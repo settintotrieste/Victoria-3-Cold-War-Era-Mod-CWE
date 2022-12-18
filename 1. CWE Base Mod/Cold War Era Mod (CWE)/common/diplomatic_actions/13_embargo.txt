@@ -1,0 +1,115 @@
+﻿embargo = {
+	requires_approval = no
+	should_notify_third_parties = yes
+
+	unlocking_technologies = {
+		international_trade
+	}
+	
+	potential = {
+		NOR = {
+			is_country_type = decentralized
+			has_law = law_type:law_isolationism
+		}
+		scope:target_country = {
+			NOR = { 
+				is_country_type = decentralized 
+				has_law = law_type:law_isolationism
+			}
+		}			
+	}
+	
+	possible = {
+		is_junior_in_customs_union = no
+		scope:target_country = { is_junior_in_customs_union = no }
+		NOT = { scope:target_country = { has_treaty_port_in_country = root } }
+		has_diplomatic_relevance = scope:target_country
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+			scope:target_country.relations:root <= relations_threshold:poor
+		}		
+	}
+
+	accept_effect = {}
+	
+	pact = {
+		cost = 100
+	
+		is_embargo = yes		
+		is_two_sided_pact = no
+		
+		relations_progress_per_day = -1 # At -100, -1 relations
+		
+		should_auto_break = {
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
+				scope:target_country.relations:root > relations_threshold:poor
+			}		
+		}
+	
+		should_invalidate = {
+			OR = {			
+				is_country_type = decentralized
+				NOT = { has_diplomatic_relevance = scope:target_country }
+				scope:target_country = { is_country_type = decentralized }
+				is_junior_in_customs_union = yes
+				scope:target_country = { is_junior_in_customs_union = yes }
+				scope:target_country = { has_treaty_port_in_country = root }
+				scope:target_country = { has_law = law_type:law_isolationism }
+				root = { has_law = law_type:law_isolationism }
+			}	
+		}	
+		
+		break_effect = {}
+	}
+	
+	ai = {
+		check_acceptance_for_will_break = no
+		max_influence_spending_fraction = 0.2
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = { 
+			"scope:target_country.num_mutual_trade_route_levels_with_country(root)" > 0
+			NOT = {
+				has_attitude = {
+					who = scope:target_country
+					attitude = conciliatory
+				}				
+			}
+			OR = {
+				scope:target_country.relations:root <= relations_threshold:hostile
+				scope:target_country.infamy >= infamy_threshold:pariah
+				scope:target_country = {
+					has_diplomatic_pact = {
+						who = root
+						type = embargo
+					}				
+				}					
+			}
+				
+		}
+		
+		will_break = { 
+			OR = {
+				has_attitude = {
+					who = scope:target_country
+					attitude = conciliatory
+				}				
+				NOR = {
+					scope:target_country.relations:root <= relations_threshold:hostile	
+					scope:target_country.infamy >= infamy_threshold:pariah
+					scope:target_country = {
+						has_diplomatic_pact = {
+							who = root
+							type = embargo
+						}				
+					}				
+				}			
+			}
+		}			
+	}
+}
+

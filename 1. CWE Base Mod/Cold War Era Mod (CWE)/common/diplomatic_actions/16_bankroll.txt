@@ -1,0 +1,244 @@
+﻿bankroll = {
+	requires_approval = no
+	should_notify_third_parties = no
+
+	unlocking_technologies = {
+		central_banking
+	}
+	
+	potential = {
+		NOT = { is_country_type = decentralized }
+		scope:target_country = {
+			NOT = { is_country_type = decentralized }
+		}	
+	}
+	
+	possible = {
+		NOT = { has_war_with = scope:target_country }
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
+			scope:target_country.relations:root > relations_threshold:poor
+		}
+		has_diplomatic_relevance = scope:target_country
+		is_revolutionary = no
+		in_default = no
+	}
+	
+	pact = {	
+		cost = 100
+	
+		is_two_sided_pact = no
+		show_in_outliner = yes
+		
+		relations_progress_per_day = 3 # At 100, +1 relations
+		relations_improvement_max = 80
+		
+		income_transfer = 0.20
+		recipient_gets_income_transfer = yes
+		income_transfer_based_on_recipient = yes
+		
+		weekly_effect = {
+			if = {
+				limit = {
+					root = {
+						owes_obligation_to = scope:target_country			
+					}						
+				}
+				random_list = { 
+					99 = {}
+					1 = { root = { set_owes_obligation_to = { country = scope:target_country setting = no } } }
+				}				
+			}		
+			else_if = {
+				limit = {
+					NOT = { 
+						scope:target_country = {
+							owes_obligation_to = root			
+						}						
+					}
+				}
+				random_list = { 
+					99 = {}
+					1 = { scope:target_country = { set_owes_obligation_to = { country = root setting = yes } } }
+				}
+			}
+		} 
+
+		is_about_to_auto_break = {
+            scope:target_country.relations:root <= -17 # this: poor + 3
+        }
+
+		should_auto_break = {
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+
+                # make sure to update is_about_to_auto_break when changing this:
+				scope:target_country.relations:root <= relations_threshold:poor
+			}
+		}		
+	
+		should_invalidate = {
+			OR = {
+				has_war_with = scope:target_country				
+				is_country_type = decentralized
+				scope:target_country = { is_country_type = decentralized }
+				is_subject_of = scope:target_country
+				scope:target_country = { is_subject_of = root }
+				in_default = yes
+			}
+		}
+	}
+	
+	ai = {
+		max_influence_spending_fraction = 0.20
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = { 
+			scaled_debt <= 0
+			is_at_war = no
+			has_attitude = {
+				who = scope:target_country
+				attitude = protective
+			}
+			OR = {
+				num_income_transfer_pacts < 1
+				AND = {
+					num_income_transfer_pacts < 2
+					weekly_net_fixed_income >= 200000
+				}
+				AND = {
+					num_income_transfer_pacts < 3
+					weekly_net_fixed_income >= 400000
+				}				
+			}
+			
+			OR = {
+				root = {
+					owes_obligation_to = scope:target_country			
+				}	
+				NOT = { 
+					scope:target_country = {
+						owes_obligation_to = root			
+					}						
+				}
+				AND = {
+					is_at_war = no
+					scope:target_country = { is_at_war = yes }
+				}			
+			}		
+			# We want to have at least five times their income, and at least 50k income in general
+			OR = {
+				AND = {
+					weekly_net_fixed_income >= 50000
+					scope:target_country.income <= 10000
+				}
+				AND = {
+					weekly_net_fixed_income >= 75000
+					scope:target_country.income <= 15000
+				}				
+				AND = {
+					weekly_net_fixed_income >= 100000
+					scope:target_country.income <= 20000
+				}
+				AND = {
+					weekly_net_fixed_income >= 125000
+					scope:target_country.income <= 25000
+				}
+				AND = {
+					weekly_net_fixed_income >= 150000
+					scope:target_country.income <= 30000
+				}	
+				AND = {
+					weekly_net_fixed_income >= 175000
+					scope:target_country.income <= 35000
+				}
+				AND = {
+					weekly_net_fixed_income >= 200000
+					scope:target_country.income <= 40000
+				}
+				AND = {
+					weekly_net_fixed_income >= 225000
+					scope:target_country.income <= 45000
+				}	
+				AND = {
+					weekly_net_fixed_income >= 250000
+					scope:target_country.income <= 50000
+				}					
+			}			
+		}
+		
+		will_break = { 
+			OR = {		
+				scaled_debt > 0.25
+				AND = {
+					scaled_debt > 0
+					is_at_war = yes
+				}				
+				NOT = {
+					has_attitude = {
+						who = scope:target_country
+						attitude = protective
+					}				
+				}
+				num_income_transfer_pacts > 2	
+				NOR = {
+					root = {
+						owes_obligation_to = scope:target_country			
+					}	
+					NOT = { 
+						scope:target_country = {
+							owes_obligation_to = root			
+						}						
+					}
+					AND = {
+						is_at_war = no
+						scope:target_country = { is_at_war = yes }
+					}			
+				}		
+				# We want to have at least five times their income, and at least 50k income in general
+				NOR = {
+					AND = {
+						weekly_net_fixed_income >= 50000
+						scope:target_country.weekly_net_fixed_income <= 10000
+					}
+					AND = {
+						weekly_net_fixed_income >= 75000
+						scope:target_country.weekly_net_fixed_income <= 15000
+					}				
+					AND = {
+						weekly_net_fixed_income >= 100000
+						scope:target_country.weekly_net_fixed_income <= 20000
+					}
+					AND = {
+						weekly_net_fixed_income >= 125000
+						scope:target_country.weekly_net_fixed_income <= 25000
+					}
+					AND = {
+						weekly_net_fixed_income >= 150000
+						scope:target_country.weekly_net_fixed_income <= 30000
+					}	
+					AND = {
+						weekly_net_fixed_income >= 175000
+						scope:target_country.weekly_net_fixed_income <= 35000
+					}
+					AND = {
+						weekly_net_fixed_income >= 200000
+						scope:target_country.weekly_net_fixed_income <= 40000
+					}
+					AND = {
+						weekly_net_fixed_income >= 225000
+						scope:target_country.weekly_net_fixed_income <= 45000
+					}	
+					AND = {
+						weekly_net_fixed_income >= 250000
+						scope:target_country.weekly_net_fixed_income <= 50000
+					}					
+				}					
+			}
+		}			
+	}
+}
+
