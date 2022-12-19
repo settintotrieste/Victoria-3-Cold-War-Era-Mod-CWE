@@ -1,0 +1,532 @@
+types character_types {
+	type character_icon = widget {
+		parentanchor = bottom|left
+		
+		block "icon_size" {			
+			size = { 30 30 }
+		}
+
+		# commander order
+		icon = {
+			size = { 100% 100% }
+			visible = "[And( Character.GetHomeHQ.IsValid, And(Character.GetCommanderOrder.IsValid, Or(And( Character.IsAdmiral, Not( Character.IsRepairing )), Character.IsGeneral)))]"
+			texture = "[Character.GetCommanderOrder.GetType.GetTexture]"
+			tooltip = "[Character.GetSwitchOrderButtonDesc( Character.GetCommanderOrder.GetType.Self )]"
+		}
+
+		# admiral repairing icon
+		icon = {
+			size = { 100% 100% }
+			visible = "[And( Character.IsAdmiral, Character.IsRepairing )]"
+			texture = "[Character.GetRepairingTexture]"
+			tooltip = "ADMIRAL_REPAIRING_DATE_TOOLTIP"
+		}
+		
+		# role icon (turned off by default)
+		flowcontainer = {
+			block "show_role_icon" {
+				visible = no
+			}
+			
+			icon = {
+				size = { 100% 100% }
+				texture = "gfx/interface/icons/character_role_icons/admiral.dds"
+				visible = "[Character.IsAdmiral]"            
+			}
+			
+			icon = {
+				size = { 100% 100% }
+				texture = "gfx/interface/icons/character_role_icons/general.dds"
+				visible = "[Character.IsGeneral]"            
+			}
+			
+			icon = {
+				size = { 100% 100% }
+				texture = "gfx/interface/icons/character_role_icons/politician.dds"
+				visible = "[And(Character.IsPolitician,And(Not(Character.IsRuler),Not(Character.IsHeir)))]"            
+			}
+			
+			icon = {
+				size = { 100% 100% }
+				texture = "gfx/interface/icons/character_role_icons/ruler.dds"
+				visible = "[Character.IsRuler]"            
+			}
+
+			icon = {
+				size = { 100% 100% }
+				texture = "gfx/interface/icons/character_role_icons/heir.dds"
+				visible = "[Character.IsHeir]"            
+			}
+		}
+	}
+
+	type character_ig_icon = ig_icon {
+		#PRCAL-7234
+		datacontext = "[Character.GetInterestGroup]"
+		tooltip = "CHARACTER_INTEREST_GROUP"
+		blockoverride "tooltip" {}
+	}
+	
+	type character_ig_button = ig_button {
+		#PRCAL-7234
+		datacontext = "[Character.GetInterestGroup]"
+		tooltip = "CHARACTER_INTEREST_GROUP"
+		blockoverride "tooltip" {}
+	}
+
+	### CHARACTER PORTRAIT BASE
+	type character_portrait_base = widget {
+		block "show_hat" {
+			scissor = yes
+		}
+		block "portrait_frame" {}
+		
+		portrait_button = {
+			parentanchor = bottom|hcenter
+			
+			block "portrait_position" {}
+			
+			block "portrait_size" {
+				size = { 80 100 }
+			}
+			
+			using = portrait_base
+			
+			block "portrait_texture" {
+				# portrait_texture = "[Character.GetPortrait('environment_standard', 'camera_head', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+			}
+
+			### IG ICON
+			character_ig_button = {
+				blockoverride "in_government_icon" {}
+				parentanchor = center
+			}
+			
+			block "portrait_mask" {
+				mask = "gfx/interface/portraits/portrait_mask_default.dds"
+			}
+			
+			block "highlight" {
+				effectname = "NoHighlight"
+			}
+
+			block "portrait_button" {
+				button = {
+					visible = "[Character.IsCommander]"
+					size = { 100% 100% }
+					onclick = "[InformationPanelBar.OpenCommanderPanel(Character.AccessSelf)]"
+					onrightclick = "[RightClickMenuManager.ShowForCharacter(Character.AccessSelf)]"
+					onmousehierarchyenter = "[AccessHighlightManager.HighlightCharacter( Character.Self )]"
+					onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+				}
+				button = {
+					visible = "[Not(Character.IsCommander)]"
+					size = { 100% 100% }
+					onclick = "[InformationPanelBar.OpenCommanderPanel(Character.AccessSelf)]"
+					onmousehierarchyenter = "[AccessHighlightManager.HighlightCharacter( Character.Self )]"
+					onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+				}
+			}
+		}
+
+		block "portrait_icons" {
+			character_icon = {}
+		}
+
+		block "tooltip" {
+			tooltipwidget = {
+				FancyTooltip_Character = {}
+			}
+		}
+	}
+
+	### CHARACTER PORTRAIT BASE WITHOUT MASK
+	type character_portrait_base_no_mask = widget {
+		block "show_hat" {
+			scissor = yes
+		}
+		block "portrait_frame" {}
+		
+		portrait_button = {
+			parentanchor = bottom|hcenter
+			
+			block "portrait_position" {}
+			
+			block "portrait_size" {
+				size = { 80 100 }
+			}
+			
+			using = portrait_base
+			
+			block "portrait_texture" {
+			  	#	portrait_texture = "[Character.GetPortrait('environment_front_generals_right', 'camera_head', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+			}
+			
+			block "portrait_mask" {
+				mask = "gfx/interface/portraits/portrait_mask_no_fade_bottom.dds"
+			}
+			
+			effectname = "NoHighlight"
+
+			block "portrait_button" {}
+		}
+
+		block "portrait_icons" {
+			character_icon = {}
+		}
+
+		block "tooltip" {
+			tooltipwidget = {
+				FancyTooltip_Character = {}
+			}
+		}
+	}
+
+	### NOTE: ALL PORTRAIT WIDGETS ARE SMALLER IN HEIGHT BECAUSE IT CUTS HIGH HATS. USE BLOCKOVERRIDE (show_hat) TO SHOW HAT WHERE IT DOES NOT COVER ANY INFO ABOVE THE PORTRAIT.
+	### ( this is because we do not want high hats to take up a big space in the layouts so that the rest of the portrait (face/body) becomes really small )
+	
+	### TORSO BASE
+	type character_portrait_base_torso = character_portrait_base {
+		blockoverride "portrait_texture" {
+			portrait_texture = "gfx\interface\icons\generic_icons/employment_not_full.dds" # "[Character.GetAnimatedPortrait('characters_portrait_environment', 'camera_torso', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+			size = { 200 200 }
+		}
+		blockoverride "portrait_mask" {
+			mask = "gfx/interface/portraits/portrait_frame_torso_mask.dds"
+		}
+	}
+	
+	### TORSO SIZES
+	
+	#240x320
+	type character_portrait_xl_torso = character_portrait_base_torso {
+		size = { 290 348 } #+50 +28 (space for frame)
+		blockoverride "portrait_position" {
+			position = { 0 -28 }
+		}
+		blockoverride "portrait_frame" {
+			icon = {
+				# texture = "gfx/interface/portraits/portrait_frame_torso.dds"
+				size = { 100% 320 }
+				parentanchor = bottom|hcenter
+
+				using = naval_commander_color
+			}
+		}
+		blockoverride "portrait_size" {
+			size = { 240 352 } #+32 (extra space for high hats)
+		}
+	}
+	
+	#180x240
+	type character_portrait_large_torso = character_portrait_base_torso {
+		size = { 217 261 } #+37 +21 (space for frame)
+		blockoverride "portrait_position" {
+			position = { 0 -21 }
+		}
+		blockoverride "portrait_frame" {
+			icon = {
+				# texture = "gfx/interface/portraits/portrait_frame_torso.dds"
+				size = { 100% 240 }
+				parentanchor = bottom|hcenter
+
+				using = naval_commander_color
+			}
+		}
+		blockoverride "portrait_size" {
+			size = { 180 264 } #+24 (extra space for high hats)
+		}
+	}
+	
+	#120x160
+	type character_portrait_medium_torso = character_portrait_base_torso {
+		size = { 145 174 } #+25 +14 (space for frame)
+		blockoverride "portrait_position" {
+			position = { 0 -14 }
+		}
+		blockoverride "portrait_frame" {
+			icon = {
+				texture = "gfx/interface/portraits/portrait_frame_torso.dds"
+				size = { 100% 160 }
+				parentanchor = bottom|hcenter
+
+				using = naval_commander_color
+			}
+		}
+		blockoverride "portrait_size" {
+			size = { 120 176 } #+16 (extra space for high hats)
+		}
+	}
+	
+	### HEAD ( use for smaller areas in the UI, where torso does not fit )
+	
+	### HEAD BASE
+	type character_portrait_base_head = character_portrait_base {
+		blockoverride "portrait_mask" {
+			mask = "gfx/interface/portraits/portrait_frame_head_mask.dds"
+		}
+		blockoverride "portrait_frame" {
+			icon = {
+				block "frame_texture" {
+					texture = "gfx/interface/portraits/portrait_frame_head.dds"
+				}
+				size = { 100% 100% }
+
+				using = generic_highlight
+				using = naval_commander_color
+			}
+		}
+
+		block "rank_icon" {
+			rank_icon = {
+				visible = "[Character.IsCommander]"
+				parentanchor = bottom|right
+				blockoverride "icon_size" {
+					size = { 40 40 }
+				}
+			}
+		}
+	}
+
+	### HEAD SIZES
+	type character_portrait_medium = character_portrait_base_head {
+		size = { 80 80 }
+		blockoverride "portrait_size" {
+			size = { 80 88 }
+		}
+		blockoverride "icon_size" {
+			size = { 22 22 }
+		}
+	}
+	
+	type character_portrait_small2 = character_portrait_base_head {
+		size = { 60 60 }
+		blockoverride "portrait_size" {
+			size = { 60 66 }
+		}
+		blockoverride "icon_size" {
+			size = { 20 20 }
+		}
+	}
+
+	type character_portrait_small = character_portrait_base_head {
+		size = { 40 40 }
+		blockoverride "portrait_size" {
+			size = { 40 44 }
+		}
+		blockoverride "icon_size" {
+			size = { 18 18 }
+		}
+		blockoverride "frame_texture" {
+			texture = "gfx/interface/portraits/portrait_frame_head_small.dds"
+		}
+		blockoverride "rank_icon" {}
+	}
+
+	type character_portrait_mini = character_portrait_base_head {
+		size = { 30 30 }
+		blockoverride "portrait_size" {
+			size = { 30 33 }
+		}
+		blockoverride "portrait_icons" {} #too small for icons
+		blockoverride "frame_texture" {
+			texture = "gfx/interface/portraits/portrait_frame_head_small.dds"
+		}
+		blockoverride "rank_icon" {}
+	}
+
+	### SPECIAL FOR SITUATIONS/EVENTS (these show more of the torso and have their own special frames)
+	type character_portrait_situation_1char = character_portrait_base {
+		size = { 520 600 }
+		blockoverride "portrait_size" {
+			size = { 520 650 }
+		}
+		blockoverride "portrait_texture" {
+			portrait_texture = "[Character.GetPortrait('environment_event_01', 'camera_body', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+		}
+	}
+	type character_portrait_duel_01 = character_portrait_base {
+		size = { 250 390 }
+		blockoverride "portrait_size" {
+			size = { 250 420 }
+		}
+		blockoverride "portrait_texture" {
+			portrait_texture = "[Character.GetAnimatedPortrait('environment_event_01', 'camera_duel_01', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+		}
+	}
+
+	type character_portrait_duel_02 = character_portrait_base {
+		size = { 250 390 }
+		blockoverride "portrait_size" {
+			size = { 250 420 }
+		}
+		blockoverride "portrait_texture" {
+			portrait_texture = "[Character.GetAnimatedPortrait('environment_event_01', 'camera_duel_02', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+		}
+	}
+	
+	### SPECIAL FOR COMMANDERS IN BATTLES/FRONTS (these show more of the torso and have no frame and also they have different lightning/vs poses)
+	type character_portrait_front_vs_right = character_portrait_base_no_mask {
+		size = { 270 360 }
+		blockoverride "portrait_size" {
+			size = { 350 390 }
+		}
+		blockoverride "portrait_texture" {
+			portrait_texture = "[Character.GetAnimatedPortrait('environment_front_generals_right', 'camera_event_right', 'commander_vs_right', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+		}
+		blockoverride "portrait_icons" {}
+		blockoverride "show_hat" {}
+	}
+	type character_portrait_front_vs_left = character_portrait_base_no_mask {
+		size = { 270 360 }
+		blockoverride "portrait_size" {
+			size = { 350 390 }
+		}
+		blockoverride "portrait_texture" {
+			portrait_texture = "[Character.GetAnimatedPortrait('environment_front_generals_left', 'camera_event_left', 'commander_vs_left', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+		}
+		blockoverride "portrait_icons" {}
+		blockoverride "show_hat" {}
+	}
+	
+	### POP PORTRAITS
+	type pop_portrait_base = character_portrait_base {
+		size = { 80 100 }
+		
+		blockoverride "portrait_texture"
+		{
+			block "pop_portrait_texture" {
+				# Always use Cached portraits by default (better for performance and they can't be animated)
+				portrait_texture = "[Pop.GetPortrait('environment_standard', 'camera_head', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+				
+				# GetTypedPortrait will return the specified type, and age.
+				#  Valid types are 'male', 'female', 'boy', 'girl', 'random_adult', 'random_child', 'scripted'. Scripted uses the same scripted weights as GetPortrait (i.e. based on laws etc)
+				#  Valid values for age are 0-100 (years), or -1 to use the scripted age.
+				#  Valid values for pose are defined in common/genes/99_genes_special.txt. Empty will use the default pose.
+				# portrait_texture = "[Pop.GetTypedPortrait('environment_standard', 'camera_head', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self), 'random_adult', '(int32)30')]"
+			}
+		}
+		blockoverride "portrait_icons" {}
+		blockoverride "tooltip" {}
+		blockoverride "show_hat" {}
+
+		# Override click/hover effects since we don't set a character context for these
+		blockoverride "portrait_button" {
+			block "portrait_button" {
+				button = {
+					size = { 100% 100% }
+				}
+			}
+		}
+	}
+	
+	### BIG (animated)
+	type pop_portrait_big = pop_portrait_base {
+		size = { 250 400 }
+		blockoverride "portrait_size" {
+			size = { 430 430 }
+		}
+		blockoverride "portrait_texture" {
+			block "pop_portrait_texture" {
+				portrait_texture = "[Pop.GetAnimatedPortrait('environment_standard', 'camera_body', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+			}
+		}
+	}
+	
+	type pop_portrait_big_female = pop_portrait_big {
+		blockoverride "pop_portrait_texture" {
+			portrait_texture = "[Pop.GetAnimatedTypedPortrait('pop_environment', 'camera_body', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self), 'female', '(int32)-1')]"
+		}
+
+	}
+	
+	type pop_portrait_big_male = pop_portrait_big {
+
+				
+
+		blockoverride "pop_portrait_texture" {
+			portrait_texture = "[Pop.GetAnimatedTypedPortrait('pop_environment', 'camera_body', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self), 'male', '(int32)-1')]"
+			size = { 600 440 }
+
+		}
+				blockoverride "portrait_mask" {
+			mask = "gfx/interface/portraits/portrait_mask_small_fade_bottom.dds"
+		}
+	}
+
+	### MEDIUM (animated)
+	type pop_portrait_medium = pop_portrait_base {
+		size = { 140 205 }
+		blockoverride "portrait_size" {
+			size = { 225 225 }
+		}
+		blockoverride "portrait_texture" {
+			block "pop_portrait_texture" {
+				portrait_texture = "[Pop.GetAnimatedPortrait('environment_standard', 'camera_body', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+			}
+		}
+	}
+	
+	type pop_portrait_medium_random_adult = pop_portrait_medium {
+		blockoverride "pop_portrait_texture" {
+			portrait_texture = "[Pop.GetAnimatedTypedPortrait('environment_standard', 'camera_body', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self), 'random_adult', '(int32)-1')]"
+		}
+	}
+
+	type pop_portrait_medium_female = pop_portrait_medium {
+		blockoverride "pop_portrait_texture" {
+			portrait_texture = "[Pop.GetAnimatedTypedPortrait('environment_standard', 'camera_body', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self), 'female', '(int32)-1')]"
+		}
+	}
+	
+	type pop_portrait_medium_male = pop_portrait_medium {
+		blockoverride "pop_portrait_texture" {
+			portrait_texture = "[Pop.GetAnimatedTypedPortrait('small_pop_environment', 'camera_body', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self), 'male', '(int32)-1')]"
+		}
+		block "portrait_mask" {}
+	}
+
+	### SIMPLE (non-animated and cached, for long lists etc)
+	type pop_portrait_simple = pop_portrait_base {
+		size = { 85 95 }
+		blockoverride "pop_portrait_texture" {
+			portrait_texture = "[Pop.GetPortrait('small_pop_environment', 'camera_body', 'idle', PdxGetWidgetScreenSize(PdxGuiWidget.Self))]"
+		}
+	}
+}
+
+template portrait_base
+{
+	pop_out = no
+	block "grayscale" {
+		grayscale = no # "[Not(Character.IsAlive)]"
+	}
+
+	gfxtype = portraitbuttongfx
+	shaderfile = "gfx/FX/jomini/gui_portrait.shader"
+
+	intersectionmask = no
+
+	background_texture = "gfx/portraits/portrait_transparent.dds"
+	texture = "gfx/portraits/portrait_transparent.dds"
+
+	block "portrait_transformation"
+	{
+		portrait_scale = { 1.0 1.0 }
+		portrait_offset = { 0.0 0.0 }
+	}
+}
+
+# Blue overlay for Admirals
+template naval_commander_color
+{
+	modify_texture = {
+		texture = "gfx/interface/selections/generic_highlight_X.dds"
+		spriteType = Corneredstretched
+		spriteborder = { 0 0 }
+		blend_mode = overlay
+		block "naval_color_visible" {
+			visible = "[Character.IsAdmiral]"
+		}
+	}
+}
