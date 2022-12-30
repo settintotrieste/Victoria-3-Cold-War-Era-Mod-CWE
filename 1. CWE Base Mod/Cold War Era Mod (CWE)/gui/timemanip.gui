@@ -1,0 +1,1104 @@
+template paused_effect_duration_show
+{
+	duration = 0.2
+}
+template paused_effect_duration_hide
+{
+	duration = 0.1
+}
+template paused_effect_alpha
+{
+	alpha = 0.5
+}
+template speedometer_set_speed_properties
+{
+	gfxtype = framedbuttongfx
+	effectname = "NoHighlight"
+	upframe = 1
+	overframe = 2
+	downframe = 3
+	enabled = "[TimeKeeper.CanSetGameSpeed]"
+	using = tooltip_se
+	using = game_speed_sound
+}
+template speed_button_1
+{
+	texture = "gfx/interface/main_hud/speedometer_set_speed_1.dds"
+	framesize = { 48 62 }
+	size = { 24 31 }
+	using = speedometer_set_speed_properties
+	onclick = "[TimeKeeper.SetGameSpeed('(int32)0')]"
+	shortcut = "speed_1"
+	tooltip = "CHANGE_SPEED_TOOLTIP_1"
+}
+template speed_button_2
+{
+	texture = "gfx/interface/main_hud/speedometer_set_speed_2.dds"
+	framesize = { 64 68 }
+	size = { 32 34 }
+	using = speedometer_set_speed_properties
+	onclick = "[TimeKeeper.SetGameSpeed('(int32)1')]"
+	shortcut = "speed_2"
+	tooltip = "CHANGE_SPEED_TOOLTIP_2"
+}
+template speed_button_3
+{
+	texture = "gfx/interface/main_hud/speedometer_set_speed_3.dds"
+	framesize = { 74 46 }
+	size = { 37 23 }
+	using = speedometer_set_speed_properties
+	onclick = "[TimeKeeper.SetGameSpeed('(int32)2')]"
+	shortcut = "speed_3"
+	tooltip = "CHANGE_SPEED_TOOLTIP_3"
+}
+template speed_button_4
+{
+	texture = "gfx/interface/main_hud/speedometer_set_speed_4.dds"
+	framesize = { 64 68 }
+	size = { 32 34 }
+	using = speedometer_set_speed_properties
+	onclick = "[TimeKeeper.SetGameSpeed('(int32)3')]"
+	shortcut = "speed_4"
+	tooltip = "CHANGE_SPEED_TOOLTIP_4"
+}
+template speed_button_5
+{
+	texture = "gfx/interface/main_hud/speedometer_set_speed_5.dds"
+	framesize = { 48 62 }
+	size = { 24 31 }
+	using = speedometer_set_speed_properties
+	onclick = "[TimeKeeper.SetGameSpeed('(int32)4')]"
+	shortcut = "speed_5"
+	tooltip = "CHANGE_SPEED_TOOLTIP_5"
+}
+
+types timekeeper
+{			
+	type time_animation = icon {
+		texture = "gfx/interface/main_hud/speedometer_cogwheel_texture.dds"
+		size = { 30 30 }
+		
+		modify_texture = {
+			name = cogwheel
+			texture = "gfx/interface/main_hud/speedometer_cogwheel_mask.dds"
+			spriteType = Corneredstretched
+			spriteborder = { 0 0 }
+			blend_mode = alphamultiply
+		}
+		
+		state = {
+			trigger_on_create = yes
+			name = 1
+			next = 2
+
+			modify_texture = {
+				name = cogwheel
+				rotate_uv = 360
+			}
+		}
+		state = {
+			name = 2
+			next = 1
+			block "speed" {}
+
+			modify_texture = {
+				name = cogwheel
+				rotate_uv = 0
+			}
+		}
+	}
+
+	type pause_border = widget {
+		name = "pause_border"
+		size = { 100% 100% }
+		alwaystransparent = yes
+		visible = "[IsInGame]"
+		ignore_in_debug_draw = yes
+		
+		widget = {
+			size = { 100% 100% }
+			using = fullscreen_hide
+
+			widget = {
+				size = { 100% 100% }
+				visible = "[TimeKeeper.IsPaused]"
+				ignore_in_debug_draw = yes
+
+				state = {
+					name = _hide
+					alpha = 0
+					duration = 0.15
+					using = Animation_Curve_Default
+				}
+				state = {
+					name = _show
+					alpha = 1
+					duration = 0.15
+					using = Animation_Curve_Default
+				}
+
+
+				container = {
+					parentanchor = center
+					position = { 0 -340 }
+
+					### PAUSED MIDDLE BUTTON
+					button = {
+						enabled = "[TimeKeeper.CanTogglePause]"
+						onclick = "[TimeKeeper.TogglePause]"
+						tooltip = "[TimeKeeper.GetTogglePauseTooltip]"
+						using = play_continue_button_sound
+						parentanchor = hcenter
+						onmousehierarchyenter = "[PdxGuiWidget.FindChild('glow').InterruptThenTriggerAnimation('hover_hide','hover_show')]"
+						onmousehierarchyleave = "[PdxGuiWidget.FindChild('glow').InterruptThenTriggerAnimation('hover_show','hover_hide')]"
+						
+						container = {
+							resizeparent = yes
+
+							widget = { 
+								size = { 50 50 }
+								parentanchor = hcenter
+
+								icon = {
+									name = glow
+									size = { 100% 100% }
+									texture = "gfx/interface/map_markers/round_highlight.dds"
+									parentanchor = center
+									alwaystransparent = yes
+									position = { 0 2 }
+
+									alpha = 0
+									
+									state = {
+										name = hover_show
+										alpha = 0.7
+										duration = 0.2
+										using = Animation_Curve_Default
+									}
+									state = {
+										name = hover_hide
+										alpha = 0
+										duration = 0.2
+										using = Animation_Curve_Default
+									}
+								}
+								
+								icon = {
+									size = { 100% 100% }
+									alwaystransparent = yes
+									texture = "gfx/interface/main_hud/paused_symbol.dds"
+								}
+							}
+
+							textbox = {
+								autoresize = yes
+								position = {  0 46 } 
+								alwaystransparent = yes
+								
+								text = "PAUSED"
+								align = nobaseline
+								parentanchor = hcenter
+
+								background = {
+									texture = "gfx/interface/main_hud/paused_bg_text.dds"
+									texture_density = 2
+									margin = { 18 10 }  
+									spriteType = Corneredstretched
+									spriteborder = { 50 40 }
+								}
+							}
+						}
+					}
+
+					### PAUSE TEXT FOR MP
+					flowcontainer = {
+						name = "multiplayer_paused_by_player"
+						visible = "[And(TimeKeeper.IsPaused, GameHasMultiplePlayers)]"
+
+						parentanchor = hcenter
+						position = { 0 74 }
+
+						ignoreinvisible = yes
+						direction = vertical
+
+						state = {
+							name = _show
+							using = Animation_FadeIn_Quick
+						}
+
+						state = {
+							name = _hide
+							using = Animation_FadeOut_Standard
+						}
+
+						text_label_center = {
+							visible = "[Not( StringIsEmpty( TimeKeeper.GetPausedBy ) )]"
+							text = "PAUSED_BY_PLAYER_MP"
+							using = fontsize_xxl
+							parentanchor = hcenter
+						}
+
+						text_label_center = {
+							visible = "[And( TimeKeeper.IsPausedByMe, Not( TimeKeeper.CanAnyoneUnpause ) )]"
+							text = "PAUSED_BY_UNPAUSE_ONLY_ME"
+							using = fontsize_large
+							parentanchor = hcenter
+						}
+
+						text_label_center = {
+							visible = "[And( Not( TimeKeeper.IsPausedByMe ), Not( TimeKeeper.CanAnyoneUnpause ) )]"
+							text = "PAUSED_BY_UNPAUSE_ONLY_PAUSED_BY"
+							using = fontsize_large
+							parentanchor = hcenter
+						}
+
+						text_label_center = {
+							visible = "[TimeKeeper.CanAnyoneUnpause]"
+							text = "PAUSED_BY_UNPAUSE_ANYONE"
+							using = fontsize_large
+							parentanchor = hcenter
+						}
+					}
+				}
+
+				### PAUSED FRAME
+				icon = {
+					size = { 100% 100% }
+					alwaystransparent = yes
+					ignore_in_debug_draw = yes
+					spriteType = Corneredtiled
+					spriteborder = { 600 400 }
+					texture_density = 2
+					texture = "gfx/interface/main_hud/ui_paus_frame.dds"
+					
+					using = hud_shiny_effect
+				}
+			}
+		}
+	}
+	
+
+	type timemanip = widget {
+		name = "timemanip"
+		size = { 590 125 }
+		alwaystransparent = no
+		using = clickthrough_blocker
+		visible = "[And( And( Not( IsPauseMenuShown ), Not( IsGameOverScreenShown )), IsInGame)]"
+		ignore_in_debug_draw = yes
+		
+		using = default_fade_in_out
+		
+		### TOP RIGHT STUFF
+		widget = {
+			size = { 590 80 }
+			parentanchor = right
+			alwaystransparent = no
+
+			### BACKGROUND
+			widget = {
+				size = { 100% 100% }
+				using = fullscreen_hide
+				
+				state = {
+					name = _show
+					alpha = 1
+					duration = 0
+				}
+				state = {
+					name = _hide
+					alpha = 0
+					duration = 0.2
+				}
+				
+				background = {
+					texture = "gfx/interface/main_hud/topbar_bg.dds"
+					mirror = horizontal
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+					spriteType = Corneredstretched
+					spriteborder = { 0 0 }
+					spriteborder_bottom = 94
+					spriteborder_right = 100
+					texture_density = 2
+					using = hud_elements_alpha
+					
+					modify_texture = {
+						texture = "gfx/interface/backgrounds/default_bg_shading.dds"
+						spriteType = Corneredstretched
+						spriteborder = { 0 0 }
+						blend_mode = overlay
+						alpha = 0.5
+					}
+					modify_texture = {
+						using = texture_velvet
+					}
+					modify_texture = {
+						using = fancy_pattern
+					}
+				}
+				icon = {
+					texture = "gfx/interface/main_hud/topbar_side_dec.dds"
+					mirror = horizontal
+					size = { 100% 100% }
+					spriteType = Corneredstretched
+					spriteborder = { 0 0 }
+					spriteborder_bottom = 94
+					spriteborder_right = 110
+					texture_density = 2
+					
+					using = hud_shiny_effect
+				}			
+			}
+
+			### DATE
+			widget = {
+				position = { 40 2 }
+				size = { 170 68 }
+					
+				### PAUSED DATE
+				textbox = {
+					position = { 0 2 }
+					text = CLOCK_TEXT
+					tooltip = "[MultiplayerSynchronizationInfo.GetPlayerDatesString]"
+					align = left|nobaseline
+					autoresize = yes
+					visible = "[TimeKeeper.IsPaused]"
+					default_format = "#variable"
+					using = font_time
+				}
+				### NOT PAUSED DATE
+				textbox = {
+					position = { 0 2 }
+					text = CLOCK_TEXT
+					tooltip = "[MultiplayerSynchronizationInfo.GetPlayerDatesString]"
+					align = left|nobaseline
+					autoresize = yes
+					visible = "[Not(TimeKeeper.IsPaused)]"
+					default_format = "#variable"
+					using = font_time
+				}
+				
+				### TICKS (week)
+				widget = {
+					size = { 100% 16 }
+					position = { 0 18 }
+					parentanchor = vcenter
+					
+					### PAUSED PROGRESSBAR
+					white_progressbar_horizontal = {
+						visible = "[TimeKeeper.IsPaused]"
+						size = { 100% 100% }
+						
+						blockoverride "values" {
+							min = 0
+							max = 28
+							value = "[IntToFloat(TimeKeeper.GetProgressOfWeek)]"
+						}
+						blockoverride "color" {
+							color = { 0.55 0.55 0.55 1 }
+						}
+						blockoverride "progress_changed_animation" {}
+					}
+					
+					### NOT PAUSED PROGRESSBAR
+					#Normal speed, animate
+					green_progressbar_horizontal = {
+						visible = "[And( Not(TimeKeeper.IsPaused), LessThanOrEqualTo_int32(TimeKeeper.GetGameSpeed, '(int32)3'))]"
+						size = { 100% 100% }
+						
+						blockoverride "values" {
+							min = 0
+							max = 28
+							value = "[IntToFloat(TimeKeeper.GetProgressOfWeek)]"
+						}
+						blockoverride "animate_negative_change" {
+							animate_negative_changes = no
+						}
+					}
+
+					# Max speed, no animation
+					green_progressbar_horizontal = {
+						visible = "[And( Not(TimeKeeper.IsPaused), GreaterThan_int32(TimeKeeper.GetGameSpeed, '(int32)3'))]"
+						size = { 100% 100% }
+						
+						blockoverride "values" {
+							min = 0
+							max = 28
+							value = "[IntToFloat(TimeKeeper.GetProgressOfWeek)]"
+						}
+						blockoverride "progress_changed_animation" {}
+						blockoverride "animate_negative_change" {
+							animate_negative_changes = no
+						}
+					}
+					
+					#tick text
+					textbox = {
+						position = { 6 0 }
+						visible = "[TimeKeeper.IsPaused]"
+						text = CLOCK_DEBUG_TEXT
+						tooltip = "[MultiplayerSynchronizationInfo.GetPlayerDatesString]"
+						align = left|nobaseline
+						autoresize = yes
+						alpha = 0.6
+						using = fontsize_small
+						default_format = "#variable"
+					}
+					
+					textbox = {
+						position = { 6 0 }
+						visible = "[Not(TimeKeeper.IsPaused)]"
+						text = CLOCK_DEBUG_TEXT
+						tooltip = "[MultiplayerSynchronizationInfo.GetPlayerDatesString]"
+						align = left|nobaseline
+						autoresize = yes
+						using = fontsize_small
+						default_format = "#variable"
+					}
+				}
+				
+				### PAUSED TEXT
+				textbox = {
+					position = { 180 -10 }
+					visible = "[TimeKeeper.IsPaused]"
+					parentanchor = bottom
+					text = "CLOCK_PAUSED"
+					autoresize = yes
+					using = fontsize_small
+					default_format = "#variable"
+					align = left|nobaseline
+					alpha = 0.5
+				}
+			}
+			
+			### SPEEDOMETER
+			widget = {
+				size = { 180 80 }
+				parentanchor = right
+				name = "tutorial_highlight_speedometer"
+				position = { -43 1 }
+				
+				# animation triggers
+				widget = {
+					visible = "[TimeKeeper.IsPaused]"
+					
+					state = {
+						name = _show
+						on_start = "[PdxGuiInterruptThenTriggerAllAnimations('speedometer_lever_play','speedometer_lever_pause')]"
+					}
+					state = {
+						name = _hide
+						on_start = "[PdxGuiInterruptThenTriggerAllAnimations('speedometer_lever_pause','speedometer_lever_play')]"
+						on_start = "[PdxGuiInterruptThenTriggerAllAnimations('speedometer_steam_play','speedometer_steam_play')]"
+					}
+				}
+				
+				# background (part under steam)
+				icon = {
+					parentanchor = right
+					texture = "gfx/interface/main_hud/speedometer_bg_behind.dds"
+					size = { 164 72 }
+				}
+				
+				# steam animation when pressing play
+				icon = {
+					texture = "gfx/interface/main_hud/speedometer_steam.dds"
+					size = { 100 70 }
+					alwaystransparent = yes
+					position = { 0 0 }
+					alpha = 0
+
+					modify_texture = {
+						name = mask_01
+						texture = "gfx/interface/main_hud/speedometer_steam.dds"
+						spriteType = Corneredstretched
+						spriteborder = { 0 0 }
+						blend_mode = alphamultiply
+					
+						translate_uv = { 0 1 }
+					}
+
+					state = {
+						name = speedometer_steam_play
+						next = 2
+						
+						position_y = 0
+						alpha = 0
+					
+						modify_texture = {
+							name = mask_01
+							translate_uv = { 0 0 }
+						}
+					}
+					state = {
+						name = 2
+						next = 3
+						
+						duration = 0.5
+						
+						position_y = -10
+						alpha = 0.7
+					
+						modify_texture = {
+							name = mask_01
+							translate_uv = { 0 0.25 }
+						}
+					}
+					state = {
+						name = 3
+						
+						duration = 1.5
+						using = Animation_Curve_EaseOut
+						
+						position_y = -30
+					
+						modify_texture = {
+							name = mask_01
+							translate_uv = { 0 1 }
+						}
+					}
+				}
+				
+				icon = {
+					texture = "gfx/interface/main_hud/speedometer_steam.dds"
+					size = { 100 70 }
+					alwaystransparent = yes
+					position = { 40 0 }
+					alpha = 0
+
+					modify_texture = {
+						name = mask_01
+						texture = "gfx/interface/main_hud/speedometer_steam.dds"
+						spriteType = Corneredstretched
+						spriteborder = { 0 0 }
+						blend_mode = alphamultiply
+					
+						translate_uv = { 0 1 }
+					}
+
+					state = {
+						name = speedometer_steam_play
+						next = 2
+						
+						position_y = 0
+						alpha = 0
+					
+						modify_texture = {
+							name = mask_01
+							translate_uv = { 0 0 }
+						}
+					}
+					state = {
+						name = 2
+						next = 3
+						
+						duration = 0.75
+						
+						position_y = -10
+						alpha = 0.7
+					
+						modify_texture = {
+							name = mask_01
+							translate_uv = { 0 0.25 }
+						}
+					}
+					state = {
+						name = 3
+						
+						duration = 3
+						using = Animation_Curve_EaseOut
+						
+						position_y = -30
+					
+						modify_texture = {
+							name = mask_01
+							translate_uv = { 0 1 }
+						}
+					}
+				}
+
+				# background
+				icon = {
+					parentanchor = right
+					texture = "gfx/interface/main_hud/speedometer_bg.dds"
+					size = { 164 72 }
+				}
+				
+				# pause / play  buttons and icons
+				icon = {
+					position = { 23 40 }
+					visible = "[Not(TimeKeeper.IsPaused)]"
+					name = "play_icon"
+					texture = "gfx/interface/main_hud/play_icon.dds"
+					size = { 35 27 }
+				}
+				icon = {
+					position = { 25 14 }
+					visible = "[TimeKeeper.IsPaused]"
+					name = "pause_icon"
+					texture = "gfx/interface/main_hud/pause_icon.dds"
+					size = { 37 33 }
+				}
+				
+				button = {
+					position = { 23 40 }
+					visible = "[TimeKeeper.IsPaused]"
+					name = "play_button"
+					texture = "gfx/interface/main_hud/play_button.dds"
+					framesize = { 70 54 }
+					size = { 35 27 }
+					gfxtype = framedbuttongfx
+					upframe = 1
+					overframe = 2
+					downframe = 3
+					effectname = "NoHighlight"
+					
+					enabled = "[TimeKeeper.CanTogglePause]"
+					onclick = "[TimeKeeper.TogglePause]"
+					tooltip = "[TimeKeeper.GetTogglePauseTooltip]"
+					using = play_continue_button_sound
+					shortcut = "pause"
+				}
+				button = {
+					position = { 25 14 }
+					visible = "[Not(TimeKeeper.IsPaused)]"
+					name = "pause_button"
+					texture = "gfx/interface/main_hud/pause_button.dds"
+					framesize = { 74 66 }
+					size = { 37 33 }
+					gfxtype = framedbuttongfx
+					upframe = 1
+					overframe = 2
+					downframe = 3
+					effectname = "NoHighlight"
+					
+					enabled = "[TimeKeeper.CanTogglePause]"
+					onclick = "[TimeKeeper.TogglePause]"
+					tooltip = "[TimeKeeper.GetTogglePauseTooltip]"
+					using = play_pause_button_sound
+					shortcut = "pause"
+				}
+				
+				
+				# lever shadow
+				icon = {
+					size = { 60 45 }
+					texture = "gfx/interface/main_hud/play_pause_lever_texture_shadow.dds"
+					position = { 10 -1 }
+					visible = no
+					
+					modify_texture = {
+						name = lever
+						texture = "gfx/interface/main_hud/play_pause_lever_mask_shadow.dds"
+						spriteType = Corneredstretched
+						spriteborder = { 0 0 }
+						blend_mode = alphamultiply
+						
+						rotate_uv = 0
+					}
+					
+					state = {
+						name = speedometer_lever_pause
+						duration = 0.2
+						using = Animation_Curve_Default
+						position = { 10 -1 }
+					
+						modify_texture = {
+							name = lever
+							rotate_uv = 0
+						}
+					}
+					state = {
+						name = speedometer_lever_play
+						duration = 0.2
+						using = Animation_Curve_Default
+						position = { 2 27 }
+					
+						modify_texture = {
+							name = lever
+							rotate_uv = 27
+						}
+					}
+				}
+				
+				# lever
+				icon = {
+					size = { 60 45 }
+					texture = "gfx/interface/main_hud/play_pause_lever_texture.dds"
+					position = { 12 6 }
+					
+					modify_texture = {
+						name = lever
+						texture = "gfx/interface/main_hud/play_pause_lever_mask.dds"
+						spriteType = Corneredstretched
+						spriteborder = { 0 0 }
+						blend_mode = alphamultiply
+						
+						rotate_uv = 0
+					}
+					
+					state = {
+						name = speedometer_lever_pause
+						duration = 0.2
+						using = Animation_Curve_Default
+						position = { 12 6 }
+					
+						modify_texture = {
+							name = lever
+							rotate_uv = 0
+						}
+					}
+					state = {
+						name = speedometer_lever_play
+						duration = 0.2
+						using = Animation_Curve_Default
+						position = { 6 31 }
+					
+						modify_texture = {
+							name = lever
+							rotate_uv = 15
+						}
+					}
+				}
+				
+				# meter
+				widget = {
+					parentanchor = right
+					size = { 124 72 }
+					
+					### cogwheel
+					container = {
+						parentanchor = hcenter
+						position = { 0 42 }
+						
+						### paused
+						icon = {
+							visible = "[TimeKeeper.IsPaused]"
+							size = { 30 30 }
+							texture = "gfx/interface/main_hud/speedometer_cogwheel_texture.dds"
+							alpha = 0.8
+							
+							modify_texture = {
+								name = cogwheel
+								texture = "gfx/interface/main_hud/speedometer_cogwheel_mask.dds"
+								spriteType = Corneredstretched
+								spriteborder = { 0 0 }
+								blend_mode = alphamultiply
+							}
+						}
+						
+						### playing (animation)
+						container = {
+							visible = "[Not(TimeKeeper.IsPaused)]"
+
+							time_animation = {
+								visible = "[EqualTo_int32(TimeKeeper.GetGameSpeed, '(int32)1')]"
+								blockoverride "speed" {
+									duration = 15
+								}
+							}
+							time_animation = {
+								visible = "[EqualTo_int32(TimeKeeper.GetGameSpeed, '(int32)2')]"
+								blockoverride "speed" {
+									duration = 12
+								}
+							}
+							time_animation = {
+								visible = "[EqualTo_int32(TimeKeeper.GetGameSpeed, '(int32)3')]"
+								blockoverride "speed" {
+									duration = 9
+								}
+							}
+							time_animation = {
+								visible = "[EqualTo_int32(TimeKeeper.GetGameSpeed, '(int32)4')]"
+								blockoverride "speed" {
+									duration = 6
+								}
+							}
+							time_animation = {
+								visible = "[EqualTo_int32(TimeKeeper.GetGameSpeed, '(int32)5')]"
+								blockoverride "speed" {
+									duration = 3
+								}
+							}
+						}
+					}
+					
+					# current speed / pointer
+					icon = {
+						position = { 0 4 }
+						parentanchor = hcenter
+						texture = "gfx/interface/main_hud/speedometer_current_speed.dds"
+						size = { 110 64 }
+						framesize = { 220 128 }
+						frame = "[TimeKeeper.GetGameSpeedFrame]"
+					}
+					icon = {
+						position = { 0 16 }
+						parentanchor = hcenter
+						texture = "gfx/interface/main_hud/speedometer_pointer.dds"
+						size = { 80 50 }
+						framesize = { 160 100 }
+						frame = "[TimeKeeper.GetGameSpeedFrame]"
+					}
+					
+					# set speed buttons
+					button = {
+						using = speed_button_1
+						position = { 9 35 }
+						visible = "[Not(EqualTo_int32(TimeKeeper.GetGameSpeed, '(int32)1'))]"
+					}
+					button = {
+						using = speed_button_2
+						position = { 16 9 }
+						visible = "[Not(EqualTo_int32(TimeKeeper.GetGameSpeed, '(int32)2'))]"
+					}
+					button = {
+						using = speed_button_3
+						parentanchor = hcenter
+						position = { 0 5 }
+						visible = "[Not(EqualTo_int32(TimeKeeper.GetGameSpeed, '(int32)3'))]"
+					}
+					button = {
+						using = speed_button_4
+						position = { -16 9 }
+						parentanchor = right
+						visible = "[Not(EqualTo_int32(TimeKeeper.GetGameSpeed, '(int32)4'))]"
+					}
+					button = {
+						using = speed_button_5
+						position = { -9 35 }
+						parentanchor = right
+						visible = "[Not(EqualTo_int32(TimeKeeper.GetGameSpeed, '(int32)5'))]" 
+					}
+				}
+			}
+			
+			### FASTER / SLOWER ( not visible in game, only here for the shortcuts )
+			widget = {
+				size = { 0 0 }
+				alwaystransparent = yes
+				alpha = 0
+				
+				button = {
+					name = "slower_button"
+					size = { 0 0 }
+					using = default_button
+					enabled = "[TimeKeeper.CanDecreaseGameSpeed]"
+					onclick = "[TimeKeeper.DecreaseGameSpeed]"
+					tooltip = "[TimeKeeper.GetDecreaseSpeedTooltip]"
+					using = decrease_button_sound
+					shortcut = "decrease_speed"
+					shortcut = "decrease_speed_2"
+				}			
+				
+				button = {
+					name = "faster_button"
+					size = { 0 0 }
+					using = default_button
+					enabled = "[TimeKeeper.CanIncreaseGameSpeed]"
+					onclick = "[TimeKeeper.IncreaseGameSpeed]"
+					tooltip = "[TimeKeeper.GetIncreaseSpeedTooltip]"
+					using = increase_button_sound
+					shortcut = "increase_speed"
+					shortcut = "increase_speed_2"
+				}
+			}
+			
+			### RIGHT BUTTONS
+			flowcontainer = {
+				direction = vertical
+				parentanchor = right
+				position { -5 3 }
+				spacing = 2
+				
+				### menu
+				button_icon_menu = {
+					size = { 32 32 }
+					onclick = "[ToggleMainMenu]"
+					enabled = "[Not( IsGameOverScreenShown )]"
+				}
+				
+				### other
+				flowcontainer = {
+					direction = vertical
+					
+					#background = {
+					#	using = default_background
+					#	alpha = 1
+					#	#visible = when other is shown
+					#}
+					
+					#button_icon_other = {
+						button_icon_vickypedia = {
+							size = { 32 32 }
+							onclick = "[ToggleEncyclopedia]"
+							#onclick = toggle other
+						}
+						
+						#flowcontainer = {
+						#	#visible = when other is shown
+						#	direction = vertical
+						#	
+						#	button_icon_vickypedia = {
+						#		size = { 32 32 }
+						#		#onclick = "[]"
+						#	}
+						#	button_icon_music_player = {
+						#		size = { 32 32 }
+						#		#onclick = "[]"
+						#	}
+						#}
+					#}	
+				}
+			}
+		}
+		
+		### CONSTRUCTION
+		widget = {
+			name = "tutorial_highlight_outliner_construction"
+			size = { 410 50 }
+			parentanchor = right|bottom
+			using = fullscreen_hide
+			
+			background = {
+				texture = "gfx/interface/main_hud/topbar_bg.dds"
+				mirror = horizontal
+				shaderfile = "gfx/FX/pdxgui_default.shader"
+				spriteType = Corneredstretched
+				spriteborder = { 0 0 }
+				spriteborder_bottom = 94
+				spriteborder_right = 100
+				texture_density = 3
+				using = hud_elements_alpha
+				
+				modify_texture = {
+					texture = "gfx/interface/backgrounds/default_bg_shading.dds"
+					spriteType = Corneredstretched
+					spriteborder = { 0 0 }
+					blend_mode = overlay
+					alpha = 0.5
+				}
+				modify_texture = {
+					using = texture_velvet
+				}
+				modify_texture = {
+					using = fancy_pattern
+				}
+			}
+			icon = {
+				size = { 100% 100% }
+				texture = "gfx/interface/main_hud/topbar_side_dec_simple.dds"
+				mirror = horizontal
+				spriteType = Corneredstretched
+				spriteborder = { 0 0 }
+				spriteborder_bottom = 94
+				spriteborder_right = 110
+				texture_density = 3
+				
+				using = hud_shiny_effect
+			}
+			
+			flowcontainer = {
+				position = { 35 4 }
+				spacing = 5
+
+				button = {
+					size = { 120 37 }
+					onclick = "[InformationPanelBar.OpenPanelTab('production_methods', 'construction_queues')]"
+					datacontext = "[GetPlayer]"
+					using = default_button
+					tooltip = "CONSTRUCTION_QUEUE_TOOLTIP"
+					using = tooltip_ws
+					parentanchor = vcenter
+					
+
+					icon = {
+						parentanchor = left|vcenter
+						position = { 8 0 }
+						size = { 28 28 }
+						texture = "gfx/interface/icons/state_status_icons/has_construction.dds"
+						visible = "[Not(Country.IsConstructionPaused)]"
+					}
+
+					icon = {
+						parentanchor = left|vcenter
+						position = { 8 0 }
+						size = { 28 28 }
+						texture = "gfx/interface/icons/state_status_icons/has_construction_paused.dds"
+						visible = "[Country.IsConstructionPaused]"
+					}
+
+					textbox = {
+						parentanchor = right|vcenter
+						margin_right = 15
+						align = left|nobaseline
+						text = "CONSTRUCTION_VALUE"
+						autoresize = yes
+						elide = right
+						fontsize_min = 12
+						maximumsize = { 80 -1 }
+					}
+				}
+					
+				overlappingitembox = {
+					datamodel = "[AccessPlayer.AccessConstructionQueue]"
+					maximumsize = { 205 37 }
+					autoresize = yes
+				
+					item = {
+						button = {
+							datacontext = "[ConstructionQueueElement.GetBuilding]"
+							visible = "[ConstructionQueueElement.IsCurrentlyUnderConstruction]"
+							parentanchor = vcenter
+							onclick = "[InformationPanelBar.OpenBuildingDetailsPanel(ConstructionQueueElement.AccessBuilding)]"
+							onrightclick = "[RightClickMenuManager.ShowForBuilding(Building.AccessSelf)]"
+							onmousehierarchyenter = "[AccessHighlightManager.HighlightState(ConstructionQueueElement.GetState)]"
+							onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+
+							size = { 37 37 }
+							texture = "[Building.GetTexture]"
+							tooltip = "[ConstructionQueueElement.GetTooltip]"
+
+				
+							default_progressbar_horizontal = {
+								visible = "[ConstructionQueueElement.IsCurrentlyUnderConstruction]"
+								tooltip = "BUILDING_PROGRESS_TOOLTIP"
+								size = { 29 3 }
+								parentanchor = top|hcenter
+								position = { 0 5 }
+								
+								blockoverride "values" {
+									value = "[ConstructionQueueElement.CalcPercentComplete]"
+									min = 0
+									max = 1
+								}
+							}
+						}
+					}
+				}
+
+				textbox = {
+					layoutpolicy_horizontal = expanding
+					visible = "[GreaterThan_int32(GetPlayer.GetNumInactiveConstructionQueueElements, '(int32)1')]"
+					size = { 0 30 }
+					align = left|nobaseline
+					parentanchor = vcenter
+					text = "IN_CONSTRUCTION_QUEUE"
+					using = tooltip_ws
+					tooltip = "IN_CONSTRUCTION_QUEUE_TOOLTIP"
+					fontsize_min = 10
+					elide = right
+					autoresize = yes
+				}
+
+				textbox = {
+					autoresize = yes
+					visible = "[Not(GetPlayer.HasConstructionQueued)]"
+					parentanchor = vcenter
+					align = left|nobaseline
+					text = "NOTHING_CONSTRUCTING"
+				}
+			}
+		}
+	}
+}
