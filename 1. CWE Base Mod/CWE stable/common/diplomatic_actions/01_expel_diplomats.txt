@@ -1,0 +1,58 @@
+﻿expel_diplomats = {
+	requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	potential = {
+		NOT = { is_country_type = decentralized }
+		scope:target_country = {
+			NOT = { is_country_type = decentralized }
+		}
+	}
+	
+	possible = {	
+		NOT = { has_war_with = scope:target_country }	
+		is_revolutionary = no
+		has_diplomatic_relevance = scope:target_country
+		NOT = { has_diplomatic_pact = { who = scope:target_country type = increase_relations } }
+		NOT = { has_diplomats_expelled = scope:target_country }
+	}
+	
+	accept_effect = {
+		change_relations = { country = scope:target_country value = -30 }
+		set_diplomats_expelled = scope:target_country
+		change_infamy = 10
+	}
+	
+	ai = {
+		propose_score = {
+			value = 100
+		}
+	
+		will_propose = {
+			scope:target_country.relations:root >= relations_threshold:cordial
+			
+			OR = {
+				AND = {
+					country_rank >= rank_value:great_power
+					scope:target_country = { infamy >= infamy_threshold:pariah }					
+				}
+				AND = {
+					OR = {
+						has_attitude = {
+							who = scope:target_country
+							attitude = domineering
+						}	
+						has_attitude = {
+							who = scope:target_country
+							attitude = belligerent
+						}			
+					}	
+					scope:target_country.relations:root >= relations_threshold:cordial
+					infamy < infamy_threshold:infamous
+					influence < 200 # Not enough to damage relations normally				
+				}
+			}
+		}
+	}
+}

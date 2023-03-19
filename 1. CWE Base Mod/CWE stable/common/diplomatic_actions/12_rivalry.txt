@@ -1,0 +1,145 @@
+﻿rivalry = {
+	requires_approval = no
+	should_notify_third_parties = yes
+
+	unlocking_technologies = {
+		international_relations
+	}
+	
+	potential = {
+		NOT = { is_country_type = decentralized }
+		scope:target_country = {
+			NOT = { is_country_type = decentralized }
+		}			
+		aggressive_diplomatic_plays_permitted = yes			
+		scope:target_country = {
+			aggressive_diplomatic_plays_permitted = yes
+		}				
+	}
+	
+	possible = {
+		countries_are_valid_rivals = yes
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER_NOT
+			scope:target_country.relations:root < relations_threshold:cordial
+		}		
+		is_revolutionary = no
+		scope:target_country = {
+			is_revolutionary = no
+		}
+	}
+	
+	pact = {
+		is_rivalry = yes		
+		is_two_sided_pact = no
+		
+		relations_progress_per_day = -1 # At -100, -1 relations
+		relations_improvement_min = -20
+
+		is_about_to_auto_break = {
+            scope:target_country.relations:root >= 17 # this is: cordial - 3
+        }
+
+		should_auto_break = {
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+
+                # make sure to update is_about_to_auto_break when changing this:
+				scope:target_country.relations:root >= relations_threshold:cordial
+			}
+		}
+	
+		should_invalidate = {
+			OR = {
+				is_country_type = decentralized
+				scope:target_country = { is_country_type = decentralized }
+				aggressive_diplomatic_plays_permitted = no
+				scope:target_country = { aggressive_diplomatic_plays_permitted = no }		
+				countries_are_valid_rivals = no
+			}	
+		}	
+		
+		break_effect = {}
+	}
+	
+	ai = {
+		check_acceptance_for_will_break = no
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = { 
+			OR = {
+				AND = {
+					country_rank > rank_value:insignificant_power
+					num_rivals < 2
+				}
+				AND = {
+					country_rank > rank_value:minor_power
+					num_rivals < 3
+				}				
+				num_rivals < 1
+			}
+			has_attitude = {
+				who = scope:target_country
+				attitude = antagonistic
+			}
+			OR = {
+				has_strategic_adjacency = scope:target_country
+				AND = {
+					country_rank = scope:target_country.country_rank
+					OR = {
+						country_rank = rank_value:great_power
+						capital.region = scope:target_country.capital.region
+					}				
+				}	
+				AND = {
+					scope:target_country = {
+						is_ai = no
+						has_diplomatic_pact = {
+							who = root
+							type = rivalry
+						}										
+					}					
+				}
+			}
+			army_size >= 10
+		}
+		
+		will_break = { 
+			OR = {
+				NOR = {
+					has_attitude = {
+						who = scope:target_country
+						attitude = antagonistic
+					}
+					has_attitude = {
+						who = scope:target_country
+						attitude = belligerent
+					}			
+				}							
+				NOR = {
+					has_strategic_adjacency = scope:target_country
+					AND = {
+						country_rank = scope:target_country.country_rank
+						OR = {
+							country_rank = rank_value:great_power
+							capital.region = scope:target_country.capital.region
+						}				
+					}	
+					AND = {
+						scope:target_country = {
+							is_ai = no
+							has_diplomatic_pact = {
+								who = root
+								type = rivalry
+							}										
+						}					
+					}				
+				}
+			}
+		}			
+	}
+}
+

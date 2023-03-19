@@ -1,0 +1,1 @@
+This is a stable version of CWE for v 1.12.
