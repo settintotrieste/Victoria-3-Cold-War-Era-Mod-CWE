@@ -1970,3 +1970,142 @@ british_decolonisation.14 = {
 }
 
 ### Asia ###
+
+# Fiji
+british_decolonisation.15 = {
+    type = country_event
+
+    title = british_fiji.sgc.t 					# Title of the event; ADD LOCALISATION
+    desc = british_fiji.sgc.d 					# Description of the event; ADD LOCALISATION
+    #flavor = british_fiji.sgc.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		this = c:GBR											# Change TAG of the overlord ****
+		game_date >= 1967.9.20									# START DATE: Date colony became self governing ****
+		game_date < 1977.9.20									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:FIJ										# Change TAG of the colony ****
+		}
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:fijian }			# Change homeland identity to match colony to be released ****
+			is_incorporated = no								# State is a colony
+			#owner = THIS										# Overlord must own the state to be released
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = british_fiji_sgc }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH THIS SECTION
+		every_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:fijian }		# Change homeland identity to match colony to be released ****
+				is_incorporated = no							# State is a colony
+				#contains_capital_of = c:FIJ					# State is the capital of colony ****
+			}
+			save_scope_as = colonial_state
+		}
+		
+	}
+    
+    option = {
+        name = british_decolonisation.option.1				#Grant them self-government
+        default_option = yes
+		
+		#Release country
+		create_country = {
+			tag = FIJ										# Change TAG of country being released ****
+			origin = THIS									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_semi_constitutional_monarchy = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_anti_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "guy_incognito_first_name"		# CHANGE
+					last_name = "guy_incognito_last_name"		# CHANGE
+					ruler = yes
+					#birth_date = 1910.1.1						# CHANGE
+					interest_group = ig_farmers					# CHANGE
+					ideology = ideology_democratic				# CHANGE
+					traits = {
+						charismatic								# CHANGE
+						persistent								# CHANGE
+						meticulous								# CHANGE
+					}
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:fijian }		# Change homeland identity to match colony to be released ****
+				is_incorporated = no							# State is a colony
+		 	}
+			set_state_owner = c:FIJ								# Change TAG to colony ****
+		}
+		
+		# Overlord create self governing colony pact with colony
+		create_diplomatic_pact = {
+			country = c:FIJ										# Change TAG ****
+			type = semi_autonomous_colony
+		}
+		
+		# Fire only once
+		set_variable = british_fiji_sgc							# Change variable ****
+		
+    }
+	
+	option = {
+        name = british_decolonisation.option.2						# REFUSE
+		
+		# Natives are angry!
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:fijian }			# Change homeland identity to match colony to be released ****
+		 	}
+			add_radicals = {
+				culture = cu:fiji									# Change culture ****
+				value = large_radicals
+			}
+		}
+		
+		# Fire only once
+		set_variable = british_fiji_sgc							# Change variable ****
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
