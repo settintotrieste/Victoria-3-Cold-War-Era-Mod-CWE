@@ -1,0 +1,92 @@
+#Cameroon
+french_decolonisation_indy.1 = {
+    type = country_event
+
+    title = french_entercountryname.indy.t 					# Title of the event; ADD LOCALISATION
+    desc = french_entercountryname.indy.d 					# Description of the event; ADD LOCALISATION
+    #flavor = french_entercountryname.indy.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		this = c:FRA											# Change TAG of the overlord ****
+		game_date >= 1960.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1970.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_republican_democracy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		c:TAG = { 												# Change TAG of the colony ****
+			is_direct_subject_of = THIS
+			is_not_sufficiently_independent = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = french_entercountryname_indy }			# CHANGE ****
+		
+    }
+    
+    option = {
+        name = french_decolonisation_indy.option.1				# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		c:TAG = { 												# Change TAG of the colony ****
+			make_independent = yes
+		}
+		
+		# Overlord create client state pact with colony
+		create_diplomatic_pact = {
+			country = c:TAG										# Change TAG ****
+			type = protectorate
+		}
+		
+		# Fire only once
+		set_variable = french_entercountryname_indy						# Change variable ****
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = french_decolonisation_indy.option.2					# REFUSE
+		default_option = yes
+		
+		c:TAG = {
+		
+			# Natives are angry!
+			every_scope_state = {
+				add_radicals = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+			#Colony is angry
+			change_relations = {
+				country = THIS
+				value = -100
+			}
+		}
+		
+		# Fire only once
+		set_variable = french_entercountryname_indy						# Change variable ****
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
