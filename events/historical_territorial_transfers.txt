@@ -50,6 +50,9 @@ historical_territorial_transfers.1 = {
 			value = -100
 		}
 		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
+		
 		ai_chance = { 
 			base = 10 
 		}
@@ -57,3 +60,277 @@ historical_territorial_transfers.1 = {
     }
 
 }
+
+#Somalia
+historical_territorial_transfers.2 = {
+    type = country_event
+
+    title = transfer_territory_somalia.t 				# Title of the event; ADD LOCALISATION
+    desc = transfer_territory_somalia.d 				# Description of the event; ADD LOCALISATION
+    #flavor = transfer_territory_somalia.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		this = c:GBR											# Change TAG of the overlord ****
+		game_date >= 1950.4.1									# START DATE: Date colony became self governing ****
+		game_date < 1960.4.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democratic_monarchy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Recipent conditions
+		c:ITA = { 												# Change TAG of the transferee ****
+			is_a_democracy = yes
+			is_at_war = no
+			is_sufficiently_independent = yes
+		}
+		
+		#Colony conditions
+		c:SOM = { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_subject_type = subject_type_mandate
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = british_somalia_htt }			# CHANGE ****
+		
+    }
+    
+    option = {
+        name = historical_territorial_transfers.option.1		# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Transfer subject to new overlord
+		c:SOM = { 												# Change TAG of the colony ****
+			make_independent = yes
+		}
+		
+		# Overlord create client state pact with colony
+		c:ITA = {
+			create_diplomatic_pact = {
+				country = c:SOM									# Change TAG ****
+				type = mandate
+			}
+		}
+		
+		# Fire only once
+		set_variable = british_somalia_htt						# Change variable ****
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_territorial_transfers.option.2		# Refuse land transfer request by FROM
+		default_option = yes
+		
+		# Reaction from colony
+		c:SOM = {
+		
+			# Natives are angry!
+			every_scope_state = {
+				add_radicals = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+			#Colony is angry
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
+		
+		# Fire only once
+		set_variable = british_somalia_htt						# Change variable ****
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
+
+#Eritrea
+historical_territorial_transfers.3 = {
+    type = country_event
+
+    title = transfer_territory_eritrea.t 				# Title of the event; ADD LOCALISATION
+    desc = transfer_territory_eritrea.d 				# Description of the event; ADD LOCALISATION
+    #flavor = transfer_territory_eritrea.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		this = c:GBR											# Change TAG of the overlord ****
+		game_date >= 1952.9.15									# START DATE: Date colony became self governing ****
+		game_date < 1962.9.15									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democratic_monarchy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Recipent conditions
+		exists = c:ETH
+		c:ETH = { 												# Change TAG of the transferee ****
+			is_a_monarchy = yes
+			is_at_war = no
+			is_sufficiently_independent = yes
+		}
+		
+		#Colony conditions
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:ERI										# Change TAG of the colony ****
+		}
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:eritrean }		# Change homeland identity to match colony to be released ****
+			is_incorporated = no								# State is a colony
+			#owner = THIS										# Overlord must own the state to be released
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = british_eritrea_htt }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH THIS SECTION
+		every_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:eritrean }	# Change homeland identity to match colony to be released ****
+				is_incorporated = no							# State is a colony
+				#contains_capital_of = c:ERI					# State is the capital of colony ****
+			}
+			save_scope_as = colonial_state
+		}
+		
+	}
+    
+    option = {
+        name = historical_territorial_transfers.option.1	# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = ERI										# Change TAG of country being released ****
+			origin = THIS									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_anti_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "guy_incognito_first_name"		# CHANGE
+					last_name = "guy_incognito_last_name"		# CHANGE
+					ruler = yes
+					#birth_date = 1910.1.1						# CHANGE
+					interest_group = ig_rural_folk				# CHANGE
+					ideology = ideology_democratic				# CHANGE
+					traits = {
+						charismatic								# CHANGE
+						persistent								# CHANGE
+						meticulous								# CHANGE
+					}
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:eritrean }	# Change homeland identity to match colony to be released ****
+				is_incorporated = no							# State is a colony
+		 	}
+			set_state_owner = c:ERI								# Change TAG to colony ****
+		}
+		
+		# Transferee receives colony
+		create_diplomatic_pact = {
+			country = c:ERI										# Change TAG ****
+			type = special_administrative_region
+		}
+		
+		# Fire only once
+		set_variable = british_eritrea_htt						# Change variable ****
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_territorial_transfers.option.2		# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:ETH
+			value = -100
+		}
+		
+		# Natives are angry!
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:eritrean }	# Change homeland identity to match colony to be released ****
+		 	}
+			add_radicals = {
+				culture = cu:eritrean							# Change culture ****
+				value = large_radicals
+			}
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
+		
+		# Fire only once
+		set_variable = british_eritrea_htt						# Change variable ****
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
+
+#Tangier International Zone
+
+#Trieste
+
+#International Authority for the Ruhr
