@@ -1,0 +1,103 @@
+namespace = historical_union_dissolution
+
+#Malaysia
+historical_union_dissolution.1 = {
+    type = country_event
+
+    title = malaysia_singapore.t 					# Title of the event; ADD LOCALISATION
+    desc = malaysia_singapore.d 					# Description of the event; ADD LOCALISATION
+    #flavor = malaysia_singapore.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		this = c:MSY											# Change TAG of the overlord ****
+		game_date >= 1965.8.9									# START DATE: Date colony became self governing ****
+		game_date < 1975.8.9									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Member state conditions
+		c:SGP = { 												# Change TAG of the transferee ****
+			is_direct_subject_of = ROOT
+			is_subject_type = subject_type_special_administrative_region
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = malaysia_singapore_hud }			# CHANGE ****
+		
+    }
+    
+    option = {
+        name = historical_union_dissolution.option.1			# Accept secesssion
+        highlighted_option = yes
+		
+		
+		#Subject becomes independent
+		c:SGP = { 												# Change TAG of the colony ****
+			make_independent = yes
+		}
+		
+		#British protection continues over expelled state
+		if = {
+			limit = {
+				c:MSY = { is_direct_subject_of = c:GBR }
+			}
+			c:GBR = {
+				create_diplomatic_pact = {
+					country = c:SGP
+					type = protectorate
+				}
+			}
+		}
+		
+		# Fire only once
+		set_variable = malaysia_singapore_hud					# Change variable ****
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_dissolution.option.2			# Refuse secesssion
+		default_option = yes
+		
+		# Internal unrest
+		every_scope_state = {
+			add_radicals = {
+				culture = cu:malay
+				value = large_radicals
+			}
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		c:SGP = {
+			every_scope_state = {
+				add_radicals = {
+					culture = cu:malay
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+		}
+		
+		# Fire only once
+		set_variable = malaysia_singapore_hud					# Change variable ****
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
