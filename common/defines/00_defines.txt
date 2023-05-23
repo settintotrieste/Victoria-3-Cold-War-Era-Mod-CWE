@@ -31,6 +31,7 @@ NAI = {
 	CHANGE_STRATEGY_INCREASE_WEEKLY_CHANCE = 20 # Chance per week of AI gaining a 'change point' towards rolling a new strategy (1 = 1%)
 	
 	CHANGE_STRATEGY_POLITICAL_NEW_RULER = 100 # How many 'change points' are added to each strategy when a country gets a new ruler
+	CHANGE_STRATEGY_POLITICAL_REGIME_CHANGE = 100 # How many 'change points' are added to each strategy when a country is the target of a regime change
 	CHANGE_STRATEGY_POLITICAL_LAW_ENACTED = 25 # How many 'change points' are added to politics strategy when a law is enacted
 	
 	CHANGE_STRATEGY_DIPLOMATIC_STATE_GAINED = 10 # How many 'change points' are added to diplomatic strategy when a new state is acquired
@@ -132,7 +133,14 @@ NAI = {
 	REFORM_GOVERNMENT_STICKYNESS = 1.25 				# Multiply score of the current government by this when checking whether to reform the government
 	REFORM_GOVERNMENT_PRO_IG_CLOUT_FACTOR = 1.0			# When scoring IGs for putting in government, add to the score multiplier (scaled by clout)
 	REFORM_GOVERNMENT_ANTI_IG_CLOUT_FACTOR = 1.0		# When scoring IGs for putting in government, add to the score divisor (scaled by clout)
-	REFORM_GOVERNMENT_BELOW_MIN_LEGITIMACY_FACTOR = 0.1 # If a government option has less than MIN_GOVERNMENT_LEGITIMACY, multiply its socre by this
+	REFORM_GOVERNMENT_BELOW_MIN_LEGITIMACY_FACTOR = 0.1 # If a government option has less than MIN_GOVERNMENT_LEGITIMACY, multiply its score by this
+	
+	MAX_CANDIDATES_TO_COMBINE_FOR_GOVERNMENT_ALTERNATIVES = 8	# Max number of interest groups or parties to combine when checking government alternatives. 8 will give 2^8=256 possible governments. Higher values will affect performance exponentially
+	
+	REGIME_CHANGE_NUM_GOVERNMENT_OPTIONS_TO_CHECK = 100 # Replaces REFORM_GOVERNMENT_NUM_OPTIONS_TO_CHECK when attempting to form a government during a regime change - it's fine for this value to be very high as it's executed rarely
+	REGIME_CHANGE_MIN_GOVERNMENT_LEGITIMACY = 5			# Replaces MIN_GOVERNMENT_LEGITIMACY when scoring IGs for government in a regime change
+	REGIME_CHANGE_REFORM_GOVERNMENT_STICKYNESS = 0.1 	# Replaces REFORM_GOVERNMENT_STICKYNESS when scoring IGs for government in a regime change
+	REGIME_CHANGE_REFORM_GOVERNMENT_CLOUT_FACTOR_MULTIPLIER = 100.0	# When scoring IGs for government in a regime change, multiply pro/anti AI clout factors by this
 	
 	IDEOLOGICAL_OPINION_LAW_APPROVAL_THRESHOLD = 0.5		# If ruling IGs have at least this much approval/disapproval for a law on average, it affects ideological opinion
 	IDEOLOGICAL_OPINION_STRONG_STANCE_THRESHOLD = 1.5		# If ruling IGs have at least this much approval/disapproval for a law on average, IDEOLOGICAL_OPINION_STRONG_STANCE_EFFECT_MULT comes into effect
@@ -358,10 +366,11 @@ NAI = {
 	WAR_GOAL_RANDOM_FACTOR = 2.0 					# The higher this is, the more random AI wargoal selection will be
 	WAR_GOAL_UNDESIRABLE_INFAMY_FACTOR = 0.5 		# Wargoal value is multiplied by this if it would bring the country above undesirable infamy levels
 	WAR_GOAL_UNACCEPTABLE_INFAMY_FACTOR = 0			# Wargoal value is multiplied by this if it would bring the country above unacceptable infamy levels
-	WAR_GOAL_NOT_PRIMARY_DEMAND_FACTOR = 0.5		# Wargoal value is multiplied by this if it would not be added as a primary demand
+	WAR_GOAL_NOT_PRIMARY_DEMAND_FACTOR = 0.5		# Wargoal value for sway offers is multiplied by this if it would not be added as a primary demand
 	
 	WAR_GOAL_MAKE_PRIMARY_DEMAND_SCORE_MULT = 0.75   # Multiply score of an existing wargoal by this when determining whether to make it into a primary demand instead of adding a new wargoal
-	WAR_GOAL_MIN_SCORE_TO_MAKE_PRIMARY_DEMAND = 40	 # A wargoal needs to have at least this much score (before applying WAR_GOAL_MAKE_PRIMARY_DEMAND_SCORE_MULT) for AI to make it a primary demand
+	WAR_GOAL_MAKE_PRIMARY_DEMAND_RETURN_STATE_SCORE_MULT = 1.25 # Overrides WAR_GOAL_MAKE_PRIMARY_DEMAND_SCORE_MULT for return state wargoals
+	WAR_GOAL_MIN_SCORE_TO_MAKE_PRIMARY_DEMAND = 30	 # A wargoal needs to have at least this much score (before applying WAR_GOAL_MAKE_PRIMARY_DEMAND_SCORE_MULT) for AI to make it a primary demand
 	
 	# Below data is used to determine which techs the AI will research
 	TECH_RANDOM_FACTOR = 1.0 # The higher this is, the more random AI tech research will be
@@ -514,9 +523,9 @@ NAI = {
 	MONEY_SPENDING_MIN_RATIO_TO_CONSIDER_GOLD_RESERVES = 0.8 # How low of a income-to-expenses ratio does the AI need to have to try to cut spending regardless of how plentiful its gold reserves are (when at peace)
 	MONEY_SPENDING_MIN_WEEKS_OF_GOLD_RESERVES_TO_NOT_REMOVE_SHOULD_HAVE = 20 # If we have enough gold reserves to maintain our current spending for this long, don't decrease spending on a 'should-have'
 	MONEY_SPENDING_MIN_WEEKS_OF_GOLD_RESERVES_TO_NOT_REMOVE_WANTS_TO_HAVE = 40 # If we have enough gold reserves to maintain our current spending for this long, don't decrease spending on a 'wants-to-have'
-	MONEY_SPENDING_MAX_WEEKS_OF_DEBT_TO_ADD_SHOULD_HAVE = 50 # If we have so much debt it will take more than this number of weeks to pay it off, don't increase spending on a 'should-have'
+	MONEY_SPENDING_MIN_GOLD_RESERVE_FRACTION_TO_ADD_SHOULD_HAVE = 0.1 # If we don't have at least this fraction of gold reserves, don't increase spending on a 'should-have'
 	MONEY_SPENDING_MIN_GOLD_RESERVE_FRACTION_TO_ADD_WANTS_TO_HAVE = 0.2 # If we don't have at least this fraction of gold reserves, don't increase spending on a 'wants-to-have'
-	MONEY_SPENDING_MIN_GOLD_RESERVE_FRACTION_TO_ADD_NICE_TO_HAVE = 0.2 # If we don't have at least this fraction of gold reserves, don't increase spending on a 'nice-to-have'
+	MONEY_SPENDING_MIN_GOLD_RESERVE_FRACTION_TO_ADD_NICE_TO_HAVE = 0.3 # If we don't have at least this fraction of gold reserves, don't increase spending on a 'nice-to-have'
 	
 	MONEY_SPENDING_LAND_THREAT_THRESHOLD = 0.25 # If a hostile country has a more than this much larger army than AI does, it wants to increase military spending
 	MONEY_SPENDING_NAVY_THREAT_THRESHOLD = 0.50 # If a hostile country has a more than this much larger navy than AI does, it wants to increase military spending
@@ -605,11 +614,8 @@ NAI = {
 	PRODUCTION_BUILDING_FAVORED_GOODS_FACTOR = 0.5 # Add this value to a building for each unit of money worth of building goods output that the AI favors
 	PRODUCTION_BUILDING_DISFAVORED_GOODS_FACTOR = -0.25 # Add this value to a building for each unit of money worth of building goods output that the AI disfavors
 	PRODUCTION_BUILDING_MISSING_QUALIFICATIONS_MULT = 0.50 # Multiply score by this if there's not enough qualifications to staff the building (disabled for now)
-	PRODUCTION_BUILDING_MISSING_INFRASTRUCTURE_DIV = 0.25 # Divide score by ( 1 + this * number of missing infrastructure after adding this building )
 	PRODUCTION_BUILDING_DESIRED_INFRASTRUCTURE_SURPLUS = 2 # If infrastructure 'surplus' in state is less than this, AI wants to improve it
-	PRODUCTION_BUILDING_BELOW_DESIRED_INFRASTRUCTURE_FACTOR = 10000 # Add this to score if the building would improve infrastructure and it's below desired threshold
 	PRODUCTION_BUILDING_EXCESSIVE_INFRASTRUCTURE_SURPLUS = 10 # If infra 'surplus' in state is at least this, AI doesn't want to improve it
-	PRODUCTION_BUILDING_ABOVE_EXCESSIVE_INFRASTRUCTURE_MULT = 0.25 # Multiply score by this if the building would improve infrastructure and it's above excessive threshold
 	PRODUCTION_BUILDING_REDUCE_SHORTAGE_MULT = 5 # Multiply score by this if we're reducing the state region's shortages
 	PRODUCTION_BUILDING_INCREASE_SHORTAGE_MULT = 0.01 # Multiply score by this if we're increasing the state region's shortages
 	PRODUCTION_BUILDING_OTHER_BUILDING_TYPES_UNDER_CONSTRUCTION_DIV = 0.5 # Divide score by (1 + this * number of other building types queued in the state) 
@@ -627,7 +633,6 @@ NAI = {
 	PRODUCTION_BUILDING_AUTONOMOUS_INVESTMENT_PRODUCED_MODIFIER_FACTOR_MULT = 0.75 # Multiplies value from produced modifiers for autonomous investment pool constructions
 	PRODUCTION_BUILDING_AUTONOMOUS_INVESTMENT_PRICE_COMPENSATION_FACTOR_MULT = 1.0 # Multiplies high/low price compensation factors for autonomous investment pool constructions
 	PRODUCTION_BUILDING_AUTONOMOUS_INVESTMENT_BELOW_DESIRED_INFRASTRUCTURE_FACTOR_MULT = 0.25 # Multiplies PRODUCTION_BUILDING_BELOW_DESIRED_INFRASTRUCTURE_FACTOR for autonomous investment pool constructions
-	PRODUCTION_BUILDING_AUTONOMOUS_INVESTMENT_ABOVE_EXCESSIVE_INFRASTRUCTURE_FACTOR_MULT = 1.0 # Multiplies PRODUCTION_BUILDING_ABOVE_EXCESSIVE_INFRASTRUCTURE_MULT for autonomous investment pool constructions
 	PRODUCTION_BUILDING_AUTONOMOUS_INVESTMENT_LOW_INVESTMENT_FACTOR = 10 	# If investment proportion of the investing pop type is low (see below), multiply building value by this
 	PRODUCTION_BUILDING_AUTONOMOUS_INVESTMENT_LOW_INVESTMENT_PROPORTION = 0.66  # If the proportion of expected to previous investments by a pop type is lower or equal to this, apply the above factor
 	PRODUCTION_BUILDING_AUTONOMOUS_INVESTMENT_LOW_INVESTMENT_RESET_TIME = 12  # Every this number of months, reset the historical construction values for each pop type to ensure system can handle significant economic changes over time
@@ -850,19 +855,19 @@ NPolitics = {
 	CHANGED_LAW_APPROVAL_MONTHS = 60 # How many months does the approval/disapproval for a law change linger after said law chain
 	
 	LAW_ENACTMENT_MIN_TOTAL_DAYS = 1		# Minimum number of total days that an enactment checkpoint can take [>=1]
-	LAW_ENACTMENT_DEFAULT_BASE_DAYS = 180	# Default number of base days required to reach an enactment checkpoint [>=1]
-	LAW_ENACTMENT_COOLDOWN_DAYS = 365		# When an enactment fails, or is manually stopped after at least one checkpoint, that law can't be tried to be enacted for this many days [>=0]
+	LAW_ENACTMENT_DEFAULT_BASE_DAYS = 100	# Default number of base days required to reach an enactment checkpoint [>=1]
+	LAW_ENACTMENT_COOLDOWN_DAYS = 730		# When an enactment fails, or is manually stopped after at least one checkpoint, that law can't be tried to be enacted for this many days [>=0]
 	LAW_ENACTMENT_ADVANCE_FACTOR = 2		# The _base_ advance chance is the success chance multiplied by this factor [>=1]
 	LAW_ENACTMENT_RULER_IDEOLOGY_EFFECT = 0.05 # Ruler ideology has this impact on a law's chance to pass or stall depending on relative approval
-	LAW_ENACTMENT_MOVEMENT_SUPPORT_PASS_EFFECT = 0.01 # Movement support has this impact on a law's chance to pass	
-	LAW_ENACTMENT_MOVEMENT_SUPPORT_STALL_EFFECT = 0.01 # Movement support has this impact on a law's chance to stall	
+	LAW_ENACTMENT_MOVEMENT_SUPPORT_PASS_EFFECT = 0.01 # Movement support has this impact on a law's chance to pass
+	LAW_ENACTMENT_MOVEMENT_SUPPORT_STALL_EFFECT = 0.01 # Movement support has this impact on a law's chance to stall
+	LAW_ENACTMENT_MAX_PHASES = 3			# Law enactment is successfully completed when it advances to this phase
+	LAW_ENACTMENT_MAX_SETBACKS = 3			# Law enactment fails when the setback count reaches this number
 	
 	STATE_BUREAUCRACY_BASE_COST = 10		# The base cost per incorporated state
 	STATE_BUREAUCRACY_POP_BASE_COST = 4		# The base BUR multiplier per population multiple
 	STATE_BUREAUCRACY_POP_MULTIPLE = 100000	# Number of people BUR cost is based on
 	MINIMUM_INVESTMENT_COST = 10			# The absolute minimum cost in BUR per investment level
-	
-	RETIRE_COMMANDER_CONSEQUENCE_DURATION = 5	# Number of years during which an Interest Group will be concerned about the retirement of one of their Commanders
 	
 	POWERFUL_IG_THRESHOLD = 0.20		# Interest groups with more Clout than this are considered to be influential
 	POWERFUL_IG_CUTOFF = 0.18		# Powerful interest groups with less Clout than this will stop being influential
@@ -880,7 +885,7 @@ NPolitics = {
 	POLITICAL_MOVEMENT_START_CHANCE_SCALED = 0.05 # Additional chance of a political movement starting scaled with potential support
 	POLITICAL_MOVEMENT_START_CHANCE_NUM_MOVEMENTS_DIVISOR = 2 # If we already have movements, divide start chance of a new movement by ( 1 + this * cur num movements )
 	POLITICAL_MOVEMENT_TO_PRESERVE_CHECK_TO_START_CHANCE = 100 # Chance that a political movement is checked at all on a daily basis if it's a movement to preserve (this can be 100 as movements to preserve are much rarer to check)
-	POLITICAL_MOVEMENT_TO_RESTORE_CHECK_TO_START_CHANCE = 0.2 # Chance that a political movement is checked at all on a daily basis if it's a movement to restore (for performance reasons)
+	POLITICAL_MOVEMENT_TO_RESTORE_CHECK_TO_START_CHANCE = 0.4 # Chance that a political movement is checked at all on a daily basis if it's a movement to restore (for performance reasons)
 	POLITICAL_MOVEMENT_TO_ENACT_CHECK_TO_START_CHANCE = 0.1 # Chance that a political movement is checked at all on a daily basis if it's a movement to enact (for performance reasons)
 	POLITICAL_MOVEMENT_MIN_SUPPORT_TO_START = 10 # If a political movement would have less support than this, it can't start
 	POLITICAL_MOVEMENT_MIN_SUPPORT_TO_REMAIN = 5 # If a political movement falls to less support than this, disband it
@@ -901,11 +906,16 @@ NPolitics = {
 	
 	REVOLUTION_SUPPORT_STATE_MULTIPLIER = 0.015		# A revolution will have the backing of ( support * this fraction of states )
 	REVOLUTION_MAX_STATE_FRACTION = 0.75			# A revolution cannot be supported by more than this fraction of the states in the country
+	REVOLUTION_MAX_PROGRESS_AT_CHECKPOINT = 0.25	# A revolution can advance at most this amount per checkpoint, regardless of radicalism
 	MIN_RADICALISM_FOR_REVOLUTION_PROGRESSION = 50	# A political movement must have this much radicalism for a revolution to start organizing
-	MIN_RADICALISM_FOR_REVOLUTION_START = 100		# At this amount of radicalism, allow full speed revolutionary progression and a revolution to start
+	MIN_RADICALISM_FOR_REVOLUTION_START = 100		# Allow a revolution to start at this amount of radicalism or more
 	MAX_PROGRESS_FOR_UNSUPPORTED_REVOLUTIONS = 0.5  # Revolutions from movements that aren't supported by any IGs won't progress further than this
-	REVOLUTIONS_PROGRESS_DECAY = 0.01				# Revolution meter without sufficient support
+	REVOLUTIONS_PROGRESS_DECAY = 0.1				# The progress of revolutions with insufficient support decays at this rate
 	REVOLUTIONARY_ADJACENCY_BIAS = 4				# higher state selection bias for adjacent states
+	REVOLUTION_PROGRESS_RADICALISM_WEIGHT = 0.2  # revolutions gain progress based on the movement's radicalism, multiplied by this weight (may be affected by modifiers)
+	REVOLUTION_CHECKPOINT_INTERVAL_BASE_WEEKS = 8   # revolution progress will be updated every this many weeks (may be affected by modifiers)
+	SECESSION_CHECKPOINT_INTERVAL_BASE_WEEKS = 1	# secession progress will be updated every this many weeks (may be affected by modifiers)
+	CIVIL_WAR_CHECKPOINT_INTERVAL_MAXIMUM_WEEKS = 52	# This serves as a limit, to protect modifiers from reducing the progress speed to zero
 	
 	# Revolutionary states scoring
 	REVOLUTION_STATE_WEIGHT_LOCAL_CLOUT_SHARE = 1.0	 # Local clout weight at the moment of revolution secession
@@ -980,6 +990,7 @@ NEconomy = {
 	NUM_TIMES_TO_INITIALIZE_WEALTH = 10					
 	
 	COUNTRY_GDP_MODIFIER_DIVISOR = 1000					# Scale the country_gdp static modifier by this divisor
+	COUNTRY_GDP_MODIFIER_MAX_MULTIPLIER = 200000		# The country_gdp modifier multiplier cannot be higher than this
 	
 	ECONOMY_OF_SCALE_START_LEVEL = 2					# Level at which buildings start getting economy of scale bonuses. Levels lower than this value provide no bonus [>=1]
 	
@@ -1063,6 +1074,7 @@ NEconomy = {
 	SUBSIDIES_MIN_GAIN = 0						# If a building is subsidized, it will always collect enough subsidies to ensure at least this weekly cash reserve growth
 	HIRING_RATE = 0.1 							# Weekly hiring limit applied in a building per profession as a ratio of full employment
 	EMPLOYMENT_PROPORTIONALITY_LIMIT = 0.1		# A building cannot have a difference of ratio of full employment between any two professions greater than this limit
+	MINIMUM_EMPLOYEES = 10						# If a building has fewer employees than this, it will always attempt to hire
 	BUILDING_RAISE_WAGES_MIN_RELEVANT_POP_SIZE = 50 # Pops with less workforce than this are ignored when checking whether a profitable building should raise wages because of radicalizing workers
 	BUILDING_RAISE_WAGES_DISCRIMINATION_FACTOR = 0.66 # Profitable buildings only care to raise wages for discriminated pops if their wealth to expected SoL ratio is less than this
 	BUILDING_LOWER_WAGES_TARGET_WEALTH_MULT = 1.33 # Buildings will consider lowering wages if all significant pops working in them have this * the target wealth to expected SoL ratio
@@ -1092,6 +1104,10 @@ NEconomy = {
 	GOLD_RESERVE_RETURNS_FACTOR = 1				# How rapidly diminishing returns will cause gold reserves to drop off after the limit has been reached (higher value increases penalty)
 	RETOOLING_WEEKS = 0							# How long it takes for a building to get back up to full production after switching a production method
 	BUILDING_TIMED_MODIFIER_WEEKS = 52 			# Duration of a timed modifier which is applied after switching a production method
+	
+	BUILDING_PAUSE_HIRES_CASH_RESERVES_THRESHOLD = 0.75 	# If cash reserves are less than this, buildings should consider pausing new hires to wait for cash reserves
+	BUILDING_MIN_EMPLOYMENT_FRACTION_TO_PAUSE_HIRES = 0.1 	# If building has at least this employment, it's OK to pause hiring
+	BUILDING_MAX_PROFIT_TO_PAUSE_HIRES = 0.2				# If building is making less than this fraction of revenue in profit, it's OK to pause hiring  
 	
 	URBANIZATION_PER_BUILDING = 100
 	
@@ -1179,6 +1195,7 @@ NMilitary = {
 	BATTLE_MAX_CASUALTY_DISADVANTAGE_PENALTY = 1.0  # a limit for the battle_casualties_disadvantage static modifier. 1.0 means a maximum of 100% penalty is applied.
 	MAX_CE_ADVANTAGE = 1
 	MIN_MANPOWER_CASUALTY_PER_ROUND = 5					# Minimum manpower losses per round
+	MIN_USABLE_MANPOWER = 100						# Lowest manpower engaged in a battle limit (otherwise determined by combat width)
     GENERAL_TRAVEL_PIXELS_TO_DAYS_SCALE = 0.045     # Used to convert a travel distance from pixels to days. Example: a travel of 500px becomes 500 * 0.05 = 25 days
     GENERAL_TRAVEL_CAP = 50                         # Limits the travel time to GENERAL_TRAVEL_CAP days. The overseas penalty (GENERAL_TRAVEL_OVERSEAS_SCALE) is still applied.
     GENERAL_AUTO_TRAVEL_MAX_DAYS = 30               # Disables auto traveling if the travel takes more than `GENERAL_AUTO_TRAVEL_MAX_DAYS`. Makes general standby the nearest HQ.
@@ -1345,7 +1362,7 @@ NDiplomacy = {
 	WAR_GOAL_MAKE_DOMINION_SUBJECT_TYPE = "subject_type_dominion"
 	WAR_GOAL_MAKE_VASSAL_SUBJECT_TYPE = "subject_type_vassal"	
 	WAR_GOAL_FORCE_RECOGNITION_FROM_TYPE = "unrecognized"
-	WAR_GOAL_FORCE_RECOGNITION_TO_TYPE = "colonial"
+	WAR_GOAL_FORCE_RECOGNITION_TO_TYPE = "recognized"
 	WAR_GOAL_FORCE_RECOGNITION_TARGET_RANK = "great_power"
 	WAR_GOAL_FORCE_RECOGNITION_ACTOR_RANK = "unrecognized_major_power"
 	WAR_GOAL_TREATY_PORT_BUILDING_LEVEL = 1
@@ -1636,7 +1653,7 @@ NCharacters = {
 	RULER_AGE_FOR_HEIR_CHANCE_BOOST = 30 # A year after this age start boosting chance of heir generation
 	RULER_HEIR_GENERATION_CHANCE = 0.001 # Per day
 	RULER_HEIR_CHANCE_BOOST_SCALE = 0.001 # Added to RULER_HEIR_CHANCE_BOOST for each year after RULER_AGE_FOR_HEIR_CHANCE_BOOST
-	AGE_GENERATION_STARTVAL = 30
+	AGE_GENERATION_STARTVAL = 20
 	AGE_GENERATION_DICE_ROLL_MAGNITUDE = 6
 	AGE_GENERATION_NUM_DICE_ROLLS = 5
 	RECRUIT_COMMANDER_NUM_OPTIONS = 3
@@ -1660,21 +1677,29 @@ NCharacters = {
 	VOIDED_CHARACTER_DEFAULT_DURATION = 12 # Default months a character will be in the void before being deleted
 
 	INHERIT_RECESSIVE_GENE_CHANCE = 0.25 # Probability of a recessive gene being picked as an heir's dominant/recessive gene. Only used for portraits.
-	
+
+	AGITATOR_EXPECTED_SPAWN_INTERVAL_0_LITERACY = 12 # At 0% literacy, a new agitator is expected to spawn in a given country once every this many years. (supports decimal values)
+	AGITATOR_EXPECTED_SPAWN_INTERVAL_100_LITERACY = 2 # At 100% literacy, a new agitator is expected to spawn in a given country once every this many years. (supports decimal values)
+	AGITATOR_MOVEMENT_SUPPORT_WEIGHT = 0.75 # Political movements will gain support from agitators' popularity multiplied by this weight
+	AGITATOR_MOVEMENT_POPULARITY_THRESHOLD = 15 # Agitators whose popularity is at or lower than this threshold will not be considered when starting/joining political movements
+
 	### TRAIT GENERATION
 	# Every week, a character's Expected Trait Value meter increases by the specified amount below depending on their role and what they're doing (Commanders also gain the Activity Level from their Orders)
 	# Every week, a percentile die is rolled against ( Expected Trait Value meter - Current Trait Value . If the die rolls under the current value, a new random trait will be added, if a valid one exists.
 	
 	WEEKLY_CONDITION_CHANCE = 0.03					# The chance that a character will get a condition each week (1 = 1%)
 	MAX_EXPECTED_TRAIT_VALUE = 12.0					# The maximum amount of Trait Value a character can develop normally (note: not adhered to by add_trait effect)
-	MAX_TRAITS_PERSONALITY = 1						# The max amount of Personality Traits a character can develop normally (note: not adhered to by add_trait effect)
-	MAX_TRAITS_SKILL = 3							# The max amount of Skill Traits a character can develop normally (note: not adhered to by add_trait effect)
+	MAX_TRAITS_PERSONALITY = 2						# The max amount of Personality Traits a character can develop normally (note: not adhered to by add_trait effect)
+	MAX_TRAITS_SKILL = 2							# The max amount of Skill Traits a character can develop normally (note: not adhered to by add_trait effect)
 	MAX_TRAITS_CONDITION = 2						# The max amount of Condition Traits a character can develop normally (note: not adhered to by add_trait effect)
-	DEFAULT_TRAIT_GAIN = 0.005 						# Every character's Expected Traits meter increases by this much per week by default
-	TRAIT_GAIN_POLITICIAN_POWERFUL = 0.01			# Powerful Politicians Expected Traits meter increases by this much per week
-	TRAIT_GAIN_POLITICIAN_MARGINALIZED = 0.001		# Marginalized Politicians Expected Traits meter increases by this much per week
-	TRAIT_GAIN_RULER = 0.005						# Rulers Expected Traits meter increases by this much per week
-	TRAIT_GAIN_COMMANDER_AT_WAR_ADDITIONAL = 0.01	# Commanders increase their Expected Traits Value meter this much *extra* each week while at war, in addition to the Activity Level of their Order
+	
+	TRAIT_GAIN_DIVISOR = 100.0						# Final trait gain is always divided by this so we don't have to use all the decimals
+	DEFAULT_TRAIT_GAIN = 0.25						# Every character's Expected Traits meter increases by this much per week by default
+	TRAIT_GAIN_POLITICIAN_POWERFUL = 0.1			# Powerful Politicians Expected Traits meter increases by this much *extra* each week
+	TRAIT_GAIN_RULER = 0.1							# Rulers Expected Traits meter increases by this much *extra* each week
+	TRAIT_GAIN_COMMANDER_RECRUITABLE = 0.05			# Recruitable offer commanders Expected Traits meter increases by this much per week, overrides all other factors
+	TRAIT_GAIN_IN_EXILE_POOL = 0.1					# Characters in the exile pool Expected Traits meter increases by this much per week, overrides all other factors
+	TRAIT_GAIN_VOIDED = 0.0							# Voided characters Expected Traits meter increases by this much per week, overrides all other factors
 
 	# The following parameters determine how character life expectancy is calculated. The calculation is based on a normal distribution with parameters:
 	# µ = CHARACTER_LIFE_EXPECTANCY_BASE_YEARS
@@ -1741,9 +1766,9 @@ NWar = {
 	AUTO_CAPITULATE_WAR_SUPPORT = -100 # When war support is this low, the country will auto capitulate
 	DAYS_BETWEEN_WAR_EXHAUSTION = 7 # Every this many days war support will be reduced by the war exhaustion formula
 	WAR_EXHAUSTION_BASE = 0.25
-	WAR_EXHAUSTION_KIA_FACTOR = 20.0 # Scaled by casualties compared to total manpower
-	WAR_EXHAUSTION_KIA_BASE_MULTIPLIER = 0.1	# War Exhaustion from casualties is always multiplied by at least this
-	WAR_EXHAUSTION_KIA_BATTLES_LOST_MULTIPLIER = 0.25 	# At 100% of battles lost by our side, War Exhaustion from casualties is further multiplied by this 
+	WAR_EXHAUSTION_KIA_FACTOR = 5.0 # Scaled by casualties compared to total manpower
+	WAR_EXHAUSTION_KIA_BASE_MULTIPLIER = 0.25	# War Exhaustion from casualties is always multiplied by at least this
+	WAR_EXHAUSTION_KIA_BATTLES_LOST_MULTIPLIER = 0.75 	# At 100% of battles lost by our side, War Exhaustion from casualties is further multiplied by this 
 	WAR_EXHAUSTION_TURMOIL_FACTOR = 2.0 # At 100% turmoil
 	WAR_EXHAUSTION_CONTESTED_ENEMY_WARGOALS = 1.0
 	OCCUPATION_STATE_BASE_WEIGHT = 1
@@ -1752,9 +1777,9 @@ NWar = {
 	
 	STATE_CONQUEST_HOMELAND_AND_CLAIM_RADICALIZATION = 0.1
 	STATE_CONQUEST_HOMELAND_AND_CLAIM_DEMILITARIZATION = 0.25
-	STATE_CONQUEST_HOMELAND_OR_CLAIM_RADICALIZATION = 0.2
-	STATE_CONQUEST_HOMELAND_OR_CLAIM_DEMILITARIZATION = 0.5
-	STATE_CONQUEST_DEFAULT_RADICALIZATION = 0.4
+	STATE_CONQUEST_HOMELAND_OR_CLAIM_RADICALIZATION = 0.3
+	STATE_CONQUEST_HOMELAND_OR_CLAIM_DEMILITARIZATION = 0.5	
+	STATE_CONQUEST_DEFAULT_RADICALIZATION = 0.5
 	STATE_CONQUEST_DEFAULT_DEMILITARIZATION = 0.75
 
 	NUM_PROVINCES_FOR_ADVANCEMENT_SELECTION = 5		# After having computed weights for possible advancement provinces using front_battle_province_weight, filter out all but the X top weighted provinces
