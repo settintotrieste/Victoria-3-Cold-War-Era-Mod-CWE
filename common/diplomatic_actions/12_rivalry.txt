@@ -3,7 +3,7 @@
 	should_notify_third_parties = yes
 
 	unlocking_technologies = {
-		international_relations
+		tech_geopolitics_1
 	}
 	
 	potential = {
@@ -81,22 +81,34 @@
 				}				
 				num_rivals < 1
 			}
-			has_attitude = {
-				who = scope:target_country
-				attitude = antagonistic
-			}
 			OR = {
-				has_strategic_adjacency = scope:target_country
 				AND = {
-					country_rank = scope:target_country.country_rank
-					OR = {
-						country_rank = rank_value:great_power
-						capital.region = scope:target_country.capital.region
+					has_attitude = {
+						who = scope:target_country
+						attitude = antagonistic
 					}				
-				}	
+					OR = {
+						AND = {
+							country_rank >= scope:target_country.country_rank
+							has_strategic_adjacency = scope:target_country					
+						}
+						AND = {
+							country_rank = scope:target_country.country_rank
+							OR = {
+								country_rank = rank_value:great_power
+								capital.region = scope:target_country.capital.region
+							}				
+						}					
+					}						
+				}
 				AND = {
+					NOT = {
+						has_attitude = {
+							who = scope:target_country
+							attitude = conciliatory
+						}						
+					}
 					scope:target_country = {
-						is_ai = no
 						has_diplomatic_pact = {
 							who = root
 							type = rivalry
@@ -108,36 +120,29 @@
 		}
 		
 		will_break = { 
-			OR = {
-				NOR = {
-					has_attitude = {
-						who = scope:target_country
-						attitude = antagonistic
-					}
-					has_attitude = {
-						who = scope:target_country
-						attitude = belligerent
-					}			
-				}							
-				NOR = {
-					has_strategic_adjacency = scope:target_country
-					AND = {
-						country_rank = scope:target_country.country_rank
-						OR = {
-							country_rank = rank_value:great_power
-							capital.region = scope:target_country.capital.region
-						}				
-					}	
-					AND = {
-						scope:target_country = {
-							is_ai = no
-							has_diplomatic_pact = {
-								who = root
-								type = rivalry
-							}										
-						}					
-					}				
+			NOR = {
+				has_attitude = {
+					who = scope:target_country
+					attitude = antagonistic
 				}
+				has_attitude = {
+					who = scope:target_country
+					attitude = belligerent
+				}				
+			}
+			NAND = {
+				NOT = {
+					has_attitude = {
+						who = scope:target_country
+						attitude = conciliatory
+					}						
+				}
+				scope:target_country = {
+					has_diplomatic_pact = {
+						who = root
+						type = rivalry
+					}										
+				}					
 			}
 		}			
 	}
