@@ -191,3 +191,107 @@ american_decolonisation_indy.2 = {
     }
 
 }
+
+#Plaza Accord
+american_decolonisation_indy.3 = {
+    type = country_event
+	placement = ROOT
+    title = american_germany_japan.indy.t 					# Title of the event; ADD LOCALISATION
+    desc = american_germany_japan.indy.d 					# Description of the event; ADD LOCALISATION
+    #flavor = american_germany_japan.indy.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		this = c:USA											# Change TAG of the overlord ****
+		game_date >= 1985.9.22									# START DATE: Date colony became self governing ****
+		game_date < 1995.9.22									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		OR = { 
+			c:WGR = { 											# Change TAG of the colony ****
+				is_direct_subject_of = ROOT
+				is_subject_type = subject_type_satellite
+			}
+			c:JAP = { 											# Change TAG of the colony ****
+				is_direct_subject_of = ROOT
+				is_subject_type = subject_type_satellite
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = american_germany_japan_indy }			# CHANGE ****
+		
+    }
+    
+    option = {
+        name = american_decolonisation_indy.option.1				# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		if = { 														# Change TAG of the colony ****
+			limit = { has_subject_relation_with = c:WGR }
+			remove_diplomatic_pact = {
+				country = c:WGR
+				type = satellite
+			}
+			create_diplomatic_pact = {
+				country = c:WGR										# Change TAG ****
+				type = protectorate
+			}
+		}
+		
+		# Colony becomes independent
+		if = { 														# Change TAG of the colony ****
+			limit = { has_subject_relation_with = c:JAP }
+			remove_diplomatic_pact = {
+				country = c:JAP
+				type = satellite
+			}
+			create_diplomatic_pact = {
+				country = c:JAP										# Change TAG ****
+				type = protectorate
+			}
+		}
+		
+		# Fire only once
+		set_variable = american_germany_japan_indy					# Change variable ****
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = american_decolonisation_indy.option.2					# REFUSE
+		default_option = yes
+		
+		#Minor discontent in USA
+		every_scope_state = {
+			add_radicals = {
+				value = small_radicals
+			}
+		}
+		
+		# Fire only once
+		set_variable = american_germany_japan_indy						# Change variable ****
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
