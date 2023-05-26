@@ -1,0 +1,350 @@
+﻿namespace = wedding
+
+wedding.1 = {
+	type = country_event
+	placement = ROOT
+	
+	title = wedding.1.t
+	desc = wedding.1.d
+	flavor = wedding.1.f
+	
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:royal_marriage_character
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+	
+	duration = 3
+	
+	trigger = {
+		# triggered by marriage.2
+		exists = scope:royal_marriage_character
+		exists = scope:marriage_country
+	}
+
+	immediate = {
+		capital = {
+			save_scope_as = capital_scope
+		}
+		random_scope_character = {
+			limit = {
+				OR = {
+					is_heir = yes
+					is_ruler = yes
+				}
+				age > 16
+				NOT = { has_variable = is_married }
+			}
+			save_scope_as = royal_marriage_character
+		}
+		scope:marriage_country = {
+			ruler = {
+				save_scope_as = foreign_ruler
+			}
+		}
+	}
+
+	option = { # private wedding for international nobility
+		name = wedding.1.a
+		default_option = yes
+		add_modifier = { # influence mult
+			name = royal_marriage
+			months = normal_modifier_time
+		}
+	}
+
+	option = { # public wedding for the masses
+		name = wedding.1.b
+		scope:royal_marriage_character = {
+			add_modifier = { # popularity
+				name = marriage_popularity
+				months = very_long_modifier_time
+			}
+		}
+	}
+}
+
+# Search for a noble spouse
+wedding.2 = {
+	type = country_event
+	placement = ROOT
+	
+	title = wedding.2.t
+	desc = wedding.2.d
+	flavor = wedding.2.f
+	
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:royal_marriage_character
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+	
+	duration = 3
+	
+	trigger = {
+		# triggered by marry_ruler_or_heir interaction
+	}
+
+	immediate = {
+		random_scope_character = {
+			limit = {
+				has_variable = spouse_seeker
+			}
+			save_scope_as = royal_marriage_character
+			set_variable = is_married
+			remove_variable = spouse_seeker
+		}
+		random_country = {
+			limit = {
+				NOT = { THIS = ROOT }
+				has_law = law_type:law_HOS_monarch OR = { has_law = law_type:law_HOG_none has_law = law_type:law_HOG_president_prime_minister }
+				religion = scope:actor.religion
+				ruler = {
+					age > 36
+					NOT = {
+						has_variable = marriage_target
+					}
+				}
+			}
+			save_scope_as = marriage_country_1
+			ruler = {
+				save_scope_as = foreign_ruler_1
+			}
+		}
+		if = {
+			limit = {
+				exists = scope:marriage_country_1
+				any_country = {
+					NOT = { THIS = ROOT }
+					NOT = { THIS = scope:marriage_country_1 }
+					has_law = law_type:law_HOS_monarch OR = { has_law = law_type:law_HOG_none has_law = law_type:law_HOG_president_prime_minister }
+					religion = scope:actor.religion
+					ruler = {
+						age > 36
+						NOT = { has_variable = marriage_target }
+					}
+				}
+			}
+			random_country = {
+				limit = {
+					NOT = { THIS = ROOT }
+					NOT = { THIS = scope:marriage_country_1 }
+					has_law = law_type:law_HOS_monarch OR = { has_law = law_type:law_HOG_none has_law = law_type:law_HOG_president_prime_minister }
+					religion = scope:actor.religion
+					ruler = {
+						age > 36
+						NOT = {
+							has_variable = marriage_target
+						}
+					}
+				}
+				save_scope_as = marriage_country_2
+				ruler = {
+					save_scope_as = foreign_ruler_2
+				}
+			}
+			if = { #In order for this to be searched for, marriage country 2 must also exist.
+				limit = {
+					exists = scope:marriage_country_2
+					any_country = {
+						NOT = { THIS = ROOT }
+						NOT = { THIS = scope:marriage_country_1 }
+						NOT = { THIS = scope:marriage_country_2 }
+						has_law = law_type:law_HOS_monarch OR = { has_law = law_type:law_HOG_none has_law = law_type:law_HOG_president_prime_minister }
+						religion = scope:actor.religion
+						ruler = {
+							age > 36
+							NOT = { has_variable = marriage_target }
+						}
+					}
+				}
+				random_country = {
+					limit = {
+						NOT = { THIS = ROOT }
+						NOT = { THIS = scope:marriage_country_1 }
+						NOT = { THIS = scope:marriage_country_2 }
+						relations:root >= 0
+						has_law = law_type:law_HOS_monarch OR = { has_law = law_type:law_HOG_none has_law = law_type:law_HOG_president_prime_minister }
+						religion = scope:actor.religion
+						ruler = {
+							age > 36
+							NOT = {
+								has_variable = marriage_target
+							}
+						}
+					}
+					save_scope_as = marriage_country_3
+					ruler = {
+						save_scope_as = foreign_ruler_3
+					}
+				}
+			}
+		}
+	}
+
+	option = { # marry noble 1
+		name = wedding.2.a
+		default_option = yes
+		scope:marriage_country_1 = {
+			ruler = {
+				set_variable = marriage_target
+			}
+			save_scope_as = marriage_country
+			change_relations = {
+				country = ROOT
+				value = 20
+			}
+		}
+		trigger_event = {
+			id = wedding.1
+			#days = 7
+		}
+	}
+
+	option = { # marry noble 2
+		name = wedding.2.b
+		trigger = {
+			exists = scope:marriage_country_2
+		}
+		scope:marriage_country_2 = {
+			ruler = {
+				set_variable = marriage_target
+				save_scope_as = marriage_country_ruler
+			}
+			save_scope_as = marriage_country
+			change_relations = {
+				country = ROOT
+				value = 20
+			}
+		}
+		trigger_event = {
+			id = wedding.1
+			popup = yes
+		}
+	}
+
+	option = { # marry noble 3
+		name = wedding.2.c
+		trigger = {
+			exists = scope:marriage_country_3
+		}
+		scope:marriage_country_3 = {
+			ruler = {
+				set_variable = marriage_target
+				save_scope_as = marriage_country_ruler
+			}
+			save_scope_as = marriage_country
+			change_relations = {
+				country = ROOT
+				value = 20
+			}
+		}
+		trigger_event = {
+			id = wedding.1
+			popup = yes
+		}
+	}
+}
+
+wedding.3 = {
+	type = country_event
+	placement = ROOT
+	
+	title = wedding.3.t
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = wedding.3.d1
+				trigger = {
+					ruler.interest_group = {
+						OR = {
+							ig_approval <= angry
+							is_marginal = yes
+						}
+					}
+				}
+			}
+			triggered_desc = {
+				desc = wedding.3.d2
+				trigger = {
+					ruler = {
+						popularity <= -50
+					}
+				}
+			}
+			triggered_desc = {
+				desc = wedding.3.d3
+				trigger = {
+					ruler = {
+						OR = {
+							has_trait = psychological_affliction
+							age >= 75
+						}
+					}
+				}
+			}
+		}
+	}
+	flavor = wedding.3.f
+
+	gui_window = event_window_2char
+
+	left_icon = scope:abdicating_monarch
+	right_icon = scope:heir_scope
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/2Characters"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+	
+	duration = 3
+
+	dlc = dlc004
+	
+	trigger = {
+		# triggered by abdicate_monarch interaction
+	}
+
+	immediate = {
+		ruler = {
+			save_scope_as = abdicating_monarch
+			interest_group = {
+				save_scope_as = monarch_ig
+			}
+		}
+		heir = {
+			save_scope_as = heir_scope
+		}
+		law_type:law_HOS_monarch = {
+			save_scope_as = monarchy_law
+		}
+	}
+
+	option = { # reassure the aristocracy
+		name = wedding.3.a
+		default_option = yes
+		add_loyalists = {
+			value = 0.1
+			pop_type = aristocrats
+		}
+		ruler = {
+			kill_character = yes
+		}
+	}
+
+	option = { # reassure the people
+		name = wedding.3.b
+		add_loyalists = {
+			value = 0.01
+		}
+		ruler = {
+			kill_character = yes
+		}
+	}
+}
