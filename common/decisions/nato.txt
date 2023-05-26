@@ -1,0 +1,229 @@
+form_nato_decision = {
+
+	is_shown = {
+		
+		#NATO does not already exist
+		NOT = { has_modifier = nato_member }
+		NOT = { any_country = { has_modifier = nato_member } }
+		
+		#Cold War
+		cold_war_ongoing = yes
+		
+		#THIS is a democracy
+		is_a_democracy = yes
+		
+		#There is a hostile superpower
+		any_country = {
+			country_rank = rank_value:super_power
+			is_a_communist_government = yes
+			has_attitude = {
+				who = ROOT
+				attitude <= antagonistic
+			}
+		}
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no
+		
+		#European and North American countries only
+		OR = { 
+			country_is_in_europe = yes
+			country_is_in_north_america = yes
+		}
+	}
+
+	possible = {
+	
+		#Within the top 2 countries in the world
+		global_country_ranking >= 2
+	
+		#Country is not at war
+		is_at_war = no
+		
+		#Country is not neutral
+		can_go_to_war = yes
+		
+		#There is someone to create NATO with
+		any_country = {
+			OR = { 
+				country_is_in_europe = yes
+				country_is_in_north_america = yes
+			}
+			is_revolutionary = no
+			
+			is_a_democracy = yes
+			can_go_to_war = yes
+			is_at_war = no
+			
+			has_attitude = {
+				who = ROOT
+				attitude >= cooperative
+			}
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS forms NATO by being the first member & leader
+		add_modifier = { name = nato_member }
+		add_modifier = { name = nato_leader }
+		
+	}
+
+	ai_chance = {
+		base = 100		
+	}
+	
+}
+
+join_nato_decision = {
+
+	is_shown = {
+		
+		#Not already in NATO
+		NOT = { has_modifier = nato_leader }
+		
+		#NATO does already exists
+		any_country = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+		
+		#Cold War
+		cold_war_ongoing = yes
+		
+		#THIS is a democracy
+		is_a_democracy = yes
+		
+		#There is a hostile superpower
+		any_country = {
+			country_rank = rank_value:super_power
+			is_a_communist_government = yes
+			has_attitude = {
+				who = ROOT
+				attitude <= antagonistic
+			}
+		}
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no
+		
+		#European and North American countries only
+		OR = { 
+			country_is_in_europe = yes
+			country_is_in_north_america = yes
+		}
+	}
+
+	possible = {
+	
+		#Country is independent
+		is_sufficiently_independent = yes
+	
+		#Country is not at war
+		is_at_war = no
+		
+		#Country is not neutral
+		can_go_to_war = yes
+		
+		#Friendly with NATO leader
+		any_country = {
+			has_modifier = nato_leader
+			
+			has_attitude = {
+				who = ROOT
+				attitude >= cooperative
+			}
+		}
+		
+		#Not hostile with any NATO member
+		NOT = { 
+			any_country = {
+				has_modifier = nato_member
+			
+				has_attitude = {
+					who = ROOT
+					attitude <= antagonistic
+				}
+			}
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS joins NATO
+		add_modifier = { name = nato_member }
+		
+		#Create defensive alliance with THIS
+		every_country = {
+			limit = { has_modifier = nato_member }
+			create_diplomatic_pact = {
+				country = ROOT
+				type = defensive_pact
+			}
+			set_relations = {
+				country = ROOT
+				value = 50
+			}
+		}
+		
+	}
+
+	ai_chance = {
+		base = 100		
+	}
+	
+}
+
+leave_nato_decision = {
+
+	is_shown = {
+		
+		#THIS is in NATO
+		OR = { has_modifier = nato_member has_modifier = nato_leader }
+		
+	}
+
+	possible = {
+	
+		#Conditions to leave nato
+		OR = {
+		
+			NOT = { is_sufficiently_independent = yes }
+			
+			NOT = { can_go_to_war = yes }
+			
+			any_country = {
+				has_modifier = nato_leader
+			
+				has_attitude = {
+					who = ROOT
+					attitude <= antagonistic
+				}
+			}
+			
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS joins NATO
+		remove_modifier = nato_member
+		remove_modifier = nato_leader
+		
+		#Remove defensive alliance with NATO members
+		every_country = {
+			limit = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+			remove_diplomatic_pact = {
+				country = ROOT
+				type = defensive_pact
+			}
+		}
+		
+	}
+
+	ai_chance = {
+		base = 100		
+	}
+	
+}

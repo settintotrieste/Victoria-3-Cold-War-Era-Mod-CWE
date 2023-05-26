@@ -1,0 +1,174 @@
+namespace = nato_system
+
+#Set NATO leader
+nato_system.1 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = {
+		
+			#No NATO leader and there is an eligible one
+			AND = { 
+			
+				NOT = { any_country = { has_modifier = nato_leader } }
+				
+				any_country = { 
+					has_modifier = nato_member 
+					OR = { 
+						country_is_in_europe = yes
+						country_is_in_north_america = yes
+					}
+					is_a_democracy = yes
+					country_rank = rank_value:super_power
+				}
+				
+			}
+			
+			#NATO leader is wrong
+			AND = { 
+				has_modifier = nato_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOT = { can_go_to_war = yes }
+					NOT = { country_rank = rank_value:super_power }
+				}
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Clear NATO leader
+		every_country = {
+			limit = { has_modifier = nato_leader }
+			remove_modifier = nato_leader
+		}
+	
+		#Set NATO leader
+		if = {
+			limit = { 
+				NOT = { any_country = { has_modifier = nato_leader } }
+				
+				any_country = { 
+					has_modifier = nato_member 
+					OR = { 
+						country_is_in_europe = yes
+						country_is_in_north_america = yes
+					}
+					is_a_democracy = yes
+					country_rank = rank_value:super_power
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = nato_member 
+					OR = { 
+						country_is_in_europe = yes
+						country_is_in_north_america = yes
+					}
+					is_a_democracy = yes
+					country_rank = rank_value:super_power
+				}
+				add_modifier = { name = nato_leader }
+			}
+		}
+		else_if = {
+			limit = {
+				has_modifier = nato_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOT = { can_go_to_war = yes }
+					NOT = { country_rank = rank_value:super_power }
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = nato_member 
+					OR = { 
+						country_is_in_europe = yes
+						country_is_in_north_america = yes
+					}
+					is_a_democracy = yes
+					country_rank = rank_value:super_power
+				}
+				add_modifier = { name = nato_leader }
+			}
+		}
+		
+	}
+
+}
+
+#Set NATO relations
+nato_system.2 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		has_modifier = nato_member
+		
+		any_country = { 
+			has_modifier = nato_member 
+			NOT = { has_diplomatic_pact = { who = ROOT type = defensive_pact } }
+		}
+		
+	}
+
+	immediate = {
+		
+		#Force defensive pact on NATO members
+		every_country = { 
+			limit = { 
+				has_modifier = nato_member 
+				NOT = { has_diplomatic_pact = { who = ROOT type = defensive_pact } }
+			}
+			create_diplomatic_pact = {
+				country = ROOT
+				type = defensive_pact
+			}
+		}
+	}
+
+}
+
+#Dissolve NATO
+nato_system.3 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = { 
+		
+			#THIS is the sole member of NATO
+			AND = { 
+				has_modifier = nato_member
+				NOT = { any_country = { has_modifier = nato_member } }
+			}
+			
+			#No NATO leader
+			NOT = { any_country = { has_modifier = nato_leader } }
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Everyone leaves NATO
+		remove_modifier = nato_member
+		remove_modifier = nato_leader
+		
+		every_country = {
+			remove_modifier = nato_member
+			remove_modifier = nato_leader
+		}
+		
+	}
+
+}
