@@ -1,0 +1,387 @@
+namespace = warsaw_pact_system
+
+#Set Warsaw Pact leader
+warsaw_pact_system.1 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = {
+		
+			#No Warsaw Pact leader and there is an eligible one
+			AND = { 
+			
+				NOT = { any_country = { has_modifier = warsaw_pact_leader } }
+				
+				any_country = { 
+					has_modifier = warsaw_pact_member 
+					country_is_in_europe = yes
+					is_a_communist_government = yes
+					country_rank = rank_value:super_power
+				}
+				
+			}
+			
+			#Warsaw Pact leader is wrong
+			AND = { 
+				has_modifier = warsaw_pact_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOT = { is_not_neutral = yes }
+					NOT = { country_rank = rank_value:super_power }
+				}
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Clear Warsaw Pact leader
+		remove_modifier = warsaw_pact_leader
+		every_country = {
+			limit = { has_modifier = warsaw_pact_leader }
+			remove_modifier = warsaw_pact_leader
+		}
+	
+		#Set Warsaw Pact leader
+		if = {
+			limit = { 
+				NOT = { any_country = { has_modifier = warsaw_pact_leader } }
+				
+				any_country = { 
+					has_modifier = warsaw_pact_member 
+					country_is_in_europe = yes
+					is_a_communist_government = yes
+					country_rank = rank_value:super_power
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = warsaw_pact_member 
+					country_is_in_europe = yes
+					is_a_communist_government = yes
+					country_rank = rank_value:super_power
+				}
+				add_modifier = { name = warsaw_pact_leader }
+			}
+		}
+		else_if = {
+			limit = {
+				has_modifier = warsaw_pact_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOT = { is_not_neutral = yes }
+					NOT = { country_rank = rank_value:super_power }
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = warsaw_pact_member 
+					country_is_in_europe = yes
+					is_a_communist_government = yes
+					country_rank = rank_value:super_power
+				}
+				add_modifier = { name = warsaw_pact_leader }
+			}
+		}
+		
+	}
+
+}
+
+#Set Warsaw Pact relations
+warsaw_pact_system.2 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		has_modifier = warsaw_pact_member
+		
+		any_country = { 
+			has_modifier = warsaw_pact_member 
+			NOR = { has_diplomatic_pact = { who = ROOT type = defensive_pact } has_diplomatic_pact = { who = ROOT type = alliance } }
+		}
+		
+	}
+
+	immediate = {
+		
+		#Force defensive pact on Warsaw Pact members
+		every_country = { 
+			limit = { 
+				has_modifier = warsaw_pact_member 
+				NOR = { has_diplomatic_pact = { who = ROOT type = defensive_pact } has_diplomatic_pact = { who = ROOT type = alliance } }
+			}
+			create_diplomatic_pact = {
+				country = ROOT
+				type = defensive_pact
+			}
+		}
+		
+	}
+
+}
+
+#Dissolve Warsaw Pact
+warsaw_pact_system.3 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = { 
+		
+			#THIS is the sole member of Warsaw Pact
+			AND = { 
+				OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader }
+				NOT = { any_country = { has_modifier = warsaw_pact_member } }
+			}
+			
+			#No Warsaw Pact leader
+			NOT = { has_modifier = warsaw_pact_leader }
+			NOT = { any_country = { has_modifier = warsaw_pact_leader } }
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Everyone leaves Warsaw Pact
+		remove_modifier = warsaw_pact_member
+		remove_modifier = warsaw_pact_leader
+		
+		every_country = {
+			remove_modifier = warsaw_pact_member
+			remove_modifier = warsaw_pact_leader
+		}
+		
+	}
+
+}
+
+#Kick ineligible countries out of Warsaw Pact
+warsaw_pact_system.4 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = { 
+			has_modifier = warsaw_pact_member
+			has_modifier = warsaw_pact_leader
+			has_variable = warsaw_pact_application_var
+		}
+		
+		OR = { 
+			NOT = { is_sufficiently_independent = yes }
+			NOT = { is_not_neutral = yes }
+			NOT = { is_a_communist_government = yes }
+		}
+		
+	}
+
+	immediate = {
+	
+		#THIS leaves Warsaw Pact
+		remove_modifier = warsaw_pact_member
+		remove_modifier = warsaw_pact_leader
+		
+		#Terminate any applications
+		remove_variable = warsaw_pact_application_var
+		
+	}
+
+}
+
+#Option for Warsaw Pact leader to accept or reject application for membership
+warsaw_pact_system.5 = {
+	title = warsaw_pact_application_choice.t 					# Title of the event; ADD LOCALISATION
+    desc = warsaw_pact_application_choice.d 					# Description of the event; ADD LOCALISATION
+    #flavor = warsaw_pact_application_choice.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		has_modifier = warsaw_pact_leader
+		
+		any_country = {
+			has_variable = warsaw_pact_application_var
+			
+			is_sufficiently_independent = yes
+			is_not_neutral = yes
+			is_at_war = no
+		}
+		
+	}
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_variable = warsaw_pact_application_var }
+			save_scope_as = warsaw_pact_applicant
+		}
+		
+		ROOT = {
+			save_scope_as = warsaw_pact_leader
+		}
+		
+	}
+
+	option = {
+        name = warsaw_pact_application_choice.option.1			# Accept application from PREV
+        highlighted_option = yes
+		
+		#Accept FROM into Warsaw Pact
+		scope:warsaw_pact_applicant = {
+			#FROM joins Warsaw Pact
+			add_modifier = { name = warsaw_pact_member }
+		}
+		
+		#Create defensive alliance with FROM
+		every_country = {
+			limit = { 
+				OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader }
+				NOR = { has_diplomatic_pact = { who = ROOT type = defensive_pact } has_diplomatic_pact = { who = ROOT type = alliance } }
+			}
+			create_diplomatic_pact = {
+				country = scope:warsaw_pact_applicant
+				type = defensive_pact
+			}
+			set_relations = {
+				country = scope:warsaw_pact_applicant
+				value = 50
+			}
+		}
+		
+		#Inform applicant of successful outcome
+		scope:warsaw_pact_applicant = { trigger_event = { id = warsaw_pact_system.7 } }
+		
+		#FROM is happy with THIS
+		set_relations = {
+			country = scope:warsaw_pact_applicant
+			value = 50
+		}
+		
+		#Hostile countries become more hostile
+		every_country = {
+			limit = { 
+				has_attitude = {
+					who = ROOT
+					attitude <= antagonistic
+				}
+			}
+			set_relations = {
+				country = root
+				value = -25
+			}
+		}
+		
+		ai_chance = { 
+			base = 99
+		}
+		
+    }
+	
+	option = {
+        name = warsaw_pact_application_choice.option.2 # Refuse application from PREV
+		default_option = yes
+		
+		#Inform applicant of unsuccessful outcome
+		scope:warsaw_pact_applicant = { trigger_event = { id = warsaw_pact_system.6 } }
+		
+		#FROM is angry!
+		change_relations = {
+			country = scope:warsaw_pact_applicant
+			value = -50
+		}
+		
+		#Hostile countries become less hostile
+		every_country = {
+			limit = { 
+				has_attitude = {
+					who = ROOT
+					attitude <= antagonistic
+				}
+			}
+			set_relations = {
+				country = root
+				value = 25
+			}
+		}
+		
+		ai_chance = { 
+			base = 1
+		}
+		
+    }
+
+}
+
+#Notification of rejection
+warsaw_pact_system.6 = {
+	title = warsaw_pact_application_rejection.t 				# Title of the event; ADD LOCALISATION
+    desc = warsaw_pact_application_rejection.d 				# Description of the event; ADD LOCALISATION
+    #flavor = warsaw_pact_application_rejection.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = warsaw_pact_leader }
+			save_scope_as = warsaw_pact_leader
+		}
+		
+	}
+
+	option = {
+        name = warsaw_pact_application_rejection.1				# Unfortunate
+		
+    }
+
+}
+
+#Notification of acceptance
+warsaw_pact_system.7 = {
+	title = warsaw_pact_application_acceptance.t 				# Title of the event; ADD LOCALISATION
+    desc = warsaw_pact_application_acceptance.d 				# Description of the event; ADD LOCALISATION
+    #flavor = warsaw_pact_application_acceptance.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = warsaw_pact_leader }
+			save_scope_as = warsaw_pact_leader
+		}
+		
+	}
+
+	option = {
+        name = warsaw_pact_application_acceptance.1				# Fortunate
+		
+    }
+
+}
