@@ -77,13 +77,16 @@ form_nato_decision = {
 join_nato_decision = {
 
 	is_shown = {
+	
+		#Is not currently applying for nato membership
+		NOT = { has_variable = nato_application_var }
 		
 		#Not already in NATO
 		NOT = { has_modifier = nato_leader }
 		NOT = { has_modifier = nato_member }
 		
 		#NATO does already exists
-		any_country = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+		any_country = { has_modifier = nato_leader }
 		
 		#Cold War
 		cold_war_ongoing = yes
@@ -134,44 +137,70 @@ join_nato_decision = {
 			}
 		}
 		
-		#There is a hostile superpower
-		any_country = {
-			country_rank = rank_value:super_power
-			is_a_communist_government = yes
-			
-			OR = { 
-				has_attitude = {
-					who = ROOT
-					attitude <= antagonistic
-				}
-				relations:root < relations_threshold:Poor
-			}
-		}
-		
 	}
 	
 	when_taken = {
 	
-		#THIS joins NATO
-		add_modifier = { name = nato_member }
+		#THIS applies for NATO
+		set_variable = {
+			name = nato_application_var
+			days = 365
+		}
 		
-		#Create defensive alliance with THIS
-		every_country = {
-			limit = { has_modifier = nato_member }
-			create_diplomatic_pact = {
-				country = ROOT
-				type = defensive_pact
-			}
-			set_relations = {
-				country = ROOT
-				value = 50
-			}
+		#Send application to NATO leader
+		random_country = {
+			limit = { has_modifier = nato_leader }
+			trigger_event = { id = historical_territorial_transfers.1 }
 		}
 		
 	}
 
 	ai_chance = {
-		base = 100		
+		base = 0
+		
+		modifier = {
+		
+			trigger = {
+			
+				OR = { 
+				
+					#There is a hostile country with rank greater than THIS
+					any_country = {
+						country_rank > root.country_rank
+						can_go_to_war = yes
+			
+						OR = { 
+							has_attitude = {
+								who = ROOT
+								attitude <= antagonistic
+							}
+							relations:root < relations_threshold:Poor
+						}
+					}
+				
+					#There is a neigbouring country that is hostile against THIS
+					any_neighbouring_state = {
+						owner = {
+							can_go_to_war = yes
+			
+							OR = { 
+								has_attitude = {
+									who = ROOT
+									attitude <= antagonistic
+								}
+								relations:root < relations_threshold:Poor
+							}
+						}
+					}
+				
+				}
+				
+			}
+			
+			add = 100
+			
+		}
+
 	}
 	
 }
