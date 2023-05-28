@@ -1,0 +1,211 @@
+namespace = austria_formation
+
+#Austria - USA
+austria_formation.1 = {
+    type = country_event
+
+    title = austria_formation.t 			# Title of the event; ADD LOCALISATION
+    desc = austria_formation.d 				# Description of the event; ADD LOCALISATION
+    #flavor = austria_formation.f 			# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		this = c:USA											# Change TAG of the overlord ****
+		game_date >= 1955.5.15									# START DATE: Date colony became self governing ****
+		game_date < 1965.5.15									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Recipent conditions
+		exists = c:SOV
+		c:SOV = { 												# Change TAG of the transferee ****
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			
+			#Colony conditions
+			c:EAU = { 											# Change TAG of the colony ****
+				is_direct_subject_of = ROOT
+				is_subject_type = subject_type_mandate
+			}
+		}
+		
+		#Colony conditions
+		c:WAU = { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_subject_type = subject_type_mandate
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = american_austria_htt }			# CHANGE ****
+		
+    }
+	
+	immediate = { 
+	
+		# Fire only once
+		set_variable = american_austria_htt						# Change variable ****
+	
+	}
+    
+    option = {
+        name = austria_formation.option.1		# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Option for USSR to accept
+		c:SOV = { 
+			trigger_event = { id = austria_formation.2 } 
+		}
+		
+		#FROM is happy!
+		change_relations = {
+			country = c:WAU
+			value = 50
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+    }
+	
+	option = {
+        name = austria_formation.option.2		# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:WAU
+			value = -100
+		}
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:EAU
+			value = -100
+		}
+		
+		c:WAU = {
+		
+			# Natives are angry!
+			every_scope_state = {
+				limit = { is_homeland = cu:austrian }
+				add_radicals = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 10 
+		}
+    }
+
+}
+
+#Austria - USSR
+austria_formation.2 = {
+    type = country_event
+
+    title = austria_formation.t 			# Title of the event; ADD LOCALISATION
+    desc = austria_formation.d 				# Description of the event; ADD LOCALISATION
+    #flavor = austria_formation.f 			# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+    
+    option = {
+        name = austria_formation.option.1			# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#FROM is happy!
+		change_relations = {
+			country = prev
+			value = 50
+		}
+		
+		#Form independent, neutral & democratic austria
+		c:WAU = {
+			annex = c:EAU
+			
+			effect_starting_politics_war_policy_pacifism = yes
+			
+			make_independent = yes
+			change_tag = AUS
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = austria_formation.option.2			# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = prev
+			value = -100
+		}
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:WAU
+			value = -100
+		}
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:EAU
+			value = -100
+		}
+		
+		c:EAU = {
+		
+			# Natives are angry!
+			every_scope_state = {
+				limit = { is_homeland = cu:austrian }
+				add_radicals = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
