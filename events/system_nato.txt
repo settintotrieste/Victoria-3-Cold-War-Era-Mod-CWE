@@ -182,7 +182,10 @@ nato_system.4 = {
 
 	trigger = {
 		
-		has_modifier = nato_member
+		OR = { 
+			has_modifier = nato_member 
+			has_variable = nato_application_var
+		}
 		
 		OR = { 
 			NOT = { is_sufficiently_independent = yes }
@@ -197,6 +200,9 @@ nato_system.4 = {
 		#THIS leaves NATO
 		remove_modifier = nato_member
 		remove_modifier = nato_leader
+		
+		#Terminate any applications
+		remove_variable = nato_application_var
 		
 	}
 
@@ -215,10 +221,24 @@ nato_system.5 = {
 
     duration = 1 # Duration to fire if triggers are met
 
+	trigger = {
+		
+		has_modifier = nato_leader
+		
+		any_country = {
+			has_variable = nato_application_var
+			
+			is_sufficiently_independent = yes
+			is_not_neutral = yes
+			is_at_war = no
+		}
+		
+	}
+
 	immediate = {
 	
 		random_country = {
-			limit = { THIS = PREV }
+			limit = { has_variable = nato_application_var }
 			save_scope_as = nato_applicant
 		}
 		
@@ -233,7 +253,7 @@ nato_system.5 = {
         highlighted_option = yes
 		
 		#Accept FROM into NATO
-		prev = {
+		scope:nato_applicant = {
 			#FROM joins NATO
 			add_modifier = { name = nato_member }
 		}
@@ -242,18 +262,18 @@ nato_system.5 = {
 		every_country = {
 			limit = { has_modifier = nato_member }
 			create_diplomatic_pact = {
-				country = prev
+				country = scope:nato_applicant
 				type = defensive_pact
 			}
 			set_relations = {
-				country = prev
+				country = scope:nato_applicant
 				value = 50
 			}
 		}
 		
 		#FROM is happy with THIS
 		set_relations = {
-			country = prev
+			country = scope:nato_applicant
 			value = 50
 		}
 		
@@ -272,7 +292,7 @@ nato_system.5 = {
 		}
 		
 		ai_chance = { 
-			base = 100
+			base = 99
 		}
 		
     }
@@ -281,9 +301,11 @@ nato_system.5 = {
         name = nato_application_choice.option.2 # Refuse application from PREV
 		default_option = yes
 		
+		scope:nato_applicant = { trigger_event = { id = nato_system.6 } }
+		
 		#FROM is angry!
 		change_relations = {
-			country = prev
+			country = scope:nato_applicant
 			value = -50
 		}
 		
@@ -302,8 +324,37 @@ nato_system.5 = {
 		}
 		
 		ai_chance = { 
-			base = 0
+			base = 1
 		}
+		
+    }
+
+}
+
+#Notification of rejection
+nato_system.6 = {
+	title = nato_application_rejection.t 				# Title of the event; ADD LOCALISATION
+    desc = nato_application_rejection.d 				# Description of the event; ADD LOCALISATION
+    #flavor = nato_application_rejection.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = nato_leader }
+			save_scope_as = nato_leader
+		}
+		
+	}
+
+	option = {
+        name = nato_application_rejection.1				# Unfortunate
 		
     }
 
