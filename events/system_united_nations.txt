@@ -24,7 +24,7 @@ united_nations.1 = {
 		OR = { 
 			has_modifier = unga_member
 			has_modifier = unsc_permanent_member
-			has_modifier = unsc_member
+			has_modifier = unsc_non_permanent_member
 		}
 		NOT = { is_country_type = recognized }
 	}
@@ -99,7 +99,8 @@ united_nations.3 = {
 		OR = { 
 			has_modifier = unga_member
 			has_modifier = unsc_permanent_member
-			has_modifier = unsc_member
+			has_modifier = unsc_non_permanent_member
+			
 			is_country_type = recognized
 		}
 		is_not_sufficiently_independent = yes
@@ -113,8 +114,100 @@ united_nations.3 = {
 		name = united_nations.1.a #Unfortunate
 		remove_modifier = unga_member
 		remove_modifier = unsc_permanent_member
-		remove_modifier = unsc_member
+		remove_modifier = unsc_non_permanent_member
+		
 		set_country_type = unrecognized
+	}
+	
+}
+
+#Set Non Permanent Members of the UNSC - Check every month
+united_nations.4 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		#Check if there are less than 15 UNSC members
+		any_country = {
+			exists = yes
+			OR = { has_modifier = unsc_non_permanent_member has_modifier = unsc_permanent_member }
+			count < 15
+		}
+		
+		#There are more than 30 UNGA members
+		any_country = {
+			exists = yes
+			has_modifier = unga_member
+			
+			count > 30
+		}
+		
+		#There is someone to give the UNSC seat to
+		any_country = {
+			exists = yes
+			
+			has_modifier = unga_member
+			NOR = { has_modifier = unsc_non_permanent_member has_modifier = unsc_permanent_member }
+			
+			infamy = infamy_threshold:reputable
+			is_at_war = no
+		}
+		
+	}
+
+	immediate = {
+		
+		#Find countries to give non-perm UNSC seat to
+		random_country = {
+			limit = {
+				exists = yes
+				
+				has_modifier = unga_member
+				NOR = { has_modifier = unsc_non_permanent_member has_modifier = unsc_permanent_member }
+				
+				infamy = infamy_threshold:reputable
+				is_at_war = no
+			}
+			trigger_event = { id = united_nations.5 }
+		}
+		
+	}
+	
+}
+
+#Set Non Permanent Members of the UNSC - Give
+united_nations.5 = {
+	type = country_event
+
+	title = UNSC_non_perm_membership.t
+	desc = UNSC_non_perm_membership.d
+	flavor = UNSC_non_perm_membership.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	immediate = {
+	
+		save_scope_as = new_non_perm_UNSC_member
+		
+		add_modifier = { 
+			name = unsc_non_permanent_member
+			months = 24 
+		}
+	}
+
+	option = {
+		name = UNSC_non_perm_membership.option 		#Great
+		
 	}
 	
 }
