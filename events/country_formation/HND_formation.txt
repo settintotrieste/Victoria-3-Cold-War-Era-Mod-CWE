@@ -1,0 +1,132 @@
+namespace = india_formation
+
+#Sikkim - originator
+india_formation.1 = {
+    type = country_event
+
+    title = india_formation_sikkim.t 			# Title of the event; ADD LOCALISATION
+    desc = india_formation_sikkim.d 			# Description of the event; ADD LOCALISATION
+    #flavor = india_formation_sikkim.f 		# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		this = c:HND											# Change TAG of the overlord ****
+		game_date >= 1975.4.26									# START DATE: Date colony became self governing ****
+		game_date < 1985.4.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_some_kind_of_democracy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Recipent conditions
+		exists = c:SIK
+		c:SIK = { 												# Change TAG of the transferee ****
+			is_some_kind_of_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = india_formation_sikkim }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = india_formation_sikkim			# Change variable ****
+	
+	}
+    
+    option = {
+        name = india_formation.option.1					# Create state
+        highlighted_option = yes
+		
+		#Option for Sikkim to accept
+		c:SIK = { 
+			trigger_event = { id = india_formation.2 } 
+		}
+		
+		ai_chance = { 
+			base = 99
+		}
+    }
+	
+	option = {
+        name = india_formation.option.2					# Do not create state
+		default_option = yes
+		
+		change_infamy = -10
+		
+		ai_chance = { 
+			base = 1
+		}
+    }
+
+}
+
+#Sikkim - recipient
+india_formation.2 = {
+    type = country_event
+
+    title = india_formation_sikkim.t 		# Title of the event; ADD LOCALISATION
+    desc = india_formation_sikkim.d 		# Description of the event; ADD LOCALISATION
+    #flavor = india_formation_sikkim.f 		# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+    
+    option = {
+        name = india_formation.option.1			# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		c:HND = { annex = c:SIK }
+		
+		every_scope_state = {
+			limit = { is_homeland = cu:sikkimese }
+			state_region = {
+				set_state_type = incorporated
+			}
+		}
+		
+		ai_chance = { 
+			base = 99 
+		}
+		
+    }
+	
+	option = {
+        name = india_formation.option.2			# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:HND
+			value = -100
+		}
+		
+		ai_chance = { 
+			base = 1 
+		}
+		
+    }
+
+}

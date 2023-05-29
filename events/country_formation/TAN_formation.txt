@@ -1,0 +1,137 @@
+namespace = tanzania_formation
+
+#Zanzibar - originator
+tanzania_formation.1 = {
+    type = country_event
+
+    title = tanzania_formation_zanzibar.t 			# Title of the event; ADD LOCALISATION
+    desc = tanzania_formation_zanzibar.d 			# Description of the event; ADD LOCALISATION
+    #flavor = tanzania_formation_zanzibar.f 		# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		this = c:TGY											# Change TAG of the overlord ****
+		game_date >= 1964.4.26									# START DATE: Date colony became self governing ****
+		game_date < 1974.4.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Tanzania has not been formed
+		NOT = { exists = c:TAN }
+		
+		#Recipent conditions
+		exists = c:ZAN
+		c:ZAN = { 												# Change TAG of the transferee ****
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = tanzania_formation_zanzibar }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = tanzania_formation_zanzibar			# Change variable ****
+	
+	}
+    
+    option = {
+        name = tanzania_formation.option.1					# Create state
+        highlighted_option = yes
+		
+		#Option for Zanzibar to accept
+		c:ZAN = { 
+			trigger_event = { id = tanzania_formation.2 } 
+		}
+		
+		ai_chance = { 
+			base = 99
+		}
+    }
+	
+	option = {
+        name = tanzania_formation.option.2					# Do not create state
+		default_option = yes
+		
+		change_infamy = -10
+		
+		ai_chance = { 
+			base = 1
+		}
+    }
+
+}
+
+#Zanzibar - recipient
+tanzania_formation.2 = {
+    type = country_event
+
+    title = tanzania_formation_zanzibar.t 		# Title of the event; ADD LOCALISATION
+    desc = tanzania_formation_zanzibar.d 		# Description of the event; ADD LOCALISATION
+    #flavor = tanzania_formation_zanzibar.f 		# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+    
+    option = {
+        name = tanzania_formation.option.1			# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		c:TGY = { annex = c:ZAN }
+		
+		every_scope_state = {
+			limit = { is_homeland = cu:zanzibari }
+			state_region = {
+				set_state_type = incorporated
+			}
+		}
+		
+		change_tag = TAN
+		
+		ai_chance = { 
+			base = 99 
+		}
+		
+    }
+	
+	option = {
+        name = tanzania_formation.option.2			# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:TGY
+			value = -100
+		}
+		
+		ai_chance = { 
+			base = 1 
+		}
+		
+    }
+
+}
