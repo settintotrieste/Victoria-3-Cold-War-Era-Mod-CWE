@@ -211,3 +211,561 @@ united_nations.5 = {
 	}
 	
 }
+
+#Vote on UN Peacekeeping - Round 1 in the UNSC
+united_nations.6 = {
+	type = country_event
+
+	title = UNSC_peacekeeping_resolution.t
+	desc = UNSC_peacekeeping_resolution.d
+	flavor = UNSC_peacekeeping_resolution.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	immediate = {
+	
+		random_country = {
+			limit = { 
+				exists = yes
+				has_variable = un_peacekeeping_applicant_var
+			}
+			save_scope_as = un_peacekeeping_applicant
+		}
+		
+		save_scope_as = un_peacekeeping_resolution_voter
+		
+	}
+
+	option = {
+		name = un_peacekeeping_vote.option.1 			#Support for FROM
+		
+		#Record vote FOR
+		change_global_variable = {
+			name = unsc_peackeeping_vote_count_var
+			add = 1
+		}
+		
+		#Mark as a UNSC supporter so that a containment war can be triggered later
+		set_variable = un_peacekeeping_unsc_supporter_var
+		
+		#FROM is happy with THIS
+		set_relations = {
+			country = scope:un_peacekeeping_applicant
+			value = 50
+		}
+		
+		ai_chance = { 
+			base = 100
+		}
+	}
+	
+	option = {
+		name = un_peacekeeping_vote.option.2 			#Do not support for FROM/VETO
+		
+		#Record vote AGAINST
+		change_global_variable = {
+			name = unsc_peackeeping_vote_count_var
+			add = -1
+		}
+		
+		#Set VETO marker if Perm UNSC member voting against
+		if = {
+			limit = { has_modifier = unsc_permanent_member }
+			set_variable = { name = un_peacekeeping_VETO_var days = 100 }
+		}
+		
+		#FROM is angry with THIS
+		set_relations = {
+			country = scope:un_peacekeeping_applicant
+			value = -50
+		}
+		
+		ai_chance = { 
+			base = 0
+		}
+		
+	}
+	
+	option = {
+		name = un_peacekeeping_vote.option.3 			#Abstain from voting
+		default_option = yes
+		
+		#FROM is angry with THIS
+		set_relations = {
+			country = scope:un_peacekeeping_applicant
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 0
+		}
+		
+	}
+	
+}
+
+#Vote on UN Peacekeeping - Round 2 in the UNGA
+united_nations.7 = {
+	type = country_event
+
+	title = UNGA_peacekeeping_resolution_advance.t
+	desc = UNGA_peacekeeping_resolution_advance.d
+	flavor = UNGA_peacekeeping_resolution_advance.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+	
+	trigger = {
+		
+		#Resolution has not expired
+		has_variable = un_peacekeeping_applicant_var
+		
+		#Round 1 has timed out
+		NOT = { has_modifier = un_peacekeeping_unsc_stage_var }
+		NOT = { has_modifier = un_peacekeeping_unga_stage_var }
+		
+		#Round 1 passed
+		global_var:unsc_peackeeping_vote_count_var >= 1
+		NOT = { 
+			any_country = { 
+				exists = yes
+				has_modifier = unsc_permanent_member
+				has_variable = un_peacekeeping_VETO_var 
+			} 
+		}
+		
+		#Baseline requirements
+		has_modifier = unga_member
+		is_diplomatic_play_committed_participant = yes
+		
+	}
+
+	immediate = {
+	
+		save_scope_as = un_peacekeeping_applicant
+		
+		#Round 2 voting (1 month of voting time)
+		add_modifier = { name = un_peacekeeping_unga_stage_var days = 30 }
+		
+		#Send out vote choice event to all UNGA members
+		every_country = {
+			limit = {
+				exists = yes
+				NOT = { THIS = ROOT }
+				has_modifier = unga_member
+			}
+			trigger_event = { id = united_nations.8 }
+		}
+		
+	}
+
+	option = {
+		name = un_peacekeeping_update			#Excellent
+		
+	}
+	
+}
+
+#Vote on UN Peacekeeping - Round 2 in the UNGA
+united_nations.8 = {
+	type = country_event
+
+	title = UNGA_peacekeeping_resolution.t
+	desc = UNGA_peacekeeping_resolution.d
+	flavor = UNGA_peacekeeping_resolution.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	immediate = {
+	
+		random_country = {
+			limit = { 
+				exists = yes
+				has_variable = un_peacekeeping_applicant_var
+			}
+			save_scope_as = un_peacekeeping_applicant
+		}
+		
+		save_scope_as = un_peacekeeping_resolution_voter
+		
+	}
+
+	option = {
+		name = un_peacekeeping_vote.option.1 			#Support for FROM
+		
+		#Record vote FOR
+		change_global_variable = {
+			name = unga_peackeeping_vote_count_var
+			add = 1
+		}
+		
+		#FROM is happy with THIS
+		set_relations = {
+			country = scope:un_peacekeeping_applicant
+			value = 50
+		}
+		
+		ai_chance = { 
+			base = 100
+		}
+		
+	}
+	
+	option = {
+		name = un_peacekeeping_vote.option.2 			#Do not support for FROM/VETO
+		
+		#Record vote AGAINST
+		change_global_variable = {
+			name = unga_peackeeping_vote_count_var
+			add = -1
+		}
+		
+		#FROM is angry with THIS
+		set_relations = {
+			country = scope:un_peacekeeping_applicant
+			value = -50
+		}
+		
+		ai_chance = { 
+			base = 0
+		}
+		
+	}
+	
+	option = {
+		name = un_peacekeeping_vote.option.3 			#Abstain from voting
+		default_option = yes
+		
+		#FROM is angry with THIS
+		set_relations = {
+			country = scope:un_peacekeeping_applicant
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 0
+		}
+		
+	}
+	
+}
+
+#Vote on UN Peacekeeping - Resolution is successful
+united_nations.9 = {
+	type = country_event
+
+	title = UN_peacekeeping_resolution_YES.t
+	desc = UN_peacekeeping_resolution_YES.d
+	flavor = UN_peacekeeping_resolution_YES.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+	
+	trigger = {
+		
+		#Resolution has not expired
+		has_variable = un_peacekeeping_applicant_var
+		
+		#Round 1 has timed out
+		NOT = { has_modifier = un_peacekeeping_unga_stage_var }
+		global_var:unsc_peackeeping_vote_count_var >= 1
+		
+		#Round 2 passed
+		global_var:unga_peackeeping_vote_count_var >= 1
+		
+		#Baseline requirements
+		has_modifier = unga_member
+		is_diplomatic_play_committed_participant = yes
+		
+		#Has not been fired yet
+		NOT = { has_variable = un_peacekeeping_resolution_passed }
+	}
+
+	immediate = {
+	
+		save_scope_as = un_peacekeeping_applicant
+		
+		#UN sends out ultimatum to aggressors to end diplo play or face a containment war
+		every_country = {
+			limit = {
+				exists = yes
+				is_diplomatic_play_enemy_of = ROOT
+			}
+			trigger_event = { id = united_nations.10 }
+		}
+		
+		#Event fired
+		set_variable = un_peacekeeping_resolution_passed
+		
+	}
+
+	option = {
+		name = un_peacekeeping_update				#Excellent
+		
+	}
+	
+}
+
+#UN Peacekeeping ultimatum
+united_nations.10 = {
+	type = country_event
+
+	title = UN_peacekeeping_ultimatum.t
+	desc = UN_peacekeeping_ultimatum.d
+	flavor = UN_peacekeeping_ultimatum.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	immediate = {
+	
+		random_country = {
+			limit = { 
+				exists = yes
+				has_variable = un_peacekeeping_applicant_var
+			}
+			save_scope_as = un_peacekeeping_applicant
+		}
+		
+		save_scope_as = un_peacekeeping_aggressor
+		
+		#Generate UNSC country to lead war of containment
+		random_country = {
+			limit = { 
+				exists = yes
+				has_variable = un_peacekeeping_unsc_supporter_var
+			}
+			save_scope_as = un_peacekeeping_containment_war_leader
+		}
+		
+		#Clean up
+		trigger_event = { id = united_nations.12 }
+		
+	}
+
+	option = {
+		name = un_peacekeeping_ultimatum.option.1 			#Accept peace
+		highlighted_option = yes
+		
+		#End diplomatic play
+		every_diplomatic_play = {
+			limit = {
+				scope:un_peacekeeping_applicant = {
+					is_diplomatic_play_committed_participant = yes
+				}
+				scope:un_peacekeeping_aggressor = {
+					is_diplomatic_play_committed_participant = yes
+				}
+			}
+			end_play = yes
+		}
+		
+		#International community is very happy
+		change_infamy = -50
+		
+		#National humiliation
+		every_scope_state = {
+			add_radicals = {
+				value = large_radicals
+			}
+		}
+		add_modifier = { 
+			name = national_humiliation 
+			months = 60 
+			is_decaying = yes 
+		} 
+		
+		#Clean up
+		trigger_event = { id = united_nations.12 }
+		
+		ai_chance = { 
+			base = 0
+		}
+		
+	}
+	
+	option = {
+		name = un_peacekeeping_ultimatum.option.2 			#Continue the war
+		default_option = yes
+		
+		#International community is NOT happy
+		change_infamy = 100
+		
+		#Create defensive alliance with UNSC containment war leader
+		every_country = {
+			limit = { 
+				NOR = { 
+					has_diplomatic_pact = { who = ROOT type = defensive_pact } 
+					has_diplomatic_pact = { who = ROOT type = alliance }
+				} 
+				has_modifier = unga_member
+				relations:un_peacekeeping_applicant >= relations_threshold:neutral
+			}
+			create_diplomatic_pact = {
+				country = un_peacekeeping_containment_war_leader
+				type = defensive_pact
+			}
+		}
+		
+		#War of containment begins!
+		create_diplomatic_play = {
+			name = containment_war
+			type = dp_humiliation
+			target_country = scope:un_peacekeeping_containment_war_leader
+			
+			war = yes
+			
+			add_war_goal = {
+				holder = scope:un_peacekeeping_containment_war_leader
+				type = contain_threat
+				target_country = ROOT
+			}
+		}
+		
+		#Clean up
+		trigger_event = { id = united_nations.12 }
+		
+		ai_chance = { 
+			base = 100
+		}
+		
+	}
+	
+}
+
+#UN Peacekeeping fails
+united_nations.11 = {
+	type = country_event
+
+	title = UN_peacekeeping_resolution_NO.t
+	desc = UN_peacekeeping_resolution_NO.d
+	flavor = UN_peacekeeping_resolution_NO.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+	
+	trigger = {
+		
+		#Resolution has not expired
+		has_variable = un_peacekeeping_applicant_var
+		
+		#Round 1 & 2 have timed out
+		NOT = { has_modifier = un_peacekeeping_unsc_stage_var }
+		NOT = { has_modifier = un_peacekeeping_unga_stage_var }
+		
+		#Neither round passed
+		OR = { 
+			global_var:unsc_peackeeping_vote_count_var <= 0
+			global_var:unga_peackeeping_vote_count_var <= 0
+			
+			any_country = { 
+				exists = yes
+				has_modifier = unsc_permanent_member
+				has_variable = un_peacekeeping_VETO_var 
+			}
+		}
+		
+		#Baseline requirements
+		has_modifier = unga_member
+		is_diplomatic_play_committed_participant = yes
+		
+	}
+
+	immediate = {
+	
+		save_scope_as = un_peacekeeping_applicant
+		
+		#Trigger clean up event
+		remove_variable = un_peacekeeping_applicant_var
+		trigger_event = { id = united_nations.12 }
+		
+	}
+
+	option = {
+		name = un_peacekeeping_fails				#F
+		
+	}
+	
+}
+
+#Clean Up UN Peacekeeping
+united_nations.12 = {
+	type = country_event
+	hidden = yes
+	
+	trigger = {
+	
+		has_variable = un_peacekeeping_applicant_var
+		
+		OR = {
+			NOT = { has_modifier = unga_member }
+			is_diplomatic_play_committed_participant = no
+		}
+		
+	}
+
+	immediate = {
+		
+		#Remove all variables
+		every_country = { remove_variable = un_peacekeeping_applicant_var }
+		remove_global_variable = unsc_peackeeping_vote_count_var
+		remove_global_variable = unga_peackeeping_vote_count_var
+		every_country = { remove_modifier = un_peacekeeping_unsc_stage_var }
+		every_country = { remove_modifier = un_peacekeeping_unga_stage_var }
+		every_country = { remove_global_variable = un_peacekeeping_VETO_var }
+		every_country = { remove_variable = un_peacekeeping_resolution_passed }
+		every_country = { remove_variable = un_peacekeeping_unsc_supporter_var }
+		
+	}
+	
+}

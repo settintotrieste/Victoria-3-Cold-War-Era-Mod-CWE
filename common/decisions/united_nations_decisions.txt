@@ -144,3 +144,100 @@ join_unsc_perm_decision = {
 	}
 	
 }
+
+request_un_peacekeeping_decision = {
+
+	is_shown = {
+		has_modifier = unga_member
+		
+		#THIS is part of a diplomatic play
+		is_diplomatic_play_committed_participant = yes
+		
+		#THIS is not an aggressor (ie. the one who started it) in a diplomatic play
+		is_diplomatic_play_initiator = no
+		
+		#Has not already fired this decision
+		NOT = { has_variable = un_peacekeeping_applicant_var }
+		
+		#Cannot trigger resolution too frequently
+		NOT = { has_modifier = un_peackeeping_timer }
+		
+		#Aggressor is not already facing a containment war
+		any_country = {
+			is_diplomatic_play_enemy_of = ROOT
+			is_diplomatic_play_initiator = yes
+			NOT = { is_target_of_wargoal = contain_threat }
+		}
+	}
+
+	possible = {
+		
+		#UN is not pre-occupied with any other peacekeeping requests
+		NOT = { 
+			any_country = { 
+				exists = yes 
+				has_variable = un_peacekeeping_applicant_var 
+			} 
+		}
+		
+		#War must have already started
+		is_at_war = yes
+		
+		#Aggressor is not revolutionary
+		any_country = {
+			is_revolutionary = no
+			is_diplomatic_play_enemy_of = ROOT
+		}
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no
+		
+		#Ruler is not jingoistic
+		ruler = {
+			NOR = {
+				has_ideology = ideology:ideology_autocratic
+				has_ideology = ideology:ideology_power_hungry
+				has_ideology = ideology:ideology_elitist
+			}
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS applies for UN peacekeeping (resolution expires in 1 year)
+		set_variable = un_peacekeeping_applicant_var
+		
+		#Create global variable for vote
+		set_global_variable = { name = unsc_peackeeping_vote_count_var value = 0 }
+		set_global_variable = { name = unga_peackeeping_vote_count_var value = 0 }
+		
+		#Round 1 voting (1 month of voting time)
+		add_modifier = { name = un_peacekeeping_unsc_stage_var days = 30 }
+		
+		#Send out vote choice event to UNSC members
+		every_country = {
+			limit = {
+				exists = yes
+				NOT = { THIS = ROOT }
+				OR = { 
+					has_modifier = unsc_non_permanent_member 
+					has_modifier = unsc_permanent_member 
+				}
+			}
+			trigger_event = { id = united_nations.6 }
+		}
+		
+		#Timer
+		add_modifier = { name = un_peackeeping_timer months = 12 }
+		
+	}
+
+	ai_chance = {
+		base = 0
+	}
+	
+}
