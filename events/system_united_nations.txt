@@ -170,6 +170,10 @@ united_nations.4 = {
 				is_at_war = no
 			}
 			trigger_event = { id = united_nations.5 }
+			add_modifier = { 
+				name = unsc_non_permanent_member
+				months = 24 
+			}
 		}
 		
 	}
@@ -199,10 +203,6 @@ united_nations.5 = {
 	
 		save_scope_as = new_non_perm_UNSC_member
 		
-		add_modifier = { 
-			name = unsc_non_permanent_member
-			months = 24 
-		}
 	}
 
 	option = {
@@ -241,6 +241,16 @@ united_nations.6 = {
 			save_scope_as = un_peacekeeping_applicant
 		}
 		
+		random_country = {
+			limit = { 
+				exists = yes
+				is_diplomatic_play_enemy_of = scope:un_peacekeeping_applicant
+				is_diplomatic_play_initiator = yes
+				has_war_with = scope:un_peacekeeping_applicant
+			}
+			save_scope_as = un_peacekeeping_aggressor
+		}
+		
 		save_scope_as = un_peacekeeping_resolution_voter
 		
 	}
@@ -257,6 +267,8 @@ united_nations.6 = {
 		#Mark as a UNSC supporter so that a containment war can be triggered later
 		set_variable = un_peacekeeping_unsc_supporter_var
 		
+		set_variable = un_peacekeeping_voted_for_war
+		
 		#FROM is happy with THIS
 		set_relations = {
 			country = scope:un_peacekeeping_applicant
@@ -264,8 +276,26 @@ united_nations.6 = {
 		}
 		
 		ai_chance = { 
-			base = 100
+			base = 0
+			modifier = {
+				trigger = {
+					OR = { 
+						has_attitude = {
+							who = un_peacekeeping_applicant
+							attitude >= cooperative
+						}
+						scope:un_peacekeeping_applicant = {
+							OR = { 
+								has_diplomatic_pact = { who = ROOT type = defensive_pact } 
+								has_diplomatic_pact = { who = ROOT type = alliance } 
+							}
+						}
+					}
+				}
+				add = 100
+			}
 		}
+		
 	}
 	
 	option = {
@@ -280,7 +310,7 @@ united_nations.6 = {
 		#Set VETO marker if Perm UNSC member voting against
 		if = {
 			limit = { has_modifier = unsc_permanent_member }
-			set_variable = { name = un_peacekeeping_VETO_var days = 100 }
+			set_variable = un_peacekeeping_VETO_var
 		}
 		
 		#FROM is angry with THIS
@@ -291,6 +321,23 @@ united_nations.6 = {
 		
 		ai_chance = { 
 			base = 0
+			modifier = {
+				trigger = {
+					OR = { 
+						has_attitude = {
+							who = un_peacekeeping_applicant_var
+							attitude <= wary
+						}
+						scope:un_peacekeeping_aggressor = {
+							OR = { 
+								has_diplomatic_pact = { who = ROOT type = defensive_pact } 
+								has_diplomatic_pact = { who = ROOT type = alliance } 
+							}
+						}
+					}
+				}
+				add = 100
+			}
 		}
 		
 	}
@@ -306,7 +353,7 @@ united_nations.6 = {
 		}
 		
 		ai_chance = { 
-			base = 0
+			base = 1
 		}
 		
 	}
@@ -350,10 +397,13 @@ united_nations.7 = {
 				has_variable = un_peacekeeping_VETO_var 
 			} 
 		}
+		NOT = { has_variable = un_peacekeeping_UNSC_voted }
 		
 		#Baseline requirements
 		has_modifier = unga_member
 		is_diplomatic_play_committed_participant = yes
+		is_diplomatic_play_initiator = no
+		is_at_war = yes
 		
 	}
 
@@ -373,6 +423,9 @@ united_nations.7 = {
 			}
 			trigger_event = { id = united_nations.8 }
 		}
+		
+		#Mark as round 1 completed
+		set_variable = un_peacekeeping_UNSC_voted
 		
 	}
 
@@ -412,6 +465,16 @@ united_nations.8 = {
 			save_scope_as = un_peacekeeping_applicant
 		}
 		
+		random_country = {
+			limit = { 
+				exists = yes
+				is_diplomatic_play_enemy_of = scope:un_peacekeeping_applicant
+				is_diplomatic_play_initiator = yes
+				has_war_with = scope:un_peacekeeping_applicant
+			}
+			save_scope_as = un_peacekeeping_aggressor
+		}
+		
 		save_scope_as = un_peacekeeping_resolution_voter
 		
 	}
@@ -425,6 +488,8 @@ united_nations.8 = {
 			add = 1
 		}
 		
+		set_variable = un_peacekeeping_voted_for_war
+		
 		#FROM is happy with THIS
 		set_relations = {
 			country = scope:un_peacekeeping_applicant
@@ -432,7 +497,24 @@ united_nations.8 = {
 		}
 		
 		ai_chance = { 
-			base = 100
+			base = 0
+			modifier = {
+				trigger = {
+					OR = { 
+						has_attitude = {
+							who = un_peacekeeping_applicant
+							attitude >= cooperative
+						}
+						scope:un_peacekeeping_applicant = {
+							OR = { 
+								has_diplomatic_pact = { who = ROOT type = defensive_pact } 
+								has_diplomatic_pact = { who = ROOT type = alliance } 
+							}
+						}
+					}
+				}
+				add = 100
+			}
 		}
 		
 	}
@@ -454,6 +536,23 @@ united_nations.8 = {
 		
 		ai_chance = { 
 			base = 0
+			modifier = {
+				trigger = {
+					OR = { 
+						has_attitude = {
+							who = un_peacekeeping_applicant_var
+							attitude <= wary
+						}
+						scope:un_peacekeeping_aggressor = {
+							OR = { 
+								has_diplomatic_pact = { who = ROOT type = defensive_pact } 
+								has_diplomatic_pact = { who = ROOT type = alliance } 
+							}
+						}
+					}
+				}
+				add = 100
+			}
 		}
 		
 	}
@@ -469,7 +568,7 @@ united_nations.8 = {
 		}
 		
 		ai_chance = { 
-			base = 0
+			base = 1
 		}
 		
 	}
@@ -503,6 +602,7 @@ united_nations.9 = {
 		#Round 1 has timed out
 		NOT = { has_modifier = un_peacekeeping_unga_stage_var }
 		global_var:unsc_peackeeping_vote_count_var >= 1
+		has_variable = un_peacekeeping_UNSC_voted
 		
 		#Round 2 passed
 		global_var:unga_peackeeping_vote_count_var >= 1
@@ -510,6 +610,8 @@ united_nations.9 = {
 		#Baseline requirements
 		has_modifier = unga_member
 		is_diplomatic_play_committed_participant = yes
+		is_diplomatic_play_initiator = no
+		is_at_war = yes
 		
 		#Has not been fired yet
 		NOT = { has_variable = un_peacekeeping_resolution_passed }
@@ -520,10 +622,13 @@ united_nations.9 = {
 		save_scope_as = un_peacekeeping_applicant
 		
 		#UN sends out ultimatum to aggressors to end diplo play or face a containment war
-		every_country = {
+		random_country = {
 			limit = {
 				exists = yes
 				is_diplomatic_play_enemy_of = ROOT
+				is_diplomatic_play_initiator = yes
+				is_at_war = yes
+				any_scope_war = { is_warleader = root }
 			}
 			trigger_event = { id = united_nations.10 }
 			
@@ -575,12 +680,37 @@ united_nations.10 = {
 		save_scope_as = un_peacekeeping_aggressor
 		
 		#Generate UNSC country to lead war of containment
-		random_country = {
+		if = {
 			limit = { 
-				exists = yes
-				has_variable = un_peacekeeping_unsc_supporter_var
+				any_country = { 
+					exists = yes
+					has_modifier = unsc_permanent_member
+					NOT = { is_in_war_together = scope:un_peacekeeping_aggressor }
+					has_variable = un_peacekeeping_unsc_supporter_var
+					can_go_to_war = yes
+				} 
 			}
-			save_scope_as = un_peacekeeping_containment_war_leader
+			random_country = {
+				limit = { 
+					exists = yes
+					has_modifier = unsc_permanent_member
+					NOT = { is_in_war_together = scope:un_peacekeeping_aggressor }
+					has_variable = un_peacekeeping_unsc_supporter_var
+					can_go_to_war = yes
+				}
+				save_scope_as = un_peacekeeping_containment_war_leader
+			}
+		}
+		else = {
+			random_country = {
+				limit = { 
+					exists = yes
+					NOT = { is_in_war_together = scope:un_peacekeeping_aggressor }
+					has_variable = un_peacekeeping_unsc_supporter_var
+					can_go_to_war = yes
+				}
+				save_scope_as = un_peacekeeping_containment_war_leader
+			}
 		}
 		
 		#Clean up
@@ -595,25 +725,29 @@ united_nations.10 = {
 		#End diplomatic play
 		every_diplomatic_play = {
 			limit = {
-				scope:un_peacekeeping_applicant = {
-					is_diplomatic_play_committed_participant = yes
-				}
-				scope:un_peacekeeping_aggressor = {
-					is_diplomatic_play_committed_participant = yes
-				}
+				initiator_is = scope:un_peacekeeping_aggressor
+				target_is = scope:un_peacekeeping_applicant
 			}
 			end_play = yes
+		}
+		create_truce = {
+			country = scope:un_peacekeeping_applicant
+			months = 24
 		}
 		
 		#International community is very happy
 		change_infamy = -50
 		
-		#National humiliation
-		every_scope_state = {
-			add_radicals = {
-				value = large_radicals
+		custom_tooltip = {
+			text = everyone_is_angry_custom_tooltip
+			every_scope_state = {
+				add_radicals = {
+					value = large_radicals
+				}
 			}
 		}
+		
+		#National humiliation
 		add_modifier = { 
 			name = national_humiliation 
 			months = 60 
@@ -636,35 +770,37 @@ united_nations.10 = {
 		#International community is NOT happy
 		change_infamy = 100
 		
-		#Create defensive alliance with UNSC containment war leader
-		every_country = {
-			limit = { 
-				NOR = { 
-					has_diplomatic_pact = { who = ROOT type = defensive_pact } 
-					has_diplomatic_pact = { who = ROOT type = alliance }
-				} 
-				has_modifier = unga_member
-				relations:un_peacekeeping_applicant >= relations_threshold:neutral
-			}
-			create_diplomatic_pact = {
-				country = un_peacekeeping_containment_war_leader
-				type = defensive_pact
-			}
-		}
-		
-		#War of containment begins!
-		create_diplomatic_play = {
-			name = containment_war
-			type = dp_humiliation
-			target_country = scope:un_peacekeeping_containment_war_leader
+		custom_tooltip = {
+			text = un_peacekeeping_coalition_custom_tooltip
 			
-			war = yes
-			
-			add_war_goal = {
-				holder = scope:un_peacekeeping_containment_war_leader
-				type = contain_threat
-				target_country = ROOT
+			#Create an alliance with UNSC containment war leader
+			every_country = {
+				limit = { 
+					NOT = { 
+						has_diplomatic_pact = { who = ROOT type = alliance }
+					} 
+					has_modifier = unga_member
+					
+					has_variable = un_peacekeeping_voted_for_war
+				}
+				create_diplomatic_pact = {
+					country = scope:un_peacekeeping_containment_war_leader
+					type = alliance
+				}
 			}
+			
+			#War of containment begins!
+			scope:un_peacekeeping_containment_war_leader = { 
+				create_diplomatic_play = {
+					name = containment_war
+					type = dp_un_peacekeeping
+					
+					target_country = scope:un_peacekeeping_aggressor
+			
+					war = yes
+				}
+			}
+			
 		}
 		
 		#Clean up
@@ -721,10 +857,20 @@ united_nations.11 = {
 		#Baseline requirements
 		has_modifier = unga_member
 		is_diplomatic_play_committed_participant = yes
+		is_diplomatic_play_initiator = no
+		is_at_war = yes
 		
 	}
 
 	immediate = {
+	
+		random_country = {
+			limit = { 
+				exists = yes
+				has_variable = un_peacekeeping_VETO_var
+			}
+			save_scope_as = un_peacekeeping_vetoer
+		}
 	
 		save_scope_as = un_peacekeeping_applicant
 		
@@ -771,9 +917,11 @@ united_nations.12 = {
 		remove_global_variable = unga_peackeeping_vote_count_var
 		every_country = { remove_modifier = un_peacekeeping_unsc_stage_var }
 		every_country = { remove_modifier = un_peacekeeping_unga_stage_var }
-		every_country = { remove_global_variable = un_peacekeeping_VETO_var }
+		every_country = { remove_variable = un_peacekeeping_VETO_var }
 		every_country = { limit = { is_at_war = no } remove_variable = un_peacekeeping_resolution_passed }
 		every_country = { remove_variable = un_peacekeeping_unsc_supporter_var }
+		every_country = { remove_variable = un_peacekeeping_UNSC_voted }
+		every_country = { remove_variable = un_peacekeeping_voted_for_war }
 		
 	}
 	
