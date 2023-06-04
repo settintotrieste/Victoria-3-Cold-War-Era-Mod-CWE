@@ -1421,3 +1421,184 @@ united_nations.18 = {
 	}
 	
 }
+
+### IMF Loan System ###
+
+united_nations.19 = {
+	type = country_event
+	
+	title = IMF_loan_request.t
+	desc = IMF_loan_request.d
+	flavor = IMF_loan_request.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	immediate = {
+		save_scope_as = imf_loan_creditor
+		
+		random_country = {
+			limit = { has_variable = imf_loan_applicant }
+			save_scope_as = imf_loan_debtor
+		}
+	}
+
+	option = {
+		name = imf_loan_option.1			#Accept
+		highlighted_option = yes
+		
+		#Bankroll FROM
+		create_diplomatic_pact = {
+			country = scope:imf_loan_debtor
+			type = bankroll
+		}
+		
+		#Mark FROM as receiving an IMF loan
+		scope:imf_loan_debtor = { 
+		
+			add_modifier = { name = imf_loan_debtor months = 60 }
+			
+			change_relations = {
+				country = ROOT
+				value = 25
+			}
+			
+			remove_variable = imf_loan_applicant
+			
+		}
+		
+		#Mark THIS as giving an IMF loan
+		add_modifier = { name = imf_loan_creditor months = 60 }
+		
+		ai_chance = { 
+			base = 1
+		}
+		
+	}
+	
+	option = {
+		name = imf_loan_option.2			#Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 0
+			modifier = {
+				trigger = {
+					OR = { 
+						scope:imf_loan_debtor = {
+							has_attitude = {
+								who = ROOT
+								attitude >= antagonistic
+							}
+						}
+						taking_loans = yes
+					}
+				}
+				add = 100
+			}
+		}
+		
+	}
+	
+}
+
+united_nations.20 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = {
+		
+			#Clean up modifiers if THIS is a debtor but has no creditor
+			AND = { 
+				has_modifier = imf_loan_debtor
+				NOT = { 
+					any_country = { 
+						has_modifier = imf_loan_creditor
+						has_diplomatic_pact = { who = ROOT type = bankroll is_initiator = yes }
+					}
+				}
+			}
+			
+			#Clean up modifiers if THIS is a creditor but has no debtor
+			AND = { 
+				has_modifier = imf_loan_creditor
+				NOT = { 
+					any_country = { 
+						has_modifier = imf_loan_debtor
+						has_diplomatic_pact = { who = ROOT type = bankroll is_initiator = no }
+					} 
+				}
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		remove_modifier = imf_loan_debtor
+		remove_modifier = imf_loan_creditor
+		
+	}
+	
+}
+
+united_nations.21 = {
+	type = country_event
+	
+	title = IMF_loan_terms.t
+	desc = IMF_loan_terms.d
+	flavor = IMF_loan_terms.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+	
+	cooldown = { months = 12 }
+
+	trigger = {
+	
+		#THIS is an IMF debtor
+		has_modifier = imf_loan_debtor
+		
+		#Debtor does not have free market reforms
+		NAND = {
+			has_law = law_type:law_free_trade
+			has_law = law_type:law_laissez_faire
+			has_law = law_type:law_deflationary_monetary_policy
+		}
+		
+	}
+
+	immediate = {
+		save_scope_as = imf_loan_debtor
+	}
+
+	option = {
+		name = imf_loan_terms			#Accept
+		
+		#THIS enacts free market laws
+		activate_law = law_type:law_free_trade
+		activate_law = law_type:law_laissez_faire
+		activate_law = law_type:law_deflationary_monetary_policy
+		
+	}
+	
+}

@@ -253,3 +253,97 @@ request_un_peacekeeping_decision = {
 	}
 	
 }
+
+request_imf_loan_decision = {
+
+	is_shown = {
+	
+		#THIS is a member of the UN
+		has_modifier = unga_member
+		
+		#THIS has not already taken out a loan
+		NOT = { has_modifier = imf_loan_debtor }
+		
+		#Is irretrievably insolvent OR is bordering on insolvency OR is a weak wartime economy
+		OR = { 
+		
+			is_player = yes
+		
+			AND = { 
+				OR = { in_default = yes taking_loans = yes } 
+				has_healthy_economy = no
+			}
+			
+			AND = { 
+				has_healthy_economy = no
+				is_at_war = yes
+			}
+			
+		}
+		
+		#Government is willing to get help from capitalist creditors
+		NOT = { is_a_communist_government = yes }
+		
+		#THIS has not recently called for a loan
+		NOT = { has_variable = imf_loan_timer }
+		
+		#UN can only take 1 request at a time
+		NOT = { any_country = { has_variable = imf_loan_applicant } }
+		
+	}
+
+	possible = {
+	
+		#Not in an election campaign
+		in_election_campaign = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+		#There is a higher ranked country willing to lend & is not already lending
+		any_country = {
+			has_modifier = unga_member
+			
+			NOT = { is_a_communist_government = yes }
+			
+			has_healthy_economy = yes
+			in_default = no
+			
+			has_diplomatic_pact = { who = ROOT type = bankroll is_initiator = no }
+			
+			country_rank > root.country_rank
+			
+			relations:root >= relations_threshold:amicable
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#Send out invitation to bankroll THIS
+		every_country = {
+			limit = { 
+				has_modifier = unga_member
+				NOT = { is_a_communist_government = yes }
+				has_healthy_economy = yes
+				in_default = no
+				NOT = { has_diplomatic_pact = { who = ROOT type = bankroll is_initiator = yes } }
+				country_rank > root.country_rank
+				relations:root >= relations_threshold:amicable
+			}
+			trigger_event = { id = united_nations.19 }
+		}
+		
+		#Mark THIS as the potential debtor
+		set_variable = { name = imf_loan_applicant months = 6 }
+	
+		#Timer
+		set_variable = { name = imf_loan_timer months = 12 }
+		
+	}
+
+	ai_chance = {
+		base = 100		
+	}
+	
+}
