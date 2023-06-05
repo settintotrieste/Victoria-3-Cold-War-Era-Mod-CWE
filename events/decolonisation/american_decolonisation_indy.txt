@@ -295,3 +295,101 @@ american_decolonisation_indy.3 = {
     }
 
 }
+
+#Micronesia
+american_decolonisation_indy.4 = {
+    type = country_event
+	
+    title = american_micronesia.indy.t 					# Title of the event; ADD LOCALISATION
+    desc = american_micronesia.indy.d 					# Description of the event; ADD LOCALISATION
+    #flavor = american_micronesia.indy.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:USA
+		this = c:USA											# Change TAG of the overlord ****
+		game_date >= 1986.11.3									# START DATE: Date colony became self governing ****
+		game_date < 1996.11.3									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		c:MIC = { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_not_sufficiently_independent = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = american_micronesia_indy }		# CHANGE ****
+		
+    }
+	
+	immediate = { 
+		
+		# Fire only once
+		set_variable = american_micronesia_indy					# Change variable ****
+		
+	}
+    
+    option = {
+        name = american_decolonisation_indy.option.1			# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		c:MIC = { 												# Change TAG of the colony ****
+			make_independent = yes
+		}
+		
+		# Overlord create client state pact with colony
+		create_diplomatic_pact = {
+			country = c:MIC										# Change TAG ****
+			type = protectorate
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = american_decolonisation_indy.option.2					# REFUSE
+		default_option = yes
+		
+		c:MIC = {
+		
+			# Natives are angry!
+			every_scope_state = {
+				add_radicals = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+			#Colony is angry
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
