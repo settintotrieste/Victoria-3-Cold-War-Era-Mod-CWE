@@ -1,0 +1,93 @@
+﻿namespace = crime_events
+
+crime_events.2 = { #Organised crime found in state
+	type = country_event
+	placement = scope:organised_crime_state
+
+	title = crime_events.2.t
+	desc = crime_events.2.d
+	flavor = crime_events.2.f
+
+	event_image = {
+		video = "unspecific_vandalized_storefront"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		NOT = { has_variable = police_cooldown }
+		institution_investment_level = {
+			institution = institution_police
+			value < 4
+		}
+		any_scope_state = {
+			radical_fraction = {
+				value > 0.40
+				pop_type = laborers
+			}
+			has_building = building_urban_center
+			is_incorporated = yes
+			NOR = {
+				has_modifier = modifier_organised_crime_suppressed
+				has_modifier = modifier_organised_crime
+			}
+		}
+	}
+
+	immediate = {
+		set_variable = {
+			name = police_cooldown
+			years = 2
+		}
+		random_scope_state = {
+			limit = {
+				radical_fraction = {
+					value > 0.40
+					pop_type = laborers
+				}
+				is_incorporated = yes
+				has_building = building_urban_center
+				NOR = {
+					has_modifier = modifier_organised_crime_suppressed
+					has_modifier = modifier_organised_crime
+				}
+			}
+			save_scope_as = organised_crime_state
+		}
+		set_variable = temperance_organised_crime_var
+	}
+
+	option = {
+		name = crime_events.2.a
+		add_modifier = {
+			name = modifier_organised_crime_suppressed
+			multiplier = money_amount_multiplier_small
+			months = normal_modifier_time
+		}
+		if = {
+			limit = {
+				has_variable = prohibition_laws_var
+			}
+			custom_tooltip = prohibition_laws_weak_pm.tt
+			change_variable = {
+				name = prohibition_laws_var
+				add = 2
+			}
+		}
+	}
+
+	option = {
+		name = crime_events.2.b
+		default_option = yes
+		add_modifier = {
+			name = modifier_organised_crime
+			months = normal_modifier_time
+		}
+	}
+}

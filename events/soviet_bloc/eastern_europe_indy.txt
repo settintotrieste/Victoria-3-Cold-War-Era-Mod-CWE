@@ -1,0 +1,96 @@
+namespace = eastern_europe_indy
+
+#East Germany
+eastern_europe_indy.1 = {
+    type = country_event
+	
+    title = soviet_east_germany.indy.t 					# Title of the event; ADD LOCALISATION
+    desc = soviet_east_germany.indy.d 					# Description of the event; ADD LOCALISATION
+    #flavor = soviet_east_germany.indy.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:SOV
+		this = c:SOV											# Change TAG of the overlord ****
+		game_date >= 1955.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1965.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		c:EGR = { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_not_sufficiently_independent = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = soviet_east_germany_indy }		# CHANGE ****
+		
+    }
+	
+	immediate = { 
+		
+		# Fire only once
+		set_variable = soviet_east_germany_indy					# Change variable ****
+		
+	}
+    
+    option = {
+        name = eastern_europe_indy.option.1						# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		c:EGR = { 												# Change TAG of the colony ****
+			make_independent = yes
+		}
+		
+		# Overlord create client state pact with colony
+		create_diplomatic_pact = {
+			country = c:EGR										# Change TAG ****
+			type = satellite
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = eastern_europe_indy.option.2						# REFUSE
+		default_option = yes
+		
+		c:EGR = {
+		
+			# Natives are angry!
+			every_scope_state = {
+				add_radicals = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+			#Colony is angry
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}

@@ -1,0 +1,960 @@
+﻿namespace = ig_suppression_events
+
+ig_suppression_events.1 = { #pst kid do you want to scheme?
+	type = country_event
+
+	title = ig_suppression_events.1.t
+	desc = ig_suppression_events.1.d
+	flavor = ig_suppression_events.1.f
+
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	trigger = {
+		# triggered by on_yearly_pulse_country
+		NOT = { has_journal_entry = je_ig_suppression_1 }
+		NOT = { has_variable = dismissed_ig_suppresion_var }
+		NOT = { has_variable = completed_ig_suppression_je_var }
+		any_interest_group = {
+			is_powerful = yes
+			is_being_suppressed = yes
+		}
+		OR = {
+			has_law = law_type:law_censorship
+			has_law = law_type:law_outlawed_dissent
+		}
+		has_law = law_type:law_secret_police
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				is_powerful = yes
+				is_being_suppressed = yes
+			}
+			save_scope_as = suppressed_ig
+		}
+	}
+
+	option = { #of course I do
+		name = ig_suppression_events.1.a
+		custom_tooltip = ig_suppression_tt
+		add_journal_entry = { 
+			type = je_ig_suppression_1
+			target = scope:suppressed_ig
+		}
+	}
+
+	option = { #nah I'm fine
+		name = ig_suppression_events.1.b
+		default_option = yes
+		set_variable = {
+			name = dismissed_ig_suppresion_var
+			months = normal_modifier_time
+		}
+		custom_tooltip = dismissed_ig_suppression_tt
+	}
+}
+
+ig_suppression_events.2 = { #scandal / es can da lo es un escandalo
+	type = country_event
+
+	title = ig_suppression_events.2.t
+	desc = ig_suppression_events.2.d
+	flavor = ig_suppression_events.2.f
+
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	trigger = {
+		#triggered by JE
+		NOT = { has_variable = scandal_event_chain_variable }
+	}
+
+	immediate = {
+		scope:target = {
+			leader = {
+				save_scope_as = suppressed_leader
+			}
+		}
+		set_variable = {
+			name = scandal_event_chain_variable
+			months = short_modifier_time
+		}
+	}
+
+	option = { #be a bit... sneaky
+		name = ig_suppression_events.2.a
+		highlighted_option = yes
+		trigger = {
+			OR = {
+				has_law = law_type:law_draconian_policing
+				AND = {
+					ig:ig_petty_bourgeoisie = {
+						is_powerful = yes
+					}
+					scope:target = {
+						is_interest_group_type = ig_petty_bourgeoisie
+					}
+				}
+			}
+		}
+		scope:target = {
+			add_modifier = {
+				name = undermined_ig_modifier
+				months = normal_modifier_time
+			}
+		}
+		set_variable = {
+			name = ig_leader_exposed_var
+		}
+		trigger_event = { id = ig_suppression_events.3 days = 60 }
+	}
+
+	option = { #spread the word at upper class balls
+		name = ig_suppression_events.2.b
+		scope:target = {
+			add_modifier = {
+				name = undermined_upper_class_modifier
+				months = normal_modifier_time
+			}
+		}
+		random_list = {
+			50 = {
+				modifier = {
+					if = {
+						limit = {
+							has_law = law_type:law_censorship
+						}
+					}
+					add = 25
+				}
+			}
+			50 = {
+				add_modifier = {
+					name = suppression_discovered
+					months = normal_modifier_time
+				}
+			}
+		}
+		hidden_effect = {
+			set_variable = {
+				name = ig_leader_exposed_var
+			}
+		}
+		trigger_event = { id = ig_suppression_events.3 days = 60 }
+	}
+
+	option = { #let the poor people spread the word
+		name = ig_suppression_events.2.c
+		default_option = yes
+		scope:target = {
+			add_modifier = {
+				name = undermined_lower_class_modifier
+				months = normal_modifier_time
+			}
+		}
+		random_list = {
+			50 = {
+				modifier = {
+					if = {
+						limit = {
+							has_law = law_type:law_censorship
+						}
+					}
+					add = 25
+				}
+			}
+			50 = {
+				add_modifier = {
+					name = suppression_discovered
+					months = normal_modifier_time
+				}
+			}
+		}
+		hidden_effect = {
+			set_variable = {
+				name = ig_leader_exposed_var
+			}
+		}
+		trigger_event = { id = ig_suppression_events.3 days = 60 }
+	}
+}
+
+ig_suppression_events.3 = { #make them step down
+	type = country_event
+
+	title = ig_suppression_events.3.t
+	desc = ig_suppression_events.3.d
+	flavor = ig_suppression_events.3.f
+
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	trigger = {
+		#triggered by ig_suppression_events.2
+	}
+
+	immediate = {
+		scope:target = {
+			leader = {
+				save_scope_as = suppressed_leader
+			}
+		}
+	}
+
+	option = { #blackmail then
+		name = ig_suppression_events.3.a
+		scope:target = {
+			add_modifier = {
+				name = blackmailed_ig_modifier
+				months = normal_modifier_time
+			}
+		}
+		custom_tooltip = ig_suppression_events.3.a.tt
+		hidden_effect = {
+			set_variable = {
+				name = ig_leader_steps_down_var
+			}
+			scope:suppressed_leader = {
+				kill_character = yes
+			}
+		}
+		trigger_event = { id = ig_suppression_events.4 days = 60 }
+	}
+
+	option = { #make the scandal bigger
+		name = ig_suppression_events.3.b
+		trigger = {
+			OR = {
+				has_law = law_type:law_full_free_speech
+				has_law = law_type:law_limited_free_speech
+			}
+		}
+		scope:target = {
+			add_modifier = {
+				name = suppression_scandal_modifier
+				months = normal_modifier_time
+			}
+		}
+		scope:suppressed_leader = {
+			add_modifier = {
+				name = suppression_leader_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #this has gone too far
+		name = ig_suppression_events.3.c
+		default_option = yes
+		if = {
+			limit = {
+				scope:target = {
+					NOT = { is_interest_group_type = ig_armed_forces }
+				}
+			}
+			ig:ig_armed_forces = {
+				add_modifier = {
+					name = plot_backing_down_bad_modifier
+					months = normal_modifier_time
+				}
+			}
+		}
+		else = {
+			random_interest_group = {
+				limit = {
+					NOT = { this = scope:target }
+				}
+				add_modifier = {
+					name = plot_backing_down_modifier
+					months = normal_modifier_time
+				}
+			}
+		}
+	}
+}
+
+ig_suppression_events.4 = { #send them to jail
+	type = country_event
+
+	title = ig_suppression_events.4.t
+	desc = ig_suppression_events.4.d
+	flavor = ig_suppression_events.4.f
+
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	trigger = {
+		#triggered by ig_suppression_events.3
+	}
+
+	immediate = {
+		scope:target = {
+			leader = {
+				save_scope_as = suppressed_leader
+			}
+		}
+	}
+
+	option = { #to jail!
+		name = ig_suppression_events.4.a
+		scope:target = {
+			add_modifier = {
+				name = imprisoned_ig_modifier
+				months = normal_modifier_time
+			}
+		}
+		custom_tooltip = ig_suppression_events.4.a.tt
+		hidden_effect = {
+			set_variable = {
+				name = ig_leader_in_jail_var
+			}
+			scope:suppressed_leader = {
+				kill_character = yes
+			}
+		}
+		if = {
+			limit = {
+				NOR = {
+					has_law = law_type:law_censorship
+					has_law = law_type:law_draconian_policing
+				}
+			}
+			add_modifier = {
+				name = imprisoned_ig_people_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #consider stepping down... harder
+		name = ig_suppression_events.4.b
+		trigger = {
+			NOT = { has_variable = ig_leader_steps_down_var }
+		}
+		scope:target = {
+			add_modifier = {
+				name = suppression_scandal_modifier
+				months = normal_modifier_time
+			}
+		}
+		custom_tooltip = ig_suppression_events.4.b.tt
+		hidden_effect = {
+			set_variable = {
+				name = ig_leader_steps_down_var
+			}
+			scope:suppressed_leader = {
+				kill_character = yes
+			}
+		}
+	}
+
+	option = { #this has gone too far (again)
+		name = ig_suppression_events.4.c
+		default_option = yes
+		if = {
+			limit = {
+				scope:target = {
+					NOT = { is_interest_group_type = ig_armed_forces }
+				}
+			}
+			ig:ig_armed_forces = {
+				add_modifier = {
+					name = plot_backing_down_bad_modifier
+					months = normal_modifier_time
+				}
+			}
+		}
+		else = {
+			random_interest_group = {
+				limit = {
+					NOT = { this = scope:target }
+				}
+				add_modifier = {
+					name = plot_backing_down_modifier
+					months = normal_modifier_time
+				}
+			}
+		}
+	}
+}
+
+ig_suppression_events.5 = { #break into an IG's meeting
+	type = country_event
+
+	title = ig_suppression_events.5.t
+	desc = ig_suppression_events.5.d
+	flavor = ig_suppression_events.5.f
+
+	event_image = {
+		video = "middleeast_police_breaking_door"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	trigger = {
+		#triggered by JE
+		has_law = law_type:law_secret_police
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				is_being_suppressed = yes
+			}
+			save_scope_as = suppressed_ig
+		}
+	}
+
+	option = { #sneak in
+		name = ig_suppression_events.5.a
+		trigger = {
+			has_law = law_type:law_strict_policing
+		}
+		scope:target = {
+			add_modifier = {
+				name = sneaky_suppressed_meeting_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #break by force
+		name = ig_suppression_events.5.b
+		trigger = {
+			has_law = law_type:law_draconian_policing
+		}
+		capital = {
+			add_radicals_in_state = {
+				value = medium_radicals
+			}
+		}
+		scope:target = {
+			add_modifier = {
+				name = violent_suppressed_meeting_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #they have no right to be doing this!
+		name = ig_suppression_events.5.c
+		trigger = {
+			NOT = { has_law = law_type:law_full_free_speech }
+		}
+		scope:target = {
+			add_modifier = {
+				name = violent_suppressed_meeting_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #just walk in there
+		name = ig_suppression_events.5.e
+		default_option = yes
+		scope:target = {
+			add_modifier = {
+				name = suppressed_meeting_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+ig_suppression_events.6 = { #bribe an IG leader
+	type = country_event
+
+	title = ig_suppression_events.6.t
+	desc = ig_suppression_events.6.d
+	flavor = ig_suppression_events.6.f
+
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	duration = 3
+
+	trigger = {
+		#triggered by JE
+		has_law = law_type:law_secret_police
+	}
+
+	immediate = {
+		scope:target = {
+			leader = {
+				save_scope_as = suppressed_leader
+			}
+		}
+	}
+
+	option = { #bribe
+		name = ig_suppression_events.6.a
+		default_option = yes
+		add_modifier = {
+			name = bribing_scandal_modifier
+			months = normal_modifier_time
+			multiplier = money_amount_multiplier_small
+		}
+		scope:target = {
+			add_modifier = {
+				name = ig_autosabotage_modifier
+				months = normal_modifier_time
+			}
+		}
+		scope:suppressed_leader = {
+			add_modifier = {
+				name = ig_autosabotage_leader_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #intimidate
+		name = ig_suppression_events.6.b
+		scope:target = {
+			add_modifier = {
+				name = ig_autosabotage_modifier
+				months = normal_modifier_time
+			}
+		}
+		scope:suppressed_leader = {
+			add_modifier = {
+				name = ig_autosabotage_leader_modifier
+				months = normal_modifier_time
+			}
+		}
+		capital = {
+			add_radicals_in_state = {
+				value = medium_radicals
+			}
+		}
+	}
+}
+
+ig_suppression_events.7 = { #ending event so it's not completely anti climatic
+	type = country_event
+
+	title = ig_suppression_events.7.t
+	desc = ig_suppression_events.7.d
+	flavor = ig_suppression_events.7.f
+
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	duration = 3
+
+	trigger = {
+		#ending event for the je_ig_suppression_1
+	}
+
+	immediate = {
+		scope:target = {
+			leader = {
+				save_scope_as = suppressed_leader
+			}
+		}
+	}
+
+	option = { #noice
+		name = ig_suppression_events.7.a
+		default_option = yes
+		add_modifier = {
+			name = founded_fear #authority
+			months = normal_modifier_time
+		}
+	}
+
+	option = { #WE did it
+		name = ig_suppression_events.7.b
+		add_modifier = {
+			name = founded_fear_legitimacy #legitimacy
+			months = normal_modifier_time
+		}
+	}
+	
+	option = { #noice but noicer
+		name = ig_suppression_events.7.c
+		trigger = {
+			OR = {
+				has_law = law_type:law_censorship
+				has_law = law_type:law_outlawed_dissent
+			}
+		}
+		random_list = {
+			50 = {
+				add_modifier = {
+					name = founded_fear #authority
+					months = normal_modifier_time
+					multiplier = 2
+				}
+			}
+			50 = {
+			}
+		}
+	}
+}
+
+ig_suppression_events.1000 = { #Write negative article about IG
+	type = country_event
+	placement = ROOT
+
+	title = ig_suppression_events.1000.t
+	desc = ig_suppression_events.1000.d
+	flavor = ig_suppression_events.1000.f
+
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	trigger = {
+		#triggered by the JE pulse
+		NOT = { has_variable = bad_article_cooldown_modifier }
+	}
+
+	immediate = {
+		scope:target = {
+			save_scope_as = negative_article_ig
+		}
+		set_variable = {
+			name = bad_article_cooldown_modifier
+			months = short_modifier_time
+		}
+	}
+
+	option = { #Devout
+		name = ig_suppression_events.1000.a.1
+		trigger = {
+			scope:negative_article_ig = ig:ig_devout
+		}
+		add_modifier = {
+			name = modifier_paying_journalist
+			multiplier = money_amount_multiplier_small
+			months = short_modifier_time
+		}
+		scope:negative_article_ig = {
+			add_modifier = {
+				name = modifier_article_damages_ig_reputation
+				months = short_modifier_time
+			}
+		}
+	}
+
+	option = { #Rural Folk
+		name = ig_suppression_events.1000.a.2
+		trigger = {
+			scope:negative_article_ig = ig:ig_rural_folk
+		}
+		add_modifier = {
+			name = modifier_paying_journalist
+			multiplier = money_amount_multiplier_small
+			months = short_modifier_time
+		}
+		scope:negative_article_ig = {
+			add_modifier = {
+				name = modifier_article_damages_ig_reputation
+				months = short_modifier_time
+			}
+		}
+	}
+
+	option = { #Armed Forces
+		name = ig_suppression_events.1000.a.3
+		trigger = {
+			scope:negative_article_ig = ig:ig_armed_forces
+		}
+		add_modifier = {
+			name = modifier_paying_journalist
+			multiplier = money_amount_multiplier_small
+			months = short_modifier_time
+		}
+		scope:negative_article_ig = {
+			add_modifier = {
+				name = modifier_article_damages_ig_reputation
+				months = short_modifier_time
+			}
+		}
+	}
+
+	option = { #industrialists
+		name = ig_suppression_events.1000.a.4
+		trigger = {
+			scope:negative_article_ig = ig:ig_industrialists
+		}
+		add_modifier = {
+			name = modifier_paying_journalist
+			multiplier = money_amount_multiplier_small
+			months = short_modifier_time
+		}
+		scope:negative_article_ig = {
+			add_modifier = {
+				name = modifier_article_damages_ig_reputation
+				months = short_modifier_time
+			}
+		}
+	}
+
+	option = { #Everyone else
+		name = ig_suppression_events.1000.a
+		trigger = {
+			OR = {
+				scope:negative_article_ig = ig:ig_landowners
+				scope:negative_article_ig = ig:ig_petty_bourgeoisie
+				scope:negative_article_ig = ig:ig_trade_unions
+			}
+		}
+		add_modifier = {
+			name = modifier_paying_journalist
+			multiplier = money_amount_multiplier_small
+			months = short_modifier_time
+		}
+		scope:negative_article_ig = {
+			add_modifier = {
+				name = modifier_article_damages_ig_reputation
+				months = short_modifier_time
+			}
+		}
+	}
+
+	option = { #Nothing happens
+		name = ig_suppression_events.1000.b
+		default_option = yes
+		random_interest_group = {
+			limit = {
+				NOT = { this = scope:target }
+			}
+			add_modifier = {
+				name = plot_backing_down_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = ig_suppression_events.1000.c
+		highlighted_option = yes
+		trigger = {
+			OR = {
+				has_law = law_type:law_censorship
+				has_law = law_type:law_outlawed_dissent
+			}
+		}
+		scope:negative_article_ig = {
+			add_modifier = {
+				name = modifier_article_damages_ig_reputation
+				months = normal_modifier_time
+			}
+		}
+	}
+
+}
+
+
+ig_suppression_events.1001 = {
+	type = country_event
+	placement = ROOT
+
+	title = ig_suppression_events.1001.t
+	desc = ig_suppression_events.1001.d
+	flavor = ig_suppression_events.1001.f
+
+	event_image = {
+		video = "africa_soldiers_breaking_protest"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	duration = 3
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				is_being_suppressed = yes
+			}
+			save_scope_as = suppressed_ig
+		}
+	}
+
+	option = {
+		name = ig_suppression_events.1001.a
+		add_modifier = {
+			name = modifier_intimidating_ig_cost
+			months = normal_modifier_time
+		}
+		scope:suppressed_ig = {
+			add_modifier = {
+				name = modifier_intimidating_ig
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = ig_suppression_events.1001.c
+		highlighted_option = yes
+		trigger = {
+				has_law = law_type:law_draconian_policing
+		}
+		scope:suppressed_ig = {
+			add_modifier = {
+				name = modifier_intimidating_ig
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #Nothing happens
+		name = ig_suppression_events.1001.b
+		default_option = yes
+		random_interest_group = {
+			limit = {
+				NOT = { this = scope:target }
+			}
+			add_modifier = {
+				name = plot_backing_down_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+
+}
+
+ig_suppression_events.1003 = { #Assassinate an Ig leader
+	type = country_event
+	placement = ROOT
+
+	title = ig_suppression_events.1003.t
+	desc = ig_suppression_events.1003.d
+	flavor = ig_suppression_events.1003.f
+
+	event_image = {
+		video = "southamerica_public_figure_assassination"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	trigger = {
+		has_law = law_type:law_secret_police
+		has_law = law_type:law_draconian_policing
+	}
+
+	immediate = {
+		scope:target = {
+			leader = {
+				save_scope_as = suppressed_ig_leader
+			}
+		}
+	}
+
+	option = {
+		name = ig_suppression_events.1003.a
+			capital = {
+				add_radicals_in_state = {
+  					value = medium_radicals
+  				}
+			}
+
+			random_list = {
+					10 = { #Success
+						scope:suppressed_leader = {
+							kill_character = yes
+						}
+
+						ROOT = {
+							post_notification = ig_leader_assassination
+						}
+					}
+
+					10 = { #Failure
+						ROOT = {
+								post_notification = ig_leader_assassination_failed
+						}
+
+					}
+			}
+	}
+
+	option = { #Nothing happens
+		name = ig_suppression_events.1003.b
+		default_option = yes
+		if = {
+			limit = {
+				scope:target = {
+					NOT = { is_interest_group_type = ig_armed_forces }
+				}
+			}
+			ig:ig_armed_forces = {
+				add_modifier = {
+					name = plot_backing_down_bad_modifier
+					months = normal_modifier_time
+				}
+			}
+		}
+		else = {
+			random_interest_group = {
+				limit = {
+					NOT = { this = scope:target }
+				}
+				add_modifier = {
+					name = plot_backing_down_modifier
+					months = normal_modifier_time
+				}
+			}
+		}
+	}
+
+}

@@ -1,0 +1,144 @@
+﻿je_strike = {
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	is_shown_when_inactive = {
+		NOT = { has_law = law_type:law_trade_unions_banned }
+		ig:ig_trade_unions = {
+			is_marginal = no
+			ig_clout >= 0.1
+		}
+		ig:ig_industrialists = {
+			is_marginal = no
+		}
+	}
+
+	possible = {
+		ig:ig_trade_unions = {
+			is_in_government = no
+			ig_approval < 0
+		}
+		OR = {
+			institution_investment_level = {
+				institution = institution_workplace_safety
+				value < 3
+			}
+			institution_investment_level = {
+				institution = institution_social_security
+				value < 3
+			}
+		}
+		# we should probably simplfy this
+		any_scope_state = {
+			is_incorporated = yes
+			radical_fraction = {
+				value >= 0.2
+				pop_type = laborers
+			}
+			any_scope_pop = {
+				is_pop_type = laborers
+				standard_of_living < 15
+				pop_is_discriminated = no
+				OR = {
+					pop_employment_building_group = bg_manufacturing
+					pop_employment_building_group = bg_mining
+					pop_employment_building_group = bg_private_infrastructure
+				}
+			}
+		}
+	}
+
+	immediate = {
+		trigger_event = { id = strike.1 }
+		set_variable = {
+			name = strike_timer_var
+			value = 0
+		}
+	}
+
+	complete = {
+		strike_goal_complete_trigger = yes
+	}
+
+	on_complete = {
+		custom_tooltip = je_end_strike_tt
+		if = {
+			limit = {
+				has_variable = strike_negotiator
+			}
+			trigger_event = {
+				id = strike.8 # strikers appeased
+			}
+		}
+		else_if = {
+			limit = {
+				has_variable = strike_breaker
+			}
+			trigger_event = {
+				id = strike.9 # strikers crushed
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			change_variable = {
+				name = strike_timer_var
+				add = 1
+			}
+		}
+		events = {
+			strike.3
+		}
+		random_events = {
+			10 = 0
+			1 = strike.5
+			1 = strike.6
+			1 = strike.7
+		}
+	}
+
+	current_value = {
+		value = root.var:strike_timer_var
+	}
+
+	goal_add_value = {
+		value = 60
+	}
+
+	progressbar = yes
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_general_strike_warning
+				trigger = {
+					scope:journal_entry = {
+						is_goal_complete = no
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_general_strike_active
+				trigger = {
+					scope:journal_entry = {
+						is_goal_complete = yes
+					}
+				}
+			}
+		}
+	}
+
+	invalid = {
+		has_law = law_type:law_trade_unions_banned
+	}
+
+	on_invalid = {
+		custom_tooltip = {
+			text = end_strike_tt
+			strike_end_effect = yes
+		}
+	}
+
+	weight = 100
+	should_be_pinned_by_default = yes
+}

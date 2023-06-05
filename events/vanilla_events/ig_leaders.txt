@@ -1,0 +1,632 @@
+﻿namespace = ig_leaders
+
+### IN POWER ###
+
+ig_leaders.20 = { #The Gamble set up
+	type = country_event
+	placement = ROOT
+
+	title = ig_leaders.20.t
+	desc = ig_leaders.20.d
+	flavor = ig_leaders.20.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:reckless_ig.leader
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+	
+	duration = 3
+	
+	trigger = {
+		has_ruling_interest_group_count >= 2
+		any_interest_group = {
+    		is_in_government = yes
+            leader = {
+                has_trait = reckless
+            }
+        }
+		NOT = { has_variable = the_gamble_var }
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+    			is_in_government = yes
+				leader = {
+					has_trait = reckless
+				}
+	        }
+			save_scope_as = reckless_ig
+			leader = {
+				save_scope_as = reckless_leader
+			}
+		}
+		set_variable = {
+			name = the_gamble_var
+			months = normal_modifier_time
+		}
+	}
+
+	option = { #gamble
+		name = ig_leaders.20.a
+		random_list = {
+			50 = {
+				trigger_event = { id = ig_leaders.1 days = 10 } #success
+			}
+			50 = {
+				trigger_event = { id = ig_leaders.2 days = 10 } #fail
+			}
+		}
+	}
+
+	option = { #dont gamble
+		name = ig_leaders.20.b
+		default_option = yes
+		scope:reckless_leader = {
+			add_modifier = {
+				name = gamble_denied_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+# Reckless - The Gamble (Good)
+#	The Party Prospers (bonus to IG Clout)
+#	The Nation Prospers (bonus to tag)
+
+ig_leaders.1 = {
+	type = country_event
+	placement = ROOT
+
+	title = ig_leaders.1.t
+	desc = ig_leaders.1.d
+	flavor = ig_leaders.1.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:reckless_ig.leader
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	trigger = {
+		has_ruling_interest_group_count >= 2
+		any_interest_group = {
+    		is_in_government = yes
+            leader = {
+                has_trait = reckless
+            }
+            NOT = {
+            	has_modifier = ig_party_prospers
+				has_modifier = ig_fall_from_grace
+            }
+        }
+        NOT = {
+        	has_modifier = ig_nation_prospers
+			has_modifier = ig_compromised_government
+        }
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+    			is_in_government = yes
+	            leader = {
+	                has_trait = reckless
+	            }
+	            NOT = {
+	            	has_modifier = ig_party_prospers
+	            }
+			}
+			save_scope_as = reckless_ig
+			leader = { save_scope_as = reckless_leader }
+		}
+	}
+	
+	cancellation_trigger = {
+		scope:reckless_leader = {
+			is_character_alive = no
+		}
+	}
+
+	option = { #focus on the party
+		name = ig_leaders.1.a
+		default_option = yes
+		scope:reckless_ig = {
+	        add_modifier = {
+	            name = ig_party_prospers
+	            months = normal_modifier_time
+	        }
+		}
+	}
+
+	option = { #focus on the nation
+		name = ig_leaders.1.b
+	    add_modifier = {
+	        name = ig_nation_prospers
+	        months = normal_modifier_time
+		}
+	}
+}
+
+# Reckless - The Gamble (Bad)
+#	The Party Suffers ( remove_ruling_interest_group  )
+#	The Nation Suffers (malus to tag)
+
+ig_leaders.2 = {
+	type = country_event
+	placement = ROOT
+
+	title = ig_leaders.2.t
+	desc = ig_leaders.2.d
+	flavor = ig_leaders.2.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:reckless_leader
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	trigger = {
+		has_ruling_interest_group_count >= 2
+    	any_interest_group = {
+    		is_in_government = yes
+            leader = {
+            	is_busy = no
+                has_trait = reckless
+            }
+            NOT = {
+            	has_modifier = ig_fall_from_grace
+				has_modifier = ig_party_prospers
+            }
+        }
+        NOT = {
+        	has_modifier = ig_compromised_government
+			has_modifier = ig_nation_prospers
+        }
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+    			is_in_government = yes
+	            leader = {
+	            	is_busy = no
+	                has_trait = reckless
+	            }
+	            NOT = {
+	            	has_modifier = ig_fall_from_grace
+	            }
+			}
+			save_scope_as = reckless_ig
+			leader = {
+				save_scope_as = reckless_leader
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		scope:reckless_leader = {
+			is_character_alive = no
+		}
+	}
+
+	option = { #blame the ig
+		name = ig_leaders.2.a
+		scope:reckless_ig = {
+			add_modifier = {
+				name = ig_fall_from_grace
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #blame the leader
+		name = ig_leaders.2.b
+		custom_tooltip = ig_leaders.2.b.tt
+		hidden_effect = {
+			scope:reckless_leader = {
+				kill_character = yes
+			}
+		}
+	}
+
+	option = { #trust them
+		name = ig_leaders.2.c
+		default_option = yes
+	    add_modifier = {
+	        name = ig_compromised_government
+	        months = normal_modifier_time
+		}
+	}
+}
+
+# Meticulous - The Grand Plan Pays Off
+#	Party bonus
+#	National Bonus
+
+ig_leaders.3 = {
+	type = country_event
+	placement = ROOT
+
+	title = ig_leaders.3.t
+	desc = ig_leaders.3.d
+	flavor = ig_leaders.3.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:meticulous_leader
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	trigger = {
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+    	any_interest_group = {
+			is_marginal = no
+            leader = {
+                has_trait = meticulous
+            }
+			has_party = yes
+        }
+        NOT = { has_variable = the_gran_plan_var }
+	}
+
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_interest_group = {
+			limit = {
+    			is_marginal = no
+	            leader = {
+	                has_trait = meticulous
+	            }
+	            has_party = yes
+			}
+			save_scope_as = meticulous_ig
+			leader = {
+				save_scope_as = meticulous_leader
+			}
+			party = { save_scope_as = gran_plan_party }
+		}
+		set_variable = {
+			name = the_gran_plan_var
+			months = normal_modifier_time
+		}
+	}
+
+	cancellation_trigger = {
+		scope:meticulous_leader = {
+			is_character_alive = no
+		}
+	}
+
+	option = { #support the party 
+		name = ig_leaders.3.a
+		scope:gran_plan_party = {
+		   add_momentum = momentum_large #lots of momentum because it's a relatively rare event
+		}
+	}
+
+	option = { #nation first
+		name = ig_leaders.3.b
+		default_option = yes
+	    add_modifier = {
+	        name = ig_national_dividends
+	        months = normal_modifier_time
+		}
+	}
+}
+
+# Charismatic - Diplomatic Tour
+# 	IG bonus
+#	National Bonus
+
+ig_leaders.4 = {
+	type = country_event
+	placement = ROOT
+
+	title = ig_leaders.4.t
+	desc = ig_leaders.4.d
+	flavor = ig_leaders.4.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:charismatic_leader
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	trigger = {
+    	any_interest_group = {
+    		is_in_government = yes
+            leader = {
+                has_trait = charismatic
+            }
+            NOT = {
+            	has_modifier = ig_popular_support
+            }
+        }
+        NOT = {
+        	has_modifier = ig_diplomatic_tour
+        }
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+    			is_in_government = yes
+	            leader = {
+	                has_trait = charismatic
+	            }
+	            NOT = {
+	            	has_modifier = ig_popular_support
+	            }
+			}
+			save_scope_as = charismatic_ig
+			leader = {
+				save_scope_as = charismatic_leader
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		scope:charismatic_leader = {
+			is_character_alive = no
+		}
+	}
+
+	option = {
+		name = ig_leaders.4.a
+		scope:charismatic_ig = {
+		    add_modifier = {
+		        name = ig_popular_support
+		        months = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = ig_leaders.4.b
+		default_option = yes
+	    add_modifier = {
+	        name = ig_diplomatic_tour
+	        months = normal_modifier_time
+		}
+	}
+}
+
+# Imperious - It's Me Or Them
+# 	Leave only the Imperious leader's IG in power (all removed IGs are pissed)
+#	Retire the Imperious leader, replace him with a new IG, hit their Clout
+
+ig_leaders.5 = {
+	type = country_event
+	placement = ROOT
+
+	title = ig_leaders.5.t
+	desc = ig_leaders.5.d
+	flavor = ig_leaders.5.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:smug_leader
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	trigger = {
+		has_ruling_interest_group_count >= 2
+    	any_interest_group = {
+    		is_in_government = yes
+            leader = {
+            	OR = {
+	                has_trait = imperious
+	                has_trait = arrogant
+	            }
+            }
+        }
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+    			is_in_government = yes
+	            leader = {
+	            	OR = {
+		                has_trait = imperious
+		                has_trait = arrogant
+		            }
+	            }
+			}
+			save_scope_as = smug_ig
+			leader = {
+				save_scope_as = smug_leader
+			}
+			set_variable = {
+				name = smug_ig_flag
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		scope:smug_leader = {
+			is_character_alive = no
+		}
+	}
+
+	option = { #dont agree
+		name = ig_leaders.5.a
+		default_option = yes
+		scope:smug_ig = {
+			add_modifier = {
+				name = imperious_leader_dont_agree_modifier
+				months = normal_modifier_time
+			}
+		}
+		scope:smug_leader = {
+			add_modifier = { #popularity bad
+				name = imperious_leader_modifier
+				months = normal_modifier_time
+			}
+		}
+		hidden_effect = {
+			scope:smug_ig = {
+				remove_variable = smug_ig_flag
+			}
+		}
+	}
+
+	option = { #agree
+		name = ig_leaders.5.b
+		every_interest_group = {
+			limit = {
+				is_in_government = yes
+				NOT = { has_variable = smug_ig_flag }
+			}
+			add_modifier = {
+				name = imperious_leader_agree_modifier
+				months = normal_modifier_time
+			}
+		}
+		scope:smug_leader = {
+			add_modifier = { #popularity good
+				name = imperious_leader_good_modifier
+				months = normal_modifier_time
+			}
+		}
+		hidden_effect = {
+			scope:smug_ig = {
+				remove_variable = smug_ig_flag
+			}
+		}
+	}
+}
+
+### NOT IN POWER ###
+
+# Reckless/Ambitious - The Gamble
+#	The Party Ascendant ( add_ruling_interest_group )
+#	The Power Play Fails ( IG is pissed off like hell, but also loses Clout )
+
+ig_leaders.6 = {
+	type = country_event
+	placement = ROOT
+
+	title = ig_leaders.6.t
+	desc = ig_leaders.6.d
+	flavor = ig_leaders.6.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:reckless_out_of_govt_leader
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	trigger = {
+    	any_interest_group = {
+    		is_in_government = no
+			exists = leader
+            leader = {
+            	OR = {
+					has_trait = reckless
+					has_trait = ambitious
+				}
+            }
+            is_insurrectionary = no
+            is_marginal = no
+            NOT = {
+            	has_modifier = ig_scheme_shot_down
+            }
+        }
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+    			is_in_government = no
+	            leader = {
+					OR = {
+						has_trait = reckless
+						has_trait = ambitious
+			       }
+	            }
+            	is_insurrectionary = no
+            	is_marginal = no
+            	NOT = {
+            		has_modifier = ig_scheme_shot_down
+            	}
+			}
+			leader = {
+				save_scope_as = reckless_out_of_govt_leader
+			}
+			save_scope_as = reckless_out_of_govt_ig
+		}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			scope:reckless_out_of_govt_leader = {
+				is_character_alive = no 
+			}
+			scope:reckless_out_of_govt_ig = {
+				ig_approval <= angry
+			}
+		}
+	}
+
+	option = { #support them
+		name = ig_leaders.6.a
+		scope:reckless_out_of_govt_ig = {
+			add_modifier = {
+				name = play_for_power_good_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #dont
+		name = ig_leaders.6.b
+		default_option = yes
+		scope:reckless_out_of_govt_ig = {
+		    add_modifier = {
+		        name = ig_scheme_shot_down
+		        months = normal_modifier_time
+			}
+		}
+	}
+}

@@ -1,0 +1,994 @@
+﻿namespace = exiles_events
+
+exiles_events.100 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = exiles_events.100.t
+	desc = exiles_events.100.d
+	flavor = exiles_events.100.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:repatriated_scope
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		# triggered by return_to_home_country interaction
+	}
+	
+	immediate = {
+	}
+	
+	option = { # We kicked them out for a reason!
+		name = exiles_events.100.a 
+		default_option = yes
+		scope:repatriated_scope = {
+			add_modifier = {
+				name = repatriated_agitator
+			}
+		}
+	}
+
+	option = { # Welcome home!
+		name = exiles_events.100.b
+		scope:repatriated_scope = {
+			add_modifier = {
+				name = repatriated_agitator
+				multiplier = 2
+			}
+		}
+	}
+}
+
+exiles_events.1 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = exiles_events.1.t
+	desc = exiles_events.1.d
+	flavor = exiles_events.1.f
+
+	event_image = {
+		video = "votp_gunboat_diplomacy"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		any_scope_character = {
+			has_role = agitator
+			character_supports_political_movement = no
+			this.interest_group = {
+				interest_group_supports_political_movement = no
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:agitator_scope
+		}
+	}
+	
+	immediate = {
+		random_scope_character = {	
+			limit = {
+				has_role = agitator
+				character_supports_political_movement = no
+				this.interest_group = {
+					interest_group_supports_political_movement = no
+				}
+			}
+			this.interest_group = {
+				save_scope_as = agitator_ig
+			}
+			save_scope_as = agitator_scope
+		}
+	}
+	
+	option = {
+		name = exiles_events.1.a 
+		default_option = yes
+		scope:agitator_scope = {
+			exile_character = yes
+		}
+		scope:agitator_ig = {
+			add_modifier = {
+				name = modifier_agitator_left
+			}
+		}
+	}
+
+	option = {
+		name = exiles_events.1.b
+		scope:agitator_scope = {
+			exile_character = yes
+			add_modifier = {
+				name = modifier_agitator_hopeless
+				months = long_modifier_time
+			}
+			random_list = {
+				30 = {
+					add_trait = alcoholic
+				}
+				70 = {
+
+				}
+			}
+		}
+	}
+}
+
+exiles_events.2 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = exiles_events.2.t
+	desc = exiles_events.2.d
+	flavor = exiles_events.2.f
+
+	event_image = {
+		video = "middleeast_middleclass_cafe"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		empty_agitator_slots >= 1
+		any_scope_character = {
+			is_ruler = no
+			is_heir = no
+			this.interest_group = {
+				is_in_government = yes
+			}
+			this.interest_group_type = {
+				save_temporary_scope_as = ex_ig_type
+			}
+		}
+		any_character_in_exile_pool = {
+			this.culture = {
+				NOT = {
+					culture_is_discriminated_in = root
+				}
+			}
+			this.interest_group_type = {
+				this = scope:ex_ig_type
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:exile_scope
+		}
+	}
+	
+	immediate = {
+		random_scope_character = {
+			limit = {
+				is_ruler = no
+				is_heir = no
+				this.interest_group = {
+					is_in_government = yes
+				}
+				any_character_in_exile_pool = {
+					this.interest_group_type = prev.interest_group_type
+				}
+			}
+			save_scope_as = friend_scope
+			this.interest_group = {
+				save_scope_as = exile_ig_scope
+			}
+			this.interest_group_type = {
+				save_temporary_scope_as = ex_ig_type
+			}
+		}
+		random_character_in_exile_pool = {
+			limit = {
+				this.culture = {
+					NOT = {
+						culture_is_discriminated_in = root
+					}
+				}
+				this.interest_group_type = {
+					this = scope:ex_ig_type
+				}
+			}
+			save_scope_as = exile_scope
+		}
+	}
+	
+	option = {
+		name = exiles_events.2.a 
+		default_option = yes
+		scope:exile_ig_scope = {
+			add_modifier = {
+				name = modifier_exile_ig_empowered
+				months = normal_modifier_time
+			}
+		}
+		scope:exile_scope = {
+			transfer_character = root
+			hidden_effect = {
+				remove_modifier = in_exile_modifier
+			}
+		}
+	}
+
+	option = {
+		name = exiles_events.2.b
+		scope:friend_scope = {
+			add_modifier = {
+				name = modifier_judgement_questioned
+				months = normal_modifier_time
+			}
+			this.interest_group = {
+				add_modifier = {
+					name = modifier_judgement_questioned_ig
+					months = normal_modifier_time
+				}
+			}
+		}
+	}
+}
+
+exiles_events.3 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = exiles_events.3.t
+	desc = exiles_events.3.d
+	flavor = exiles_events.3.f
+
+	event_image = {
+		video = "votp_realist_household"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = { #If an interest group has a character in the exile pool and supports a movement, this fires.
+		empty_agitator_slots >= 1
+		any_political_movement = {
+			any_supporting_interest_group = {
+				interest_group_supports_political_movement = yes
+				type = {
+					save_temporary_scope_as = ex_ig_type
+				}
+			}
+			this.desired_law = {
+				save_temporary_scope_as = movement_law
+			}
+		}
+		any_character_in_exile_pool = {
+			root = this.home_country
+			this.interest_group_type = scope:ex_ig_type
+			law_stance = {
+				law = scope:movement_law
+				value > neutral
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:exile_scope
+		}
+	}
+	
+	immediate = {
+		random_interest_group = {
+			limit = {
+				interest_group_supports_political_movement = yes
+				any_character_in_exile_pool = {
+					this.interest_group_type = prev.type
+				}
+			}
+			type = {
+				save_temporary_scope_as = ex_ig_type
+			}
+			save_scope_as = exile_ig
+		}
+		random_political_movement = {
+			limit = {
+				any_supporting_interest_group = {
+					is_same_interest_group_type = scope:exile_ig
+				}
+			}
+			this.desired_law = {
+				save_scope_as = movement_law
+			}
+			save_scope_as = movement_scope
+		}
+		random_character_in_exile_pool = {
+			limit = {
+				root = this.home_country
+				this.interest_group_type = scope:ex_ig_type
+				law_stance = {
+					law = scope:movement_law
+					value > neutral
+				}
+			}
+			save_scope_as = exile_scope
+		}
+	}
+	
+	option = {
+		name = exiles_events.3.a 
+		default_option = yes
+		scope:exile_scope = {
+			transfer_character = root
+			hidden_effect = {
+				remove_modifier = in_exile_modifier
+			}
+		}
+		scope:movement_scope = {
+			add_modifier = {
+				name = modifier_agitator_invited
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = exiles_events.3.b
+		scope:movement_scope = {
+			add_modifier = {
+				name = modifier_agitator_refused
+				months = normal_modifier_time
+			}
+		}
+		scope:exile_scope = {
+			add_modifier = {
+				name = modifier_agitator_coward
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+exiles_events.4 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = exiles_events.4.t
+	desc = exiles_events.4.d
+	flavor = exiles_events.4.f
+
+	event_image = {
+		video = "votp_gunboat_diplomacy"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	cooldown = { months = long_modifier_time }
+
+	trigger = {
+		any_interest_group = {
+			OR = {
+				has_modifier = failed_coup
+				has_modifier = revolution_lost_ig
+				has_variable = coup_guilty
+			}
+			any_scope_character = {
+				OR = {	
+					has_role = agitator
+					has_modifier = incompetent_coup_attempt
+				}
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:failed_revolution_agitator
+		}
+	}
+	
+	immediate = {
+		random_interest_group = {	
+			limit = {
+				OR = {
+					has_modifier = failed_coup
+					has_modifier = revolution_lost_ig
+					has_variable = coup_guilty
+				}
+			}
+			save_scope_as = failed_revolution_ig
+			random_scope_character = {
+				limit = {
+					OR = {	
+						has_role = agitator
+						has_modifier = incompetent_coup_attempt
+					}
+				}
+				save_scope_as = failed_revolution_agitator
+			}
+		}
+	}
+	
+	option = {
+		name = exiles_events.4.a 
+		default_option = yes
+		scope:failed_revolution_agitator = {
+			exile_character_with_martyrdom = yes
+		}
+	}
+
+	option = {
+		name = exiles_events.4.b
+		scope:failed_revolution_agitator = {
+			random_list = {
+				33 = {
+					exile_character_with_martyrdom = yes
+				}
+				33 = {
+					add_trait = wounded
+					exile_character_with_martyrdom = yes
+				}
+				33 = {
+					kill_character = yes
+				}
+			}
+		}
+	}
+}
+
+exiles_events.5 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = exiles_events.5.t
+	desc = exiles_events.5.d
+	flavor = exiles_events.5.f
+
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		empty_agitator_slots >= 1
+		any_interest_group = {
+			ig_approval >= 5
+			type = {
+				save_temporary_scope_as = ex_ig_type
+			}
+		}
+		any_character_in_exile_pool = {
+			root = this.home_country
+			interest_group_type = scope:ex_ig_type
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:exile_scope
+		}
+	}
+	
+	immediate = {
+		random_interest_group = {
+			limit = {
+				ig_approval >= 5
+				any_character_in_exile_pool = {
+					root = this.home_country
+					this.interest_group_type = prev.type
+				}
+			}
+			type = {
+				save_temporary_scope_as = ex_ig_type
+			}
+			save_scope_as = exile_ig
+		}
+		random_character_in_exile_pool = {
+			limit = {
+				root = this.home_country
+				this.interest_group_type = scope:ex_ig_type
+			}
+			save_scope_as = exile_scope
+		}
+	}
+	
+	option = {
+		name = exiles_events.5.a 
+		default_option = yes
+		scope:exile_scope = {
+			transfer_character = root
+			hidden_effect = {
+				remove_modifier = in_exile_modifier
+			}
+		}
+		add_modifier = {
+			name = modifier_accepted_repentant_exile
+			months = normal_modifier_time
+		}
+	}
+
+	option = {
+		name = exiles_events.5.b
+		scope:exile_ig = {
+			add_modifier = {
+				name = modifier_refused_repentant_exile
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+exiles_events.6 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = exiles_events.6.t
+	desc = exiles_events.6.d
+	flavor = exiles_events.6.f
+
+	event_image = {
+		video = "unspecific_steam_ship"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		empty_agitator_slots >= 1
+		any_interest_group = { #Must have a political movement supported by this IG and one not supported by it, necessitating at least two.
+			interest_group_supports_political_movement = yes
+			save_temporary_scope_as = movement_ig
+		}
+		any_political_movement = { count >= 2 }
+		any_character_in_exile_pool = {
+			this.culture = {
+				NOT = {
+					culture_is_discriminated_in = root
+				}
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:exile_scope
+		}
+	}
+	
+	immediate = {
+		random_character_in_exile_pool = {
+			limit = {
+				this.culture = {
+					NOT = {
+						culture_is_discriminated_in = root
+					}
+				}
+			}
+			save_scope_as = exile_scope
+		}
+		capital = {
+			save_scope_as = capital_scope
+		}
+	}
+	
+	option = {
+		name = exiles_events.6.a 
+		default_option = yes
+		add_modifier = {
+			name = modifier_rich_politics
+			months = normal_modifier_time
+		}
+		scope:exile_scope = {
+			transfer_character = root
+			hidden_effect = {
+				remove_modifier = in_exile_modifier
+			}
+		}
+	}
+
+	option = {
+		name = exiles_events.6.b
+		add_modifier = {
+			name = modifier_rich_politics_rejected
+			months = normal_modifier_time
+		}
+	}
+}
+
+exiles_events.7 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = exiles_events.7.t
+	desc = exiles_events.7.d
+	flavor = exiles_events.7.f
+
+	event_image = {
+		video = "unspecific_trains"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		empty_agitator_slots >= 1
+		OR = {	
+			has_law = law_type:law_no_migration_controls
+			has_law = law_type:law_migration_controls
+		}
+		any_character_in_exile_pool = {
+			this.culture = {
+				NOT = {
+					culture_is_discriminated_in = root
+				}
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:exile_scope
+		}
+	}
+	
+	immediate = {
+		random_character_in_exile_pool = {
+			limit = {
+				this.culture = {
+					NOT = {
+						culture_is_discriminated_in = root
+					}
+				}
+			}
+			save_scope_as = exile_scope
+		}
+	}
+	
+	option = {
+		name = exiles_events.7.a 
+		default_option = yes
+		scope:exile_scope = {
+			transfer_character = root
+			hidden_effect = {
+				remove_modifier = in_exile_modifier
+			}
+		}
+	}
+
+	option = {
+		name = exiles_events.7.b
+		random_interest_group = {
+			limit = {
+				law_stance = {
+					law = law_type:law_closed_borders
+					value < neutral
+				}
+			}
+			add_modifier = {
+				name = modifier_turned_away_immigrant
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+exiles_events.8 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = exiles_events.8.t
+	desc = exiles_events.8.d
+	flavor = exiles_events.8.f
+
+	event_image = {
+		video = "middleeast_engineer_blueprint"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		any_political_movement = {
+			this.desired_law = {
+				save_temporary_scope_as = movement_law
+			}
+		}
+		any_character_in_exile_pool = {
+			law_stance = {
+				law = scope:movement_law
+				value > neutral
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:exile_scope
+		}
+	}
+	
+	immediate = {
+		random_political_movement = {
+			limit = {
+				this.desired_law = {
+					save_temporary_scope_as = movement_law
+				}	
+				any_character_in_exile_pool = {
+					law_stance = {
+						law = scope:movement_law
+						value > neutral
+					}
+				}
+			}
+			save_scope_as = movement_scope
+		}
+		random_character_in_exile_pool = {
+			limit = {
+				law_stance = {
+					law = scope:movement_law
+					value > neutral
+				}	
+			}
+			save_scope_as = exile_scope
+		}
+	}
+	
+	option = {
+		name = exiles_events.8.a 
+		default_option = yes
+		scope:movement_scope = {
+			add_modifier = {
+				name = modifier_foreign_manifesto
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = exiles_events.8.b
+		scope:movement_scope = {
+			add_modifier = {
+				name = modifier_censored_foreign_manifesto
+				months = normal_modifier_time
+			}
+			random_supporting_interest_group = {
+				add_modifier = {
+					name = modifier_supporters_of_foreigners
+					months = normal_modifier_time
+				}
+			}
+		}
+	}
+}
+
+exiles_events.9 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = exiles_events.9.t
+	desc = exiles_events.9.d
+	flavor = exiles_events.9.f
+
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		empty_agitator_slots >= 1
+		any_interest_group = {
+			is_in_government = yes
+			type = {
+				save_temporary_scope_as = ex_ig_type
+			}
+		}
+		any_character_in_exile_pool = {
+			root = this.home_country
+			interest_group_type = scope:ex_ig_type
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:exile_scope
+		}
+	}
+	
+	immediate = {
+		random_interest_group = {
+			limit = {
+				is_in_government = yes
+				any_character_in_exile_pool = {
+					root = this.home_country
+					interest_group_type = prev.type
+				}
+			}
+			type = {
+				save_temporary_scope_as = ex_ig_type
+			}
+			save_scope_as = government_ig_scope
+		}
+		random_character_in_exile_pool = {
+			limit = {
+				root = this.home_country
+				interest_group_type = scope:ex_ig_type	
+			}
+			save_scope_as = exile_scope
+		}
+	}
+	
+	option = {
+		name = exiles_events.9.a 
+		default_option = yes
+		scope:government_ig_scope = {
+			add_modifier = {
+				name = modifier_government_ig_placated
+				months = normal_modifier_time
+			}
+		}
+		scope:exile_scope = {
+			transfer_character = root
+			hidden_effect = {
+				remove_modifier = in_exile_modifier
+			}
+		}
+	}
+
+	option = {
+		name = exiles_events.9.b
+		scope:government_ig_scope = {
+			add_modifier = {
+				name = modifier_government_ig_angered
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+exiles_events.10 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = exiles_events.10.t
+	desc = exiles_events.10.d
+	flavor = exiles_events.10.f
+
+	event_image = {
+		video = "unspecific_sick_in_hospital"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		empty_agitator_slots >= 1
+		any_character_in_exile_pool = {
+			root = this.home_country
+			this.age >= 40
+		}
+		institution_investment_level = {
+			institution = institution_health_system
+			value >= 3
+		}
+	}
+	
+	immediate = {
+		random_character_in_exile_pool = {
+			limit = {
+				root = this.home_country
+				this.age >= 40
+			}
+			save_scope_as = exile_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:exile_scope
+		}
+	}
+	
+	option = {
+		name = exiles_events.10.a 
+		default_option = yes
+		scope:exile_scope = {
+			kill_character = yes
+		}
+	}
+
+	option = {
+		name = exiles_events.10.b
+		scope:exile_scope = {
+			add_modifier = {
+				name = modifier_health_treatments
+				months = long_modifier_time
+			}
+		}
+		add_modifier = {
+			name = modifier_impressive_healthcare_system
+			months = normal_modifier_time
+		}
+	}
+
+	option = {
+		name = exiles_events.10.c
+		scope:exile_scope = {
+			add_modifier = {
+				name = modifier_health_treatments
+				months = long_modifier_time
+			}
+		}
+		add_modifier = {
+			name = modifier_impressive_healthcare_system
+			months = normal_modifier_time
+		}
+		scope:exile_scope = {
+			transfer_character = root
+			hidden_effect = {
+				remove_modifier = in_exile_modifier
+			}
+		}
+	}
+}
