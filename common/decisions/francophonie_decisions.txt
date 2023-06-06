@@ -1,0 +1,173 @@
+form_francophonie_decision = {
+
+	is_shown = {
+		
+		game_date >= 1970.3.20
+		
+		#Historical founder
+		c:FRA ?= this
+		
+		#Francophonie does not already exist
+		NOR = { has_modifier = francophonie_member has_modifier = francophonie_leader }
+		NOT = { any_country = { OR = { has_modifier = francophonie_member has_modifier = francophonie_leader } } }
+		
+		#THIS is a democracy
+		is_a_democracy = yes
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no
+	}
+
+	possible = {
+	
+		#THIS is at least a Great Power
+		country_rank >= rank_value:great_power
+		
+		#Country is independent
+		is_sufficiently_independent = yes
+	
+		#Country is not at war
+		is_at_war = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+		#There is someone to create Francophonie with
+		any_country = {
+			is_a_democracy = yes
+			is_in_our_sphere_of_influence = yes
+			is_revolutionary = no
+			relations:root >= relations_threshold:amicable
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS forms Francophonie by being the first member & leader
+		add_modifier = { name = francophonie_leader }
+		
+	}
+
+	ai_chance = {
+		base = 100		
+	}
+	
+}
+
+join_francophonie_decision = {
+
+	is_shown = {
+	
+		#Is not currently applying for francophonie membership
+		NOT = { has_variable = francophonie_application_var }
+		
+		#Not already in Francophonie
+		NOT = { has_modifier = francophonie_leader }
+		NOT = { has_modifier = francophonie_member }
+		
+		#Francophonie does already exists
+		any_country = { has_modifier = francophonie_leader }
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no
+		
+	}
+
+	possible = {
+	
+		#Did not leave Francophonie recently
+		NOT = { has_variable = left_francophonie_var }
+		
+		#THIS is a democracy
+		is_a_democracy = yes
+	
+		#Country is independent
+		is_sufficiently_independent = yes
+	
+		#Country is not at war
+		is_at_war = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+		#Friendly with Francophonie leader
+		any_country = {
+			has_modifier = francophonie_leader
+			
+			relations:root >= relations_threshold:amicable
+			NOT = { has_attitude = { who = ROOT attitude <= antagonistic } }
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS applies for Francophonie
+		set_variable = {
+			name = francophonie_application_var
+			months = 12
+		}
+		
+		#Choice for Francophonie leader to accpet or decline
+		random_country = { 
+			limit = { has_modifier = francophonie_leader }
+			trigger_event = { id = francophonie_system.4 }
+		}
+		
+	}
+
+	ai_chance = {
+		base = 100
+	}
+	
+}
+
+leave_francophonie_decision = {
+
+	is_shown = {
+		
+		#THIS is in Francophonie
+		OR = { has_modifier = francophonie_member has_modifier = francophonie_leader }
+		
+	}
+
+	possible = {
+	
+		#Conditions to leave francophonie
+		OR = {
+		
+			is_a_communist_government = yes
+		
+			NOT = { is_sufficiently_independent = yes }
+			
+			any_country = {
+				has_modifier = francophonie_leader
+			
+				NOT = { relations:root >= relations_threshold:poor }
+				has_attitude = { who = ROOT attitude <= antagonistic }
+			}
+			
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS leaves Francophonie
+		remove_modifier = francophonie_member
+		remove_modifier = francophonie_leader
+		
+		#Block reapplication for 5 years
+		set_variable = {
+			name = left_francophonie_var
+			months = 60
+		}
+		
+	}
+
+	ai_chance = {
+		base = 100		
+	}
+	
+}

@@ -1,0 +1,340 @@
+namespace = ibero_american_organisation_member_system
+
+#Set Ibero-American Organisation leader
+ibero_american_organisation_member_system.1 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = {
+		
+			#No Ibero-American Organisation leader and there is an eligible one
+			AND = { 
+			
+				NOT = { any_country = { has_modifier = ibero_american_organisation_member_leader } }
+				
+				any_country = { 
+					has_modifier = ibero_american_organisation_member_member 
+					OR = { 
+						shares_non_heritage_trait_with_any_primary_culture = c:SPA
+						shares_non_heritage_trait_with_any_primary_culture = c:POR
+					}
+					is_a_democracy = yes
+					country_rank >= rank_value:major_power
+				}
+				
+			}
+			
+			#Ibero-American Organisation leader is wrong
+			AND = { 
+				has_modifier = ibero_american_organisation_member_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOT = { country_rank >= rank_value:major_power }
+				}
+			}
+			
+			#Overlapping modifiers
+			any_country = { has_modifier = ibero_american_organisation_member_leader has_modifier = ibero_american_organisation_member_member }
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Clear Ibero-American Organisation leader
+		remove_modifier = ibero_american_organisation_member_leader
+		every_country = {
+			limit = { has_modifier = ibero_american_organisation_member_leader }
+			remove_modifier = ibero_american_organisation_member_leader
+		}
+	
+		#Set Ibero-American Organisation leader
+		if = {
+			limit = { 
+				NOT = { any_country = { has_modifier = ibero_american_organisation_member_leader } }
+				
+				any_country = { 
+					has_modifier = ibero_american_organisation_member_member 
+					OR = { 
+						shares_non_heritage_trait_with_any_primary_culture = c:SPA
+						shares_non_heritage_trait_with_any_primary_culture = c:POR
+					}
+					is_a_democracy = yes
+					country_rank >= rank_value:major_power
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = ibero_american_organisation_member_member 
+					OR = { 
+						shares_non_heritage_trait_with_any_primary_culture = c:SPA
+						shares_non_heritage_trait_with_any_primary_culture = c:POR
+					}
+					is_a_democracy = yes
+					country_rank >= rank_value:major_power
+				}
+				add_modifier = { name = ibero_american_organisation_member_leader }
+			}
+		}
+		else_if = {
+			limit = {
+				has_modifier = ibero_american_organisation_member_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOT = { country_rank >= rank_value:major_power }
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = ibero_american_organisation_member_member 
+					OR = { 
+						shares_non_heritage_trait_with_any_primary_culture = c:SPA
+						shares_non_heritage_trait_with_any_primary_culture = c:POR
+					}
+					is_a_democracy = yes
+					country_rank >= rank_value:major_power
+				}
+				add_modifier = { name = ibero_american_organisation_member_leader }
+			}
+		}
+		
+		#Clean up memberships
+		if = { 
+			limit = { has_modifier = ibero_american_organisation_member_leader has_modifier = ibero_american_organisation_member_member }
+			remove_modifier = ibero_american_organisation_member_member
+		}
+		
+	}
+
+}
+
+#Dissolve Ibero-American Organisation
+ibero_american_organisation_member_system.2 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = { 
+		
+			#THIS is the sole member of Ibero-American Organisation
+			AND = { 
+				OR = { has_modifier = ibero_american_organisation_member_member has_modifier = ibero_american_organisation_member_leader }
+				NOT = { any_country = { has_modifier = ibero_american_organisation_member_member } }
+			}
+			
+			#No Ibero-American Organisation leader
+			AND = { 
+				NOT = { has_modifier = ibero_american_organisation_member_leader }
+				NOT = { any_country = { has_modifier = ibero_american_organisation_member_leader } }
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Everyone leaves Ibero-American Organisation
+		remove_modifier = ibero_american_organisation_member_member
+		remove_modifier = ibero_american_organisation_member_leader
+		
+		every_country = {
+			remove_modifier = ibero_american_organisation_member_member
+			remove_modifier = ibero_american_organisation_member_leader
+		}
+		
+	}
+
+}
+
+#Kick ineligible countries out of Ibero-American Organisation
+ibero_american_organisation_member_system.3 = {
+	type = country_event
+	title = ibero_american_organisation_member_expulsion.t 					# Title of the event; ADD LOCALISATION
+    desc = ibero_american_organisation_member_expulsion.d 					# Description of the event; ADD LOCALISATION
+    flavor = ibero_american_organisation_member_expulsion.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	trigger = {
+		
+		OR = { 
+			has_modifier = ibero_american_organisation_member_member
+			has_modifier = ibero_american_organisation_member_leader
+			has_variable = ibero_american_organisation_member_application_var
+		}
+		
+		OR = { 
+			NOT = { is_sufficiently_independent = yes }
+			NOT = { infamy < infamy_threshold:pariah }
+			is_a_communist_government = yes
+		}
+		
+	}
+
+	immediate = {
+	
+		#THIS leaves Ibero-American Organisation
+		remove_modifier = ibero_american_organisation_member_member
+		remove_modifier = ibero_american_organisation_member_leader
+		
+		#Terminate any applications
+		remove_variable = ibero_american_organisation_member_application_var
+		
+		#Block reapplication for 5 years
+		set_variable = {
+			name = left_ibero_american_organisation_member_var
+			months = 60
+		}
+		
+	}
+
+}
+
+#Option for Ibero-American Organisation leader to accept or reject application for membership
+ibero_american_organisation_member_system.4 = {
+	title = ibero_american_organisation_member_application_choice.t 					# Title of the event; ADD LOCALISATION
+    desc = ibero_american_organisation_member_application_choice.d 					# Description of the event; ADD LOCALISATION
+    #flavor = ibero_american_organisation_member_application_choice.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		has_modifier = ibero_american_organisation_member_leader
+		
+		any_country = {
+			has_variable = ibero_american_organisation_member_application_var
+			
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+	}
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_variable = ibero_american_organisation_member_application_var }
+			
+			remove_variable = ibero_american_organisation_member_application_var
+			
+			save_scope_as = ibero_american_organisation_member_applicant
+		}
+		
+		ROOT = {
+			save_scope_as = ibero_american_organisation_member_leader
+		}
+		
+	}
+
+	option = {
+        name = ibero_american_organisation_member_application_choice.option.1			# Accept application from PREV
+        highlighted_option = yes
+		
+		#Accept FROM into Ibero-American Organisation
+		scope:ibero_american_organisation_member_applicant = {
+			#FROM joins Ibero-American Organisation
+			add_modifier = { name = ibero_american_organisation_member_member }
+		}
+		
+		#Inform applicant of successful outcome
+		scope:ibero_american_organisation_member_applicant = { trigger_event = { id = ibero_american_organisation_member_system.6 } }
+		
+		#FROM is happy with THIS
+		set_relations = {
+			country = scope:ibero_american_organisation_member_applicant
+			value = 25
+		}
+		
+		ai_chance = { 
+			base = 99
+		}
+		
+    }
+	
+	option = {
+        name = ibero_american_organisation_member_application_choice.option.2 # Refuse application from PREV
+		default_option = yes
+		
+		#Inform applicant of unsuccessful outcome
+		scope:ibero_american_organisation_member_applicant = { trigger_event = { id = ibero_american_organisation_member_system.5 } }
+		
+		#FROM is angry!
+		change_relations = {
+			country = scope:ibero_american_organisation_member_applicant
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 1
+		}
+		
+    }
+
+}
+
+#Notification of rejection
+ibero_american_organisation_member_system.5 = {
+	title = ibero_american_organisation_member_application_rejection.t 				# Title of the event; ADD LOCALISATION
+    desc = ibero_american_organisation_member_application_rejection.d 				# Description of the event; ADD LOCALISATION
+    #flavor = ibero_american_organisation_member_application_rejection.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = ibero_american_organisation_member_leader }
+			save_scope_as = ibero_american_organisation_member_leader
+		}
+		
+	}
+
+	option = {
+        name = ibero_american_organisation_member_application_rejection.1				# Unfortunate
+		
+    }
+
+}
+
+#Notification of acceptance
+ibero_american_organisation_member_system.6 = {
+	title = ibero_american_organisation_member_application_acceptance.t 				# Title of the event; ADD LOCALISATION
+    desc = ibero_american_organisation_member_application_acceptance.d 				# Description of the event; ADD LOCALISATION
+    #flavor = ibero_american_organisation_member_application_acceptance.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = ibero_american_organisation_member_leader }
+			save_scope_as = ibero_american_organisation_member_leader
+		}
+		
+	}
+
+	option = {
+        name = ibero_american_organisation_member_application_acceptance.1				# Fortunate
+		
+    }
+
+}
