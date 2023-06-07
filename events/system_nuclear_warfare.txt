@@ -1,0 +1,200 @@
+namespace = nuclear_warfare_system
+
+#THIS gains nuclear capability
+nuclear_warfare_system.1 = {
+	type = country_event
+
+	title = gained_nuclear_capability.t
+	desc = gained_nuclear_capability.d
+	flavor = gained_nuclear_capability.f
+
+	event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+	
+		NOT = { has_modifier = nuclear_capability }
+		
+		#Has nuclear weapons law
+		has_law = law_type:law_wmd_allowed
+		
+		#Has nuclear weapons tech
+		has_technology_researched = tech_military_nuclear_3
+		
+		#Has at least 1 functional nuclear weapons building
+		any_scope_state = {
+			any_scope_building = {
+				is_building_type = building_nuclear_weapons_silo
+				level >= 1
+				building_has_goods_shortage = no
+			}
+		}
+		
+	}
+
+	immediate = {
+		add_modifier = { name = nuclear_capability }
+		
+		save_scope_as = nuclear_country
+	}
+
+	option = {
+		name = gained_nuclear_capability.option 	#The world shall tremble at our might!
+		
+	}
+	
+}
+
+#THIS loses nuclear capability
+nuclear_warfare_system.2 = {
+	type = country_event
+
+	title = lost_nuclear_capability.t
+	desc = lost_nuclear_capability.d
+	flavor = lost_nuclear_capability.f
+
+	event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+	
+		has_modifier = nuclear_capability
+		
+		OR = { 
+		
+			#Does not have nuclear weapons law
+			NOT = { has_law = law_type:law_wmd_allowed }
+		
+			#Does not have at least 1 functional nuclear weapons building
+			NOT = { 
+				any_scope_state = {
+					any_scope_building = {
+						is_building_type = building_nuclear_weapons_silo
+						level >= 1
+						building_has_goods_shortage = no
+					}
+				}
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		remove_modifier = nuclear_capability
+		
+		save_scope_as = nuclear_country
+	}
+
+	option = {
+		name = lost_nuclear_capability.option 	#The world shall tremble at our might!
+		
+	}
+	
+}
+
+#Clean up nuclear buildings
+nuclear_warfare_system.3 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		#Not a nuclear capable country
+		NOT = { has_modifier = nuclear_capability }
+		
+		#Has Nuclear Weapons Silo OR Nuclear Submarine Base
+		any_scope_building = { 
+			OR = { 
+				is_building_type = building_nuclear_weapons_silo
+				is_building_type = building_nuclear_naval_base
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		#Clear nuclear buildings
+		every_scope_state = { 
+			limit = { has_building = building_nuclear_weapons_silo }
+			remove_building = building_nuclear_weapons_silo
+		}
+		every_scope_state = { 
+			limit = { has_building = building_nuclear_naval_base }
+			remove_building = building_nuclear_naval_base
+		}
+		
+	}
+	
+}
+
+#Calculate nuclear capability level (Checked yearly)
+nuclear_warfare_system.4 = {
+	type = country_event
+	#hidden = yes
+
+	trigger = {
+		has_modifier = nuclear_capability
+	}
+
+	immediate = {
+	
+		#Clear all variables
+		remove_variable = very_low_nuclear_capability
+		remove_variable = low_nuclear_capability
+		remove_variable = medium_nuclear_capability
+		remove_variable = high_nuclear_capability
+		remove_variable = very_high_nuclear_capability
+		
+		if = {
+			limit = { 
+				nuclear_capability_points_net > 0
+				nuclear_capability_points_net <= 2 
+			}
+			set_variable = very_low_nuclear_capability
+		}
+		else_if = {
+			limit = { 
+				nuclear_capability_points_net > 2
+				nuclear_capability_points_net <= 4 
+			}
+			set_variable = low_nuclear_capability
+		}
+		else_if = {
+			limit = { 
+				nuclear_capability_points_net > 4
+				nuclear_capability_points_net <= 6 
+			}
+			set_variable = medium_nuclear_capability
+		}
+		else_if = {
+			limit = { 
+				nuclear_capability_points_net > 6
+				nuclear_capability_points_net <= 8 
+			}
+			set_variable = high_nuclear_capability
+		}
+		else_if = {
+			limit = { 
+				nuclear_capability_points_net > 8
+				nuclear_capability_points_net <= 10 
+			}
+			set_variable = very_high_nuclear_capability
+		}
+		
+	}
+	
+}
