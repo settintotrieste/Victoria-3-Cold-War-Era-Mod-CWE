@@ -1,0 +1,328 @@
+﻿nuclear_ultimatum_white_peace = {
+	requires_approval = yes
+	should_notify_third_parties = yes
+	can_use_obligations = no
+
+	potential = {
+		#THIS has nuclear weapons
+		has_modifier = nuclear_capability
+		NOT = { has_modifier = nuclear_attack_cooldown }
+		
+		#THIS is at war
+		is_at_war = yes
+		
+		#Can only threaten an enemy war leader
+		scope:target_country = {
+			is_diplomatic_play_enemy_of = scope:actor
+			is_warleader = yes
+		}
+		NOT = { is_in_war_together = scope:target_country }
+		
+		#Civil war countries do not nuke each other
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no }
+	}
+
+	possible = {
+		
+		#Only desperate countries think of nuclear weapons
+		OR = { 
+			has_war_exhaustion = { target = scope:actor value > 50 }
+			has_war_support = { target = scope:actor value < 50 }
+		}
+		
+		#Only radical leaders think of launching nukes
+		ruler = {
+			OR = {
+				has_ideology = ideology:ideology_autocratic
+				has_ideology = ideology:ideology_power_hungry
+			}
+		}
+		
+		#Only an independent country can issue ultimatums
+		is_sufficiently_independent = yes
+		
+	}
+	
+	accept_effect = {
+		
+		#Immediate white peace with truce
+		every_diplomatic_play = {
+			limit = {
+				initiator_is = scope:target_country
+				target_is = scope:actor
+			}
+			end_play = yes
+		}
+		create_truce = {
+			country = scope:target_country
+			months = 24
+		}
+		
+	}
+
+	decline_effect = {
+		
+		### Calculate strike capability  ###
+		#Attacker's gross attack ability
+		set_global_variable = { 
+			name = nuclear_strike_power_global
+			value = nuclear_capability_points_attacker
+		}
+		#Defender's inherent defence
+		scope:target_country = {
+			set_global_variable = { 
+				name = nuclear_strike_defence_global
+				value = nuclear_capability_points_states
+			}
+		}
+		#Aggregate score (Total attack points / Total states of defender)
+		change_global_variable = { 
+			name = nuclear_strike_power_global
+			divide = nuclear_strike_defence_global
+		}
+		
+		### Apply damage based on ratio calculated above ###
+		scope:target_country = {
+			if = {
+				limit = { 
+					nuclear_strike_power_global > 0
+					nuclear_strike_power_global <= 1 
+				}
+				effect_tiny_nuclear_damage = yes
+			}
+			else_if = {
+				limit = { 
+					nuclear_strike_power_global > 1
+					nuclear_strike_power_global <= 2 
+				}
+				effect_very_low_nuclear_damage = yes
+			}
+			else_if = {
+				limit = { 
+					nuclear_strike_power_global > 2
+					nuclear_strike_power_global <= 4 
+				}
+				effect_low_nuclear_damage = yes
+			}
+			else_if = {
+				limit = { 
+					nuclear_strike_power_global > 4
+					nuclear_strike_power_global <= 6 
+				}
+				effect_medium_nuclear_damage = yes
+			}
+			else_if = {
+				limit = { 
+					nuclear_strike_power_global > 6
+					nuclear_strike_power_global <= 8 
+				}
+				effect_high_nuclear_damage = yes
+			}
+			else_if = {
+				limit = { 
+					nuclear_strike_power_global > 8
+					nuclear_strike_power_global <= 10 
+				}
+				effect_very_high_nuclear_damage = yes
+			}
+		}
+		
+		### Attacker Cooldown ###
+		add_modifier = {
+			name = nuclear_attack_cooldown
+			years = 1
+		}
+		
+		### Possible Second Strike ###
+		if = {
+			limit = { 
+				scope:target_country = { has_modifier = nuclear_capability } 
+			}
+			
+			### Calculate strike capability  ###
+			#Attacker's gross attack ability
+			scope:target_country = {
+				set_global_variable = { 
+					name = nuclear_strike_power_global
+					value = nuclear_capability_points_attacker
+				}
+			}
+			#Defender's inherent defence
+			set_global_variable = { 
+				name = nuclear_strike_defence_global
+				value = nuclear_capability_points_states
+			}
+			#Aggregate score (Total attack points / Total states of defender)
+			change_global_variable = { 
+				name = nuclear_strike_power_global
+				divide = nuclear_strike_defence_global
+			}
+			
+			### Apply damage based on ratio calculated above ###
+			if = {
+				limit = { 
+					nuclear_strike_power_global > 0
+					nuclear_strike_power_global <= 1 
+				}
+				effect_tiny_nuclear_damage = yes
+			}
+			else_if = {
+				limit = { 
+					nuclear_strike_power_global > 1
+					nuclear_strike_power_global <= 2 
+				}
+				effect_very_low_nuclear_damage = yes
+			}
+			else_if = {
+				limit = { 
+					nuclear_strike_power_global > 2
+					nuclear_strike_power_global <= 4 
+				}
+				effect_low_nuclear_damage = yes
+			}
+			else_if = {
+				limit = { 
+					nuclear_strike_power_global > 4
+					nuclear_strike_power_global <= 6 
+				}
+				effect_medium_nuclear_damage = yes
+			}
+			else_if = {
+				limit = { 
+					nuclear_strike_power_global > 6
+					nuclear_strike_power_global <= 8 
+				}
+				effect_high_nuclear_damage = yes
+			}
+			else_if = {
+				limit = { 
+					nuclear_strike_power_global > 8
+					nuclear_strike_power_global <= 10 
+				}
+				effect_very_high_nuclear_damage = yes
+			}
+			
+			### Defender Cooldown ###
+			add_modifier = {
+				name = nuclear_attack_cooldown
+				years = 1
+			}
+		}
+		
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 0
+			
+			add = {
+				desc = "ENEMY_COUNTRY_IS_GOING_TO_CAPITULATE"
+				value = 50
+				OR = { 
+					has_war_exhaustion = { target = scope:target_country value > 90 }
+					has_war_support = { target = scope:target_country value < 10 }
+				}
+			}
+			add = {
+				desc = "ENEMY_HAS_NUKES"
+				value = -100
+				scope:target_country = { has_modifier = nuclear_capability }
+			}
+			
+			add = {
+				desc = "THIS_COUNTRY_IS_GOING_TO_CAPITULATE"
+				value = 25
+				has_war_support = { target = scope:actor value < 10 }
+			}
+			add = {
+				desc = "THIS_COUNTRY_IS_RECKLESS"
+				value = 25
+				ruler = {
+					OR = {
+						has_ideology = ideology:ideology_autocratic
+						has_ideology = ideology:ideology_power_hungry
+					}
+				}
+			}
+			add = {
+				desc = "THIS_COUNTRY_IS_MILITARILY_WEAK"
+				value = 50
+				scope:target_country = { army_size > scope:actor.army_size }
+			}
+			
+		}
+	
+		accept_score = {
+			value = 0
+			
+			add = {
+				desc = "THIS_DOES_NOT_HAVE_NUKES"
+				value = 100
+				scope:target_country = { NOT = { has_modifier = nuclear_capability } }
+			}
+			add = {
+				desc = "THIS_COUNTRY_IS_PEACE_LOVING"
+				value = 100
+				scope:target_country = {
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+			}
+			
+			add = {
+				desc = "THIS_COUNTRY_IS_RECKLESS"
+				value = -50
+				scope:target_country = {
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+			}
+			add = {
+				desc = "COUNTRY_THINKS_IT_CAN_WIN"
+				value = -50
+				scope:target_country = {
+					OR = {
+						country_rank >= scope:actor.country_rank
+						army_size >= scope:actor.army_size
+					}
+				}
+			}
+			add = {
+				desc = "COUNTRY_IS_PREPARED_FOR_NUCLEAR_WAR"
+				if = {
+					limit = { scope:target_country = { any_scope_building = { is_building_type = building_urban_center has_active_production_method = pm_city_civil_defence_5 } } }
+					value = -50
+				}
+				else_if = {
+					limit = { scope:target_country = { any_scope_building = { is_building_type = building_urban_center has_active_production_method = pm_city_civil_defence_4 } } }
+					value = -40
+				}
+				else_if = {
+					limit = { scope:target_country = { any_scope_building = { is_building_type = building_urban_center has_active_production_method = pm_city_civil_defence_3 } } }
+					value = -30
+				}
+				else_if = {
+					limit = { scope:target_country = { any_scope_building = { is_building_type = building_urban_center has_active_production_method = pm_city_civil_defence_2 } } }
+					value = -20
+				}
+				else_if = {
+					limit = { scope:target_country = { any_scope_building = { is_building_type = building_urban_center has_active_production_method = pm_city_civil_defence_1 } } }
+					value = -10
+				}
+			}
+			
+		}
+		
+	}
+	
+}
