@@ -1,0 +1,833 @@
+namespace = historical_colonial_wars
+
+### Algerian War ###
+
+historical_colonial_wars.1 = {
+    type = country_event
+
+    title = algerian_war.t 								# Title of the event; ADD LOCALISATION
+    desc = algerian_war.d 								# Description of the event; ADD LOCALISATION
+    #flavor = algerian_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:FRA this = c:FRA										# Change TAG of the overlord ****
+		game_date >= 1954.11.1											# START DATE: Date colony became self governing ****
+		game_date < 1964.11.1											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		#is_a_democracy = yes											# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		#is_at_war = no													# war = no
+		
+		#can_go_to_war = yes											# No legal or political restrictions on going to war
+		
+		#Colony conditions
+		NOT = { 													# Colony to be released must not already exist on the map
+			exists = c:ALG											# Change TAG of the colony ****
+		}
+		any_scope_state = { 										# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:algerian }			# Change homeland identity to match colony to be released ****
+			is_incorporated = no									# State is a colony
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = algerian_war_hcw }						# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released						# DO NOT TOUCH ROOT SECTION
+		every_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:algerian }		# Change homeland identity to match colony to be released ****
+				is_incorporated = no								# State is a colony
+				#contains_capital_of = c:ALG						# State is the capital of colony ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = algerian_war_hcw							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_colonial_wars.option.1					# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = ALG								# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_nationalist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "guy_incognito_first_name"		# CHANGE
+					last_name = "guy_incognito_last_name"		# CHANGE
+					ruler = yes
+					#birth_date = 1910.1.1						# CHANGE
+					interest_group = ig_rural_folk					# CHANGE
+					ideology = ideology_democratic				# CHANGE
+					traits = {
+						charismatic								# CHANGE
+						persistent								# CHANGE
+						meticulous								# CHANGE
+					}
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:algerian }	# Change homeland identity to match colony to be released ****
+		 	}
+			set_state_owner = c:ALG							# Change TAG to colony ****
+		}
+		
+		#algerian War
+		create_diplomatic_play = {
+			name = algerian_war
+			type = dp_annex_war_historical
+			target_country = c:ALG
+			
+			#war = yes
+			
+			add_war_goal = {
+				holder = c:ALG
+				type = humiliation
+				target_country = c:FRA
+			}
+			
+		}
+		
+		# Fire only once
+		set_variable = algerian_war_hcw							# Change variable ****
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_colonial_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Independence for the defender
+		#Release country
+		create_country = {
+			tag = ALG										# Change TAG of country being released ****
+			origin = ROOT											# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {											# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_nationalist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "guy_incognito_first_name"		# CHANGE
+					last_name = "guy_incognito_last_name"		# CHANGE
+					ruler = yes
+					#birth_date = 1910.1.1						# CHANGE
+					interest_group = ig_rural_folk				# CHANGE
+					ideology = ideology_democratic				# CHANGE
+					traits = {
+						charismatic								# CHANGE
+						persistent								# CHANGE
+						meticulous								# CHANGE
+					}
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:algerian }		# Change homeland identity to match colony to be released ****
+		 	}
+			set_state_owner = c:ALG								# Change TAG to colony ****
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Minor discontent
+		custom_tooltip = {
+			text = everyone_is_angry_custom_tooltip
+			every_scope_state = {
+				add_radicals = {
+					value = small_radicals
+				}
+			}
+		}
+		
+		# Fire only once
+		set_variable = algerian_war_hcw							# Change variable ****
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
+
+### Angolan War ###
+
+historical_colonial_wars.2 = {
+    type = country_event
+
+    title = angolan_war.t 								# Title of the event; ADD LOCALISATION
+    desc = angolan_war.d 								# Description of the event; ADD LOCALISATION
+    #flavor = angolan_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:POR this = c:POR										# Change TAG of the overlord ****
+		game_date >= 1964.9.25											# START DATE: Date colony became self governing ****
+		game_date < 1974.9.25											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_nationalist_government = yes								# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		#is_at_war = no													# war = no
+		
+		#can_go_to_war = yes											# No legal or political restrictions on going to war
+		
+		#Colony conditions
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:ANG										# Change TAG of the colony ****
+		}
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:angolan }			# Change homeland identity to match colony to be released ****
+			is_incorporated = no								# State is a colony
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = angolan_war_hcw }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released						# DO NOT TOUCH ROOT SECTION
+		every_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:angolan }	# Change homeland identity to match colony to be released ****
+				is_incorporated = no									# State is a colony
+				#contains_capital_of = c:ANG					# State is the capital of colony ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = angolan_war_hcw							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_colonial_wars.option.1					# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = ANG								# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_communist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "guy_incognito_first_name"		# CHANGE
+					last_name = "guy_incognito_last_name"		# CHANGE
+					ruler = yes
+					#birth_date = 1910.1.1						# CHANGE
+					interest_group = ig_rural_folk					# CHANGE
+					ideology = ideology_democratic				# CHANGE
+					traits = {
+						charismatic								# CHANGE
+						persistent								# CHANGE
+						meticulous								# CHANGE
+					}
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:angolan }	# Change homeland identity to match colony to be released ****
+		 	}
+			set_state_owner = c:ANG							# Change TAG to colony ****
+		}
+		
+		#angolan War
+		create_diplomatic_play = {
+			name = angolan_war
+			type = dp_annex_war_historical
+			target_country = c:ANG
+			
+			#war = yes
+			
+			add_war_goal = {
+				holder = c:ANG
+				type = humiliation
+				target_country = c:POR
+			}
+			
+		}
+		
+		# Fire only once
+		set_variable = angolan_war_hcw							# Change variable ****
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_colonial_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Independence for the defender
+		#Release country
+		create_country = {
+			tag = ANG										# Change TAG of country being released ****
+			origin = ROOT											# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {											# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_communist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "guy_incognito_first_name"		# CHANGE
+					last_name = "guy_incognito_last_name"		# CHANGE
+					ruler = yes
+					#birth_date = 1910.1.1						# CHANGE
+					interest_group = ig_rural_folk				# CHANGE
+					ideology = ideology_democratic				# CHANGE
+					traits = {
+						charismatic								# CHANGE
+						persistent								# CHANGE
+						meticulous								# CHANGE
+					}
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:angolan }		# Change homeland identity to match colony to be released ****
+		 	}
+			set_state_owner = c:ANG								# Change TAG to colony ****
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Minor discontent
+		custom_tooltip = {
+			text = everyone_is_angry_custom_tooltip
+			every_scope_state = {
+				add_radicals = {
+					value = small_radicals
+				}
+			}
+		}
+		
+		# Fire only once
+		set_variable = angolan_war_hcw							# Change variable ****
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
+
+### Mozambican War ###
+
+historical_colonial_wars.3 = {
+    type = country_event
+
+    title = mozambican_war.t 								# Title of the event; ADD LOCALISATION
+    desc = mozambican_war.d 								# Description of the event; ADD LOCALISATION
+    #flavor = mozambican_war.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:POR this = c:POR										# Change TAG of the overlord ****
+		game_date >= 1964.9.25											# START DATE: Date colony became self governing ****
+		game_date < 1974.9.25											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_nationalist_government = yes								# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		#is_at_war = no													# war = no
+		
+		#can_go_to_war = yes											# No legal or political restrictions on going to war
+		
+		#Colony conditions
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:MOZ										# Change TAG of the colony ****
+		}
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:mozambican }			# Change homeland identity to match colony to be released ****
+			is_incorporated = no								# State is a colony
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = mozambican_war_hcw }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released						# DO NOT TOUCH ROOT SECTION
+		every_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:mozambican }	# Change homeland identity to match colony to be released ****
+				is_incorporated = no									# State is a colony
+				#contains_capital_of = c:MOZ					# State is the capital of colony ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = mozambican_war_hcw							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_colonial_wars.option.1					# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = MOZ								# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_communist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "guy_incognito_first_name"		# CHANGE
+					last_name = "guy_incognito_last_name"		# CHANGE
+					ruler = yes
+					#birth_date = 1910.1.1						# CHANGE
+					interest_group = ig_rural_folk					# CHANGE
+					ideology = ideology_democratic				# CHANGE
+					traits = {
+						charismatic								# CHANGE
+						persistent								# CHANGE
+						meticulous								# CHANGE
+					}
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:mozambican }	# Change homeland identity to match colony to be released ****
+		 	}
+			set_state_owner = c:MOZ							# Change TAG to colony ****
+		}
+		
+		#mozambican War
+		create_diplomatic_play = {
+			name = mozambican_war
+			type = dp_annex_war_historical
+			target_country = c:MOZ
+			
+			#war = yes
+			
+			add_war_goal = {
+				holder = c:MOZ
+				type = humiliation
+				target_country = c:POR
+			}
+			
+		}
+		
+		# Fire only once
+		set_variable = mozambican_war_hcw							# Change variable ****
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_colonial_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Independence for the defender
+		#Release country
+		create_country = {
+			tag = MOZ										# Change TAG of country being released ****
+			origin = ROOT											# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {											# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_communist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "guy_incognito_first_name"		# CHANGE
+					last_name = "guy_incognito_last_name"		# CHANGE
+					ruler = yes
+					#birth_date = 1910.1.1						# CHANGE
+					interest_group = ig_rural_folk				# CHANGE
+					ideology = ideology_democratic				# CHANGE
+					traits = {
+						charismatic								# CHANGE
+						persistent								# CHANGE
+						meticulous								# CHANGE
+					}
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:mozambican }		# Change homeland identity to match colony to be released ****
+		 	}
+			set_state_owner = c:MOZ								# Change TAG to colony ****
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Minor discontent
+		custom_tooltip = {
+			text = everyone_is_angry_custom_tooltip
+			every_scope_state = {
+				add_radicals = {
+					value = small_radicals
+				}
+			}
+		}
+		
+		# Fire only once
+		set_variable = mozambican_war_hcw							# Change variable ****
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
+
+### Portuguese Guinea War ###
+
+historical_colonial_wars.4 = {
+    type = country_event
+
+    title = bissau_guinean_war.t 								# Title of the event; ADD LOCALISATION
+    desc = bissau_guinean_war.d 								# Description of the event; ADD LOCALISATION
+    #flavor = bissau_guinean_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:POR this = c:POR										# Change TAG of the overlord ****
+		game_date >= 1963.1.23											# START DATE: Date colony became self governing ****
+		game_date < 1973.1.23											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_nationalist_government = yes								# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		#is_at_war = no													# war = no
+		
+		#can_go_to_war = yes											# No legal or political restrictions on going to war
+		
+		#Colony conditions
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:GNB										# Change TAG of the colony ****
+		}
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:bissau_guinean }			# Change homeland identity to match colony to be released ****
+			is_incorporated = no								# State is a colony
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = bissau_guinean_war_hcw }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released						# DO NOT TOUCH ROOT SECTION
+		every_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:bissau_guinean }	# Change homeland identity to match colony to be released ****
+				is_incorporated = no									# State is a colony
+				#contains_capital_of = c:GNB					# State is the capital of colony ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = bissau_guinean_war_hcw							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_colonial_wars.option.1					# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = GNB								# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_communist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "guy_incognito_first_name"		# CHANGE
+					last_name = "guy_incognito_last_name"		# CHANGE
+					ruler = yes
+					#birth_date = 1910.1.1						# CHANGE
+					interest_group = ig_rural_folk					# CHANGE
+					ideology = ideology_democratic				# CHANGE
+					traits = {
+						charismatic								# CHANGE
+						persistent								# CHANGE
+						meticulous								# CHANGE
+					}
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:bissau_guinean }	# Change homeland identity to match colony to be released ****
+		 	}
+			set_state_owner = c:GNB							# Change TAG to colony ****
+		}
+		
+		#bissau_guinean War
+		create_diplomatic_play = {
+			name = bissau_guinean_war
+			type = dp_annex_war_historical
+			target_country = c:GNB
+			
+			#war = yes
+			
+			add_war_goal = {
+				holder = c:GNB
+				type = humiliation
+				target_country = c:POR
+			}
+			
+		}
+		
+		# Fire only once
+		set_variable = bissau_guinean_war_hcw							# Change variable ****
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_colonial_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Independence for the defender
+		#Release country
+		create_country = {
+			tag = GNB										# Change TAG of country being released ****
+			origin = ROOT											# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {											# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_communist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "guy_incognito_first_name"		# CHANGE
+					last_name = "guy_incognito_last_name"		# CHANGE
+					ruler = yes
+					#birth_date = 1910.1.1						# CHANGE
+					interest_group = ig_rural_folk				# CHANGE
+					ideology = ideology_democratic				# CHANGE
+					traits = {
+						charismatic								# CHANGE
+						persistent								# CHANGE
+						meticulous								# CHANGE
+					}
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:bissau_guinean }		# Change homeland identity to match colony to be released ****
+		 	}
+			set_state_owner = c:GNB								# Change TAG to colony ****
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Minor discontent
+		custom_tooltip = {
+			text = everyone_is_angry_custom_tooltip
+			every_scope_state = {
+				add_radicals = {
+					value = small_radicals
+				}
+			}
+		}
+		
+		# Fire only once
+		set_variable = bissau_guinean_war_hcw							# Change variable ****
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
