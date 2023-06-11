@@ -1,0 +1,140 @@
+start_nuclear_weapons_program_decision = {
+
+	is_shown = {
+	
+		NOT = { has_modifier = nuclear_capability }
+		
+		NOT = { has_variable = nuclear_program_started }
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no
+		
+	}
+
+	possible = {
+	
+		#THIS has a jingoistic government
+		has_jingoistic_ruler = yes
+		
+		#Must be a sovereign state
+		is_sufficiently_independent = yes
+		
+		#THIS is not legally barred from starting a nuclear program
+		has_law = law_type:law_wmd_allowed
+		
+		#THIS is not demilitarised
+		NOT = { has_law = law_type:law_peasant_levies }
+		
+		#THIS is not broke
+		in_default = no
+		
+		#THIS is not in the midst of a revolution
+		has_revolution = no
+		
+		#Has nuclear weapons tech
+		has_technology_researched = tech_military_nuclear_3
+		
+	}
+	
+	when_taken = {
+		set_variable = nuclear_program_started
+		
+		#Hostile countries become more hostile
+		every_country = {
+			limit = {
+				OR = {
+				
+					AND = {
+						country_rank > root.country_rank
+						can_go_to_war = yes
+						OR = { has_modifier = nuclear_capability has_variable = nuclear_program_started }
+			
+						OR = { 
+							has_attitude = {
+								who = ROOT
+								attitude <= antagonistic
+							}
+							relations:root < relations_threshold:poor
+						}
+					}
+					
+					AND = {
+						is_sufficiently_independent = yes
+						has_diplomatic_pact = { who = ROOT type = rivalry }
+						OR = { has_modifier = nuclear_capability has_variable = nuclear_program_started }
+					}
+					
+				}
+			}
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+		}
+		
+		#International community does not like this
+		change_infamy = 10
+		
+	}
+
+	ai_chance = {
+		base = 0
+		
+		modifier = {
+		
+			trigger = {
+			
+				OR = { 
+				
+					#There is a hostile country with rank greater than THIS that has nukes OR is developing nukes
+					any_country = {
+						country_rank > root.country_rank
+						can_go_to_war = yes
+						OR = { has_modifier = nuclear_capability has_variable = nuclear_program_started }
+			
+						OR = { 
+							has_attitude = {
+								who = ROOT
+								attitude <= antagonistic
+							}
+							relations:root < relations_threshold:poor
+						}
+					}
+				
+					#There is a neigbouring country that is hostile against THIS that has nukes OR is developing nukes
+					any_neighbouring_state = {
+						owner = {
+							can_go_to_war = yes
+							OR = { has_modifier = nuclear_capability has_variable = nuclear_program_started }
+			
+							OR = { 
+								has_attitude = {
+									who = ROOT
+									attitude <= antagonistic
+								}
+								relations:root < relations_threshold:poor
+							}
+						}
+					}
+					
+					#Rival has nukes OR is developing nukes
+					any_country = {
+						is_sufficiently_independent = yes
+						has_diplomatic_pact = { who = ROOT type = rivalry }
+						OR = { has_modifier = nuclear_capability has_variable = nuclear_program_started }
+					}
+					
+					#THIS is a superpower or great power
+					country_rank >= rank_value:great_power
+				
+				}
+				
+			}
+			
+			add = 100
+			
+		}
+
+	}
+	
+}
