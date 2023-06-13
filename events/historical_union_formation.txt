@@ -51,3 +51,138 @@ historical_union_formation.1 = {
     }
 
 }
+
+#United Arab Republic
+historical_union_formation.2 = {
+    type = country_event
+
+    title = united_arab_republic.t 					# Title of the event; ADD LOCALISATION
+    desc = united_arab_republic.d 					# Description of the event; ADD LOCALISATION
+    #flavor = united_arab_republic.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:EGY
+		this ?= c:EGY											# Change TAG of the overlord ****
+		game_date >= 1958.2.22									# START DATE: Date colony became self governing ****
+		game_date < 1968.2.22									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_nationalist_government = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		left_wing_ruling_coalition = yes						# Correct Ruling Coalition
+		
+		#Union candidate conditions
+		c:SYR = { 												# Change TAG of the colony ****
+			exists = yes
+			
+			OR = { is_a_nationalist_government = yes is_a_democracy = yes }
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = UAR_1958_huf }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = UAR_1958_huf								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_union_formation.option.1				# Accept annexation by FROM
+        highlighted_option = yes
+		
+		#Option for Syria to accept
+		c:SYR = { 
+			trigger_event = { id = historical_union_formation.3 } 
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_formation.option.2				# Refuse annexation by FROM
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
+
+#United Arab Republic - recipient
+historical_union_formation.3 = {
+    type = country_event
+
+    title = united_arab_republic.t 					# Title of the event; ADD LOCALISATION
+    desc = united_arab_republic.d 					# Description of the event; ADD LOCALISATION
+    #flavor = united_arab_republic.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+    
+    option = {
+        name = historical_union_formation.option.1			# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		prev = { annex = root }
+		
+		every_scope_state = {
+			limit = { is_homeland = cu:syrian }
+			state_region = {
+				set_state_type = incorporated
+			}
+		}
+		
+		ai_chance = { 
+			base = 99 
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_formation.option.2			# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = prev
+			value = -100
+		}
+		
+		ai_chance = { 
+			base = 1 
+		}
+		
+    }
+
+}
