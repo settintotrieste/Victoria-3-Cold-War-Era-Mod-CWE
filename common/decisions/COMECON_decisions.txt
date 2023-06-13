@@ -1,0 +1,184 @@
+form_COMECON_decision = {
+
+	is_shown = {
+		
+		game_date >= 1949.1.5
+		
+		#Historical founder
+		c:SOV ?= this
+		
+		#COMECON does not already exist
+		NOR = { has_modifier = COMECON_member has_modifier = COMECON_leader }
+		NOT = { any_country = { OR = { has_modifier = COMECON_member has_modifier = COMECON_leader } } }
+		
+		#THIS is a democracy
+		is_a_communist_government = yes
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no
+	}
+
+	possible = {
+	
+		#THIS is at least a Super Power
+		country_rank >= rank_value:super_power
+		
+		#Country is independent
+		is_sufficiently_independent = yes
+	
+		#Country is not at war
+		is_at_war = no
+		
+		#Country is not broke
+		in_default = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+		#There is someone to create COMECON with
+		any_country = {
+			is_a_communist_government = yes
+			is_in_our_sphere_of_influence = yes
+			is_revolutionary = no
+			relations:root >= relations_threshold:amicable
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS forms COMECON by being the first member & leader
+		add_modifier = { name = COMECON_leader }
+		
+	}
+
+	ai_chance = {
+		base = 100		
+	}
+	
+}
+
+join_COMECON_decision = {
+
+	is_shown = {
+	
+		#Is not currently applying for COMECON membership
+		NOT = { has_variable = COMECON_application_var }
+		
+		#Not already in COMECON
+		NOT = { has_modifier = COMECON_leader }
+		NOT = { has_modifier = COMECON_member }
+		
+		#COMECON does already exists
+		any_country = { has_modifier = COMECON_leader }
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no
+		
+		#COMECON Leader is higher rank than THIS
+		any_country = {
+			has_modifier = COMECON_leader
+			country_rank > root.country_rank
+		}
+		
+	}
+
+	possible = {
+	
+		#Did not leave COMECON recently
+		NOT = { has_variable = left_COMECON_var }
+		
+		#THIS is a democracy
+		is_a_communist_government = yes
+	
+		#Country is independent
+		is_sufficiently_independent = yes
+	
+		#Country is not at war
+		is_at_war = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+		#Friendly with COMECON leader
+		any_country = {
+			has_modifier = COMECON_leader
+			
+			relations:root >= relations_threshold:amicable
+			NOT = { has_attitude = { who = ROOT attitude <= antagonistic } }
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS applies for COMECON
+		set_variable = {
+			name = COMECON_application_var
+			months = 12
+		}
+		
+		#Choice for COMECON leader to accept or decline
+		random_country = { 
+			limit = { has_modifier = COMECON_leader }
+			trigger_event = { id = COMECON_system.4 }
+		}
+		
+	}
+
+	ai_chance = {
+		base = 100
+	}
+	
+}
+
+leave_COMECON_decision = {
+
+	is_shown = {
+		
+		#THIS is in COMECON
+		OR = { has_modifier = COMECON_member has_modifier = COMECON_leader }
+		
+	}
+
+	possible = {
+	
+		#Conditions to leave COMECON
+		OR = {
+		
+			NOT = { is_a_communist_government = yes }
+		
+			NOT = { is_sufficiently_independent = yes }
+			
+			any_country = {
+				has_modifier = COMECON_leader
+			
+				NOT = { relations:root >= relations_threshold:poor }
+				has_attitude = { who = ROOT attitude <= antagonistic }
+			}
+			
+			is_player = yes
+			
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS leaves COMECON
+		remove_modifier = COMECON_member
+		remove_modifier = COMECON_leader
+		
+		#Block reapplication for 5 years
+		set_variable = {
+			name = left_COMECON_var
+			months = 60
+		}
+		
+	}
+
+	ai_chance = {
+		base = 100		
+	}
+	
+}

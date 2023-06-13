@@ -1,0 +1,329 @@
+namespace = OECD_system
+
+#Set OECD leader
+OECD_system.1 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = {
+		
+			#No OECD leader and there is an eligible one
+			AND = { 
+			
+				NOT = { any_country = { has_modifier = OECD_leader } }
+				
+				any_country = { 
+					has_modifier = OECD_member
+					is_a_democracy = yes
+					in_default = no
+					country_rank >= rank_value:super_power
+				}
+				
+			}
+			
+			#OECD leader is wrong
+			AND = { 
+				has_modifier = OECD_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOT = { is_a_democracy = yes }
+					NOT = { country_rank >= rank_value:super_power }
+				}
+			}
+			
+			#Overlapping modifiers
+			any_country = { has_modifier = OECD_leader has_modifier = OECD_member }
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Clear OECD leader
+		every_country = {
+			limit = { has_modifier = OECD_leader }
+			remove_modifier = OECD_leader
+			add_modifier = { name = OECD_member }
+		}
+	
+		#Set OECD leader
+		if = {
+			limit = { 
+				NOT = { any_country = { has_modifier = OECD_leader } }
+				any_country = { 
+					has_modifier = OECD_member
+					is_a_democracy = yes
+					in_default = no
+					country_rank >= rank_value:super_power
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = OECD_member
+					is_a_democracy = yes
+					in_default = no
+					country_rank >= rank_value:super_power
+				}
+				add_modifier = { name = OECD_leader }
+			}
+		}
+		else_if = {
+			limit = {
+				has_modifier = OECD_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOT = { is_a_democracy = yes }
+					NOT = { country_rank >= rank_value:super_power }
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = OECD_member
+					is_a_democracy = yes
+					in_default = no
+					country_rank >= rank_value:super_power
+				}
+				add_modifier = { name = OECD_leader }
+			}
+		}
+		
+		#Clean up memberships
+		if = { 
+			limit = { has_modifier = OECD_leader has_modifier = OECD_member }
+			remove_modifier = OECD_member
+		}
+		
+	}
+
+}
+
+#Dissolve OECD
+OECD_system.2 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = { 
+		
+			#THIS is the sole member of OECD
+			AND = { 
+				OR = { has_modifier = OECD_member has_modifier = OECD_leader }
+				NOT = { any_country = { has_modifier = OECD_member } }
+			}
+			
+			#No OECD leader
+			AND = { 
+				NOT = { has_modifier = OECD_leader }
+				NOT = { any_country = { has_modifier = OECD_leader } }
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Everyone leaves OECD
+		remove_modifier = OECD_member
+		remove_modifier = OECD_leader
+		
+		every_country = {
+			remove_modifier = OECD_member
+			remove_modifier = OECD_leader
+		}
+		
+	}
+
+}
+
+#Kick ineligible countries out of OECD
+OECD_system.3 = {
+	type = country_event
+	title = OECD_expulsion.t 					# Title of the event; ADD LOCALISATION
+    desc = OECD_expulsion.d 					# Description of the event; ADD LOCALISATION
+    flavor = OECD_expulsion.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	trigger = {
+		
+		OR = { 
+			has_modifier = OECD_member
+			has_modifier = OECD_leader
+			has_variable = OECD_application_var
+		}
+		
+		OR = { 
+			NOT = { is_sufficiently_independent = yes }
+			NOT = { infamy < infamy_threshold:pariah }
+			NOT = { is_a_democracy = yes }
+		}
+		
+	}
+
+	immediate = {
+	
+		#THIS leaves OECD
+		remove_modifier = OECD_member
+		remove_modifier = OECD_leader
+		
+		#Terminate any applications
+		remove_variable = OECD_application_var
+		
+		#Block reapplication for 5 years
+		set_variable = {
+			name = left_OECD_var
+			months = 60
+		}
+		
+	}
+
+}
+
+#Option for OECD leader to accept or reject application for membership
+OECD_system.4 = {
+	title = OECD_application_choice.t 					# Title of the event; ADD LOCALISATION
+    desc = OECD_application_choice.d 					# Description of the event; ADD LOCALISATION
+    #flavor = OECD_application_choice.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		has_modifier = OECD_leader
+		
+		any_country = {
+			has_variable = OECD_application_var
+			
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+	}
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_variable = OECD_application_var }
+			
+			remove_variable = OECD_application_var
+			
+			save_scope_as = OECD_applicant
+		}
+		
+		ROOT = {
+			save_scope_as = OECD_leader
+		}
+		
+	}
+
+	option = {
+        name = OECD_application_choice.option.1			# Accept application from PREV
+        highlighted_option = yes
+		
+		#Accept FROM into OECD
+		scope:OECD_applicant = {
+			#FROM joins OECD
+			add_modifier = { name = OECD_member }
+		}
+		
+		#Inform applicant of successful outcome
+		scope:OECD_applicant = { trigger_event = { id = OECD_system.6 } }
+		
+		#FROM is happy with THIS
+		set_relations = {
+			country = scope:OECD_applicant
+			value = 25
+		}
+		
+		ai_chance = { 
+			base = 99
+		}
+		
+    }
+	
+	option = {
+        name = OECD_application_choice.option.2 # Refuse application from PREV
+		default_option = yes
+		
+		#Inform applicant of unsuccessful outcome
+		scope:OECD_applicant = { trigger_event = { id = OECD_system.5 } }
+		
+		#FROM is angry!
+		change_relations = {
+			country = scope:OECD_applicant
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 1
+		}
+		
+    }
+
+}
+
+#Notification of rejection
+OECD_system.5 = {
+	title = OECD_application_rejection.t 				# Title of the event; ADD LOCALISATION
+    desc = OECD_application_rejection.d 				# Description of the event; ADD LOCALISATION
+    #flavor = OECD_application_rejection.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = OECD_leader }
+			save_scope_as = OECD_leader
+		}
+		
+	}
+
+	option = {
+        name = OECD_application_rejection.1				# Unfortunate
+		
+    }
+
+}
+
+#Notification of acceptance
+OECD_system.6 = {
+	title = OECD_application_acceptance.t 				# Title of the event; ADD LOCALISATION
+    desc = OECD_application_acceptance.d 				# Description of the event; ADD LOCALISATION
+    #flavor = OECD_application_acceptance.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = OECD_leader }
+			save_scope_as = OECD_leader
+		}
+		
+	}
+
+	option = {
+        name = OECD_application_acceptance.1				# Fortunate
+		
+    }
+
+}
