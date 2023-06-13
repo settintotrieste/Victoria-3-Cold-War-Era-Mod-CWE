@@ -107,22 +107,51 @@
 		
 		actor_can_break = {
 			
+			#Irish Open border
+			NAND = { 
+				scope:target_country = { 
+					this ?= c:SIR
+					is_a_democracy = yes
+					has_strategic_land_adjacency = c:GBR
+				}
+				scope:actor = { 
+					this ?= c:GBR
+					is_a_democracy = yes
+					has_strategic_land_adjacency = c:SIR
+				}
+			}
+			
 		}
 		
 		target_can_break = {
+			
+			#Subjects cannot freely leave Customs Union
 			NAND = { 
 				scope:target_country = { is_direct_subject_of = scope:actor }
 				scope:actor = { leads_customs_union = yes }
 			}
+			
+			#Irish Open border
+			NAND = { 
+				scope:target_country = { 
+					this ?= c:SIR
+					is_a_democracy = yes
+					has_strategic_land_adjacency = c:GBR
+				}
+				scope:actor = { 
+					this ?= c:GBR
+					is_a_democracy = yes
+					has_strategic_land_adjacency = c:SIR
+				}
+			}
+			
 		}
 
 		should_auto_break = {
-		
 			NAND = { 
 				scope:target_country = { is_direct_subject_of = scope:actor }
 				scope:actor = { leads_customs_union = yes }
 			}
-		
 			custom_tooltip = {
 				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER_NOT
 
@@ -142,6 +171,8 @@
 				scope:target_country = { is_already_in_a_customs_union = yes }
 				
 				is_junior_in_customs_union = yes
+				
+				is_already_in_a_customs_union = yes
 				
 				scope:target_country = { has_law = law_type:law_isolationism }
 				has_law = law_type:law_isolationism
@@ -233,9 +264,15 @@
 				}
 			}	
 
-			add = {
-				desc = "DIPLOMATIC_ACCEPTANCE_SENIOR_PART"
-				value = 20
+			if = {
+				limit = { 
+					scope:target_country = { is_direct_subject_of = scope:actor }
+					scope:actor = { leads_customs_union = yes }
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_SENIOR_PART"
+					value = 100
+				}
 			}
 
 			add = {
@@ -421,7 +458,23 @@
 				value = "scope:actor.num_mutual_trade_route_levels_with_country(root)"
 				multiply = 0.5
 				max = 25
-			}				
+			}
+
+			#Land locked countries are desperate to find a country with a port
+			if = {
+				limit = { 
+					scope:actor = { 
+						NOT = { any_scope_state = { is_coastal = yes } } 
+					}
+					scope:target_country = { 
+						any_scope_state = { is_coastal = yes } 
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_JUNIOR_PART"
+					value = 100
+				}
+			}
 
 			if = {
 				limit = {
@@ -444,7 +497,7 @@
 					multiply = 0.5
 					min = -20
 				}					
-			}		
+			}
 
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
@@ -753,7 +806,7 @@ change_customs_union = {
 		is_junior_in_customs_union = no
 		scope:target_country = {
 			NOT = { is_country_type = decentralized }
-			 is_junior_in_customs_union = yes
+			is_junior_in_customs_union = yes
 		}
 	}
 
