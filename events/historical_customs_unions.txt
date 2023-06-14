@@ -1,0 +1,82 @@
+namespace = historical_customs_unions
+
+#Irish Open Border
+historical_customs_unions.1 = {
+	type = country_event
+	
+	title = irish_open_border.t 						# Title of the event; ADD LOCALISATION
+    desc = irish_open_border.d 							# Description of the event; ADD LOCALISATION
+    flavor = irish_open_border.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_rich_and_poor.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+	
+		c:SIR ?= this
+		
+		is_a_democracy = yes
+		is_sufficiently_independent = yes
+		is_at_war = no
+		
+		NOT = { is_already_in_a_customs_union = yes }
+		
+		NOT = { has_law = law_type:law_isolationism }
+		
+		#Other side
+		exists = c:GBR
+		c:GBR = { 
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			
+			leads_customs_union = yes
+			has_strategic_land_adjacency = c:SIR
+			
+			NOT = { has_law = law_type:law_isolationism }
+			
+			NOT = { is_subject_of = ROOT }
+		}
+		
+		NOR = { 
+			has_variable = irish_open_border
+			c:GBR = { has_variable = irish_open_border }
+			c:GBR = { has_diplomatic_pact = { who = ROOT type = customs_union is_initiator = yes } }
+		}
+		
+	}
+
+	immediate = {
+		
+		save_scope_as = irish_country
+		c:GBR = { save_scope_as = british_country }
+		
+		set_variable = irish_open_border
+		c:GBR = { set_variable = irish_open_border }
+		
+		if = {
+			limit = { 
+				NOT = { 
+					c:GBR = { has_diplomatic_pact = { who = ROOT type = customs_union is_initiator = yes } } 
+				} 
+			}
+			c:GBR = { 
+				create_diplomatic_pact = {
+					country = c:SIR
+					type = customs_union
+				}
+			}
+		}
+		
+	}
+	
+	option = {
+        name = historical_economy.1								# Interesting
+		
+    }
+	
+}
