@@ -1,0 +1,356 @@
+namespace = economic_cycles_system
+
+#Determine economic outlook (Checked every 6 months)
+economic_cycles_system.1 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+	}
+
+	immediate = {
+		
+		#Failsafe
+		if = {
+			limit = { 
+				NOR = { 
+					has_modifier = economic_cycle_1 
+					has_modifier = economic_cycle_2
+					has_modifier = economic_cycle_3
+					has_modifier = economic_cycle_4
+					has_modifier = economic_cycle_5
+				} 
+			}
+			add_modifier = { name = economic_cycle_3 }
+		}
+		
+		#Calculate economic strength
+		set_variable = { 
+			name = economic_strength_var
+			value = 0
+		}
+	
+		### Good for the economy ###
+	
+		## Structural (Max: 10) ##
+	
+		#Corruption (Max: 2)
+		if = {
+			limit = { has_law = law_type:law_high_anti_corruption }
+			change_variable = { name = economic_strength_var add = 1 }
+		}
+		if = {
+			limit = { has_law = law_type:law_very_high_anti_corruption }
+			change_variable = { name = economic_strength_var add = 2 }
+		}
+	
+		#Financial Sector Regulations (Max: 2)
+		if = {
+			limit = { has_law = law_type:law_weak_financial_regulations }
+			change_variable = { name = economic_strength_var add = 2 }
+		}
+	
+		#Industrial Policy (Max: 2)
+		if = {
+			limit = { has_law = law_type:law_pro_industry_regulations }
+			change_variable = { name = economic_strength_var add = 2 }
+		}
+	
+		#Fiscal Policy (Max: 4)
+		if = {
+			limit = { has_law = law_type:law_expansionary_monetary_policy }
+			change_variable = { name = economic_strength_var add = 4 }
+		}
+	
+		## Situational (Max: 10) ##
+	
+		#Stock Market Speculation
+		if = {
+			limit = { 
+				NOT = { is_a_command_economy = yes }
+			}
+			random_list = {
+				1 = {
+					change_variable = { name = economic_strength_var add = 1 }
+				}
+				2 = {
+					change_variable = { name = economic_strength_var add = 2 }
+				}
+				3 = {
+					change_variable = { name = economic_strength_var add = 3 }
+				}
+				4 = {
+					change_variable = { name = economic_strength_var add = 4 }
+				}
+				5 = {
+					change_variable = { name = economic_strength_var add = 5 }
+				}
+			}
+		}
+	
+		### Bad for the economy ###
+	
+		## Structural (Max: -10) ##
+	
+		#Corruption (Max: -2)
+		if = {
+			limit = { has_law = law_type:law_low_anti_corruption }
+			change_variable = { name = economic_strength_var add = -1 }
+		}
+		if = {
+			limit = { has_law = law_type:law_very_low_anti_corruption }
+			change_variable = { name = economic_strength_var add = -2 }
+		}
+	
+		#Financial Sector Regulations (Max: -2)
+		if = {
+			limit = { has_law = law_type:law_strong_financial_regulations }
+			change_variable = { name = economic_strength_var add = -2 }
+		}
+	
+		#Industrial Policy (Max: -2)
+		if = {
+			limit = { has_law = law_type:law_pro_consumer_regulations }
+			change_variable = { name = economic_strength_var add = -2 }
+		}
+	
+		#Fiscal Policy (Max: -4)
+		if = {
+			limit = { has_law = law_type:law_deflationary_monetary_policy }
+			change_variable = { name = economic_strength_var add = -4 }
+		}
+	
+		## Situational (Max: -10) ##
+	
+		#Wars (Max: -4)
+		if = {
+			limit = { 
+				is_at_war = yes
+				any_scope_war = { has_war_support = { target = ROOT value < 25 } }
+			}
+			change_variable = { name = economic_strength_var add = -2 }
+		}
+		if = {
+			limit = { 
+				is_at_war = yes
+				any_scope_war = { has_war_support = { target = ROOT value < 50 } }
+			}
+			change_variable = { name = economic_strength_var add = -2 }
+		}
+	
+		#State of Economy (Max: -6)
+		if = {
+			limit = { 
+				taking_loans = yes
+			}
+			change_variable = { name = economic_strength_var add = -2 }
+		}
+		if = {
+			limit = { 
+				in_default = yes
+			}
+			change_variable = { name = economic_strength_var add = -2 }
+		}
+		if = {
+			limit = { 
+				has_healthy_economy = no
+			}
+			change_variable = { name = economic_strength_var add = -2 }
+		}
+		
+		#Apply modifiers
+		if = {
+			limit = { 
+				root.var:economic_strength_var >= 0
+				root.var:economic_strength_var < 2
+			}
+			if = {
+				limit = { has_modifier = economic_cycle_2 }
+				remove_modifier = economic_cycle_2
+				add_modifier = { name = economic_cycle_1 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_3 }
+				remove_modifier = economic_cycle_3
+				add_modifier = { name = economic_cycle_2 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_4 }
+				remove_modifier = economic_cycle_4
+				add_modifier = { name = economic_cycle_3 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_5 }
+				remove_modifier = economic_cycle_5
+				add_modifier = { name = economic_cycle_4 }
+			}
+			else = {
+				limit = { 
+					NOR = { 
+						has_modifier = economic_cycle_1 
+						has_modifier = economic_cycle_2
+						has_modifier = economic_cycle_3
+						has_modifier = economic_cycle_4
+						has_modifier = economic_cycle_5
+					} 
+				}
+				add_modifier = { name = economic_cycle_1 }
+			}
+		}
+		else_if = {
+			limit = { 
+				root.var:economic_strength_var >= 2
+				root.var:economic_strength_var < 4
+			}
+			if = {
+				limit = { has_modifier = economic_cycle_1 }
+				remove_modifier = economic_cycle_1
+				add_modifier = { name = economic_cycle_2 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_3 }
+				remove_modifier = economic_cycle_3
+				add_modifier = { name = economic_cycle_2 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_4 }
+				remove_modifier = economic_cycle_4
+				add_modifier = { name = economic_cycle_3 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_5 }
+				remove_modifier = economic_cycle_5
+				add_modifier = { name = economic_cycle_4 }
+			}
+			else = {
+				limit = { 
+					NOR = { 
+						has_modifier = economic_cycle_1 
+						has_modifier = economic_cycle_2
+						has_modifier = economic_cycle_3
+						has_modifier = economic_cycle_4
+						has_modifier = economic_cycle_5
+					} 
+				}
+				add_modifier = { name = economic_cycle_2 }
+			}
+		}
+		else_if = {
+			limit = { 
+				root.var:economic_strength_var >= 4
+				root.var:economic_strength_var < 6
+			}
+			if = {
+				limit = { has_modifier = economic_cycle_1 }
+				remove_modifier = economic_cycle_1
+				add_modifier = { name = economic_cycle_2 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_2 }
+				remove_modifier = economic_cycle_2
+				add_modifier = { name = economic_cycle_3 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_4 }
+				remove_modifier = economic_cycle_4
+				add_modifier = { name = economic_cycle_3 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_5 }
+				remove_modifier = economic_cycle_5
+				add_modifier = { name = economic_cycle_4 }
+			}
+			else_if = {
+				limit = { 
+					NOR = { 
+						has_modifier = economic_cycle_1 
+						has_modifier = economic_cycle_2
+						has_modifier = economic_cycle_3
+						has_modifier = economic_cycle_4
+						has_modifier = economic_cycle_5
+					} 
+				}
+				add_modifier = { name = economic_cycle_3 }
+			}
+		}
+		else_if = {
+			limit = { 
+				root.var:economic_strength_var >= 6
+				root.var:economic_strength_var < 8
+			}
+			if = {
+				limit = { has_modifier = economic_cycle_1 }
+				remove_modifier = economic_cycle_1
+				add_modifier = { name = economic_cycle_2 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_2 }
+				remove_modifier = economic_cycle_2
+				add_modifier = { name = economic_cycle_3 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_3 }
+				remove_modifier = economic_cycle_3
+				add_modifier = { name = economic_cycle_4 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_5 }
+				remove_modifier = economic_cycle_5
+				add_modifier = { name = economic_cycle_4 }
+			}
+			else = {
+				limit = { 
+					NOR = { 
+						has_modifier = economic_cycle_1 
+						has_modifier = economic_cycle_2
+						has_modifier = economic_cycle_3
+						has_modifier = economic_cycle_4
+						has_modifier = economic_cycle_5
+					} 
+				}
+				add_modifier = { name = economic_cycle_4 }
+			}
+		}
+		else_if = {
+			limit = { 
+				root.var:economic_strength_var >= 8
+				#root.var:economic_strength_var <= 10
+			}
+			if = {
+				limit = { has_modifier = economic_cycle_1 }
+				remove_modifier = economic_cycle_1
+				add_modifier = { name = economic_cycle_2 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_2 }
+				remove_modifier = economic_cycle_2
+				add_modifier = { name = economic_cycle_3 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_3 }
+				remove_modifier = economic_cycle_3
+				add_modifier = { name = economic_cycle_4 }
+			}
+			else_if = {
+				limit = { has_modifier = economic_cycle_4 }
+				remove_modifier = economic_cycle_4
+				add_modifier = { name = economic_cycle_5 }
+			}
+			else = {
+				limit = { 
+					NOR = { 
+						has_modifier = economic_cycle_1 
+						has_modifier = economic_cycle_2
+						has_modifier = economic_cycle_3
+						has_modifier = economic_cycle_4
+						has_modifier = economic_cycle_5
+					} 
+				}
+				add_modifier = { name = economic_cycle_5 }
+			}
+		}
+		
+	}
+
+}
