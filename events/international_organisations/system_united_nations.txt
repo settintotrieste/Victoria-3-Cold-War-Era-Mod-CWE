@@ -1442,6 +1442,43 @@ united_nations.18 = {
 	option = {
 		name = un_peacekeeping_update			#Excellent
 		
+		#Roll UNSG's proactiveness
+		remove_global_variable = passive_unsg
+		remove_global_variable = balanced_unsg
+		remove_global_variable = proactive_unsg
+		random_list = {
+			1 = {	
+				set_global_variable = passive_unsg
+			
+				#Neutral countries are more likely to produce a passive UNSG
+				modifier = {
+					if = {
+						limit = {
+							has_law = law_type:law_no_war
+						}
+					}
+					add = 1
+				}
+			}
+			1 = {	
+				set_global_variable = balanced_unsg
+			
+				#Neutral countries are more likely to produce a passive UNSG
+				modifier = {
+					if = {
+						limit = {
+							has_law = law_type:law_defensive_war
+						}
+					}
+					add = 1
+				}
+			}
+			1 = {	
+				set_global_variable = proactive_unsg
+				
+			}
+		}
+		
 	}
 	
 }
@@ -1582,6 +1619,306 @@ united_nations.20 = {
 		activate_law = law_type:law_free_trade
 		activate_law = law_type:law_laissez_faire
 		activate_law = law_type:law_deflationary_monetary_policy
+		
+	}
+	
+}
+
+### UN Sanctions System ####
+
+united_nations.21 = {
+	type = country_event
+	
+	title = UN_sanctions_system.t
+	desc = UN_sanctions_system.d
+	flavor = UN_sanctions_system.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+	
+	cooldown = { months = 6 }
+
+	trigger = {
+	
+		#THIS is a bad boy and not already a target of sanctions
+		OR = { 
+			AND = { 
+				infamy >= infamy_threshold:infamous
+				has_global_variable = proactive_unsg
+				NOT = { has_modifier = un_sanctions_1 }
+			}
+			AND = { 
+				infamy >= infamy_threshold:notorious
+				OR = { has_global_variable = proactive_unsg has_global_variable = balanced_unsg }
+				NOT = { has_modifier = un_sanctions_2 }
+			}
+			AND = { 
+				infamy >= infamy_threshold:pariah
+				OR = { has_global_variable = proactive_unsg has_global_variable = balanced_unsg has_global_variable = passive_unsg }
+				NOT = { has_modifier = un_sanctions_3 }
+			}
+		}
+		
+		#UNSG perm members are immune to sanctions OR THIS is friendly with a UNSG perm member
+		NOR = { 
+			has_modifier = unsc_permanent_member
+			any_country = { 
+				has_modifier = unsc_permanent_member 
+				OR = { 
+					relations:root >= relations_threshold:amicable
+					in_alliance_with_THIS = yes
+				}
+			}
+		}
+		
+	}
+
+	immediate = {
+	
+		save_scope_as = UN_sanctions_target
+		
+	}
+
+	option = {
+		name = UN_sanctions_option				#F
+		
+		if = {
+			limit = {
+				infamy >= infamy_threshold:infamous
+				has_global_variable = proactive_unsg
+				NOT = { has_modifier = un_sanctions_1 }
+			}
+			add_modifier = { name = un_sanctions_1 }
+		}
+		if = {
+			limit = {
+				infamy >= infamy_threshold:notorious
+				OR = { has_global_variable = proactive_unsg has_global_variable = balanced_unsg }
+				NOT = { has_modifier = un_sanctions_2 }
+			}
+			add_modifier = { name = un_sanctions_2 }
+		}
+		if = {
+			limit = {
+				infamy >= infamy_threshold:pariah
+				OR = { has_global_variable = proactive_unsg has_global_variable = balanced_unsg has_global_variable = passive_unsg }
+				NOT = { has_modifier = un_sanctions_3 }
+			}
+			add_modifier = { name = un_sanctions_3 }
+			
+			set_variable = un_embargo_target
+			
+			#Call for an embargo of THIS
+			every_country = {
+				limit = {
+					exists = yes
+					NOT = { THIS = ROOT }
+					has_modifier = unga_member
+					NOR = {
+						has_modifier = un_sanctions_3
+					}
+				}
+				trigger_event = { id = united_nations.22 }
+			}
+		}
+		
+	}
+	
+}
+
+united_nations.22 = {
+	type = country_event
+	
+	title = UN_sanctions_system_embargo.t
+	desc = UN_sanctions_system_embargo.d
+	flavor = UN_sanctions_system_embargo.d
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	immediate = {
+		save_scope_as = un_sanctions_embargoing_country
+		
+		random_country = {
+			limit = { has_variable = un_embargo_target }
+			save_scope_as = un_sanctions_embargoed_country
+			remove_variable = un_embargo_target
+		}
+	}
+
+	option = {
+		name = UN_sanctions_system_embargo_option.1			#Yes
+		
+		#Create UN embargo
+		create_diplomatic_pact = {
+			country = scope:un_sanctions_embargoed_country 
+			type = embargo
+		}
+		if = {
+			limit = { NOT = { has_modifier = un_embargo_participant } }
+			add_modifier = { name = un_embargo_participant }
+		}
+		
+		#FROM is angry!
+		change_relations = {
+			country = scope:un_sanctions_embargoed_country 
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 0
+			modifier = {
+				trigger = {
+					has_attitude = { 
+						who = scope:un_sanctions_embargoed_country 
+						attitude < cooperative 
+					}
+				}
+				add = 100
+			}
+		}
+	}
+	
+	option = {
+		name = UN_sanctions_system_embargo_option.2			#No
+		
+		#FROM is happy!
+		change_relations = {
+			country = scope:un_sanctions_embargoed_country 
+			value = 25
+		}
+		
+		ai_chance = { 
+			base = 0
+			modifier = {
+				trigger = {
+					has_attitude = { 
+						who = scope:un_sanctions_embargoed_country
+						attitude >= cooperative 
+					}
+				}
+				add = 100
+			}
+		}
+	}
+	
+}
+
+united_nations.23 = {
+	type = country_event
+	
+	title = UN_sanctions_system_end.t
+	desc = UN_sanctions_system_end.d
+	flavor = UN_sanctions_system_end.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+	
+	cooldown = { months = 6 }
+
+	trigger = {
+	
+		#THIS is not a bad boy and but is a target of sanctions
+		OR = { 
+			AND = { 
+				infamy < infamy_threshold:infamous
+				has_modifier = un_sanctions_1
+			}
+			AND = { 
+				infamy < infamy_threshold:notorious
+				has_modifier = un_sanctions_2
+			}
+			AND = { 
+				infamy < infamy_threshold:pariah
+				has_modifier = un_sanctions_3
+			}
+		}
+		
+	}
+
+	immediate = {
+	
+		save_scope_as = UN_sanctions_target
+		
+	}
+
+	option = {
+		name = UN_sanctions_end_option				#Great
+		
+		if = {
+			limit = {
+				infamy < infamy_threshold:infamous
+				has_modifier = un_sanctions_1
+			}
+			remove_modifier = un_sanctions_1
+		}
+		if = {
+			limit = {
+				infamy < infamy_threshold:notorious
+				has_modifier = un_sanctions_2
+			}
+			remove_modifier = un_sanctions_2
+		}
+		if = {
+			limit = {
+				infamy < infamy_threshold:pariah
+				has_modifier = un_sanctions_3
+			}
+			remove_modifier = un_sanctions_3
+			
+			#Clear all embargoes of THIS
+			every_country = {
+				limit = {
+					has_modifier = un_embargo_participant
+					has_diplomatic_pact = { who = ROOT type = embargo }
+				}
+				remove_diplomatic_pact = { country = ROOT type = embargo }
+			}
+		}
+		
+	}
+	
+}
+
+united_nations.24 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		has_modifier = un_embargo_participant
+		
+		NOT = { any_country = { has_modifier = un_sanctions_3 } }
+		
+	}
+
+	immediate = {
+		
+		remove_modifier = un_embargo_participant
 		
 	}
 	
