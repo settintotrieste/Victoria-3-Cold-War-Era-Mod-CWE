@@ -1,0 +1,344 @@
+namespace = historical_civil_wars
+
+### Eritrean War ###
+
+historical_civil_wars.1 = {
+    type = country_event
+
+    title = eritrean_war.t 								# Title of the event; ADD LOCALISATION
+    desc = eritrean_war.d 								# Description of the event; ADD LOCALISATION
+    #flavor = eritrean_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:ERI ?= this													# Change TAG of the overlord ****
+		game_date >= 1961.6.1											# START DATE: Date colony became self governing ****
+		game_date < 1971.6.1											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		#is_a_democracy = yes											# Correct gov types
+		is_not_sufficiently_independent = yes 							# is_vassal = no
+		is_at_war = no													# war = no
+		
+		#Recipent conditions
+		exists = c:ETH
+		is_direct_subject_of = c:ETH
+		c:ETH = { 														# Change TAG of the transferee ****
+			is_a_regime_monarchy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = eritrean_war_hccw }						# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = eritrean_war_hccw								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1							# Declare war!
+        highlighted_option = yes
+		
+		#eritrean War
+		create_diplomatic_play = {
+			name = eritrean_war
+			type = dp_annex_war_historical
+			target_country = c:ERI
+			
+			#war = yes
+			
+			add_war_goal = {
+				holder = c:ERI
+				type = independence
+				target_country = c:ETH
+			}
+			
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2						# Peace option
+		default_option = yes
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Minor discontent
+		custom_tooltip = {
+			text = everyone_is_angry_custom_tooltip
+			every_scope_state = {
+				add_radicals = {
+					value = small_radicals
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
+
+### Congo Civil War ###
+
+historical_civil_wars.2 = {
+    type = country_event
+
+    title = congolese_war.t 							# Title of the event; ADD LOCALISATION
+    desc = congolese_war.d 								# Description of the event; ADD LOCALISATION
+    #flavor = congolese_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:CNG this = c:CNG										# Change TAG of the overlord ****
+		game_date >= 1960.7.5											# START DATE: Date colony became self governing ****
+		game_date < 1970.7.5											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes											# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		is_at_war = no													# war = no
+		
+		#Owns Katanga
+		NOT = { 														# Colony to be released must not already exist on the map
+			exists = c:KAT												# Change TAG of the colony ****
+		}
+		owns_entire_state_region = STATE_KATANGA
+		
+		#Owns Stanleyville
+		NOT = { 														# Colony to be released must not already exist on the map
+			exists = c:FCG												# Change TAG of the colony ****
+		}
+		owns_entire_state_region = STATE_CONGO_ORIENTALE
+		
+		#TODO: Add South Kasai
+		
+		# Event has not been fired before
+		NOT = { has_variable = congolese_war_hccw }						# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = congolese_war_hccw					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Change gov of Congo
+		effect_starting_politics_presidential_republic = yes
+		effect_conservative_ruling_coalition = yes
+		create_character = {
+			first_name = "Joseph_Kasa_Vubu_first_name"
+			last_name = "Joseph_Kasa_Vubu_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1915.1.1
+			interest_group = ig_landowners 
+			ideology = ideology_elitist
+			traits = {
+				reserved
+				cautious
+			}
+		}
+		
+		#Release country (Katanga)
+		create_country = {
+			tag = KAT										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = s:STATE_KATANGA.region_state:CNG
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_nationalist_republic = yes
+				effect_starting_politics_regime = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		create_diplomatic_play = {
+			name = congolese_war
+			type = dp_annex_war_historical
+			target_country = c:KAT
+			
+			#war = yes
+			
+			add_war_goal = {
+				holder = c:KAT
+				type = secession
+				target_country = c:CNG
+			}
+			
+		}
+		
+		#Release country (Free Republic of the Congo)
+		create_country = {
+			tag = FCG										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = s:STATE_CONGO_ORIENTALE.region_state:CNG
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_parliamentary_republic = yes
+				effect_starting_politics_regime = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_socialist_ruling_coalition = yes
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		create_diplomatic_play = {
+			name = congolese_war
+			type = dp_annex_war_historical
+			target_country = c:CNG
+			
+			add_war_goal = {
+				holder = c:CNG
+				type = annex_country
+				target_country = c:FCG
+			}
+			
+		}
+		c:FCG = {
+			create_character = {
+				first_name = "Antoine_Gizenga_first_name"
+				last_name = "Antoine_Gizenga_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1925.10.5
+				interest_group = ig_rural_folk
+				ideology = ideology_autocratic
+				traits = {
+					charismatic
+					pious
+					persistent
+				}
+			}
+		}
+		
+		#TODO: Add South Kasai
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Change government
+		effect_socialist_ruling_coalition = yes
+		create_character = {
+			first_name = "Patrice_Lumumba_first_name"
+			last_name = "Patrice_Lumumba_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1925.7.2
+			interest_group = ig_rural_folk
+			ideology = ideology_power_hungry
+			traits = {
+				charismatic
+				pious
+				persistent
+			}
+		}
+		
+		#Independence for the defender
+		#Release country (Katanga)
+		create_country = {
+			tag = KAT										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = s:STATE_KATANGA.region_state:CNG
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_nationalist_republic = yes
+				effect_starting_politics_regime = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		
+		#TODO: Add South Kasai
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Minor discontent
+		custom_tooltip = {
+			text = everyone_is_angry_custom_tooltip
+			every_scope_state = {
+				add_radicals = {
+					value = small_radicals
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
