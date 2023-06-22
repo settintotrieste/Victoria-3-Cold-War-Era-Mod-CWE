@@ -1,0 +1,126 @@
+namespace = SOV_gov_changes
+
+# Stalin's Successor
+SOV_gov_changes.1 = {
+    type = country_event
+
+    title = SOV_stalin_succession.t 						# Title of the event; ADD LOCALISATION
+    desc = SOV_stalin_succession.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SOV_stalin_succession.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:SOV
+		this = c:SOV											# Change TAG of the overlord ****
+		game_date >= 1953.3.5									# START DATE: Date colony became self governing ****
+		game_date < 1963.3.5									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		ruler = { is_interest_group_type = ig_trade_unions }	# Correct Ruling Coalition
+		
+		# Event has not been fired before
+		NOT = { has_variable = SOV_1953_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		#Kill Stalin & replace with Brezhnev
+		ruler = {
+			kill_character = yes
+		}
+		#Create new leader for Trade Unions IG
+		create_character = {
+			first_name = "Leonid_Brezhnev_first_name"
+			last_name = "Leonid_Brezhnev_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1906.12.19
+			interest_group = ig_trade_unions
+			ideology = ideology_autocratic
+			traits = {
+				cautious
+				tactful
+				expensive_tastes
+			}
+		}
+		
+		#Khrushchev is leader by default
+		every_interest_group = {
+			limit = { is_in_government = yes }
+			remove_ruling_interest_group = yes
+		}
+		ig:ig_rural_folk = {
+			add_ruling_interest_group = yes
+		}
+	
+		# Fire only once
+		set_variable = SOV_1953_hgc							# Change variable ****
+		
+	}
+    
+    option = {
+        name = SOV_khrushchev.option						# Historical
+        highlighted_option = yes
+		default_option = yes
+		
+		#Install Khrushchev by not changing ruler's IG
+		
+		#Kill Beria
+		ig:ig_bureaucrats = {
+			kill_character = yes
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = SOV_beria.option
+		
+		#Install Beria
+		every_interest_group = {
+			limit = { is_in_government = yes }
+			remove_ruling_interest_group = yes
+		}
+		ig:ig_bureaucrats = {
+			add_ruling_interest_group = yes
+		}
+		
+		ai_chance = { 
+			base = 5
+		}
+		
+    }
+	
+	option = {
+        name = SOV_zhukov.option
+		
+		#Install Zhukov
+		every_interest_group = {
+			limit = { is_in_government = yes }
+			remove_ruling_interest_group = yes
+		}
+		ig:ig_armed_forces = {
+			add_ruling_interest_group = yes
+		}
+		
+		ai_chance = { 
+			base = 5
+		}
+		
+    }
+
+}
