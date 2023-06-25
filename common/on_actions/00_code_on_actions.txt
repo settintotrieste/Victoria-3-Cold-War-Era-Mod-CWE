@@ -611,6 +611,28 @@ on_monthly_pulse_character = {
 			remove_trait = trait_child
 			add_random_trait = personality
 		}
+		if = {
+			limit = {
+				is_mobilized = yes
+			}
+			set_variable = {
+				name = num_months_mobilized
+				value = {
+					add = {
+						if = {
+							limit = {
+								exists = var:num_months_mobilized
+							}
+							add = var:num_months_mobilized
+						}
+						else = { # for safety
+							add = 0
+						}
+					}
+					add = 1
+				}
+			}
+		}
 	}
 }
 on_yearly_pulse_character = {
@@ -832,11 +854,44 @@ on_spreading_technology = {
 	}
 }
 
-# Fires for all countries with an interest marker in the play's region
-# Root = Country who owns the interest marker
-# scope:diplomatic_play = The diplomatic play that has been started
+# Fires when a diplomatic play is started
+# root = The diplomatic play that has been started
+# scope:initiator = Initiator of the play
+# scope:target = Target of the play
 on_diplomatic_play_started = {
-	events = {
+	effect = {
+		if = {
+			limit = { is_diplomatic_play_type = dp_unify_germany }
+			every_country = {
+				limit = {
+					is_supporting_unification_candidate = { who = scope:initiator country_formation = GER }
+				}
+				
+				scope:initiator = { annex = prev }
+			}
+		}
+		
+		if = {
+			limit = { is_diplomatic_play_type = dp_unify_italy }
+			every_country = {
+				limit = {
+					is_supporting_unification_candidate = { who = scope:initiator country_formation = ITA }
+				}
+				
+				scope:initiator = { annex = prev }
+			}
+		}
+
+		if = {
+			limit = { is_diplomatic_play_type = dp_unify_scandinavia }
+			every_country = {
+				limit = {
+					is_supporting_unification_candidate = { who = scope:initiator country_formation = SCA }
+				}
+				
+				scope:initiator = { annex = prev }
+			}
+		}		
 	}
 }
 
@@ -1562,6 +1617,23 @@ on_enemy_capitulated_notification = {
 on_ally_capitulated_notification = {
 	effect = {
 		post_notification = ally_capitulated
+	}
+}
+
+# Root = Character
+on_mobilized_general = {
+	effect = {
+		set_variable = {
+			name = num_months_mobilized
+			value = 0
+		}
+	}
+}
+
+# Root = Character
+on_demobilized_general = {
+	effect = {
+		remove_variable = num_months_mobilized
 	}
 }
 
@@ -2760,6 +2832,22 @@ on_new_culture_obsession = {
 on_rank_changed = {
 	effect = {
 		post_notification = rank_changed_notification
+	}
+}
+
+# Root = State Region
+# scope:actor = Claimant country
+# scope:region = State Region
+on_claim_added = {
+	effect = {
+		every_country = {
+			limit = {
+				any_state = {
+					state_region = root
+				}
+			}
+			post_notification = claim_added_notification
+		}
 	}
 }
 

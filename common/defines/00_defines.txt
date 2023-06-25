@@ -591,7 +591,7 @@ NAI = {
 
 	# Below data is used to calculate how much weight the AI places on a production building
 	PRODUCTION_BUILDING_RANDOM_FACTOR = 10.0 # The higher this is, the more random AI construction will be
-	PRODUCTION_BUILDING_STATE_RANDOM_FACTOR = 2.0 # The higher this is, the more random AI state selection for building types will be
+	PRODUCTION_BUILDING_STATE_RANDOM_FACTOR = 0.33 # The higher this is, the more random AI state selection for building types will be
 	PRODUCTION_BUILDING_BASE_VALUE = 1000 # If no ai_value is scripted in the building
 	PRODUCTION_BUILDING_NO_AVAILABLE_WORKFORCE_FACTOR = 0.25 # Total weight is multiplied by this if the state lacks enough workforce to staff the building
 	PRODUCTION_BUILDING_GOODS_PROFIT_FACTOR = 5000 # Per pound of predicted building profit (divided by employee count per level)
@@ -793,12 +793,10 @@ NAI = {
 NCountry = {
 	DEFAULT_COUNTRY_TYPE = "recognized"
 	MAX_NUM_COUNTRY_FORMATION_CANDIDATES = 3
-	COUNTRY_FORMATION_CANDIDATE_MIN_RANK = 6
-	COUNTRY_FORMATION_ANNEXATION_TARGET_MAX_RANK = 6
+	COUNTRY_FORMATION_CANDIDATE_MIN_RANK = 6				# countries with a lower rank value than this cannot be formation candidates
 	MOVE_CAPITAL_COOLDOWN_YEARS = 5
 	MOVE_MARKET_CAPITAL_COOLDOWN_YEARS = 5
 	MAX_POWER_EFFECT = 1.0 # The max by which a power excess/deficiency modifier can scale						
-	SPLIT_STATE_MIN_LAND_SHARE = 0.05
 	SPLIT_STATE_DOMINANT_LAND_SHARE_THRESHOLD = 0.5	# States with more land share than this can use the region's name
 	SPLIT_STATE_PRIME_LAND_WEIGHT = 5.0
 	CAPITAL_CULTURE_CORE_WEIGHT = 10
@@ -870,8 +868,9 @@ NPolitics = {
 	MINIMUM_INVESTMENT_COST = 10			# The absolute minimum cost in BUR per investment level
 	
 	POWERFUL_IG_THRESHOLD = 0.20		# Interest groups with more Clout than this are considered to be influential
-	POWERFUL_IG_CUTOFF = 0.18		# Powerful interest groups with less Clout than this will stop being influential
-	POWERFUL_IG_TRAIT_BONUS = 1		# The effects of all trait modifiers from influential IGs are increased by this, 1 = +100%
+	POWERFUL_IG_CUTOFF = 0.18			# Powerful interest groups with less Clout than this will stop being influential
+	POWERFUL_IG_TRAIT_BONUS = 1			# The effects of all trait modifiers from influential IGs are increased by this, 1 = +100%
+	IG_TRAIT_STICKINESS = 2				# If an IG trait is already active, this is the amount of Approval difference required to deactivate it
 	MARGINAL_IG_THRESHOLD = 0.05		# Interest Groups with Clout above this value are considered relevant while those below are marginal (if not also In Government)
 	MARGINAL_IG_CUTOFF = 0.04			# Interest Groups who are already relevant will only become marginal again if they drop below this value.
 	
@@ -1390,7 +1389,7 @@ NDiplomacy = {
 	WAR_GOAL_INFAMY_MAKE_DOMINION = 2.0
 	WAR_GOAL_INFAMY_TRANSFER_SUBJECT = 2.0	
 	WAR_GOAL_INFAMY_ANNEX_COUNTRY = 5.0
-	WAR_GOAL_INFAMY_UNIFICATION = 2.0
+	WAR_GOAL_INFAMY_UNIFICATION = 0.5
 	WAR_GOAL_INFAMY_REGIME_CHANGE = 0.5
 	
 	WAR_GOAL_INFAMY_DIPLO_PLAY_BACK_DOWN_REFUND = -0.75 # Refund of infamy for war goals that are dropped due to one side backing down in a diplo play (applied to initiator/target)
@@ -1594,11 +1593,34 @@ NPops = {
 	
 	INDIVIDUALS_TAXED_PER_TAX_CAPACITY = 10000			# How many pops can be taxed efficiently for each tax capacity
 	
-	POP_MERGE_MAX_WORKFORCE = 1000						# Pops with workforce smaller than this may get merged with other pops of the same type in their building / unemployment pool; if zero, no small pop merging will occur, which may have an adverse effect on late-game performance
-	POP_MERGE_MIN_NUM_POPS_SAME_PROFESSION = 1000		# Employed Pops will not get merged with others in their same building if there aren't at least this many Pops of the same type in the building
-	WORKFORCE_RATIO_MAX_UNEMPLOYMENT_FACTOR = 2			# Unemployed Pops with less than POP_MERGE_MAX_WORKFORCE and a Workforce:Dependent ratio that's this much worse than the ideal will be all turned into Dependents and merged back into Pops in the same state
-	
 	EXPECTED_SOL_FROM_LITERACY_SUBSISTENCE_MULT = 0.25	# Expected SoL from literacy is multiplied by this for Pops working in subsistence buildings
+	
+	### Pop Consolidation defines
+	# Pop Consolidation identifies pops so small their impact on the economy and politics is insignificant, and merges them into other pops in the same building or state.
+	# 
+	# POP_MERGE_MAX_WORKFORCE_*: determines how small the pop needs to be in terms of Workforce in order to qualify to be merged with others in their same building or the unemployment pool
+	# POP_MERGE_MIN_NUM_POPS_SAME_PROFESSION_*: employed pops will not get merged with others in their same building if there aren't at least this many pops of the same type in the building
+	# WORKFORCE_RATIO_MAX_UNEMPLOYMENT_FACTOR_*: unemployed Pops with less than POP_MERGE_MAX_WORKFORCE and a Workforce:Dependent ratio that's this much worse than the ideal will be all turned into Dependents and merged back into pops in the same state
+	# 
+	# The tail of the define name corresponds to a Pop Consolidation Game Rule with the same name. 
+	# When that Game Rule is active, the defined values for POP_MERGE_MAX_WORKFORCE and WORKFORCE_RATIO_MAX_UNEMPLOYMENT_FACTOR represent the minimum values, while the maximum are that of the level above it.
+	# POP_MERGE_START_POP and POP_MERGE_MAX_TARGET_POP determines how high to scale the values towards the level above it.
+	# For example, at Moderate Consolidation, POP_MERGE_START_POP = 50000 and POP_MERGE_MAX_TARGET_POP = 100000, and a global population of 87560 pops:
+	# POP_MERGE_MAX_WORKFORCE will effectively be 45 (75% of the way from 30 to 50) and WORKFORCE_RATIO_MAX_UNEMPLOYMENT_FACTOR will effectively be 1.6244 (75% of the way from 2 to 1.5) 
+	
+	POP_MERGE_MAX_WORKFORCE_MINOR_CONSOLIDATION = 1000
+	POP_MERGE_MIN_NUM_POPS_SAME_PROFESSION_MINOR_CONSOLIDATION = 500
+	WORKFORCE_RATIO_MAX_UNEMPLOYMENT_FACTOR_MINOR_CONSOLIDATION = 2.5
+	POP_MERGE_MAX_WORKFORCE_MODERATE_CONSOLIDATION = 30						
+	POP_MERGE_MIN_NUM_POPS_SAME_PROFESSION_MODERATE_CONSOLIDATION = 4
+	WORKFORCE_RATIO_MAX_UNEMPLOYMENT_FACTOR_MODERATE_CONSOLIDATION = 2		
+	POP_MERGE_MAX_WORKFORCE_AGGRESSIVE_CONSOLIDATION = 50
+	POP_MERGE_MIN_NUM_POPS_SAME_PROFESSION_AGGRESSIVE_CONSOLIDATION = 3
+	WORKFORCE_RATIO_MAX_UNEMPLOYMENT_FACTOR_AGGRESSIVE_CONSOLIDATION = 1.5
+	POP_MERGE_MAX_WORKFORCE_MAX_CONSOLIDATION = 100
+	WORKFORCE_RATIO_MAX_UNEMPLOYMENT_FACTOR_MAX_CONSOLIDATION = 1
+	POP_MERGE_START_POPS = 50000
+	POP_MERGE_MAX_TARGET_POPS = 100000
 } 
 
 ### Pop Growth Constants
@@ -1649,11 +1671,11 @@ NTechnology = {
 }
 
 NCharacters = {
-	RULER_MIN_AGE_FOR_HEIR = 20 # Before this age, don't randomly generate heirs for rulers
+	RULER_MIN_AGE_FOR_HEIR = 21 # Before this age, don't randomly generate heirs for rulers
 	RULER_AGE_FOR_HEIR_CHANCE_BOOST = 30 # A year after this age start boosting chance of heir generation
 	RULER_HEIR_GENERATION_CHANCE = 0.001 # Per day
 	RULER_HEIR_CHANCE_BOOST_SCALE = 0.001 # Added to RULER_HEIR_CHANCE_BOOST for each year after RULER_AGE_FOR_HEIR_CHANCE_BOOST
-	AGE_GENERATION_STARTVAL = 20
+	AGE_GENERATION_STARTVAL = 40
 	AGE_GENERATION_DICE_ROLL_MAGNITUDE = 6
 	AGE_GENERATION_NUM_DICE_ROLLS = 5
 	RECRUIT_COMMANDER_NUM_OPTIONS = 3
@@ -1671,7 +1693,7 @@ NCharacters = {
 	POPULARITY_LOVED_THRESHOLD = 50
 	POPULARITY_AUTHORITY_FACTOR = 1			# Popularity of ruler is multiplied by this when turned into Authority
 	MAX_NUM_CHARACTERS_PER_TYPE = 20		# The maximum number of characters of a certain primary role (e.g. General, Admiral) you can manually recruit. This is a hard cap failsafe and should be set high enough that players have no legitimate reason to recruit more than this.
-	ADULT_AGE = 16 # Characters under this age have more limited options. For example they cannot become military leaders [>= 0]
+	ADULT_AGE = 21 # Characters under this age have more limited options. For example they cannot become military leaders [>= 0]
 	OLD_AGE = 60 # Characters above this age may get some specific traits and events [>= ADULT_AGE]
 	
 	VOIDED_CHARACTER_DEFAULT_DURATION = 12 # Default months a character will be in the void before being deleted
@@ -1680,7 +1702,7 @@ NCharacters = {
 
 	AGITATOR_EXPECTED_SPAWN_INTERVAL_0_LITERACY = 12 # At 0% literacy, a new agitator is expected to spawn in a given country once every this many years. (supports decimal values)
 	AGITATOR_EXPECTED_SPAWN_INTERVAL_100_LITERACY = 2 # At 100% literacy, a new agitator is expected to spawn in a given country once every this many years. (supports decimal values)
-	AGITATOR_MOVEMENT_SUPPORT_WEIGHT = 0.4 # Political movements will gain support from agitators' popularity multiplied by this weight
+	AGITATOR_MOVEMENT_SUPPORT_WEIGHT = 0.5 # Political movements will gain support from agitators' popularity multiplied by this weight
 	AGITATOR_MOVEMENT_POPULARITY_THRESHOLD = 15 # Agitators whose popularity is at or lower than this threshold will not be considered when starting/joining political movements
 
 	### TRAIT GENERATION
@@ -1721,7 +1743,7 @@ NCharacters = {
 
 	MIN_CHARACTER_HEALTH = 0.0					# Baseline is 1.0 (meaning 100%), defined in the base_values modifier. 0.0 means -100% from baseline. [any value]
 	MAX_CHARACTER_HEALTH = 2.0					# Baseline is 1.0 (meaning 100%), defined in the base_values modifier. 2.0 means +100% from baseline. [>= MIN_CHARACTER_HEALTH]
-	CHARACTER_LIFE_EXPECTANCY_BASE_YEARS = 90	# The median life expecancy in years at baseline health. It's the µ parameter of the normal distribution [> 0]
+	CHARACTER_LIFE_EXPECTANCY_BASE_YEARS = 85	# The median life expecancy in years at baseline health. It's the µ parameter of the normal distribution [> 0]
 	CHARACTER_LIFE_EXPECTANCY_STDDEV = 5		# The standard deviation for the life expectancy distribution. It's the σ parameter [> 0]
 	CHARACTER_LIFE_EXPECTANCY_CUTOFF = 3		# We clamp the distribution between this amount of σ in both directions. A range of [-3σ; +3σ] accounts for 99.73% of values. [> 0]
 
