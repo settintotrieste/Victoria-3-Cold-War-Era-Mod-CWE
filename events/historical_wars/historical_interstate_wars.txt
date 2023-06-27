@@ -1554,3 +1554,103 @@ historical_interstate_wars.15 = {
     }
 
 }
+
+### Iran-Iraq War ###
+
+historical_interstate_wars.16 = {
+    type = country_event
+
+    title = iran_iraq_war.t 							# Title of the event; ADD LOCALISATION
+    desc = iran_iraq_war.d 								# Description of the event; ADD LOCALISATION
+    #flavor = iran_iraq_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:IRQ this = c:IRQ								# Change TAG of the overlord ****
+		game_date >= 1980.9.22									# START DATE: Date colony became self governing ****
+		game_date < 1990.9.22									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_nationalist_government = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		can_go_to_war = yes										# No legal or political restrictions on going to war
+		
+		#Recipent conditions
+		exists = c:PER
+		c:PER = { 												# Change TAG of the transferee ****
+			is_a_theocratic_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			
+			has_state_in_state_region = STATE_KHUZESTAN
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = iran_iraq_war_hiw }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = s:STATE_KHUZESTAN }
+			save_scope_as = iraq_target_state
+		}
+	
+		# Fire only once
+		set_variable = iran_iraq_war_hiw						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_interstate_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#War
+		create_diplomatic_play = {
+			name = iran_iraq_war
+			type = dp_conquer_state_historical
+			target_state = scope:iraq_target_state
+			
+			#war = yes
+
+			add_war_goal = {
+				holder = c:PER
+				type = regime_change
+				target_country = c:IRQ
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_interstate_wars.option.2				# Peace option
+		default_option = yes
+		
+		#Minor discontent
+		every_scope_state = {
+			add_radicals_in_state = {
+				value = small_radicals
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
