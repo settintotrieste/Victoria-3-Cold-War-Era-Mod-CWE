@@ -1,0 +1,230 @@
+﻿conduct_hostile_espionage = {
+	requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	unlocking_technologies = {
+		tech_geopolitics_1
+	}
+
+	potential = {
+	
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#THIS has intelligence services
+		has_law = law_type:law_secret_police
+		
+		#THIS and Target are not revolutionary
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no } 
+		
+		#THIS is not broke
+		in_default = no
+		
+		#THIS is of a higher or equal rank than the Target
+		OR = { 
+			scope:target_country = { country_rank < root.country_rank }
+			AND = { 
+				country_rank = rank_value:super_power
+				scope:target_country = { country_rank = rank_value:super_power }
+			}
+			AND = { 
+				country_rank = rank_value:great_power
+				scope:target_country = { country_rank = rank_value:great_power }
+			}
+			AND = { 
+				country_rank = rank_value:major_power
+				scope:target_country = { country_rank = rank_value:major_power }
+			}
+		}
+		
+	}
+	
+	possible = {
+
+		#THIS is not at war with the Target
+		NOT = { has_war_with = scope:target_country }
+		
+		#THIS is interested in Target
+		has_diplomatic_relevance = scope:target_country
+		
+		#THIS is not friendly with Target in anyway
+		NOR = { 
+			has_diplomatic_pact = { who = scope:target_country type = increase_relations }
+			has_diplomatic_pact = { who = scope:target_country type = bankroll }
+			has_diplomatic_pact = { who = scope:target_country type = alliance }
+			has_diplomatic_pact = { who = scope:target_country type = defensive_pact } 
+		}
+		
+		#Country wants to meddle in other's affairs
+		OR = { 
+		
+			#Leader is aggressive
+			ruler = {
+				OR = {
+					has_ideology = ideology:ideology_autocratic
+					has_ideology = ideology:ideology_power_hungry
+					has_ideology = ideology:ideology_elitist
+				}
+			}
+			
+			#Target is a rival of THIS
+			has_diplomatic_pact = { who = scope:target_country type = rivalry is_initiator = no }
+			
+		}
+		
+		#THIS is not friendly with Target
+		scope:target_country.relations:root < relations_threshold:cordial
+		
+	}
+	
+	pact = {	
+		cost = 100
+		is_two_sided_pact = no
+		infamy_affects_maintenance = no
+		
+		### Validation requirements ###
+		
+		is_about_to_auto_break = {
+            scope:target_country.relations:root >= relations_threshold:neutral
+        }
+		
+		should_auto_break = {
+			
+			#THIS is friendly with Target
+			scope:target_country.relations:root >= relations_threshold:cordial
+			
+			#THIS is at war with Target
+			has_war_with = scope:target_country
+			
+			#THIS is friendly with Target in anyway
+			OR = { 
+				has_diplomatic_pact = { who = scope:target_country type = increase_relations }
+				has_diplomatic_pact = { who = scope:target_country type = bankroll }
+				has_diplomatic_pact = { who = scope:target_country type = alliance }
+				has_diplomatic_pact = { who = scope:target_country type = defensive_pact } 
+			}
+			
+			#Country no longer wants to meddle in other's affairs
+			OR = { 
+		
+				#Leader is aggressive
+				ruler = {
+					OR = {
+						has_ideology = ideology:ideology_autocratic
+						has_ideology = ideology:ideology_power_hungry
+						has_ideology = ideology:ideology_elitist
+					}
+				}
+			
+				#Target is a rival of THIS
+				has_diplomatic_pact = { who = scope:target_country type = rivalry is_initiator = no }
+			
+			}
+			
+			#THIS is broke
+			in_default = yes
+			
+		}
+		
+		should_invalidate = {
+		
+			#THIS no longer has intelligence services
+			NOT = { has_law = law_type:law_secret_police }
+		
+			#THIS has lost interest in Target
+			NOT = { has_diplomatic_relevance = scope:target_country }
+			
+			#THIS is not of a higher or equal rank than the Target
+			NOR = {
+				scope:target_country = { country_rank < root.country_rank }
+				AND = { 
+					country_rank = rank_value:super_power
+					scope:target_country = { country_rank = rank_value:super_power }
+				}
+				AND = { 
+					country_rank = rank_value:great_power
+					scope:target_country = { country_rank = rank_value:great_power }
+				}
+				AND = { 
+					country_rank = rank_value:major_power
+					scope:target_country = { country_rank = rank_value:major_power }
+				}
+			}
+			
+		}
+		
+		### Effects ###
+		
+		weekly_effect = {
+			
+			#Chance for an Espionage Opportunity to appear
+			random_list = { 
+				99 = {}
+				1 = { root = { set_owes_obligation_to = { country = scope:target_country setting = no } } }
+			}
+			
+		} 
+		
+	}
+	
+	ai = {
+	
+		max_influence_spending_fraction = 0.20
+	
+		propose_score = {
+			value = 0
+			
+			add = {
+				desc = "ENEMY_COUNTRY"
+				value = 50
+				has_attitude = {
+					who = scope:target_country
+					attitude <= antagonistic
+				}
+			}
+			add = {
+				desc = "POWERFUL_COUNTRY"
+				value = 50
+				OR = {
+					has_diplomatic_pact = { who = scope:target_country type = rivalry is_initiator = no }
+					AND = { 
+						country_rank = rank_value:super_power
+						scope:target_country = { country_rank = rank_value:super_power }
+					}
+					AND = { 
+						country_rank = rank_value:great_power
+						scope:target_country = { country_rank = rank_value:great_power }
+					}
+					AND = { 
+						country_rank = rank_value:major_power
+						scope:target_country = { country_rank = rank_value:major_power }
+					}
+				}
+			}
+			
+			add = {
+				desc = "CORDIAL_RELATIONS_TARGET"
+				value = -60
+				scope:target_country.relations:root >= relations_threshold:cordial
+			}
+			add = {
+				desc = "NEUTRAL_RELATIONS_TARGET"
+				value = -50
+				scope:target_country.relations:root >= relations_threshold:neutral
+			}
+			
+		}
+		
+		will_break = { 
+			has_attitude = {
+				who = scope:target_country
+				attitude > antagonistic
+			}
+		}
+		
+	}
+	
+}
