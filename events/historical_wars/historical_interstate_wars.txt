@@ -1654,3 +1654,175 @@ historical_interstate_wars.16 = {
     }
 
 }
+
+### Bizerte Crisis ###
+
+historical_interstate_wars.17 = {
+    type = country_event
+
+    title = france_tunisia_war.t 							# Title of the event; ADD LOCALISATION
+    desc = france_tunisia_war.d 							# Description of the event; ADD LOCALISATION
+    #flavor = france_tunisia_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:TUN this = c:TUN								# Change TAG of the overlord ****
+		game_date >= 1961.7.19									# START DATE: Date colony became self governing ****
+		game_date < 1971.7.19									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		#is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_not_neutral = yes									# No legal or political restrictions on going to war
+		
+		#Recipent conditions
+		exists = c:FRA
+		c:FRA = { 												# Change TAG of the transferee ****
+			is_sufficiently_independent = yes
+			is_at_war = no
+			
+			has_state_in_state_region = STATE_TUNISIA
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = france_tunisia_war_hiw }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = france_tunisia_war_hiw					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_interstate_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Option for war
+		c:FRA = { trigger_event = { id = historical_interstate_wars.18 } }
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_interstate_wars.option.2				# Peace option
+		default_option = yes
+		
+		#FROM is happy!
+		change_relations = {
+			country = c:FRA
+			value = 25
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		#Minor discontent
+		custom_tooltip = {
+			text = everyone_is_angry_custom_tooltip
+			every_scope_state = {
+				add_radicals_in_state = {
+					value = small_radicals
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
+
+historical_interstate_wars.18 = {
+    type = country_event
+
+    title = france_tunisia_war.t 							# Title of the event; ADD LOCALISATION
+    desc = france_tunisia_war.d 							# Description of the event; ADD LOCALISATION
+    #flavor = france_tunisia_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+    
+    option = {
+        name = historical_interstate_wars_accept.option.1			# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Transfer territories
+		s:STATE_TUNISIA.region_state:FRA = { set_state_owner = c:TUN }
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_interstate_wars_reject.option.2			# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#Trigger war
+		c:TUN = {
+		
+			#Become independent
+			make_independent = yes
+		
+			create_diplomatic_play = {
+				name = france_tunisia_war
+				type = dp_take_treaty_port
+				target_state = s:STATE_TUNISIA.region_state:FRA
+			
+				#war = yes
+
+				add_war_goal = {
+					holder = c:FRA
+					type = humiliation
+					target_country = c:TUN
+				}
+			}
+			
+		}
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
