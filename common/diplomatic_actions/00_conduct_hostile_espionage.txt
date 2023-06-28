@@ -14,7 +14,7 @@
 		scope:target_country = { NOT = { is_country_type = decentralized } }
 		
 		#THIS has intelligence services
-		has_law = law_type:law_secret_police
+		has_law = law_type:law_offensive_espionage
 		
 		#THIS and Target are not revolutionary
 		is_revolutionary = no
@@ -85,6 +85,9 @@
 		is_two_sided_pact = no
 		infamy_affects_maintenance = no
 		
+		relations_progress_per_day = -1 # At -100, -1 relations
+		relations_improvement_min = -50
+		
 		### Validation requirements ###
 		
 		is_about_to_auto_break = {
@@ -132,7 +135,7 @@
 		should_invalidate = {
 		
 			#THIS no longer has intelligence services
-			NOT = { has_law = law_type:law_secret_police }
+			NOT = { has_law = law_type:law_offensive_espionage }
 		
 			#THIS has lost interest in Target
 			NOT = { has_diplomatic_relevance = scope:target_country }
@@ -160,10 +163,12 @@
 		
 		weekly_effect = {
 			
-			#Chance for an Espionage Opportunity to appear
+			## Chance for an Espionage Opportunity to appear ##
+			
+			#Instigate Domestic Unrest (1% chance per week)
 			random_list = { 
-				99 = {}
-				1 = { root = { set_owes_obligation_to = { country = scope:target_country setting = no } } }
+				99 = { }
+				1 = { root = { trigger_event = { id = espionage_system.1 } } }
 			}
 			
 		} 
@@ -214,6 +219,14 @@
 				desc = "NEUTRAL_RELATIONS_TARGET"
 				value = -50
 				scope:target_country.relations:root >= relations_threshold:neutral
+			}
+			add = {
+				desc = "FRIENDLY_COUNTRY"
+				value = -50
+				has_attitude = {
+					who = scope:target_country
+					attitude >= conciliatory
+				}
 			}
 			
 		}

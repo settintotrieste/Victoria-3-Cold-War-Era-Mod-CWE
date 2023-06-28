@@ -1,0 +1,157 @@
+namespace = espionage_system
+
+#Instigate Domestic Unrest - INITIATOR
+espionage_system.1 = {
+    type = country_event
+
+    title = espionage_instigate_domestic_unrest.t 				# Title of the event; ADD LOCALISATION
+    desc = espionage_instigate_domestic_unrest.d 				# Description of the event; ADD LOCALISATION
+    flavor = espionage_instigate_domestic_unrest.f 			# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by weekly pulse by Conduct Hostile Espionage pact
+		
+    }
+	
+	immediate = {
+	
+		save_scope_as = espionage_attacker
+	
+		#Attack a country that THIS is conducting hostile espionage against
+		random_country = {
+			limit = {
+			
+				#THIS is conducting hostile espionage in TARGET
+				has_diplomatic_pact = { who = root type = conduct_hostile_espionage is_initiator = no } 
+				
+			}
+			save_scope_as = espionage_target
+		}
+		
+	}
+    
+    option = {
+        name = espionage_system.option.1			# Attack!
+        highlighted_option = yes
+		
+		#Attack a country that THIS is conducting hostile espionage against
+		scope:espionage_target = {
+			trigger_event = { id = espionage_system.2 }
+		}
+		
+		#Add infamy because this is against international law
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 90 
+			
+			#AI will not do espionage if infamy is high
+			modifier = { trigger = { infamy >= infamy_threshold:infamous } add = -50 }
+			modifier = { trigger = { infamy >= infamy_threshold:notorious } add = -50 } 
+		}
+		
+    }
+	
+	option = {
+        name = espionage_system.option.2			# Refuse
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10
+		}
+		
+    }
+
+}
+
+#Instigate Domestic Unrest - TARGET
+espionage_system.2 = {
+    type = country_event
+
+    title = espionage_instigate_domestic_unrest_target.t 			# Title of the event; ADD LOCALISATION
+    desc = espionage_instigate_domestic_unrest_target.d 			# Description of the event; ADD LOCALISATION
+    flavor = espionage_instigate_domestic_unrest_target.f 			# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by previous event
+		
+    }
+	
+	immediate = {
+	
+		save_scope_as = espionage_victim
+	
+		#Guess the identity of attacker
+		random_country = {
+			limit = {
+			
+				#THIS is conducting hostile espionage in TARGET
+				has_diplomatic_pact = { who = root type = conduct_hostile_espionage is_initiator = no } 
+				
+			}
+			save_scope_as = suspected_espionage_attacker
+		}
+		
+		#Anger everywhere
+		every_scope_state = {
+			add_radicals_in_state = {
+				value = small_radicals
+			}
+			add_modifier = { name = nationalist_agitation months = 12 is_decaying = yes } 
+		}
+		
+	}
+    
+    option = {
+        name = espionage_system_response.option.1			# Angry reaction!
+        highlighted_option = yes
+		
+		#THIS is angry with FROM!
+		change_relations = {
+			country = scope:suspected_espionage_attacker
+			value = -50
+		}
+		
+		ai_chance = { 
+			base = 90 
+			
+			#AI is more likely to kick up a fuss
+			modifier = { trigger = { is_neutral = yes } add = -50 }
+			modifier = { trigger = { NOT = { has_jingoistic_ruler = yes } } add = -50 }
+		}
+		
+    }
+	
+	option = {
+        name = espionage_system_response.option.2			# Tolerate it
+		default_option = yes
+		
+		#Add embarassment
+		if = {
+			limit = { NOT = { has_modifier = embarassed_by_espionage } }
+			add_modifier = { name = embarassed_by_espionage months = 12 is_decaying = yes }
+		}
+		
+		ai_chance = { 
+			base = 10
+		}
+		
+    }
+
+}
