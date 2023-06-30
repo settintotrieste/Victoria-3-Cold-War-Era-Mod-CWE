@@ -451,3 +451,178 @@ economic_cycles_system.1 = {
 	}
 
 }
+
+# Determine International Interest Rates
+economic_cycles_system.2 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		#International interest rates only applies to countries who did not borrow from the IMF
+		NOT = { has_modifier = imf_loan_debtor }
+		
+	}
+
+	immediate = {
+		
+		#Check state of the Global Economy (Max: 5)
+		set_global_variable = { 
+			name = interest_rates_global_var
+			value = 0
+		}
+		set_global_variable = { 
+			name = interest_rates_country_count_var
+			value = 0
+		}
+		#Normal countries
+		every_country = {
+			if = {
+				limit = { has_law = law_type:law_very_deflationary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 1 }
+			}
+			if = {
+				limit = { has_law = law_type:law_deflationary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 2 }
+			}
+			if = {
+				limit = { has_law = law_type:law_neutral_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 3 }
+			}
+			if = {
+				limit = { has_law = law_type:law_expansionary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 4 }
+			}
+			if = {
+				limit = { has_law = law_type:law_very_expansionary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 5 }
+			}
+			change_global_variable = { name = interest_rates_country_count_var add = 1 }
+		}
+		
+		#Global Reserve Currency countries (x10 weight)
+		every_country = {
+			limit = { has_modifier = global_reserve_currency }
+			if = {
+				limit = { has_law = law_type:law_very_deflationary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 10 }
+			}
+			if = {
+				limit = { has_law = law_type:law_deflationary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 20 }
+			}
+			if = {
+				limit = { has_law = law_type:law_neutral_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 30 }
+			}
+			if = {
+				limit = { has_law = law_type:law_expansionary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 40 }
+			}
+			if = {
+				limit = { has_law = law_type:law_very_expansionary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 50 }
+			}
+			change_global_variable = { name = interest_rates_country_count_var add = 10 }
+		}
+		
+		#Major Reserve Currency countries (x2 weight)
+		every_country = {
+			limit = { has_modifier = major_reserve_currency }
+			if = {
+				limit = { has_law = law_type:law_very_deflationary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 2 }
+			}
+			if = {
+				limit = { has_law = law_type:law_deflationary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 4 }
+			}
+			if = {
+				limit = { has_law = law_type:law_neutral_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 6 }
+			}
+			if = {
+				limit = { has_law = law_type:law_expansionary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 8 }
+			}
+			if = {
+				limit = { has_law = law_type:law_very_expansionary_monetary_policy }
+				change_global_variable = { name = interest_rates_global_var add = 10 }
+			}
+			change_global_variable = { name = interest_rates_country_count_var add = 2 }
+		}
+		
+		#Compute global average interest rates
+		change_global_variable = { 
+			name = interest_rates_global_var
+			divide = global_var:interest_rates_country_count_var
+		}
+		
+		#Apply modifiers
+		if = {
+			limit = { 
+				global_var:interest_rates_global_var <= 1 
+				
+				NOT = { has_modifier = very_low_imf_interest_rate }
+			}
+			add_modifier = { name = very_low_imf_interest_rate }
+			remove_modifier = low_imf_interest_rate
+			remove_modifier = medium_imf_interest_rate
+			remove_modifier = high_imf_interest_rate
+			remove_modifier = very_high_imf_interest_rate
+		}
+		if = {
+			limit = { 
+				global_var:interest_rates_global_var > 1
+				global_var:interest_rates_global_var <= 2
+				
+				NOT = { has_modifier = low_imf_interest_rate }
+			}
+			remove_modifier = very_low_imf_interest_rate
+			add_modifier = { name = low_imf_interest_rate }
+			remove_modifier = medium_imf_interest_rate
+			remove_modifier = high_imf_interest_rate
+			remove_modifier = very_high_imf_interest_rate
+		}
+		if = {
+			limit = { 
+				global_var:interest_rates_global_var > 2
+				global_var:interest_rates_global_var <= 3
+				
+				NOT = { has_modifier = medium_imf_interest_rate }
+			}
+			remove_modifier = very_low_imf_interest_rate
+			remove_modifier = low_imf_interest_rate
+			add_modifier = { name = medium_imf_interest_rate }
+			remove_modifier = high_imf_interest_rate
+			remove_modifier = very_high_imf_interest_rate
+		}
+		if = {
+			limit = { 
+				global_var:interest_rates_global_var > 3
+				global_var:interest_rates_global_var <= 4
+				
+				NOT = { has_modifier = high_imf_interest_rate }
+			}
+			remove_modifier = very_low_imf_interest_rate
+			remove_modifier = low_imf_interest_rate
+			remove_modifier = medium_imf_interest_rate
+			add_modifier = { name = high_imf_interest_rate }
+			remove_modifier = very_high_imf_interest_rate
+		}
+		if = {
+			limit = { 
+				global_var:interest_rates_global_var > 4
+				
+				NOT = { has_modifier = very_high_imf_interest_rate }
+			}
+			remove_modifier = very_low_imf_interest_rate
+			remove_modifier = low_imf_interest_rate
+			remove_modifier = medium_imf_interest_rate
+			remove_modifier = high_imf_interest_rate
+			add_modifier = { name = very_high_imf_interest_rate }
+		}
+		
+	}
+	
+}
