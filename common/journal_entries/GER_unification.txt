@@ -1,0 +1,150 @@
+je_german_unification = {
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	is_shown_when_inactive = {
+		OR = { 
+			c:WGR ?= { is_direct_subject_of = ROOT }
+			c:EGR ?= { is_direct_subject_of = ROOT }
+			c:SGR ?= { is_direct_subject_of = ROOT }
+			
+			c:WGR ?= this
+			c:EGR ?= this
+			c:SGR ?= this
+		}
+	}
+
+	possible = {
+	
+		#GER does not exist
+		NOT = { exists = c:GER }
+	
+		#THIS is a German state
+		OR = { 
+			c:WGR ?= this
+			c:EGR ?= this
+			c:SGR ?= this
+		}
+		
+	}
+
+	complete = {
+	
+		OR = { 
+			
+			#THIS has not become Germany yet
+			AND = {
+				NOT = { c:GER ?= this }
+			
+				#Independent or are subjects of the same overlord
+				OR = { 
+					AND = { 
+						is_sufficiently_independent = yes
+						OR = { c:WGR ?= { is_direct_subject_of = ROOT } NOT = { exists = c:WGR } c:WGR ?= this }
+						OR = { c:EGR ?= { is_direct_subject_of = ROOT } NOT = { exists = c:EGR } c:EGR ?= this }
+						OR = { c:SGR ?= { is_direct_subject_of = ROOT } NOT = { exists = c:SGR } c:SGR ?= this }
+					}
+					AND = { 
+						exists = overlord
+						overlord = { 
+							is_sufficiently_independent = yes
+							is_at_war = no
+						
+							OR = { c:WGR ?= { is_direct_subject_of = ROOT } NOT = { exists = c:WGR } }
+							OR = { c:EGR ?= { is_direct_subject_of = ROOT } NOT = { exists = c:EGR } }
+							OR = { c:SGR ?= { is_direct_subject_of = ROOT } NOT = { exists = c:SGR } }
+						}
+					}
+				}
+				
+				#Other German States share the same gov type
+				custom_tooltip = {
+					text = has_same_gov_type_tt
+					OR = {
+						AND = { OR = { c:WGR ?= { is_a_democracy = yes } NOT = { exists = c:WGR } } OR = { c:EGR ?= { is_a_democracy = yes } NOT = { exists = c:EGR } } OR = { c:SGR ?= { is_a_democracy = yes } NOT = { exists = c:SGR } } }
+						AND = { OR = { c:WGR ?= { is_a_communist_government = yes } NOT = { exists = c:WGR } } OR = { c:EGR ?= { is_a_communist_government = yes } NOT = { exists = c:EGR } } OR = { c:SGR ?= { is_a_communist_government = yes } NOT = { exists = c:SGR } } }
+						AND = { OR = { c:WGR ?= { is_a_nationalist_government = yes } NOT = { exists = c:WGR } } OR = { c:EGR ?= { is_a_nationalist_government = yes } NOT = { exists = c:EGR } } OR = { c:SGR ?= { is_a_nationalist_government = yes } NOT = { exists = c:SGR } } }
+						AND = { OR = { c:WGR ?= { is_a_theocratic_government = yes } NOT = { exists = c:WGR } } OR = { c:EGR ?= { is_a_theocratic_government = yes } NOT = { exists = c:EGR } } OR = { c:SGR ?= { is_a_theocratic_government = yes } NOT = { exists = c:SGR } } }
+					}
+				}
+				
+			}
+		
+			#THIS has become Germany through some other means
+			custom_tooltip = {
+				c:GER ?= this
+				text = je_german_unification_complete_trigger_desc
+			}
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+	}
+
+	on_complete = {
+		
+		#Form GER if THIS was not already Germany
+		if = {
+			limit = { 
+				is_player = yes 
+				NOT = { c:GER ?= this } 
+			}
+			change_tag = GER
+		}
+		else_if = {
+			limit = { 
+				is_player = no
+				exists = c:WGR
+				NOT = { c:GER ?= this } 
+			}
+			c:WGR = { change_tag = GER }
+		}
+		else_if = {
+			limit = { 
+				is_player = no
+				NOT = { exists = c:WGR }
+				exists = c:EGR
+				NOT = { c:GER ?= this } 
+			}
+			c:EGR = { change_tag = GER }
+		}
+		else_if = {
+			limit = { 
+				is_player = no
+				NOT = { exists = c:WGR }
+				NOT = { exists = c:EGR }
+				exists = c:SGR
+				NOT = { c:GER ?= this } 
+			}
+			c:SGR = { change_tag = GER }
+		}
+		
+		#Annex all other Germanies
+		custom_tooltip = {
+			text = union_annexation_tt
+			if = {
+				limit = { exists = c:WGR }
+				c:GER = { annex = c:WGR }
+			}
+			if = {
+				limit = { exists = c:EGR }
+				c:GER = { annex = c:EGR }
+			}
+			if = {
+				limit = { exists = c:SGR }
+				c:GER = { annex = c:SGR }
+			}
+		}
+		
+		#Prestige from re-unification
+		add_modifier = { name = national_pride_modifier months = 60 is_decaying = yes }
+		
+	}
+
+	invalid = {
+		
+	}
+
+	weight = 1000
+	should_be_pinned_by_default = yes
+}
