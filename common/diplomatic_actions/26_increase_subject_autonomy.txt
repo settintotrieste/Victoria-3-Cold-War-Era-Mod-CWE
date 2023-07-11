@@ -1,0 +1,204 @@
+
+###
+# INCREASE AUTONOMY
+###
+
+increase_subject_autonomy = {
+	requires_approval = no
+	can_use_obligations = no
+
+	potential = {
+		
+		#THIS is an overlord
+		scope:target_country = { 
+			is_direct_subject_of = scope:actor
+			OR = { 
+				is_subject_type = subject_type_dominion
+				is_subject_type = subject_type_semi_autonomous_colony
+				is_subject_type = subject_type_mandate
+				
+				is_subject_type = subject_type_satellite
+				is_subject_type = subject_type_puppet
+				is_subject_type = subject_type_special_administrative_region
+			}
+		}
+		
+		#THIS is sufficiently independent
+		is_sufficiently_independent = yes
+		
+		#Not a civil war country
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no }
+		
+	}
+
+	possible = {
+		
+		#Only democratic leaders want to grant more autonomy
+		OR = { 
+			is_player = yes
+			ruler = {
+				OR = {
+					has_ideology = ideology:ideology_democratic
+					has_ideology = ideology:ideology_liberal
+				}
+			}
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+		#THIS can only release 1 subject per year
+		custom_tooltip = {
+			text = increase_subject_autonomy.tt
+			NOT = { has_variable = increase_subject_autonomy_timer }
+		}
+	}
+	
+	accept_effect = {
+		
+		#Gain relations with subject
+		change_relations = { country = scope:target_country value = 50 }
+		
+		#THIS loses infamy
+		change_infamy = -10
+		
+		#TARGET is converted into a dominion/satellite
+		scope:target_country = { 
+			
+			#Colonial subjects
+			if = {
+				limit = { is_subject_type = subject_type_dominion }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = dominion
+				}
+				if = {
+					limit = { scope:actor = { is_a_monarchy = yes } }
+					scope:actor = {
+						create_diplomatic_pact = {
+							country = scope:target_country
+							type = personal_union
+						}
+					}
+				}
+				else = {
+					scope:actor = {
+						create_diplomatic_pact = {
+							country = scope:target_country
+							type = protectorate
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = { is_subject_type = subject_type_semi_autonomous_colony }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = semi_autonomous_colony
+				}
+				scope:actor = {
+					create_diplomatic_pact = {
+						country = scope:target_country
+						type = dominion
+					}
+				}
+			}
+			else_if = {
+				limit = { is_subject_type = subject_type_mandate }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = mandate
+				}
+				scope:actor = {
+					create_diplomatic_pact = {
+						country = scope:target_country
+						type = satellite
+					}
+				}
+			}
+			
+			#Normal subjects
+			else_if = {
+				limit = { is_subject_type = subject_type_satellite }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = satellite
+				}
+				scope:actor = {
+					create_diplomatic_pact = {
+						country = scope:target_country
+						type = protectorate
+					}
+				}
+			}
+			else_if = {
+				limit = { is_subject_type = subject_type_puppet }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = puppet
+				}
+				scope:actor = {
+					create_diplomatic_pact = {
+						country = scope:target_country
+						type = satellite
+					}
+				}
+			}
+			else_if = {
+				limit = { is_subject_type = subject_type_special_administrative_region }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = special_administrative_region
+				}
+				scope:actor = {
+					create_diplomatic_pact = {
+						country = scope:target_country
+						type = satellite
+					}
+				}
+			}
+			
+		}
+		
+		#THIS can only release 1 country per year
+		set_variable = {
+			name = increase_subject_autonomy_timer
+			months = 12
+		}
+		
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = {
+			
+			#Does not have historical railroading
+			NOT = { has_global_variable = historical_railroading_active }
+			
+			#AI weights
+			OR = {
+			
+				#Overlord is in financial difficulty
+				in_default = yes
+				has_healthy_economy = yes
+				
+				#Overlord is a pariah and needs to reduce infamy quickly
+				infamy >= infamy_threshold:pariah
+				
+			}
+			
+			#Do not interfere with historical events
+			game_date >= 1980.1.1
+			has_technology_researched = tech_geopolitics_5
+			scope:target_country = { NOT = { is_subject_type = subject_type_mandate } }
+			
+		}
+		
+	}
+	
+}
