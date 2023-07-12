@@ -1,0 +1,128 @@
+je_korean_unification = {
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	is_shown_when_inactive = {
+		OR = {
+			c:SKO ?= this
+			c:NKO ?= this
+		}
+	}
+
+	possible = {
+	
+		#KOR does not exist
+		NOT = { exists = c:KOR }
+	
+		#THIS is a German state
+		OR = { 
+			c:SKO ?= this
+			c:NKO ?= this
+		}
+		
+	}
+
+	complete = {
+	
+		OR = { 
+			
+			#THIS has not become Germany yet
+			AND = {
+				NOT = { c:KOR ?= this }
+			
+				#Independent or are subjects of the same overlord
+				OR = { 
+					AND = { 
+						is_sufficiently_independent = yes
+						OR = { c:SKO ?= { is_direct_subject_of = ROOT } NOT = { exists = c:SKO } c:SKO ?= this }
+						OR = { c:NKO ?= { is_direct_subject_of = ROOT } NOT = { exists = c:NKO } c:NKO ?= this }
+					}
+					AND = { 
+						exists = overlord
+						overlord = { 
+							is_sufficiently_independent = yes
+							is_at_war = no
+						
+							OR = { c:SKO ?= { is_direct_subject_of = ROOT } NOT = { exists = c:SKO } }
+							OR = { c:NKO ?= { is_direct_subject_of = ROOT } NOT = { exists = c:NKO } }
+						}
+					}
+				}
+				
+				#Other German States share the same gov type
+				custom_tooltip = {
+					text = has_same_gov_type_tt
+					OR = {
+						AND = { OR = { c:SKO ?= { is_a_democracy = yes } NOT = { exists = c:SKO } } OR = { c:NKO ?= { is_a_democracy = yes } NOT = { exists = c:NKO } } }
+						AND = { OR = { c:SKO ?= { is_a_communist_government = yes } NOT = { exists = c:SKO } } OR = { c:NKO ?= { is_a_communist_government = yes } NOT = { exists = c:NKO } } }
+						AND = { OR = { c:SKO ?= { is_a_nationalist_government = yes } NOT = { exists = c:SKO } } OR = { c:NKO ?= { is_a_nationalist_government = yes } NOT = { exists = c:NKO } } }
+						AND = { OR = { c:SKO ?= { is_a_theocratic_government = yes } NOT = { exists = c:SKO } } OR = { c:NKO ?= { is_a_theocratic_government = yes } NOT = { exists = c:NKO } } }
+					}
+				}
+				
+			}
+		
+			#THIS has become Korea through some other means
+			custom_tooltip = {
+				c:KOR ?= this
+				text = je_korean_unification_complete_trigger_desc
+			}
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+	}
+
+	on_complete = {
+		
+		#Form KOR if THIS was not already Germany
+		if = {
+			limit = { 
+				is_player = yes 
+				NOT = { c:KOR ?= this } 
+			}
+			change_tag = KOR
+		}
+		else_if = {
+			limit = { 
+				is_player = no
+				exists = c:SKO
+				NOT = { c:KOR ?= this } 
+			}
+			c:SKO = { change_tag = KOR }
+		}
+		else_if = {
+			limit = { 
+				is_player = no
+				NOT = { exists = c:SKO }
+				exists = c:NKO
+				NOT = { c:KOR ?= this } 
+			}
+			c:NKO = { change_tag = KOR }
+		}
+		
+		#Annex all other Koreas if THIS is KOR
+		custom_tooltip = {
+			text = union_annexation_tt
+			if = {
+				limit = { exists = c:SKO c:KOR ?= this }
+				annex = c:SKO
+			}
+			if = {
+				limit = { exists = c:NKO c:KOR ?= this }
+				annex = c:NKO
+			}
+		}
+		
+		#Prestige from re-unification
+		add_modifier = { name = national_pride_modifier months = 60 is_decaying = yes }
+		
+	}
+
+	invalid = {
+		
+	}
+
+	weight = 1000
+	should_be_pinned_by_default = yes
+}

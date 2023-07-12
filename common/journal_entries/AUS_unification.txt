@@ -1,0 +1,128 @@
+je_austrian_unification = {
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	is_shown_when_inactive = {
+		OR = {
+			c:WAU ?= this
+			c:EAU ?= this
+		}
+	}
+
+	possible = {
+	
+		#AUS does not exist
+		NOT = { exists = c:AUS }
+	
+		#THIS is a German state
+		OR = { 
+			c:WAU ?= this
+			c:EAU ?= this
+		}
+		
+	}
+
+	complete = {
+	
+		OR = { 
+			
+			#THIS has not become Germany yet
+			AND = {
+				NOT = { c:AUS ?= this }
+			
+				#Independent or are subjects of the same overlord
+				OR = { 
+					AND = { 
+						is_sufficiently_independent = yes
+						OR = { c:WAU ?= { is_direct_subject_of = ROOT } NOT = { exists = c:WAU } c:WAU ?= this }
+						OR = { c:EAU ?= { is_direct_subject_of = ROOT } NOT = { exists = c:EAU } c:EAU ?= this }
+					}
+					AND = { 
+						exists = overlord
+						overlord = { 
+							is_sufficiently_independent = yes
+							is_at_war = no
+						
+							OR = { c:WAU ?= { is_direct_subject_of = ROOT } NOT = { exists = c:WAU } }
+							OR = { c:EAU ?= { is_direct_subject_of = ROOT } NOT = { exists = c:EAU } }
+						}
+					}
+				}
+				
+				#Other German States share the same gov type
+				custom_tooltip = {
+					text = has_same_gov_type_tt
+					OR = {
+						AND = { OR = { c:WAU ?= { is_a_democracy = yes } NOT = { exists = c:WAU } } OR = { c:EAU ?= { is_a_democracy = yes } NOT = { exists = c:EAU } } }
+						AND = { OR = { c:WAU ?= { is_a_communist_government = yes } NOT = { exists = c:WAU } } OR = { c:EAU ?= { is_a_communist_government = yes } NOT = { exists = c:EAU } } }
+						AND = { OR = { c:WAU ?= { is_a_nationalist_government = yes } NOT = { exists = c:WAU } } OR = { c:EAU ?= { is_a_nationalist_government = yes } NOT = { exists = c:EAU } } }
+						AND = { OR = { c:WAU ?= { is_a_theocratic_government = yes } NOT = { exists = c:WAU } } OR = { c:EAU ?= { is_a_theocratic_government = yes } NOT = { exists = c:EAU } } }
+					}
+				}
+				
+			}
+		
+			#THIS has become Korea through some other means
+			custom_tooltip = {
+				c:AUS ?= this
+				text = je_austrian_unification_complete_trigger_desc
+			}
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+	}
+
+	on_complete = {
+		
+		#Form AUS if THIS was not already Germany
+		if = {
+			limit = { 
+				is_player = yes 
+				NOT = { c:AUS ?= this } 
+			}
+			change_tag = AUS
+		}
+		else_if = {
+			limit = { 
+				is_player = no
+				exists = c:WAU
+				NOT = { c:AUS ?= this } 
+			}
+			c:WAU = { change_tag = AUS }
+		}
+		else_if = {
+			limit = { 
+				is_player = no
+				NOT = { exists = c:WAU }
+				exists = c:EAU
+				NOT = { c:AUS ?= this } 
+			}
+			c:EAU = { change_tag = AUS }
+		}
+		
+		#Annex all other Koreas if THIS is AUS
+		custom_tooltip = {
+			text = union_annexation_tt
+			if = {
+				limit = { exists = c:WAU c:AUS ?= this }
+				annex = c:WAU
+			}
+			if = {
+				limit = { exists = c:EAU c:AUS ?= this }
+				annex = c:EAU
+			}
+		}
+		
+		#Prestige from re-unification
+		add_modifier = { name = national_pride_modifier months = 60 is_decaying = yes }
+		
+	}
+
+	invalid = {
+		
+	}
+
+	weight = 1000
+	should_be_pinned_by_default = yes
+}

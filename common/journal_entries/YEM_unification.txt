@@ -1,0 +1,128 @@
+je_yemeni_unification = {
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	is_shown_when_inactive = {
+		OR = {
+			c:SYE ?= this
+			c:NYE ?= this
+		}
+	}
+
+	possible = {
+	
+		#YEM does not exist
+		NOT = { exists = c:YEM }
+	
+		#THIS is a German state
+		OR = { 
+			c:SYE ?= this
+			c:NYE ?= this
+		}
+		
+	}
+
+	complete = {
+	
+		OR = { 
+			
+			#THIS has not become Germany yet
+			AND = {
+				NOT = { c:YEM ?= this }
+			
+				#Independent or are subjects of the same overlord
+				OR = { 
+					AND = { 
+						is_sufficiently_independent = yes
+						OR = { c:SYE ?= { is_direct_subject_of = ROOT } NOT = { exists = c:SYE } c:SYE ?= this }
+						OR = { c:NYE ?= { is_direct_subject_of = ROOT } NOT = { exists = c:NYE } c:NYE ?= this }
+					}
+					AND = { 
+						exists = overlord
+						overlord = { 
+							is_sufficiently_independent = yes
+							is_at_war = no
+						
+							OR = { c:SYE ?= { is_direct_subject_of = ROOT } NOT = { exists = c:SYE } }
+							OR = { c:NYE ?= { is_direct_subject_of = ROOT } NOT = { exists = c:NYE } }
+						}
+					}
+				}
+				
+				#Other German States share the same gov type
+				custom_tooltip = {
+					text = has_same_gov_type_tt
+					OR = {
+						AND = { OR = { c:SYE ?= { is_a_democracy = yes } NOT = { exists = c:SYE } } OR = { c:NYE ?= { is_a_democracy = yes } NOT = { exists = c:NYE } } }
+						AND = { OR = { c:SYE ?= { is_a_communist_government = yes } NOT = { exists = c:SYE } } OR = { c:NYE ?= { is_a_communist_government = yes } NOT = { exists = c:NYE } } }
+						AND = { OR = { c:SYE ?= { is_a_nationalist_government = yes } NOT = { exists = c:SYE } } OR = { c:NYE ?= { is_a_nationalist_government = yes } NOT = { exists = c:NYE } } }
+						AND = { OR = { c:SYE ?= { is_a_theocratic_government = yes } NOT = { exists = c:SYE } } OR = { c:NYE ?= { is_a_theocratic_government = yes } NOT = { exists = c:NYE } } }
+					}
+				}
+				
+			}
+		
+			#THIS has become Korea through some other means
+			custom_tooltip = {
+				c:YEM ?= this
+				text = je_yemeni_unification_complete_trigger_desc
+			}
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+	}
+
+	on_complete = {
+		
+		#Form YEM if THIS was not already Germany
+		if = {
+			limit = { 
+				is_player = yes 
+				NOT = { c:YEM ?= this } 
+			}
+			change_tag = YEM
+		}
+		else_if = {
+			limit = { 
+				is_player = no
+				exists = c:SYE
+				NOT = { c:YEM ?= this } 
+			}
+			c:SYE = { change_tag = YEM }
+		}
+		else_if = {
+			limit = { 
+				is_player = no
+				NOT = { exists = c:SYE }
+				exists = c:NYE
+				NOT = { c:YEM ?= this } 
+			}
+			c:NYE = { change_tag = YEM }
+		}
+		
+		#Annex all other Koreas if THIS is YEM
+		custom_tooltip = {
+			text = union_annexation_tt
+			if = {
+				limit = { exists = c:SYE c:YEM ?= this }
+				annex = c:SYE
+			}
+			if = {
+				limit = { exists = c:NYE c:YEM ?= this }
+				annex = c:NYE
+			}
+		}
+		
+		#Prestige from re-unification
+		add_modifier = { name = national_pride_modifier months = 60 is_decaying = yes }
+		
+	}
+
+	invalid = {
+		
+	}
+
+	weight = 1000
+	should_be_pinned_by_default = yes
+}

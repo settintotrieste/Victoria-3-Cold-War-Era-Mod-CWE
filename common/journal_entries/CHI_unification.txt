@@ -1,0 +1,128 @@
+je_chinese_unification = {
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	is_shown_when_inactive = {
+		OR = {
+			c:ROC ?= this
+			c:PRC ?= this
+		}
+	}
+
+	possible = {
+	
+		#CHI does not exist
+		NOT = { exists = c:CHI }
+	
+		#THIS is a German state
+		OR = { 
+			c:ROC ?= this
+			c:PRC ?= this
+		}
+		
+	}
+
+	complete = {
+	
+		OR = { 
+			
+			#THIS has not become Germany yet
+			AND = {
+				NOT = { c:CHI ?= this }
+			
+				#Independent or are subjects of the same overlord
+				OR = { 
+					AND = { 
+						is_sufficiently_independent = yes
+						OR = { c:ROC ?= { is_direct_subject_of = ROOT } NOT = { exists = c:ROC } c:ROC ?= this }
+						OR = { c:PRC ?= { is_direct_subject_of = ROOT } NOT = { exists = c:PRC } c:PRC ?= this }
+					}
+					AND = { 
+						exists = overlord
+						overlord = { 
+							is_sufficiently_independent = yes
+							is_at_war = no
+						
+							OR = { c:ROC ?= { is_direct_subject_of = ROOT } NOT = { exists = c:ROC } }
+							OR = { c:PRC ?= { is_direct_subject_of = ROOT } NOT = { exists = c:PRC } }
+						}
+					}
+				}
+				
+				#Other German States share the same gov type
+				custom_tooltip = {
+					text = has_same_gov_type_tt
+					OR = {
+						AND = { OR = { c:ROC ?= { is_a_democracy = yes } NOT = { exists = c:ROC } } OR = { c:PRC ?= { is_a_democracy = yes } NOT = { exists = c:PRC } } }
+						AND = { OR = { c:ROC ?= { is_a_communist_government = yes } NOT = { exists = c:ROC } } OR = { c:PRC ?= { is_a_communist_government = yes } NOT = { exists = c:PRC } } }
+						AND = { OR = { c:ROC ?= { is_a_nationalist_government = yes } NOT = { exists = c:ROC } } OR = { c:PRC ?= { is_a_nationalist_government = yes } NOT = { exists = c:PRC } } }
+						AND = { OR = { c:ROC ?= { is_a_theocratic_government = yes } NOT = { exists = c:ROC } } OR = { c:PRC ?= { is_a_theocratic_government = yes } NOT = { exists = c:PRC } } }
+					}
+				}
+				
+			}
+		
+			#THIS has become Korea through some other means
+			custom_tooltip = {
+				c:CHI ?= this
+				text = je_chinese_unification_complete_trigger_desc
+			}
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+	}
+
+	on_complete = {
+		
+		#Form CHI if THIS was not already Germany
+		if = {
+			limit = { 
+				is_player = yes 
+				NOT = { c:CHI ?= this } 
+			}
+			change_tag = CHI
+		}
+		else_if = {
+			limit = { 
+				is_player = no
+				exists = c:ROC
+				NOT = { c:CHI ?= this } 
+			}
+			c:ROC = { change_tag = CHI }
+		}
+		else_if = {
+			limit = { 
+				is_player = no
+				NOT = { exists = c:ROC }
+				exists = c:PRC
+				NOT = { c:CHI ?= this } 
+			}
+			c:PRC = { change_tag = CHI }
+		}
+		
+		#Annex all other Koreas if THIS is CHI
+		custom_tooltip = {
+			text = union_annexation_tt
+			if = {
+				limit = { exists = c:ROC c:CHI ?= this }
+				annex = c:ROC
+			}
+			if = {
+				limit = { exists = c:PRC c:CHI ?= this }
+				annex = c:PRC
+			}
+		}
+		
+		#Prestige from re-unification
+		add_modifier = { name = national_pride_modifier months = 60 is_decaying = yes }
+		
+	}
+
+	invalid = {
+		
+	}
+
+	weight = 1000
+	should_be_pinned_by_default = yes
+}
