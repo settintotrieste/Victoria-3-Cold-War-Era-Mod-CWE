@@ -142,6 +142,17 @@ OPEC_system.3 = {
 			has_modifier = OPEC_member
 			has_modifier = OPEC_leader
 			has_variable = OPEC_application_var
+			
+			any_scope_state = {
+				OR = {
+					has_modifier = very_low_OPEC_oil_quota
+					has_modifier = low_OPEC_oil_quota
+					has_modifier = medium_OPEC_oil_quota
+					has_modifier = high_OPEC_oil_quota
+					has_modifier = very_high_OPEC_oil_quota
+				}
+			}
+			
 		}
 		
 		OR = { 
@@ -158,6 +169,15 @@ OPEC_system.3 = {
 		#THIS leaves OPEC
 		remove_modifier = OPEC_member
 		remove_modifier = OPEC_leader
+		
+		#Clear all OPEC modifiers
+		every_scope_state = {
+			remove_modifier = very_low_OPEC_oil_quota
+			remove_modifier = low_OPEC_oil_quota
+			remove_modifier = medium_OPEC_oil_quota
+			remove_modifier = high_OPEC_oil_quota
+			remove_modifier = very_high_OPEC_oil_quota
+		}
 		
 		#Terminate any applications
 		remove_variable = OPEC_application_var
@@ -316,4 +336,320 @@ OPEC_system.6 = {
 		
     }
 
+}
+
+### OPEC Oil Production Quotas ###
+
+# Fires once per year
+OPEC_system.7 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		#Only applies to OPEC members
+		OR = { 
+			has_modifier = OPEC_leader 
+			has_modifier = OPEC_member 
+		} 
+		
+	}
+
+	immediate = {
+		
+		#Check state of the Global Economy (Max: 5)
+		set_global_variable = { 
+			name = economic_strength_global_var
+			value = 0
+		}
+		set_global_variable = { 
+			name = economic_strength_country_count_var
+			value = 0
+		}
+		every_country = {
+			limit = { 
+				OR = { 
+					has_modifier = OPEC_leader 
+					has_modifier = OPEC_member 
+				} 
+			}
+			if = {
+				limit = { has_modifier = economic_cycle_1 }
+				change_global_variable = { name = economic_strength_global_var add = 1 }
+			}
+			if = {
+				limit = { has_modifier = economic_cycle_2 }
+				change_global_variable = { name = economic_strength_global_var add = 2 }
+			}
+			if = {
+				limit = { has_modifier = economic_cycle_3 }
+				change_global_variable = { name = economic_strength_global_var add = 3 }
+			}
+			if = {
+				limit = { has_modifier = economic_cycle_4 }
+				change_global_variable = { name = economic_strength_global_var add = 4 }
+			}
+			if = {
+				limit = { has_modifier = economic_cycle_5 }
+				change_global_variable = { name = economic_strength_global_var add = 5 }
+			}
+			change_global_variable = { name = economic_strength_country_count_var add = 1 }
+		}
+		change_global_variable = { 
+			name = economic_strength_global_var 
+			divide = global_var:economic_strength_country_count_var
+		}
+		
+		#Apply OPEC quotas to oil producing states
+		if = {
+			limit = { 
+				global_var:economic_strength_global_var <= 1 
+				
+				any_scope_state = { NOT = { has_modifier = very_low_OPEC_oil_quota } }
+			}
+			
+			#Always clear everything first
+			every_scope_state = {
+				remove_modifier = very_low_OPEC_oil_quota
+				remove_modifier = low_OPEC_oil_quota
+				remove_modifier = medium_OPEC_oil_quota
+				remove_modifier = high_OPEC_oil_quota
+				remove_modifier = very_high_OPEC_oil_quota
+			}
+			
+			#Add quota to all oil producing states
+			every_scope_state = {
+				limit = { has_building = building_oil_rig }
+				add_modifier = { name = very_low_OPEC_oil_quota }
+			}
+			
+			#Inform country of change
+			trigger_event = { id = OPEC_system.8 }
+		}
+		if = {
+			limit = { 
+				global_var:economic_strength_global_var > 1
+				global_var:economic_strength_global_var <= 2
+				
+				any_scope_state = { NOT = { has_modifier = low_OPEC_oil_quota } }
+			}
+			
+			#Always clear everything first
+			every_scope_state = {
+				remove_modifier = very_low_OPEC_oil_quota
+				remove_modifier = low_OPEC_oil_quota
+				remove_modifier = medium_OPEC_oil_quota
+				remove_modifier = high_OPEC_oil_quota
+				remove_modifier = very_high_OPEC_oil_quota
+			}
+			
+			#Add quota to all oil producing states
+			every_scope_state = {
+				limit = { has_building = building_oil_rig }
+				add_modifier = { name = low_OPEC_oil_quota }
+			}
+			
+			#Inform country of change
+			trigger_event = { id = OPEC_system.8 }
+		}
+		if = {
+			limit = { 
+				global_var:economic_strength_global_var > 2
+				global_var:economic_strength_global_var <= 3
+				
+				any_scope_state = { NOT = { has_modifier = medium_OPEC_oil_quota } }
+			}
+			
+			#Always clear everything first
+			every_scope_state = {
+				remove_modifier = very_low_OPEC_oil_quota
+				remove_modifier = low_OPEC_oil_quota
+				remove_modifier = medium_OPEC_oil_quota
+				remove_modifier = high_OPEC_oil_quota
+				remove_modifier = very_high_OPEC_oil_quota
+			}
+			
+			#Add quota to all oil producing states
+			every_scope_state = {
+				limit = { has_building = building_oil_rig }
+				add_modifier = { name = medium_OPEC_oil_quota }
+			}
+			
+			#Inform country of change
+			trigger_event = { id = OPEC_system.8 }
+		}
+		if = {
+			limit = { 
+				global_var:economic_strength_global_var > 3
+				global_var:economic_strength_global_var <= 4
+				
+				any_scope_state = { NOT = { has_modifier = high_OPEC_oil_quota } }
+			}
+			
+			#Always clear everything first
+			every_scope_state = {
+				remove_modifier = very_low_OPEC_oil_quota
+				remove_modifier = low_OPEC_oil_quota
+				remove_modifier = medium_OPEC_oil_quota
+				remove_modifier = high_OPEC_oil_quota
+				remove_modifier = very_high_OPEC_oil_quota
+			}
+			
+			#Add quota to all oil producing states
+			every_scope_state = {
+				limit = { has_building = building_oil_rig }
+				add_modifier = { name = high_OPEC_oil_quota }
+			}
+			
+			#Inform country of change
+			trigger_event = { id = OPEC_system.8 }
+		}
+		if = {
+			limit = { 
+				global_var:economic_strength_global_var > 4
+				
+				any_scope_state = { NOT = { has_modifier = very_high_OPEC_oil_quota } }
+			}
+			
+			#Always clear everything first
+			every_scope_state = {
+				remove_modifier = very_low_OPEC_oil_quota
+				remove_modifier = low_OPEC_oil_quota
+				remove_modifier = medium_OPEC_oil_quota
+				remove_modifier = high_OPEC_oil_quota
+				remove_modifier = very_high_OPEC_oil_quota
+			}
+			
+			#Add quota to all oil producing states
+			every_scope_state = {
+				limit = { has_building = building_oil_rig }
+				add_modifier = { name = very_high_OPEC_oil_quota }
+			}
+			
+			#Inform country of change
+			trigger_event = { id = OPEC_system.8 }
+		}
+		
+	}
+	
+}
+
+OPEC_system.8 = {
+	type = country_event
+	
+	title = OPEC_oil_quota.t
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = OPEC_oil_quota.1.d
+				trigger = { any_scope_state = { has_modifier = very_low_OPEC_oil_quota } }
+			}
+			triggered_desc = {
+				desc = OPEC_oil_quota.2.d
+				trigger = { any_scope_state = { has_modifier = low_OPEC_oil_quota } }
+			}
+			triggered_desc = {
+				desc = OPEC_oil_quota.3.d
+				trigger = { any_scope_state = { has_modifier = medium_OPEC_oil_quota } }
+			}
+			triggered_desc = {
+				desc = OPEC_oil_quota.4.d
+				trigger = { any_scope_state = { has_modifier = high_OPEC_oil_quota } }
+			}
+			triggered_desc = {
+				desc = OPEC_oil_quota.5.d
+				trigger = { any_scope_state = { has_modifier = very_high_OPEC_oil_quota } }
+			}
+		}
+	}
+	flavor = OPEC_oil_quota.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_signed_contract.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		#Triggered by the event above
+	}
+
+	immediate = {
+		save_scope_as = OPEC_oil_quota_target
+	}
+
+	option = {
+		name = OPEC_accept_quota
+		default_option = yes
+		
+		ai_chance = { 
+			base = 100
+			
+			#AI will ignore quotas when it is in financial difficulties
+			modifier = {
+				trigger = {
+					OR = { 
+						has_healthy_economy = no
+						in_default = yes
+					}
+				}
+				add = -100
+			}
+			
+		}
+		
+	}
+	
+	option = {
+		name = OPEC_reject_quota
+		
+		#Clear all quotas
+		every_scope_state = {
+			remove_modifier = very_low_OPEC_oil_quota
+			remove_modifier = low_OPEC_oil_quota
+			remove_modifier = medium_OPEC_oil_quota
+			remove_modifier = high_OPEC_oil_quota
+			remove_modifier = very_high_OPEC_oil_quota
+		}
+		
+		#Antagonise OPEC members
+		every_country = {
+			limit = { 
+				OR = { 
+					has_modifier = OPEC_leader 
+					has_modifier = OPEC_member 
+				} 
+			}
+			change_relations = {
+				country = ROOT
+				value = -25
+			}
+		}
+		
+		#Add infamy because doing this is a breach of international treaty obligations
+		change_infamy = 5
+		
+		ai_chance = { 
+			base = 0
+			
+			#AI will ignore quotas when it is in financial difficulties
+			modifier = {
+				trigger = {
+					OR = { 
+						has_healthy_economy = no
+						in_default = yes
+					}
+				}
+				add = 100
+			}
+			
+		}
+		
+	}
+	
 }
