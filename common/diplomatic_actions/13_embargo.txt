@@ -97,6 +97,7 @@
 		propose_score = {
 			value = 10
 
+			#Non-communist countries are more likely to embargo non-communist countries
 			if = {
 				limit = {
 					AND = {
@@ -106,65 +107,98 @@
 						scope:target_country = { has_law = law_type:law_HOS_communist_leader }	
 					}			
 				}
-				
 				add = 25
 			}
+			
 		}
 	
 		will_propose = { 
+		
+			#THIS has some trade with TARGET
 			"scope:target_country.num_mutual_trade_route_levels_with_country(root)" > 0
-			NOT = {
+			
+			#THIS is hostile with TARGET OR cares a lot about democracy OR TARGET is embargoing THIS
+			OR = {
+			
 				has_attitude = {
 					who = scope:target_country
-					attitude = conciliatory
-				}				
-			}
-			OR = {
+					attitude <= antagonistic
+				}
 				scope:target_country.relations:root <= relations_threshold:hostile
+				
+				ruler = {
+					OR = {
+						has_ideology = ideology:ideology_democratic
+						has_ideology = ideology:ideology_liberal
+					}
+				}
+				
+				scope:target_country = {
+					has_diplomatic_pact = {
+						who = root
+						type = embargo
+					}
+				}
+				
+			}
+			
+			#TARGET has high infamy OR is embargoing THIS OR THIS has a jingoistic leader
+			OR = {
+			
 				scope:target_country.infamy >= infamy_threshold:pariah
+				
+				ruler = {
+					OR = {
+						has_ideology = ideology:ideology_autocratic
+						has_ideology = ideology:ideology_power_hungry
+					}
+				}
+				
 				scope:target_country = {
 					has_diplomatic_pact = {
 						who = root
 						type = embargo
 					}				
-				}		
-				AND = {
-					NOT = {
-						has_law = law_type:law_HOS_communist_leader
-					}
-					scope:target_country = {
-						has_law = law_type:law_HOS_communist_leader	
-					}
-				}				
+				}
+				
 			}
+			
+			#AI will not sabotage its own economy
+			in_default = no
+			has_healthy_economy = yes
+			
 		}
 		
 		will_break = { 
-			OR = {
+			
+			NOR = {
+			
+				#Relations have improved
 				has_attitude = {
 					who = scope:target_country
-					attitude = conciliatory
-				}				
-				NOR = {
-					scope:target_country.relations:root <= relations_threshold:hostile	
-					scope:target_country.infamy >= infamy_threshold:pariah
-					scope:target_country = {
-						has_diplomatic_pact = {
-							who = root
-							type = embargo
-						}				
-					}
-					AND = {
-						NOT = {
-							has_law = law_type:law_HOS_communist_leader
-						}
-						scope:target_country = {
-							has_law = law_type:law_HOS_communist_leader	
-						}
+					attitude <= antagonistic
+				}
+				scope:target_country.relations:root <= relations_threshold:hostile
+				
+				#TARGET is no longer a pariah
+				scope:target_country.infamy >= infamy_threshold:pariah
+				
+				#AI needs to save its economy
+				in_default = no
+				has_healthy_economy = yes
+				
+				#TARGET has lifted its embargo on THIS
+				scope:target_country = {
+					has_diplomatic_pact = {
+						who = root
+						type = embargo
 					}				
-				}			
+				}
+				
 			}
-		}			
+			
+		}
+		
 	}
 }
 
