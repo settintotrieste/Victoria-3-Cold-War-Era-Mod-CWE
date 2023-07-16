@@ -38,11 +38,15 @@
 		
 		#OPEC leader must have good relations with fellow OPEC members
 		OR = {
-			NOT = { has_modifier = OPEC_leader }
-			NOT = { 
-				any_country = {
-					has_modifier = OPEC_member
-					relations:root < relations_threshold:amicable
+			has_modifier = OPEC_leader
+			
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_LESS_OPEC
+				NOT = { 
+					any_country = {
+						has_modifier = OPEC_member
+						relations:root < relations_threshold:amicable
+					}
 				}
 			}
 		}
@@ -55,8 +59,17 @@
 	}
 
 	# Effect of action on execution
-	effect = {
+	accept_effect = {
 	
+		#Lose relations with TARGET
+		change_relations = {
+			country = scope:target_country
+			value = -50
+		}
+		
+		#Mark TARGET as a OPEC Embargo target
+		scope:target_country = { set_variable = oil_embargo_target }
+		
 		#Invite all OPEC members to join in on the embargo
 		every_country = {
 			limit = { 
@@ -67,11 +80,8 @@
 			trigger_event = { id = OPEC_system.9 }
 		}
 		
-		#Lose relations with TARGET
-		change_relations = {
-			country = scope:target_country
-			value = -50
-		}
+		#Timer
+		set_variable = { name = oil_embargo_timer months = 1 }
 		
 	}
 	
@@ -93,6 +103,9 @@
 					has_diplomatic_pact = { who = scope:target_country type = OPEC_oil_embargo }
 				}
 			}
+			
+			#Cannot break oil embargo too quickly
+			NOT = { has_variable = oil_embargo_timer }
 			
 		}
 		
@@ -139,7 +152,9 @@
 			
 		}
 		
-		break_effect = {}
+		break_effect = { 
+			scope:target_country = { remove_variable = oil_embargo_target }
+		}
 	}
 	
 	ai = {
