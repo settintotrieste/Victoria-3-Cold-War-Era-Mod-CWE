@@ -1,0 +1,227 @@
+﻿OPEC_oil_embargo = {
+	requires_approval = no
+	should_notify_third_parties = yes
+	
+	potential = {
+	
+		#THIS is an OPEC leader OR there is an OPEC leader targeting TARGET
+		OR = { 
+		
+			has_modifier = OPEC_leader
+			
+			AND = {
+				has_modifier = OPEC_member
+				any_country = {
+					has_modifier = OPEC_leader
+					has_diplomatic_pact = { who = scope:target_country type = OPEC_oil_embargo }
+				}
+			}
+			
+		}
+		
+		#THIS or TARGET are not decentralized
+		NOR = { is_country_type = decentralized }
+		scope:target_country = { NOR = { is_country_type = decentralized } }
+		
+	}
+	
+	possible = {
+	
+		#THIS is interested in the TARGET
+		has_diplomatic_relevance = scope:target_country
+		
+		#THIS must have poor relations with TARGET
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+			scope:target_country.relations:root <= relations_threshold:poor
+		}
+		
+		#OPEC leader must have good relations with fellow OPEC members
+		OR = {
+			NOT = { has_modifier = OPEC_leader }
+			NOT = { 
+				any_country = {
+					has_modifier = OPEC_member
+					relations:root < relations_threshold:amicable
+				}
+			}
+		}
+		
+		#THIS & TARGET are not in a customs union OR cannot evade an embargo with a treaty port
+		is_junior_in_customs_union = no
+		scope:target_country = { is_junior_in_customs_union = no }
+		NOT = { scope:target_country = { has_treaty_port_in_country = root } }
+		
+	}
+
+	# Effect of action on execution
+	effect = {
+	
+		#Invite all OPEC members to join in on the embargo
+		every_country = {
+			limit = { 
+				has_modifier = OPEC_member
+				is_junior_in_customs_union = no
+				NOT = { has_diplomatic_pact = { who = scope:target_country type = OPEC_oil_embargo } }
+			}
+			trigger_event = { id = OPEC_system.9 }
+		}
+		
+		#Lose relations with TARGET
+		change_relations = {
+			country = scope:target_country
+			value = -50
+		}
+		
+	}
+	
+	pact = {
+		cost = 100
+	
+		is_embargo = yes		
+		is_two_sided_pact = no
+		
+		relations_progress_per_day = -1 # At -100, -1 relations
+		
+		actor_can_break = {
+			
+			#OPEC members cannot stop the embargo unless the OPEC leader also does so
+			NOT = { 
+				any_country = {
+					NOT = { THIS = ROOT }
+					has_modifier = OPEC_leader
+					has_diplomatic_pact = { who = scope:target_country type = OPEC_oil_embargo }
+				}
+			}
+			
+		}
+		
+		should_auto_break = {
+		
+			#OPEC Leader (THIS) has good relations with TARGET
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
+				
+				has_modifier = OPEC_leader
+				scope:target_country.relations:root > relations_threshold:neutral
+			}
+			
+			#THIS & TARGET are in a customs union OR can evade an embargo with a treaty port
+			OR = {
+				is_junior_in_customs_union = yes
+				scope:target_country = { is_junior_in_customs_union = yes }
+				scope:target_country = { has_treaty_port_in_country = root }
+			}
+			
+		}
+	
+		should_invalidate = {
+		
+			OR = {
+			
+				NOR = { 
+					has_modifier = OPEC_leader
+					AND = {
+						has_modifier = OPEC_member
+						any_country = {
+							has_modifier = OPEC_leader
+							has_diplomatic_pact = { who = scope:target_country type = OPEC_oil_embargo }
+						}
+					}
+				}
+				
+				is_country_type = decentralized
+				scope:target_country = { is_country_type = decentralized }
+				
+				NOT = { has_diplomatic_relevance = scope:target_country }
+				
+			}
+			
+		}
+		
+		break_effect = {}
+	}
+	
+	ai = {
+		check_acceptance_for_will_break = no
+		max_influence_spending_fraction = 0.2
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = { 
+		
+			#THIS has some trade with TARGET
+			"scope:target_country.num_mutual_trade_route_levels_with_country(root)" > 0
+			
+			#THIS is hostile with TARGET OR cares a lot about democracy OR TARGET is embargoing THIS
+			OR = {
+			
+				has_attitude = {
+					who = scope:target_country
+					attitude <= antagonistic
+				}
+				scope:target_country.relations:root <= relations_threshold:hostile
+				
+				scope:target_country = {
+					has_diplomatic_pact = {
+						who = root
+						type = embargo
+					}
+				}
+				
+			}
+			
+			#TARGET has high infamy OR is embargoing THIS OR THIS has a jingoistic leader
+			OR = {
+				
+				ruler = {
+					has_ideology = ideology:ideology_autocratic
+				}
+				
+				scope:target_country = {
+					has_diplomatic_pact = {
+						who = root
+						type = embargo
+					}				
+				}
+				
+			}
+			
+			#AI will not sabotage its own economy
+			in_default = no
+			has_healthy_economy = yes
+			
+		}
+		
+		will_break = { 
+			
+			NOR = {
+			
+				#Relations have improved
+				has_attitude = {
+					who = scope:target_country
+					attitude <= antagonistic
+				}
+				scope:target_country.relations:root <= relations_threshold:hostile
+				
+				#AI needs to save its economy
+				in_default = no
+				has_healthy_economy = yes
+				
+				#TARGET has lifted its embargo on THIS
+				scope:target_country = {
+					has_diplomatic_pact = {
+						who = root
+						type = embargo
+					}
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+}

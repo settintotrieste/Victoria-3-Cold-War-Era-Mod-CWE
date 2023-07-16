@@ -647,3 +647,102 @@ OPEC_system.8 = {
 	}
 	
 }
+
+#Offer to join OPEC embargo
+OPEC_system.9 = {
+	title = OPEC_embargo_invitation.t 					# Title of the event; ADD LOCALISATION
+    desc = OPEC_embargo_invitation.d 					# Description of the event; ADD LOCALISATION
+    flavor = OPEC_embargo_invitation.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = {
+				has_modifier = OPEC_leader
+			}
+			save_scope_as = OPEC_leader
+		}
+		
+		random_country = {
+			limit = {
+				NOT = { has_modifier = OPEC_leader }
+				has_diplomatic_pact = { who = scope:OPEC_leader type = OPEC_oil_embargo }
+				NOT = { has_diplomatic_pact = { who = ROOT type = OPEC_oil_embargo } }
+			}
+			save_scope_as = OPEC_embargo_target
+		}
+		
+	}
+
+	option = {
+       name = OPEC_accept_embargo
+		
+		#THIS creates an Oil Embargo Pact with a country that the OPEC leader is embargoing
+		create_diplomatic_pact = {
+			country = scope:OPEC_embargo_target
+			type = OPEC_oil_embargo
+		}
+		
+		ai_chance = { 
+			base = 100
+			
+			#AI will ignore quotas when it is in financial difficulties
+			modifier = {
+				trigger = {
+					OR = { 
+						has_healthy_economy = no
+						in_default = yes
+					}
+				}
+				add = -100
+			}
+			
+		}
+    }
+	
+	option = {
+       name = OPEC_reject_embargo
+	   default_option = yes
+		
+		#Antagonise OPEC members who are participating in the embargo
+		every_country = {
+			limit = { 
+				OR = { 
+					has_modifier = OPEC_leader 
+					AND = { 
+						has_modifier = OPEC_member 
+						has_diplomatic_pact = { who = scope:OPEC_embargo_target type = OPEC_oil_embargo } 
+					}
+				} 
+			}
+			change_relations = {
+				country = ROOT
+				value = -25
+			}
+		}
+		
+		ai_chance = { 
+			base = 0
+			
+			#AI will ignore quotas when it is in financial difficulties
+			modifier = {
+				trigger = {
+					OR = { 
+						has_healthy_economy = no
+						in_default = yes
+					}
+				}
+				add = 100
+			}
+			
+		}
+    }
+
+}
