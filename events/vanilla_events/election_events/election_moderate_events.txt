@@ -1,0 +1,202 @@
+﻿namespace = election_moderate_events
+
+# [ROOT.GetCountry.GetGovernment.GetName] of Conscience
+# If the country has both communist and fascist parties, both Liberals and Conservatives can campaign as the moderate alternative to the two extremes.
+election_moderate_events.1 = {
+	type = country_event
+	placement = root
+	title = election_moderate_events.1.t
+	desc = election_moderate_events.1.d
+	flavor = election_moderate_events.1.f
+
+	duration = 3
+
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		any_active_party = {
+			OR = {
+				is_party_type = conservative_party
+				is_party_type = liberal_party 
+				is_party_type = centrist_party
+			}
+		}
+		any_active_party = {
+			is_party_type = fascist_party
+		}
+		any_active_party = {
+			is_party_type = communist_party
+		}
+	}
+
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_active_party = {
+			limit = {
+				OR = {
+					is_party_type = conservative_party
+					is_party_type = liberal_party 
+					is_party_type = centrist_party
+				}
+			}
+			save_scope_as = moderate_party
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+
+	# Accept the argument, giving momentum to the party making it.
+	option = {
+		name = election_moderate_events.1.a
+		scope:moderate_party = {
+			add_momentum = momentum_large
+		}
+	}
+
+	# Suggest the political system needs some shaking up, adding momentum to communist, fascist and anarchist parties.
+	option = {
+		name = election_moderate_events.1.b
+		default_option = yes
+		if = {
+			limit = { exists = py:fascist_party }
+			py:fascist_party = { add_momentum = momentum_medium }
+		}
+		if = {
+			limit = { exists = py:communist_party }
+			py:communist_party = { add_momentum = momentum_medium }
+		}
+		if = {
+			limit = { exists = py:libertarian_party }
+			py:libertarian_party = { add_momentum = momentum_medium }
+		}
+	}
+}
+
+# The Red Menace
+# If powerful other countries have communist parties in power and there is a domestic communist or social democratic party, both Liberals and Conservatives can campaign on shielding the country from becoming swept up in an international revolution.
+election_moderate_events.2 = {
+	type = country_event
+	placement = root
+	title = election_moderate_events.2.t
+	desc = election_moderate_events.2.d
+	flavor = election_moderate_events.2.f
+
+	duration = 3
+
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		any_active_party = {
+			OR = {
+				is_party_type = conservative_party
+				is_party_type = liberal_party 
+				is_party_type = centrist_party
+			}
+		}
+		any_active_party = {
+			OR = {
+				is_party_type = communist_party
+				is_party_type = socialist_party
+			}
+		}
+		any_country = {
+			NOT = { this = ROOT }
+			country_rank >= rank_value:major_power
+			any_interest_group = {
+				is_in_government = yes
+				has_party = yes
+				party = {
+					is_party_type = communist_party
+				}
+			}
+		}
+	}
+
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_active_party = {
+			limit = {
+				OR = {
+					is_party_type = conservative_party
+					is_party_type = liberal_party 
+					is_party_type = centrist_party
+				}
+			}
+			save_scope_as = moderate_party
+		}
+		random_active_party = {
+			limit = {
+				OR = {
+					is_party_type = communist_party
+					is_party_type = socialist_party
+				}
+			}
+			save_scope_as = socialist_party
+		}
+		random_country = {
+			limit = {
+				NOT = { this = ROOT }
+				country_rank >= rank_value:major_power
+				any_interest_group = {
+					is_in_government = yes
+					party = {
+						exists = yes
+						is_party_type = communist_party
+					}
+				}
+			}
+			save_scope_as = communist_country
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+
+	# Accept the argument, giving momentum to the party making it.
+	option = {
+		name = election_moderate_events.2.a
+		scope:moderate_party = {
+			add_momentum = momentum_large
+		}
+	}
+
+	# Welcome the revolution, improving relations with the other country and giving smaller momentum to the communist party.
+	option = {
+		name = election_moderate_events.2.b
+		default_option = yes
+		change_relations = {
+			country = scope:communist_country
+			value = 20
+		}
+		scope:socialist_party = {
+			add_momentum = momentum_small
+		}
+	}
+}

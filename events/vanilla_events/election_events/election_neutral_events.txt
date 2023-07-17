@@ -1,0 +1,826 @@
+﻿namespace = election_neutral
+
+# Kindly Burn This Letter
+election_neutral.1 = {
+	type = country_event
+	placement = ROOT
+
+	title = election_neutral.1.t
+	desc = election_neutral.1.d
+	flavor = election_neutral.1.f
+	
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 3
+
+	trigger = {
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		any_active_party = {
+			any_member = {
+				leader = {
+					NOT = { has_modifier = tarred_by_mulligan_letters }
+					OR = {
+						has_trait = reckless
+						has_trait = ambitious
+						has_trait = hedonist
+						has_trait = alcoholic
+						has_trait = opium_addiction
+						has_trait = expensive_tastes
+						has_trait = cocaine_addiction
+						has_trait = grifter
+					}
+				}
+			}
+		}
+	}
+	
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_active_party = {
+			limit = {
+				any_member = {
+					leader = {
+						NOT = { has_modifier = tarred_by_mulligan_letters }
+						OR = {
+							has_trait = reckless
+							has_trait = ambitious
+							has_trait = hedonist
+							has_trait = alcoholic
+							has_trait = opium_addiction
+							has_trait = expensive_tastes
+							has_trait = cocaine_addiction
+							has_trait = grifter
+						}
+					}
+				}
+			}
+			random_member = {
+				limit = {
+					leader = {
+						NOT = { has_modifier = tarred_by_mulligan_letters }
+						OR = {
+							has_trait = reckless
+							has_trait = ambitious
+							has_trait = hedonist
+							has_trait = alcoholic
+							has_trait = opium_addiction
+							has_trait = expensive_tastes
+							has_trait = cocaine_addiction
+							has_trait = grifter
+						}
+					}
+				}
+				save_scope_as = mulligan_letters_ig
+				leader = {
+					save_scope_as = mulligan_letters_leader
+				}
+			}
+			save_scope_as = mulligan_letters_party
+		}
+	}
+
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+	
+	option = { # Deny, Deny, Deny
+		name = election_neutral.1.a
+		default_option = yes
+
+		scope:mulligan_letters_party = {
+			add_momentum = momentum_medium_decrease
+		}
+	}
+
+	option = { # Leave the leader out to hang
+		name = election_neutral.1.b
+		scope:mulligan_letters_leader = {
+			add_modifier = {
+				name = tarred_by_mulligan_letters
+				months = short_modifier_time
+			}
+		}
+	}
+
+	option = { # Charismatic IG partner saves the day
+		name = election_neutral.1.c
+		highlighted_option = yes
+		trigger = {
+			custom_tooltip = election_neutral.1.c.tt
+			scope:mulligan_letters_party = {
+				any_member = {
+					any_scope_character = {
+						OR = {
+							has_role = agitator
+							has_role = politician
+						}
+						has_trait = charismatic
+					}
+				}
+			}
+		}
+
+		scope:mulligan_letters_party = {
+			add_momentum = momentum_small_decrease
+		}
+	}
+}
+
+# General speaks in favor of party
+election_neutral.2 = {
+	type = country_event
+	placement = ROOT
+
+	title = election_neutral.2.t
+	desc = election_neutral.2.d
+	flavor = election_neutral.2.f
+	
+	event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 3
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		any_scope_character = {
+			OR = {
+				has_role = general
+				has_role = admiral
+			}
+			interest_group = {
+				has_party = yes
+			}
+		}
+	}
+
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_scope_character = {
+			limit = {
+				OR = {
+					has_role = general
+					has_role = admiral
+				}
+				is_ruler = no
+				interest_group = {
+					has_party = yes
+				}
+			}
+			save_scope_as = electioneering_commander
+			interest_group = {
+				save_scope_as = electioneering_commander_ig
+				party = {
+					save_scope_as = electioneering_commander_party
+				}
+			}
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+
+	option = {
+		name = election_neutral.2.a
+		default_option = yes
+
+		scope:electioneering_commander_party = {
+			add_momentum = momentum_medium
+		}
+	}
+
+	option = { # Reprimand the commander
+		name = election_neutral.2.b
+		add_radicals = {
+			value = medium_radicals
+			pop_type = officers
+		}
+	}
+
+	option = { # If he likes politics so much, why doesn't he...
+		name = election_neutral.2.c
+		highlighted_option = yes
+		trigger = {
+			custom_tooltip = election_neutral.2.c.tt
+			scope:electioneering_commander = {
+				NOT = { has_role = politician }
+			}
+		}
+		
+		scope:electioneering_commander = {
+			add_character_role = politician
+			set_as_interest_group_leader = yes
+		}
+	}
+}
+
+# Whistle-Stop Tour
+election_neutral.3 = {
+	type = country_event
+	placement = ROOT
+
+	title = election_neutral.3.t
+	desc = election_neutral.3.d
+	flavor = election_neutral.3.f
+	
+	event_image = {
+		video = "unspecific_trains"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 3
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		any_scope_state = {
+			has_building = building_railway
+		}
+	}
+
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+			}
+			save_scope_as = whistle_stop_ig
+			leader = {
+				save_scope_as = whistle_stop_leader
+			}
+			party = {
+				save_scope_as = whistle_stop_party
+			}
+		}
+		random_scope_state = {
+			limit = {
+				has_building = building_railway
+			}
+			save_scope_as = whistle_stop_state
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+
+	option = {
+		name = election_neutral.3.a
+		default_option = yes
+
+		scope:whistle_stop_party = {
+			add_momentum = momentum_small
+		}
+		scope:whistle_stop_state = {
+			add_modifier = {
+				name = stressed_rail_network
+				months = short_modifier_time
+			}
+		}
+	}
+
+	option = { # Sure would be a shame if that train kept being misdirected
+		name = election_neutral.3.b
+		highlighted_option = yes
+
+		trigger = {
+			custom_tooltip = election_neutral.3.b.tt
+			scope:whistle_stop_party = {
+				NOT = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+			}
+		}
+
+		scope:whistle_stop_party = {
+			add_momentum = momentum_small_decrease
+		}
+		scope:whistle_stop_state = {
+			add_modifier = {
+				name = mysteriously_mismanaged_rail_network
+				months = short_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = election_neutral.3.c
+		highlighted_option = yes
+
+		trigger = {
+			scope:whistle_stop_party = {
+				any_member = {
+					is_in_government = yes
+				}
+			}
+		}
+
+		scope:whistle_stop_party = {
+			add_momentum = momentum_medium
+		}
+		scope:whistle_stop_state = {
+			add_modifier = {
+				name = surprisingly_efficient_rail_network
+				months = short_modifier_time
+			}
+		}
+	}
+}
+
+# The [State]/Midlothian Campaign
+election_neutral.4 = {
+	type = country_event
+	placement = scope:midlothian_campaign_state
+
+	title = election_neutral.4.t
+	desc = election_neutral.4.d
+	flavor = election_neutral.4.f
+	
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 3
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		any_interest_group = {
+			has_party = yes
+			is_in_government = yes
+		}
+		any_scope_ally = {
+			infamy >= infamy_threshold:infamous
+		}
+	}
+
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				is_in_government = yes
+			}
+			party = {
+				save_scope_as = government_party
+			}
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				is_in_government = no
+			}
+			party = {
+				save_scope_as = opposition_party
+			}
+		}
+		random_scope_state = {
+			save_scope_as = midlothian_campaign_state
+		}
+		random_scope_ally = {
+			limit = {
+				infamy >= infamy_threshold:infamous			
+			}
+			save_scope_as = midlothian_campaign_ally_country
+		}
+	}
+
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+
+	option = {
+		name = election_neutral.4.a
+		default_option = yes
+
+		scope:government_party = {
+			add_momentum = momentum_small_decrease
+		}
+		scope:opposition_party = {
+			add_momentum = momentum_small
+		}
+	}
+
+	option = {
+		name = election_neutral.4.b
+
+		change_relations = {
+			country = scope:midlothian_campaign_ally_country
+			value = -30
+		}
+	}
+}
+
+# Overly-Enthusiastic Partisans
+election_neutral.5 = {
+	type = country_event
+	placement = ROOT
+
+	title = election_neutral.5.t
+	desc = election_neutral.5.d
+	flavor = election_neutral.5.f
+	
+	event_image = {
+		video = "unspecific_vandalized_storefront"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 3
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		any_active_party = { count >= 2 }
+		any_interest_group = {
+			has_party = yes
+		}
+		NOT = { has_variable = partisans_cooldown_var }
+	}
+	
+
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+			}
+			party = {
+				save_scope_as = campaign_club_party
+			}
+		}
+		set_variable = {
+			name = partisans_cooldown_var
+			months = normal_modifier_time
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+
+	option = {
+		name = election_neutral.5.a
+		default_option = yes
+
+		scope:campaign_club_party = {
+			add_momentum = momentum_small_decrease
+		}
+	}
+	
+	option = {
+		name = election_neutral.5.b
+
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				NOT = { is_member_of_party = scope:campaign_club_party }
+			}
+			add_modifier = {
+				name = harassed_by_political_partisans
+				months = short_modifier_time
+			}
+		}
+	}
+	
+	# Encourage them!
+	option = {
+		name = election_neutral.5.c
+		highlighted_option = yes
+		
+		trigger = {
+			custom_tooltip = election_neutral.5.c.tt
+			any_interest_group = {
+				is_member_of_party = scope:campaign_club_party
+				leader = {
+					OR = {
+						has_trait = wrathful
+						has_trait = cruel
+					}
+				}
+			}
+		}
+
+		scope:campaign_club_party = {
+			add_momentum = momentum_medium
+		}
+
+		every_interest_group = {
+			limit = {
+				has_party = yes
+				NOT = { is_member_of_party = scope:campaign_club_party }
+			}
+			add_modifier = {
+				name = harassed_by_political_partisans
+				months = short_modifier_time
+			}
+		}
+	}
+}
+
+# Partisan Papers
+election_neutral.6 = {
+	type = country_event
+	placement = ROOT
+
+	title = election_neutral.6.t
+	desc = election_neutral.6.d
+	flavor = election_neutral.6.f
+	
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 3
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		NOT = { has_law = law_type:law_outlawed_dissent }
+		any_interest_group = {
+			has_party = yes
+		}
+	}
+	
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+			}
+			party = {
+				save_scope_as = newspaper_party
+			}
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+	
+	option = {
+		name = election_neutral.6.a
+		default_option = yes
+
+		scope:newspaper_party = {
+			add_momentum = momentum_small
+		}
+	}
+	
+	option = {
+		name = election_neutral.6.b
+
+		add_modifier = {
+			name = high_distribution_news_cycle
+			months = short_modifier_time
+		}
+	}
+	
+	option = {
+		name = election_neutral.6.c1
+		highlighted_option = yes
+		
+		trigger = {
+			has_law = law_type:law_censorship
+			scope:newspaper_party = {
+				any_member = {
+					is_in_government = yes
+				}
+			}
+		}
+
+		scope:newspaper_party = {
+			add_momentum = momentum_medium
+		}
+	}
+	
+	option = {
+		name = election_neutral.6.c2
+		highlighted_option = yes
+		
+		trigger = {
+			has_law = law_type:law_censorship
+			scope:newspaper_party = {
+				NOT = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+			}
+		}
+
+		scope:newspaper_party = {
+			add_momentum = momentum_small_decrease
+		}
+	}
+}
+
+# Campaign Financing
+election_neutral.7 = {
+	type = country_event
+	placement = ROOT
+
+	title = election_neutral.7.t
+	desc = election_neutral.7.d
+	flavor = election_neutral.7.f
+	
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 3
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		any_interest_group = {
+			has_party = yes
+		}
+	}
+	
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		save_scope_as = campaign_financing_country
+		random_interest_group = {
+			limit = {
+				has_party = yes
+			}
+			party = {
+				save_scope_as = campaign_financing_party
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+
+	option = {
+		name = election_neutral.7.a
+		default_option = yes
+		add_modifier = {
+			name = state_funding_for_campaigns_expenses
+			multiplier = money_amount_multiplier_very_small
+			months = short_modifier_time
+		}
+		scope:campaign_financing_party = {
+			add_momentum = momentum_small
+		}
+	}
+	
+	option = {
+		name = election_neutral.7.b
+		add_modifier = {
+			name = state_funding_for_campaigns_expenses
+			multiplier = money_amount_multiplier_small
+			months = short_modifier_time
+		}
+		add_modifier = {
+			name = state_funding_for_campaigns_approval
+			months = short_modifier_time
+		}
+	}
+	
+	option = {
+		name = election_neutral.7.c
+		scope:campaign_financing_party = {
+			add_momentum = momentum_small_decrease
+		}	
+	}
+}
+
+# Crusade for Change
+election_neutral.8 = {
+	type = country_event
+	placement = ROOT
+
+	title = election_neutral.8.t
+	desc = election_neutral.8.d
+	flavor = election_neutral.8.f
+	
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 3
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		enacting_any_law = yes
+		any_interest_group = {
+			has_party = yes
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value > neutral
+			}
+		}
+	}
+	
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		currently_enacting_law = {
+			save_scope_as = changing_policies_law
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value > neutral
+				}
+			}
+			party = {
+				save_scope_as = changing_policies_favorable_party
+			}
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+	
+	# Champions of Change!
+	option = {
+		name = election_neutral.8.a
+		default_option = yes
+		scope:changing_policies_favorable_party = {
+			add_momentum = momentum_small
+		}
+	}
+
+	# The People Speak!
+	option = {
+		name = election_neutral.8.b
+		add_enactment_modifier = {
+			name = changing_policies_electoral_support
+		}
+	}
+}
