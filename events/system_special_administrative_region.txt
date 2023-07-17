@@ -1,0 +1,76 @@
+namespace = special_administrative_region_system
+
+#Convert certain subjects into SARs
+special_administrative_region_system.1 = {
+	type = country_event
+
+	title = special_administrative_region_system.1.t
+	desc = special_administrative_region_system.1.d
+	flavor = special_administrative_region_system.1.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+	
+		#Any subject of THIS has a capital state that has a homeland of THIS
+		any_country = {
+			is_direct_subject_of = ROOT
+			capital = { is_homeland_of_country_cultures = ROOT }
+			OR = { 
+				is_subject_type = subject_type_puppet
+				is_subject_type = subject_type_semi_autonomous_colony
+			}
+		}
+		
+		#Prevent event from firing 2 times at the same time
+		NOT = { has_variable = special_administrative_region_system }
+		
+	}
+
+	immediate = {
+	
+		#Mark subject to be converted into an SAR
+		random_country = {
+			limit = { 
+				is_direct_subject_of = ROOT
+				capital = { is_homeland_of_country_cultures = ROOT }
+				OR = { 
+					is_subject_type = subject_type_puppet
+					is_subject_type = subject_type_semi_autonomous_colony
+				}
+			}
+			save_scope_as = SAR_country
+		}
+		
+		#Prevent event from firing 2 times at the same time
+		set_variable = special_administrative_region_system
+		
+	}
+
+	option = {
+		name = special_administrative_region_system_option #Unfortunate
+		default_option = yes
+		
+		#Turn subject into an SAR
+		scope:SAR_country = { make_independent = yes }
+		create_diplomatic_pact = {
+			country = scope:SAR_country
+			type = special_administrative_region
+		}
+		
+		#Event can fire again once option is selected
+		remove_variable = special_administrative_region_system
+		
+	}
+	
+	
+}
