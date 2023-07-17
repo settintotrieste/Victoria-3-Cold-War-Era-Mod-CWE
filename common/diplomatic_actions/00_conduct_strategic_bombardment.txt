@@ -1,0 +1,305 @@
+﻿conduct_strategic_bombardment = {
+	requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	is_hostile = yes
+	
+	unlocking_technologies = {
+		tech_military_theory_3
+	}
+
+	potential = {
+	
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		
+		#THIS and TARGET are not revolutionary
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no } 
+		
+		#THIS is at war with the TARGET
+		has_war_with = scope:target_country
+		
+	}
+	
+	possible = {
+	
+		#THIS has strategic bombardment capability
+		any_scope_state = {
+			any_scope_building = {
+				is_building_type = building_barracks
+				level >= 1
+				building_has_goods_shortage = no
+				
+				NOR = { 
+					has_active_production_method = pm_airforce_0
+					has_active_production_method = pm_airforce_1
+					has_active_production_method = pm_airforce_2
+					
+					has_active_production_method = pm_airforce_draft_0
+					has_active_production_method = pm_airforce_draft_1
+					has_active_production_method = pm_airforce_draft_2
+				}
+			}
+		}
+	
+		#THIS is not broke
+		in_default = no
+		
+		#THIS wants to conduct strategic bombardment
+		OR = {
+		
+			#Ruler is jingoistic
+			ruler = {
+				OR = {
+					has_ideology = ideology:ideology_autocratic
+					has_ideology = ideology:ideology_power_hungry
+				}
+			}
+			
+			#TARGET is bombing THIS
+			has_diplomatic_pact = { who = scope:target_country type = conduct_strategic_bombardment is_initiator = no }
+			
+		}
+		
+		#THIS can reach the TARGET
+		OR = {
+		
+			#THIS has direct access to the TARGET
+			scope:target_country = { 
+				OR = { 
+					has_strategic_adjacency = ROOT
+					any_scope_state = { is_coastal = yes }
+				}
+			}
+			
+			#THIS has access to the TARGET through an ally
+			any_scope_ally = {
+				has_strategic_adjacency = scope:target_country
+			}
+			
+			#THIS has access to the TARGET through a subject
+			any_scope_country = {
+				is_subject_of = ROOT
+				has_strategic_adjacency = ROOT
+			}
+			
+		}
+		
+	}
+	
+	pact = {	
+		cost = 100
+		is_two_sided_pact = no
+		infamy_affects_maintenance = no
+		
+		# Makes barracks more expensive
+		country_military_goods_cost_mult = 0.05
+		
+		### Validation requirements ###
+		
+		should_auto_break = {
+			
+			OR = {
+			
+				#THIS is broke
+				in_default = yes
+			
+				#THIS no longer wants to conduct strategic bombardment
+				NOR = {
+		
+					#Ruler is no longer jingoistic
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+			
+					#TARGET is no longer bombing THIS
+					has_diplomatic_pact = { who = scope:target_country type = conduct_strategic_bombardment is_initiator = no }
+			
+				}
+				
+			}
+			
+		}
+		
+		should_invalidate = {
+		
+			#THIS is no longer at war with the TARGET
+			NOT = { has_war_with = scope:target_country }
+		
+			#THIS no longer has strategic bombardment capability
+			NOT = { 
+				any_scope_state = {
+					any_scope_building = {
+						is_building_type = building_barracks
+						level >= 1
+						building_has_goods_shortage = no
+				
+						NOR = { 
+							has_active_production_method = pm_airforce_0
+							has_active_production_method = pm_airforce_1
+							has_active_production_method = pm_airforce_2
+					
+							has_active_production_method = pm_airforce_draft_0
+							has_active_production_method = pm_airforce_draft_1
+							has_active_production_method = pm_airforce_draft_2
+						}
+					}
+				}
+			}
+			
+			#THIS can no longer reach the TARGET
+			NOR = {
+		
+				#THIS has direct access to the TARGET
+				scope:target_country = { 
+					OR = { 
+						has_strategic_adjacency = ROOT
+						any_scope_state = { is_coastal = yes }
+					}
+				}
+			
+				#THIS has access to the TARGET through an ally
+				any_scope_ally = {
+					has_strategic_adjacency = scope:target_country
+				}
+				
+				#THIS has access to the TARGET through a subject
+				any_scope_country = {
+					is_subject_of = ROOT
+					has_strategic_adjacency = ROOT
+				}
+			
+			}
+			
+		}
+		
+		### Effects ###
+		
+		weekly_effect = {
+			
+			### Weekly bombing campaign to add devestation to TARGET's states ###
+			
+			### Calculate strike capability  ###
+			#Attacker's gross attack ability
+			effect_compute_strategic_bombardment_capability_points_attacker = yes
+		
+			#Defender's inherent defence
+			scope:target_country = {
+				effect_compute_strategic_bombardment_capability_points_states = yes
+			}
+			
+			#Aggregate score (Total attack points / Total states of defender)
+			change_global_variable = { 
+				name = strategic_bombardment_strike_power_global
+				divide = global_var:strategic_bombardment_strike_defence_global
+			}
+		
+			### Apply damage based on ratio calculated above ###
+			scope:target_country = {
+				if = {
+					limit = { 
+						global_var:strategic_bombardment_strike_power_global > 0
+						global_var:strategic_bombardment_strike_power_global <= 1 
+					}
+					custom_tooltip = {
+						text = tiny_strategic_bombardment_damage_custom_tooltip
+						effect_tiny_strategic_bombardment_damage = yes
+					}
+				}
+				else_if = {
+					limit = { 
+						global_var:strategic_bombardment_strike_power_global > 1
+						global_var:strategic_bombardment_strike_power_global <= 2 
+					}
+					custom_tooltip = {
+						text = very_low_strategic_bombardment_damage_custom_tooltip
+						effect_very_low_strategic_bombardment_damage = yes
+					}
+				}
+				else_if = {
+					limit = { 
+						global_var:strategic_bombardment_strike_power_global > 2
+						global_var:strategic_bombardment_strike_power_global <= 4 
+					}
+					custom_tooltip = {
+						text = low_strategic_bombardment_damage_custom_tooltip
+						effect_low_strategic_bombardment_damage = yes
+					}
+				}
+				else_if = {
+					limit = { 
+						global_var:strategic_bombardment_strike_power_global > 4
+						global_var:strategic_bombardment_strike_power_global <= 6 
+					}
+					custom_tooltip = {
+						text = medium_strategic_bombardment_damage_custom_tooltip
+						effect_medium_strategic_bombardment_damage = yes
+					}
+				}
+				else_if = {
+					limit = { 
+						global_var:strategic_bombardment_strike_power_global > 6
+						global_var:strategic_bombardment_strike_power_global <= 8 
+					}
+					custom_tooltip = {
+						text = high_strategic_bombardment_damage_custom_tooltip
+						effect_high_strategic_bombardment_damage = yes
+					}
+				}
+				else_if = {
+					limit = { 
+						global_var:strategic_bombardment_strike_power_global > 8
+						global_var:strategic_bombardment_strike_power_global <= 10 
+					}
+					custom_tooltip = {
+						text = very_high_strategic_bombardment_damage_custom_tooltip
+						effect_very_high_strategic_bombardment_damage = yes
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			OR = { 
+				has_attitude = {
+					who = scope:target_country
+					attitude <= antagonistic
+				}
+				has_diplomatic_pact = { who = scope:target_country type = rivalry }
+				scope:target_country.relations:root < relations_threshold:poor
+			}
+		}
+		
+		will_break = {
+			NOR = { 
+				has_diplomatic_pact = { who = scope:target_country type = rivalry }
+				scope:target_country.relations:root < relations_threshold:poor
+				scope:target_country.infamy >= infamy_threshold:pariah
+			}
+			NOR = { 
+				has_attitude = {
+					who = scope:target_country
+					attitude <= antagonistic
+				}
+				has_diplomatic_pact = { who = scope:target_country type = rivalry }
+				scope:target_country.relations:root < relations_threshold:poor
+			}
+		}
+		
+	}
+	
+}
