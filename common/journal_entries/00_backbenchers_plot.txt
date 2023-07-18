@@ -1,0 +1,158 @@
+je_backbenchers_plot_system = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	possible = {
+	
+		is_a_parliamentary_democracy = yes
+		
+		OR = {
+		
+			#PM did something wrong
+			ruler = {
+		
+				#Ruler has committed an impeachable offence
+				OR = {
+			
+					#Corruption scandal
+					has_modifier = ignored_corruption
+					has_modifier = corrupt_connections_exposed
+					has_modifier = corrupt_connections_exposed_minor
+					has_modifier = dealing_with_corruption
+				
+					#Traitor
+					has_modifier = treasonous_traitor
+				
+					#Abuse of Power
+					has_modifier = seizing_power
+				
+				}
+		
+			}
+			
+			#The most powerful IG within the ruling coalition hates the PM
+			any_interest_group = {
+				is_strongest_ig_in_government = yes
+				ig_approval < -10 # ANGERY
+			}
+			
+		}
+		
+		ruler = {
+		
+			#Ruler has not been subjected to a backbencher's plot recently recently
+			NOR = { 
+				has_modifier = backbenchers_plot_politician
+				has_modifier = survived_backbenchers_plot
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Mark ruler as backbenchers_plot so as to prevent JE from firing too frequently
+		ruler = {
+			add_modifier = { name = backbenchers_plot_politician years = 4 }
+			save_scope_as = backbenchers_plot_prime_minister_scope
+		}
+		
+	}
+	
+	# Ruler has 180 days to avoid backbenchers plot
+	timeout = 180
+	
+	# Senate to vote on whether to convict after 180 days
+	on_timeout = {
+	
+		# backbencher's plot is successful
+		if = {
+			limit = { 
+			
+				#The most powerful IG within the ruling coalition no longer hates the PM
+				NOT = { 
+					any_interest_group = {
+						is_strongest_ig_in_government = yes
+						ig_approval < 0
+					}
+				}
+			
+			}
+			
+			#PM's IG is tarnished for 1 electoral cycle
+			random_interest_group = {
+				limit = { leader = { is_ruler = yes } }
+				add_modifier = { 
+					name = party_in_chaos_modifier 
+					years = 5
+					is_decaying = yes
+				}
+			}
+	
+			#PM is removed from office
+			custom_tooltip = {
+				text = je_backbenchers_plot_system_1.tt
+				ruler = { kill_character = yes }
+			}
+			
+		}
+		
+		# backbencher's plot is unsuccessful
+		if = {
+			limit = { 
+			
+				any_interest_group = {
+					is_strongest_ig_in_government = yes
+					ig_approval < 0
+				}
+			
+			}
+	
+			#PM's popularity is raised for 1 electoral cycle
+			custom_tooltip = {
+				text = je_backbenchers_plot_system_2.tt
+			}
+			ruler = { add_modifier = { name = survived_backbenchers_plot years = 4 } }
+			
+		}
+		
+	}
+	
+	invalid = {
+	
+		OR = {
+		
+			#PM has become the Parliament OR there is no longer a PM
+			NOT = { is_a_parliamentary_democracy = yes }
+			
+			#Ruler was changed midway
+			ruler = { 
+				NOR = { 
+					has_modifier = backbenchers_plot_politician
+					has_modifier = survived_backbenchers_plot
+				}
+			}
+		
+		}
+		
+	}
+	
+	on_invalid = {
+	
+		#Clear backbenchers_plot markers
+		if = {
+			limit = { ruler = { has_modifier = backbenchers_plot_politician } }
+			ruler = { remove_modifier = backbenchers_plot_politician }
+		}
+		
+	}
+	
+	weight = 200
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = no
+	
+}
