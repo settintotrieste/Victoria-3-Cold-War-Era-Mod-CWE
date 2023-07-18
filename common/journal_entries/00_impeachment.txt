@@ -1,0 +1,135 @@
+je_impeachment_system = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	possible = {
+	
+		is_a_presidential_democracy = yes
+		
+		ruler = {
+		
+			#Ruler has committed an impeachable offence
+			OR = {
+			
+				#Corruption scandal
+				has_modifier = ignored_corruption
+				has_modifier = corrupt_connections_exposed
+				has_modifier = corrupt_connections_exposed_minor
+				has_modifier = dealing_with_corruption
+				
+				#Traitor
+				has_modifier = treasonous_traitor
+				
+				#Abuse of Power
+				has_modifier = seizing_power
+				
+			}
+			
+			#Ruler has not been impeached recently
+			NOR = { 
+				has_modifier = impeached_politician
+				has_modifier = survived_impeachment
+			}
+			
+		}
+		
+		#Ruler does not have a simple majority in Parliament
+		government_legitimacy < 50
+		
+	}
+
+	immediate = {
+		
+		#Mark ruler as impeached so as to prevent JE from firing too frequently
+		ruler = {
+			add_modifier = { name = impeached_politician years = 4 }
+			save_scope_as = impeached_president_scope
+		}
+		
+	}
+	
+	# Ruler has 180 days to avoid impeachment
+	timeout = 180
+	
+	# Senate to vote on whether to convict after 180 days
+	on_timeout = {
+	
+		# Impeachment is successful
+		if = {
+			limit = { 
+			
+				#Opposition has a 2/3 majority to convict the President
+				government_legitimacy < 34
+			
+			}
+			
+			#President's IG is tarnished for 1 electoral cycle
+			random_interest_group = {
+				limit = { leader = { is_ruler = yes } }
+				add_modifier = { name = leader_imprisoned years = 4 }
+			}
+	
+			#President is removed from office
+			custom_tooltip = {
+				text = je_impeachment_system_1.tt
+				ruler = { kill_character = yes }
+			}
+			
+		}
+		
+		# Impeachment is unsuccessful
+		if = {
+			limit = { 
+			
+				#Opposition has less than 2/3 majority to convict the President
+				NOT = { government_legitimacy < 34 }
+			
+			}
+	
+			#President's popularity is raised for 1 electoral cycle
+			custom_tooltip = {
+				text = je_impeachment_system_2.tt
+				ruler = { add_modifier = { name = survived_impeachment years = 4 } }
+			}
+			
+		}
+		
+	}
+	
+	invalid = {
+	
+		OR = {
+		
+			#President has become the Senate OR there is no longer a President
+			NOT = { is_a_presidential_democracy = yes }
+			
+			#Ruler was changed midway
+			ruler = { 
+				NOR = { 
+					has_modifier = impeached_politician
+					has_modifier = survived_impeachment
+				}
+			}
+		
+		}
+		
+	}
+	
+	on_invalid = {
+	
+		#Clear impeachment markers
+		if = {
+			limit = { ruler = { has_modifier = impeached_politician } }
+			ruler = { remove_modifier = impeached_politician }
+		}
+		
+	}
+	
+	weight = 200
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = no
+	
+}
