@@ -1,0 +1,139 @@
+namespace = genocide_system
+
+# Genocide in FROM
+genocide_system.1 = {
+    type = country_event
+
+    title = genocide_discovered.t 							# Title of the event; ADD LOCALISATION
+    desc = genocide_discovered.d 							# Description of the event; ADD LOCALISATION
+    flavor = genocide_discovered.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_rich_and_poor.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by genocide JE
+		
+    }
+	
+	immediate = {
+	
+		#Identify country committing genocide
+		random_country = {
+			limit = { 
+				has_variable = genocide_discovered
+				NOT = { has_variable = genocide_discovered_reacted }
+				
+				has_journal_entry = je_genocide_system
+			}
+			save_scope_as = country_committing_genocide
+		}
+		
+	}
+    
+    option = {
+        name = genocide_system_option.1								# Condemn them!
+		highlighted_option = yes 
+		default_option = yes
+		
+		#Lose relations with genocide country
+		change_relations = {
+			country = scope:country_committing_genocide
+			value = -50
+		}
+		#Genocide country gains 1 infamy for every country that condemns it
+		random_country = {
+			limit = { scope:country_committing_genocide ?= this }
+			change_infamy = 1
+		}
+		
+		ai_chance = { 
+			base = 0
+			
+			#AI will only condemn the contry if it cares about democracy and human rights
+			modifier = {
+				trigger = {
+					NOR = {
+						has_law = law_type:law_ethnostate
+						has_journal_entry = je_genocide_system
+						ruler = { has_ideology = ideology:ideology_autocratic }
+					}
+				}
+				add = 100
+			}
+		}
+		
+    }
+	
+	option = {
+        name = genocide_system_option.2								# No comment
+		
+		#Human rights IGs dont like the government because of this
+		every_interest_group = { 
+			limit = { 
+				leader = { 
+					OR = { 
+						has_ideology = ideology:ideology_democratic
+						has_ideology = ideology:ideology_liberal
+					}
+				} 
+			}
+			add_modifier = {
+				name = ig_furious_at_cowardice
+				months = normal_modifier_time
+				is_decaying = yes
+			}
+		}
+		
+		ai_chance = { 
+			base = 0
+			
+			#AI will only condemn the contry if it cares about democracy and human rights
+			modifier = {
+				trigger = {
+					OR = {
+						has_law = law_type:law_ethnostate
+						has_journal_entry = je_genocide_system
+						ruler = { has_ideology = ideology:ideology_autocratic }
+					}
+				}
+				add = 100
+			}
+		}
+		
+    }
+
+}
+
+# Genocide in FROM
+genocide_system.2 = {
+    type = country_event
+
+    title = genocide_discovered_notice.t 					# Title of the event; ADD LOCALISATION
+    desc = genocide_discovered_notice.d 					# Description of the event; ADD LOCALISATION
+    flavor = genocide_discovered_notice.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_rich_and_poor.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by genocide JE
+		
+    }
+    
+    option = {
+        name = genocide_system_notice_option								# Oh well
+		
+    }
+	
+}
