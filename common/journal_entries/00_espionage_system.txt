@@ -1,0 +1,238 @@
+﻿je_espionage_system = {
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	is_shown_when_inactive = {
+		has_law = law_type:law_offensive_espionage
+	}
+
+	possible = {
+	
+		#THIS is conducting hostile espionage against someone
+		any_country = {
+			has_diplomatic_pact = { 
+				who = ROOT 
+				type = conduct_hostile_espionage 
+				is_initiator = no 
+			}
+		}
+		
+	}
+
+	immediate = {
+	
+		#Create timer
+		set_variable = {
+			name = espionage_system_progress_var
+			value = 0
+		}
+		set_variable = {
+			name = espionage_system_dilution_var
+			value = 0
+		}
+		set_variable = {
+			name = espionage_system_goal_var
+			value = 0
+		}
+		
+	}
+	
+	invalid = {
+	
+		NOR = { 
+			
+			#THIS is no longer allowed to conduct hostile espionage
+			has_law = law_type:law_offensive_espionage
+			
+			#THIS is no longer conducting hostile espionage against someone
+			custom_tooltip = {
+				text = je_espionage_system_1_tt
+				any_country = {
+					has_diplomatic_pact = { 
+						who = ROOT 
+						type = conduct_hostile_espionage 
+						is_initiator = no 
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	on_invalid = {
+		
+		#Reset timers
+		remove_variable = espionage_system_progress_var
+		remove_variable = espionage_system_dilution_var
+		remove_variable = espionage_system_goal_var
+		
+	}
+
+	current_value = {
+		value =	root.var:espionage_system_goal_var
+	}
+
+	goal_add_value = {
+		add = 60
+	}
+
+	on_monthly_pulse = {
+		
+		effect = {
+			
+			#Always first set to 0
+			set_variable = {
+				name = espionage_system_progress_var
+				value = 0
+			}
+			set_variable = {
+				name = espionage_system_dilution_var
+				value = 0
+			}
+			
+			#Add monthly progress
+			if = {
+				limit = { institution_investment_level = { institution = institution_espionage value = 1 } NOT = { scope:journal_entry = { is_goal_complete = yes } } }
+				change_variable = { name = espionage_system_progress_var add = 1 }
+			}
+			if = {
+				limit = { institution_investment_level = { institution = institution_espionage value = 2 } NOT = { scope:journal_entry = { is_goal_complete = yes } } }
+				change_variable = { name = espionage_system_progress_var add = 2 }
+			}
+			if = {
+				limit = { institution_investment_level = { institution = institution_espionage value = 3 } NOT = { scope:journal_entry = { is_goal_complete = yes } } }
+				change_variable = { name = espionage_system_progress_var add = 3 }
+			}
+			if = {
+				limit = { institution_investment_level = { institution = institution_espionage value = 4 } NOT = { scope:journal_entry = { is_goal_complete = yes } } }
+				change_variable = { name = espionage_system_progress_var add = 4 }
+			}
+			if = {
+				limit = { institution_investment_level = { institution = institution_espionage value = 5 } NOT = { scope:journal_entry = { is_goal_complete = yes } } }
+				change_variable = { name = espionage_system_progress_var add = 5 }
+			}
+			
+			#Dilute monthly progress
+			if = {
+				limit = { NOT = { scope:journal_entry = { is_goal_complete = yes } } }
+				every_country = { 
+					limit = { has_diplomatic_pact = { who = ROOT type = conduct_hostile_espionage is_initiator = no } } 
+					ROOT = { change_variable = { name = espionage_system_dilution_var add = 1 } } 
+				}
+				change_variable = { 
+					name = espionage_system_progress_var
+					divide = root.var:espionage_system_dilution_var
+				}
+				change_variable = {
+					name = espionage_system_goal_var
+					add = root.var:espionage_system_progress_var
+				}
+			}
+			
+			#If the progress bar is full: Give THIS an option to launch 1 attack against a random country
+			if = {
+				limit = { scope:journal_entry = { is_goal_complete = yes } }
+				
+				#Select a random operation
+				random_list = {
+					1 = {
+					
+						#Instigate Domestic Unrest [ONLY possible if country has an open media]
+						random_country = {
+							limit = { 
+								has_diplomatic_pact = { who = ROOT type = conduct_hostile_espionage is_initiator = no } 
+								country_has_an_open_media = yes
+							}
+							
+							#Reset Espionage cooldown
+							ROOT = { 
+								trigger_event = { id = espionage_system.1 }
+								set_variable = {
+									name = espionage_system_goal_var
+									value = 0
+								}
+							}
+						}
+						
+					}
+					1 = {
+					
+						#Conduct Economic Sabotage
+						random_country = {
+							limit = { 
+								has_diplomatic_pact = { who = ROOT type = conduct_hostile_espionage is_initiator = no }
+							}
+							
+							#Reset Espionage cooldown
+							ROOT = { 
+								trigger_event = { id = espionage_system.3 }
+								set_variable = {
+									name = espionage_system_goal_var
+									value = 0
+								}
+							}
+						}
+					
+					}
+					1 = {
+					
+						#Instigate Secessionist Movement
+						random_country = {
+							limit = { 
+								has_diplomatic_pact = { who = ROOT type = conduct_hostile_espionage is_initiator = no }
+								OR = { 
+									any_scope_state = { is_incorporated = no }
+									any_scope_pop = { pop_is_discriminated = yes }
+								}
+							}
+							
+							#Reset Espionage cooldown
+							ROOT = { 
+								trigger_event = { id = espionage_system.5 }
+								set_variable = {
+									name = espionage_system_goal_var
+									value = 0
+								}
+							}
+						}
+					
+					}
+					1 = {
+					
+						#Election Interference [ONLY possible if country has a ruling party & is having elections]
+						random_country = {
+							limit = { 
+								has_diplomatic_pact = { who = ROOT type = conduct_hostile_espionage is_initiator = no }
+								ruler.interest_group = { has_party = yes }
+								in_election_campaign = yes
+							}
+							
+							#Reset Espionage cooldown
+							ROOT = { 
+								trigger_event = { id = espionage_system.7 }
+								set_variable = {
+									name = espionage_system_goal_var
+									value = 0
+								}
+							}
+						}
+					
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = no
+
+	transferable = no
+
+	progressbar = yes
+	
+}
