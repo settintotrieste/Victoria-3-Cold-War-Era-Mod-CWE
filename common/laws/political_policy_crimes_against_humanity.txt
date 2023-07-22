@@ -77,8 +77,11 @@ law_slavery_political = {
 		has_law = law_type:law_secret_police
 		
 		#Ruler is autocratic
-		ruler = {
-			has_ideology = ideology:ideology_autocratic
+		any_interest_group = {
+			leader = { 
+				is_ruler = yes
+				has_ideology = ideology:ideology_autocratic 
+			}
 		}
 		
 	}
@@ -129,6 +132,40 @@ law_slavery_political = {
 			}
 			add = 750
 		}
+		
+		if = {
+			limit = {
+				has_law = law_type:law_slavery_cultural
+				NOR = {
+				
+					#Examples: Myanmar, Serbia, Rwanda, Darfur, Cambodia
+					is_revolutionary = yes
+					has_revolution = yes
+					capital = { turmoil > 0.5 }
+					
+					#Examples: Iraq
+					AND = { 
+						has_variable = recently_lost_war
+						capital = { turmoil > 0.5 }
+					}
+					
+					#Examples: Nazi Germany
+					AND = { 
+						is_at_war = yes
+						any_scope_war = {
+							has_war_support = {
+								target = ROOT
+								value < 0
+							}
+						}
+					}
+					
+				}
+			}
+			add = 1000
+		}
+		
+		
 	}
 	
 }
@@ -153,8 +190,11 @@ law_slavery_cultural = {
 		has_law = law_type:law_ethnostate
 		
 		#Ruler is autocratic
-		ruler = {
-			has_ideology = ideology:ideology_autocratic
+		any_interest_group = {
+			leader = { 
+				is_ruler = yes
+				has_ideology = ideology:ideology_autocratic 
+			}
 		}
 		
 		#There are discriminated pops in THIS
@@ -162,11 +202,19 @@ law_slavery_cultural = {
 		
 	}
 	
+	on_activate = {
+		add_journal_entry = { type = je_genocide_system }
+	}
+	
 	modifier = {
 		country_institution_gulag_max_investment_add = 5
 		
+		#No agitators can come to THIS
+		country_disallow_agitator_invites = yes
+		
 		#Borders are closed to prevent more minorities from coming
 		country_disallow_discriminated_migration = yes
+		
 	}
 
 	institution = institution_gulag
@@ -199,6 +247,39 @@ law_slavery_cultural = {
 	
 	ai_enact_weight_modifier = { #Petitions
 		value = 0
+		
+		#AI will only commit Genocide under conditions genocides have happened before
+		if = {
+			limit = {
+				has_law = law_type:law_slavery_political
+				OR = {
+				
+					#Examples: Myanmar, Serbia, Rwanda, Darfur, Cambodia
+					is_revolutionary = yes
+					has_revolution = yes
+					capital = { turmoil > 0.5 }
+					
+					#Examples: Iraq
+					AND = { 
+						has_variable = recently_lost_war
+						capital = { turmoil > 0.5 }
+					}
+					
+					#Examples: Nazi Germany
+					AND = { 
+						is_at_war = yes
+						any_scope_war = {
+							has_war_support = {
+								target = ROOT
+								value < 0
+							}
+						}
+					}
+					
+				}
+			}
+			add = 100
+		}
 		
 		if = {
 			limit = { 
