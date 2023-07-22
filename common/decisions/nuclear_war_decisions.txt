@@ -133,9 +133,7 @@ start_nuclear_weapons_program_decision = {
 					}
 					
 					#Rival has nukes OR is developing nukes
-					any_country = {
-						is_sufficiently_independent = yes
-						has_diplomatic_pact = { who = ROOT type = rivalry }
+					any_rival_country = { 
 						OR = { has_modifier = nuclear_capability has_variable = nuclear_program_started }
 					}
 					
@@ -150,6 +148,187 @@ start_nuclear_weapons_program_decision = {
 			
 		}
 
+	}
+	
+}
+
+join_nuclear_non_proliferation_treaty_decision = {
+
+	is_shown = {
+		
+		#THIS has not already signed the NPT
+		NOT = { has_variable = signed_nuclear_non_proliferation_treaty }
+		
+		#Date of establishment
+		game_date >= 1968.7.1
+		
+	}
+
+	possible = {
+		
+		#THIS is sufficiently independent
+		is_sufficiently_independent = yes
+		
+		#THIS is not currently at war
+		is_at_war = no
+		
+	}
+	
+	when_taken = {
+	
+		custom_tooltip = {
+			text = signed_NPT_1_tt
+			
+			#Mark THIS as having signed the NPT
+			set_variable = signed_nuclear_non_proliferation_treaty
+			
+			#No cheesing
+			set_variable = {
+				name = nuclear_non_proliferation_treaty_timer
+				years = 10
+			}
+			
+		}
+		
+		#Disable nuclear program & weapons
+		if = {
+			limit = { has_law = law_type:law_wmd_allowed }
+			activate_law = law_type:law_wmd_banned
+			change_infamy = -50
+			every_country = {
+				change_relations = {
+					country = ROOT
+					value = 50
+				}
+			}
+		}
+		else = {
+			change_infamy = -10
+			every_country = {
+				change_relations = {
+					country = ROOT
+					value = 10
+				}
+			}
+		}
+		
+	}
+
+	ai_chance = {
+		base = 0
+		
+		modifier = {
+		
+			trigger = {
+			
+				#Country is not faced with a nuclear threat from somewhere
+				NOR = {
+					country_rank >= rank_value:great_power
+					any_rival_country = { 
+						OR = { 
+							has_modifier = nuclear_capability
+							has_variable = nuclear_program_started
+						}
+					}
+					any_country = {
+						relations:root < relations_threshold:poor
+						OR = { 
+							has_modifier = nuclear_capability
+							has_variable = nuclear_program_started
+						}
+					}
+				}
+				
+				#Country is democratic
+				is_some_kind_of_democracy = yes
+				
+				#Ruler is not jingoistic
+				NOT = { has_jingoistic_ruler = yes }
+				
+			}
+			
+			add = 100
+			
+		}
+		
+	}
+	
+}
+
+leave_nuclear_non_proliferation_treaty_decision = {
+
+	is_shown = {
+		
+		#THIS has already signed the NPT
+		has_variable = signed_nuclear_non_proliferation_treaty
+		
+	}
+
+	possible = {
+		
+		#THIS must have upheld the treaty for at least 10 years
+		custom_tooltip = {
+			text = signed_NPT_2_tt
+			NOT = { has_variable = nuclear_non_proliferation_treaty_timer }
+		}
+		
+		#THIS is sufficiently independent
+		is_sufficiently_independent = yes
+		
+		#THIS is not currently at war
+		is_at_war = no
+		
+	}
+	
+	when_taken = {
+	
+		#Mark THIS as having signed the NPT
+		remove_variable = signed_nuclear_non_proliferation_treaty
+		
+		#Everyone is not happy with THIS
+		change_infamy = 20
+		every_country = {
+			change_relations = {
+				country = ROOT
+				value = -25
+			}
+		}
+		
+	}
+
+	ai_chance = {
+		base = 0
+		
+		modifier = {
+		
+			trigger = {
+			
+				#Country is faced with a nuclear threat from somewhere
+				OR = {
+					any_rival_country = { 
+						OR = { 
+							has_modifier = nuclear_capability
+							has_variable = nuclear_program_started
+						}
+					}
+					any_country = {
+						relations:root < relations_threshold:poor
+						OR = { 
+							has_modifier = nuclear_capability
+							has_variable = nuclear_program_started
+						}
+					}
+				}
+				
+				#Ruler is jingoistic
+				has_jingoistic_ruler = yes
+				
+			}
+			
+			add = 100
+			
+		}
+		
 	}
 	
 }
