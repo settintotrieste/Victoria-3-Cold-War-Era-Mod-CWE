@@ -1,0 +1,163 @@
+namespace = generic_decolonisation_indy
+
+#War of Independence
+generic_decolonisation_indy.1 = {
+    type = country_event
+
+    title = generic_decolonisation_indy.t 					# Title of the event; ADD LOCALISATION
+    desc = generic_decolonisation_indy.d 					# Description of the event; ADD LOCALISATION
+    flavor = generic_decolonisation_indy.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#THIS is a non sovereign state
+		NOT = { is_sufficiently_independent = yes }
+		
+		#THIS will always ask nicely for more autonomy first
+		has_variable = request_subject_autonomy_timer
+		
+		#THIS has not contemplated an independence war recently
+		NOT = { has_variable = generic_war_of_indy_timer }
+		
+		#Domestic pressure pushing for independence
+		OR = {
+		
+			#People are clamouring for independence
+			capital = { turmoil > 0.5 }
+			
+			#Overlord is weak or hated
+			overlord = {
+				OR = {
+					infamy >= infamy_threshold:pariah
+					in_default = yes
+					has_healthy_economy = no
+				}
+			}
+			
+			#THIS hates the overlord
+			has_attitude = {
+				who = overlord
+				attitude = rebellious
+			}
+			
+		}
+		
+		#THIS has a stronger military than its overlord OR THIS has a greater GDP than its overlord OR the overlord is broke
+		OR = { 
+			navy_size >= overlord.navy_size
+			army_size >= overlord.army_size
+			
+			overlord.gdp < root.gdp
+			
+			#Overlord is weak or hated
+			overlord = {
+				OR = {
+					infamy >= infamy_threshold:pariah
+					in_default = yes
+					has_healthy_economy = no
+				}
+			}
+			
+			has_jingoistic_ruler = yes
+			
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once every 5 years
+		set_variable = { 
+			name = generic_war_of_indy_timer 
+			years = 5 
+		}
+		
+		overlord = { save_scope_as = overlord_in_question_scopes }
+		
+		ruler = { save_scope_as = puppet_leader_in_question_scopes }
+		
+	}
+	
+	cancellation_trigger = {
+		is_sufficiently_independent = yes
+	}
+    
+    option = {
+        name = generic_decolonisation_indy.option.1						# Begin war of independence!
+        highlighted_option = yes
+		
+		#The COUNTRY_ADJ empire survives
+		custom_tooltip = {
+			text = generic_decolonisation_indy.1.1.tt
+		
+			#War of Independence
+			create_diplomatic_play = {
+				name = generic_independence_war
+				type = dp_independence
+				target_country = overlord
+				
+				#war = yes
+				
+				add_war_goal = {
+					holder = overlord
+					type = make_puppet
+					target_country = ROOT
+				}
+				
+			}
+		
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = generic_decolonisation_indy.option.2						# Remain a vassal
+		default_option = yes
+		
+		#Government is accused of cowardice
+		every_interest_group = {
+			limit = { is_in_government = yes }
+			add_modifier = { 
+				name = ig_accused_of_cowardice 
+				years = 5 
+				is_decaying = yes
+			}
+		}
+		every_interest_group = {
+			limit = { is_in_government = no }
+			add_modifier = { 
+				name = ig_furious_at_cowardice
+				years = 5 
+				is_decaying = yes
+			}
+		}
+		
+		ai_chance = {
+			base = 10 
+			
+			#Puppet will not go to war if leader is peaceful
+			modifier = { 
+				trigger = { 
+					OR = { 
+						NOT = { has_jingoistic_ruler = yes }
+						in_default = yes
+					}
+				} 
+				add = -100 
+			} 
+		}
+		
+    }
+
+}
