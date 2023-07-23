@@ -10,13 +10,18 @@
 	}
 
 	possible = {
-		NOT = { has_war_with = scope:target_country }
-		is_revolutionary = no
+		
+		#THIS is interested in TARGET
 		has_diplomatic_relevance = scope:target_country
+		
+		#THIS does not have bad relations with TARGET
+		NOT = { has_war_with = scope:target_country }
 		NOT = { has_diplomats_expelled = scope:target_country }
 		NOT = { scope:target_country = { has_diplomats_expelled = root } }
+		
 		NOT = { has_diplomatic_pact = { who = scope:target_country type = damage_relations } }
 		
+		#THIS has room for improving relations further
 		custom_tooltip = {
 			text = DIPLO_ACTION_RELATIONS_AMICABLE_OR_GREATER_NOT
 			scope:target_country.relations:root < relations_threshold:friendly
@@ -37,12 +42,19 @@
 		}
 		
 		should_invalidate = {
+		
 			OR = {
+			
+				NOT = { has_diplomatic_relevance = scope:target_country }
+				
+				has_war_with = scope:target_country
 				has_diplomats_expelled = scope:target_country
 				scope:target_country = { has_diplomats_expelled = root }
-				has_war_with = scope:target_country
-				NOT = { has_diplomatic_relevance = scope:target_country }
+				
+				has_diplomatic_pact = { who = scope:target_country type = damage_relations }
+				
 			}
+			
 		}
 	}
 	
@@ -111,7 +123,14 @@
 				has_attitude = {
 					who = scope:target_country
 					attitude = protective
-				}	
+				}
+				
+				#THIS has the same ideology as TARGET
+				OR = {
+					AND = { radical_left_wing_ruling_coalition = yes scope:target_country = { radical_left_wing_ruling_coalition = yes } }
+					AND = { radical_right_wing_ruling_coalition = yes scope:target_country = { radical_right_wing_ruling_coalition = yes } }
+				}
+				
 			}
 		}	
 		
@@ -150,13 +169,18 @@ damage_relations = {
 	}
 	
 	possible = {
-		is_revolutionary = no
+		
+		#THIS is interested in TARGET
 		has_diplomatic_relevance = scope:target_country
+		
+		#THIS does not have bad relations with TARGET
 		NOT = { has_diplomatic_pact = { who = scope:target_country type = increase_relations } }
+		
+		#THIS has room for decreasing relations further
 		custom_tooltip = {
 			text = DIPLO_ACTION_RELATIONS_COLD_OR_LESS_NOT
-			scope:target_country.relations:root > relations_threshold:cold
-		}	
+			scope:target_country.relations:root > relations_threshold:hostile
+		}
 	}
 
 	pact = {	
@@ -166,15 +190,26 @@ damage_relations = {
 		show_in_outliner = yes
 		
 		relations_progress_per_day = -3 # At -100, -1 relations
-		relations_improvement_min = -50
+		relations_improvement_min = -100
 		
 		should_auto_break = {
-			scope:target_country.relations:root <= relations_threshold:cold			
-		}		
+			scope:target_country.relations:root <= relations_threshold:hostile
+		}
 		
 		should_invalidate = {
-			NOT = { has_diplomatic_relevance = scope:target_country }	
+		
+			OR = { 
+			
+				NOT = { has_diplomatic_relevance = scope:target_country }
+			
+				has_war_with = scope:target_country
+			
+				has_diplomatic_pact = { who = scope:target_country type = increase_relations }
+				
+			}
+			
 		}
+		
 	}
 	
 	ai = {
@@ -250,14 +285,15 @@ damage_relations = {
 					who = scope:target_country
 					attitude = rebellious
 				}	
-				AND = {
-					NOT = {
-						has_law = law_type:law_HOS_communist_leader
-					}
-					scope:target_country = { has_law = law_type:law_HOS_communist_leader }	
-				}	
+				
+				#THIS has a different ideology than TARGET
+				OR = {
+					NAND = { radical_left_wing_ruling_coalition = yes scope:target_country = { radical_left_wing_ruling_coalition = yes } }
+					NAND = { radical_right_wing_ruling_coalition = yes scope:target_country = { radical_right_wing_ruling_coalition = yes } }
+				}
+				
 			}
-			scope:target_country.relations:root > relations_threshold:poor
+			scope:target_country.relations:root > relations_threshold:hostile
 		}
 		
 		will_break = { 
@@ -278,15 +314,16 @@ damage_relations = {
 					has_attitude = {
 						who = scope:target_country
 						attitude = rebellious
-					}	
-					AND = {
-						NOT = {
-							has_law = law_type:law_HOS_communist_leader
-						}
-						scope:target_country = { has_law = law_type:law_HOS_communist_leader }	
 					}					
-				}	
-				scope:target_country.relations:root <= relations_threshold:poor
+				}
+				
+				#THIS has the same ideology as TARGET
+				OR = {
+					AND = { radical_left_wing_ruling_coalition = yes scope:target_country = { radical_left_wing_ruling_coalition = yes } }
+					AND = { radical_right_wing_ruling_coalition = yes scope:target_country = { radical_right_wing_ruling_coalition = yes } }
+				}
+				
+				scope:target_country.relations:root <= relations_threshold:hostile
 			}
 		}
 	}
