@@ -1,0 +1,331 @@
+﻿support_revolution = {
+	requires_approval = yes
+	can_use_obligations = yes
+
+	unlocking_technologies = {
+		tech_geopolitics_3
+	}
+	
+	potential = {
+		
+		#Only Superpowers and Great Powers can sponsor rebels
+		country_rank >= rank_value:great_power
+		
+		#Not a revolutionary state
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = yes }
+		
+		#Revolutionary country is at war
+		scope:target_country = { is_at_war = yes }
+		
+		#THIS is sufficiently independent
+		is_sufficiently_independent = yes
+		
+	}
+	
+	possible = {
+		
+		#THIS is interested in the TARGET
+		has_diplomatic_relevance = scope:target_country
+		
+		#THIS is willing to intervene
+		has_interventionist_fp = yes
+		
+		#THIS has very good relations with TARGET
+		scope:target_country.relations:root > relations_threshold:cordial
+		
+		#THIS is not in default
+		in_default = no
+		
+		#THIS & TARGET are not already in a customs union
+		is_junior_in_customs_union = no
+		scope:target_country = { is_junior_in_customs_union = no }
+		
+		#THIS can reach the TARGET's market
+		custom_tooltip = {
+			text = DIPLO_ACTION_MARKET_CONNECTION_REQUIRED
+			OR = {	
+				AND = {
+					market = { has_port = yes }
+					scope:target_country.market = { has_port = yes }
+				}
+				market = {
+					any_scope_country = {
+						is_adjacent = scope:target_country
+					}
+				}
+			}
+		}
+		
+	}
+	
+	accept_effect = {
+		change_relations = { country = scope:target_country value = 50 }
+	}
+	
+	decline_effect = {
+		change_relations = { country = scope:target_country value = -50 }
+	}
+	
+	pact = {
+		cost = 100
+		is_two_sided_pact = yes
+		
+		#Provide military goods
+		has_junior_participant = yes
+		recipient_pays_maintenance = yes
+		is_customs_union = yes
+		
+		#Provide financial support
+		income_transfer = 1.0
+		recipient_gets_income_transfer = yes
+		income_transfer_based_on_recipient = yes
+		
+		#Boost relations
+		relations_progress_per_day = 1  # At 100, +1 relations
+		relations_improvement_max = 100
+
+		should_auto_break = {
+		
+			#THIS has poor relations with TARGET
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+				scope:target_country.relations:root < relations_threshold:neutral
+			}
+			
+		}
+
+		should_invalidate = {
+		
+			OR = {
+				
+				NOT = { has_diplomatic_relevance = scope:target_country }
+				
+				NOT = { has_interventionist_fp = yes }
+				
+				is_revolutionary = yes
+				scope:target_country = { is_revolutionary = no }
+				
+				in_default = yes
+				
+				is_junior_in_customs_union = yes
+				
+				NOR = {	
+					AND = {
+						market = { has_port = yes }
+						scope:target_country.market = { has_port = yes }
+					}
+					market = {
+						any_scope_country = {
+							is_adjacent = scope:target_country
+						}
+					}
+				}
+				
+			}
+			
+		}
+		
+		break_effect = {
+			change_relations = { country = scope:target_country value = -10 }
+		}
+		
+		weekly_effect = {
+			if = {
+				limit = {
+					root = {
+						owes_obligation_to = scope:target_country			
+					}						
+				}
+				random_list = { 
+					99 = {}
+					1 = { root = { set_owes_obligation_to = { country = scope:target_country setting = no } } }
+				}				
+			}		
+			else_if = {
+				limit = {
+					NOT = { 
+						scope:target_country = {
+							owes_obligation_to = root			
+						}						
+					}
+				}
+				random_list = { 
+					99 = {}
+					1 = { scope:target_country = { set_owes_obligation_to = { country = root setting = yes } } }
+				}
+			}
+		}
+		
+	}
+
+	ai = {
+		check_acceptance_for_will_break = yes
+		check_acceptance_for_will_propose = yes
+		
+		will_propose = { 
+		
+			scaled_debt <= 0
+			
+			#TARGET shares the same gov type
+			OR = {
+				AND = { is_a_democracy = yes scope:target_country = { is_a_democracy = yes } }
+				AND = { is_a_nationalist_government = yes scope:target_country = { is_a_nationalist_government = yes } }
+				AND = { is_a_communist_government = yes scope:target_country = { is_a_communist_government = yes } }
+				AND = { is_a_theocratic_government = yes scope:target_country = { is_a_theocratic_government = yes } }
+			}
+			
+			#TARGET is at war with someone THIS hates
+			OR = { 
+				
+				#Opposing country to TARGET is not the same ideologically
+				any_country = {
+					has_war_with = scope:target_country
+					NOR = {
+						AND = { is_a_democracy = yes scope:target_country = { is_a_democracy = yes } }
+						AND = { is_a_nationalist_government = yes scope:target_country = { is_a_nationalist_government = yes } }
+						AND = { is_a_communist_government = yes scope:target_country = { is_a_communist_government = yes } }
+						AND = { is_a_theocratic_government = yes scope:target_country = { is_a_theocratic_government = yes } }
+					}
+				}
+				
+				#Opposing country to TARGET is a rival of THIS OR is allied to a country that has a rivalry to THIS
+				any_country = {
+					has_war_with = scope:target_country
+					OR = {
+						has_diplomatic_pact = {
+							who = ROOT
+							type = rivalry
+						}
+						any_scope_ally = { 
+							has_diplomatic_pact = {
+								who = ROOT
+								type = rivalry
+							}
+						}
+					}
+				}
+				
+			}
+			
+		}
+		
+		will_break = { 
+			
+			scaled_debt < 0.5
+			
+			#TARGET shares the same gov type
+			NOR = {
+				AND = { is_a_democracy = yes scope:target_country = { is_a_democracy = yes } }
+				AND = { is_a_nationalist_government = yes scope:target_country = { is_a_nationalist_government = yes } }
+				AND = { is_a_communist_government = yes scope:target_country = { is_a_communist_government = yes } }
+				AND = { is_a_theocratic_government = yes scope:target_country = { is_a_theocratic_government = yes } }
+			}
+			
+			#TARGET is at war with someone THIS hates
+			NOR = { 
+				
+				#Opposing country to TARGET is not the same ideologically
+				any_country = {
+					has_war_with = scope:target_country
+					NOR = {
+						AND = { is_a_democracy = yes scope:target_country = { is_a_democracy = yes } }
+						AND = { is_a_nationalist_government = yes scope:target_country = { is_a_nationalist_government = yes } }
+						AND = { is_a_communist_government = yes scope:target_country = { is_a_communist_government = yes } }
+						AND = { is_a_theocratic_government = yes scope:target_country = { is_a_theocratic_government = yes } }
+					}
+				}
+				
+				#Opposing country to TARGET is a rival of THIS OR is allied to a country that has a rivalry to THIS
+				any_country = {
+					has_war_with = scope:target_country
+					OR = {
+						has_diplomatic_pact = {
+							who = ROOT
+							type = rivalry
+						}
+						any_scope_ally = { 
+							has_diplomatic_pact = {
+								who = ROOT
+								type = rivalry
+							}
+						}
+					}
+				}
+				
+			}
+			
+		}
+	
+		junior_accept_score = {
+			value = 0
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_GDP"
+				value = "scope:actor.ai_gdp_comparison(root)"
+				multiply = 2
+				min = -20
+				max = 20
+			}
+			
+			if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" > 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					max = 20
+				}					
+			}
+			else_if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" < 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					min = -20
+				}					
+			}
+			
+		}
+
+		propose_score = {
+			value = 10
+		}
+
+		propose_break_score = {
+			value = 10
+		}
+		
+		use_obligation_chance = {
+			value = 0
+	
+			add = {
+				if = {
+					limit = {
+						scope:target_country = { country_rank = root.country_rank }
+					}					
+					value = 25
+				}
+			}
+	
+			add = {
+				if = {
+					limit = {
+						scope:target_country = { country_rank > root.country_rank }
+					}					
+					value = 50
+				}
+			}
+		}
+		
+		owe_obligation_chance = {
+			value = 0			
+		}
+	}
+	
+}
