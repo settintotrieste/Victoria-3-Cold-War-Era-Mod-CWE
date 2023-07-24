@@ -1,6 +1,6 @@
 ﻿support_revolution = {
 	requires_approval = yes
-	can_use_obligations = yes
+	can_use_obligations = no
 
 	unlocking_technologies = {
 		tech_geopolitics_3
@@ -21,6 +21,9 @@
 		#THIS is sufficiently independent
 		is_sufficiently_independent = yes
 		
+		#THIS is not at war with TARGET
+		NOT = { has_war_with = scope:target_country }
+		
 	}
 	
 	possible = {
@@ -28,11 +31,15 @@
 		#THIS is interested in the TARGET
 		has_diplomatic_relevance = scope:target_country
 		
-		#THIS is willing to intervene
-		has_interventionist_fp = yes
-		
-		#THIS has very good relations with TARGET
-		scope:target_country.relations:root > relations_threshold:cordial
+		#THIS does not have restricted war rights
+		OR = { 
+			has_law = law_type:law_regionalist_fp
+			has_law = law_type:law_globalist_fp
+			is_a_dictatorship = yes
+		}
+	
+		#THIS does not have restricted war rights
+		NOT = { has_law = law_type:law_no_war }
 		
 		#THIS is not in default
 		in_default = no
@@ -60,7 +67,30 @@
 	}
 	
 	accept_effect = {
-		change_relations = { country = scope:target_country value = 50 }
+		change_relations = { country = scope:target_country value = 200 }
+		
+		every_country = {
+			limit = { 
+				OR = { 
+					has_war_with = scope:target_country 
+					has_diplomatic_pact = {
+						who = ROOT
+						type = rivalry
+					}
+					AND = {
+						has_war_with = scope:target_country 
+						any_scope_ally = { 
+							has_diplomatic_pact = {
+								who = ROOT
+								type = rivalry
+							}
+						}
+					}
+				}
+			}
+			change_relations = { country = ROOT value = -20 }
+		}
+		
 	}
 	
 	decline_effect = {
@@ -87,11 +117,7 @@
 
 		should_auto_break = {
 		
-			#THIS has poor relations with TARGET
-			custom_tooltip = {
-				text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
-				scope:target_country.relations:root < relations_threshold:neutral
-			}
+			has_war_with = scope:target_country
 			
 		}
 
@@ -101,7 +127,13 @@
 				
 				NOT = { has_diplomatic_relevance = scope:target_country }
 				
-				NOT = { has_interventionist_fp = yes }
+				NOR = { 
+					has_law = law_type:law_regionalist_fp
+					has_law = law_type:law_globalist_fp
+					is_a_dictatorship = yes
+				}
+				
+				has_law = law_type:law_no_war
 				
 				is_revolutionary = yes
 				scope:target_country = { is_revolutionary = no }
@@ -208,6 +240,9 @@
 				
 			}
 			
+			#THIS is willing to provide support
+			has_jingoistic_ruler = yes
+			
 		}
 		
 		will_break = { 
@@ -258,7 +293,7 @@
 		}
 	
 		junior_accept_score = {
-			value = 0
+			value = -20
 			
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_GDP"
