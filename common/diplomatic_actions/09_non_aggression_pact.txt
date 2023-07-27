@@ -1,0 +1,310 @@
+﻿non_aggression_pact = {
+	requires_approval = yes
+	can_use_obligations = yes
+
+	unlocking_technologies = {
+		tech_geopolitics_2
+	}
+	
+	potential = {
+	
+		#Standard checks
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no }
+		
+		#Both parties are sufficiently independent
+		is_sufficiently_independent = yes
+		scope:target_country = { is_sufficiently_independent = yes }
+		
+		#Both countries do not have a better pact with each other
+		NOR = {
+			has_diplomatic_pact = { who = scope:target_country type = alliance }
+			has_diplomatic_pact = { who = scope:target_country type = defensive_pact }
+		}
+		
+		#Both countries do not have a subject-overlord relationship
+		NOR = { 
+			is_subject_of = scope:target_country
+			scope:target_country = { is_subject_of = ROOT }
+		}
+		
+	}
+	
+	possible = {
+	
+		#THIS is interested in TARGET
+		has_diplomatic_relevance = scope:target_country
+	
+		#Cannot enter into NAP if both are at war
+		NOT = { has_war_with = scope:target_country }
+		
+	}
+	
+	accept_effect = {
+		
+		#International community likes peace
+		change_relations = { country = scope:target_country value = -30 }
+		change_infamy = -10
+		scope:target_country = { 
+			change_relations = { country = scope:target_country value = -30 }
+			change_infamy = -10
+		}
+		
+	}
+
+	pact = {
+		cost = 100
+		
+		#Will slowly bring relations to neutral
+		relations_progress_per_day = 1 # At 100, +1 relations
+		relations_improvement_max = 0
+
+		should_invalidate = {
+		
+			OR = {
+				
+				is_country_type = decentralized
+				scope:target_country = { is_country_type = decentralized }
+				
+				is_revolutionary = yes
+				scope:target_country = { is_revolutionary = yes }
+				
+				scope:actor = { is_not_sufficiently_independent = yes }
+				scope:target_country = { is_not_sufficiently_independent = yes }
+				
+				has_diplomatic_pact = { who = scope:target_country type = alliance }
+				has_diplomatic_pact = { who = scope:target_country type = defensive_pact }
+				
+				is_subject_of = scope:target_country
+				scope:target_country = { is_subject_of = ROOT }
+				
+				has_war_with = scope:target_country
+				
+			}
+			
+		}
+
+		break_effect = {
+			create_truce = { country = scope:target_country months = 12 }
+			
+			#International community does not like this
+			change_relations = { country = scope:target_country value = -25 }
+			change_infamy = 10
+		}
+		
+	}
+
+	ai = {
+		check_acceptance_for_will_break = yes
+		check_acceptance_for_will_propose = yes
+	
+		will_propose = {
+			
+			#THIS is liberal OR has some internal problems
+			OR = { 
+				NOT = { has_jingoistic_ruler = yes }
+				in_default = yes
+				has_revolution = yes
+			}
+			
+			#THIS does not hate TARGET
+			NOR = { 
+				scope:target_country.relations:root = relations_threshold:hostile
+				scope:target_country.infamy >= infamy_threshold:pariah
+			}
+			
+		}
+		
+		will_break = {
+			
+			#THIS hates TARGET
+			OR = { 
+				scope:target_country.relations:root = relations_threshold:hostile
+				scope:target_country.infamy >= infamy_threshold:pariah
+			}
+			
+		}
+	
+		accept_score = {
+			value = -25
+			
+			if = {
+				limit = {
+					scope:target_country = {
+						navy_size < scope:actor.navy_size
+						army_size < scope:actor.army_size
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_MILITARY_POWER_DISPARITY"
+					value = 50
+				}
+			}
+			if = {
+				limit = {
+					scope:actor = { has_modifier = nuclear_capability }
+					scope:target_country = { has_modifier = nuclear_capability }
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_THREAT_OF_MUTALLY_ASSURED_DESTRUCTION"
+					value = 50
+				}
+			}
+			if = {
+				limit = {
+					scope:target_country = { 
+						OR = {
+							in_default = yes
+							has_revolution = yes
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_INTERNAL_TURMOIL"
+					value = 50
+				}
+			}
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RELATIONS"			
+				if = {
+					limit = {
+						"relations(scope:actor)" < relations_threshold:friendly
+					}
+					value = 0
+				}
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:amicable
+						"relations(scope:actor)" < relations_threshold:friendly
+					}
+					value = 25
+				}	
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:friendly
+					}
+					value = 50
+				}				
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:infamous
+						"scope:actor.infamy" < infamy_threshold:notorious
+					}
+					value = -10
+				}	
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:notorious
+						"scope:actor.infamy" < infamy_threshold:pariah
+					}
+					value = -25
+				}
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:pariah
+					}
+					value = -50
+				}					
+			}
+			if = {
+				limit = {
+					scope:target_country = {
+						ruler = {
+							OR = {
+								has_ideology = ideology:ideology_autocratic
+								has_ideology = ideology:ideology_power_hungry
+							}
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_JINGOISTIC_RULER"
+					value = -50
+				}
+			}
+			if = {
+				limit = {
+					scope:target_country = {
+						has_attitude = {
+							who = scope:actor
+							attitude <= antagonistic
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+					value = -50
+				}
+			}
+			
+		}
+
+		propose_score = {
+			value = 10
+			
+			add = {
+				value = scope:target_country.country_rank
+				multiply = 3
+			}		
+		}
+
+		propose_break_score = {
+			value = 10
+		}
+		
+		use_obligation_chance = {
+			value = 0
+	
+			add = {
+				if = {
+					limit = {
+						scope:target_country = { country_rank = root.country_rank }
+					}					
+					value = 25
+				}			
+			}
+	
+			add = {
+				if = {
+					limit = {
+						scope:target_country = { country_rank > root.country_rank }
+					}					
+					value = 50
+				}			
+			}
+			
+		}
+		
+		owe_obligation_chance = {
+			value = 0
+	
+			add = {
+				if = {
+					limit = {
+						scope:target_country = { country_rank = root.country_rank }
+					}				
+					value = 5
+				}	
+			}			
+	
+			add = {
+				if = {
+					limit = {
+						scope:target_country = { country_rank > root.country_rank }
+					}				
+					value = 10
+				}	
+			}
+			
+		}
+		
+	}
+	
+}
