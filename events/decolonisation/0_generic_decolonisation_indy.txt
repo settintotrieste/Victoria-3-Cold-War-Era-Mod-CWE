@@ -10,7 +10,7 @@ generic_decolonisation_indy.1 = {
 
     event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
 
-    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    icon = "gfx/interface/icons/event_icons/event_newspaper.dds" 	# Icon that shows on the map or the outliner
     on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
 
     duration = 1 # Duration to fire if triggers are met
@@ -164,7 +164,8 @@ generic_decolonisation_indy.1 = {
 
 #Generic Independence (Step 1: Self-Government) TEST EVENT
 generic_decolonisation_indy.2 = {
-    type = country_event
+	type = country_event
+	placement = scope:state_to_release
 
     title = generic_decolonisation_indy_1.t 					# Title of the event; ADD LOCALISATION
     desc = generic_decolonisation_indy_2.d 						# Description of the event; ADD LOCALISATION
@@ -172,21 +173,40 @@ generic_decolonisation_indy.2 = {
 
     event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
 
-    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    icon = "gfx/interface/icons/event_icons/event_newspaper.dds" 	# Icon that shows on the map or the outliner
     on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
 
     duration = 1 # Duration to fire if triggers are met
 	
 	trigger = {														# What triggers the event, if using other events or journal entries leave empty
 		
-		#Owns a colony
-		has_any_possible_vassal = yes
+		#Only 1 decolonisation tag in the world at anytime
+		NOT = { exists = c:XFC }
+		
+		#Owns Colonial States (ie. states that THIS does not have cores in and is unincorporated)
+		any_scope_state = {
+			capable_of_release = yes
+			turmoil > 0.15
+		}
 		
     }
 	
 	immediate = {
-	
 		
+		random_scope_state = {
+			limit = { 
+				capable_of_release = yes
+				turmoil > 0.15
+			}
+			save_scope_as = state_to_release
+			random_scope_culture = { 
+				limit = { 
+					has_homeland = scope:state_to_release
+					NOT = { is_primary_culture_of = ROOT }
+				}
+				save_scope_as = culture_to_release
+			}
+		}
 		
 	}
     
@@ -195,7 +215,57 @@ generic_decolonisation_indy.2 = {
         highlighted_option = yes
 		
 		#Release 1 colony
-		release_any_possible_vassal = yes
+		custom_tooltip = {
+			text = self_governing_colony.tt
+			create_country = { 
+				tag = XFC
+				origin = ROOT
+				state = scope:state_to_release
+				on_created = {
+					set_release_vassal_effects = yes
+				}
+			}
+			if = {
+				limit = { exists = c:XFC }
+				c:XFC = {
+				
+					random_scope_state = {
+						random_scope_culture = { 
+							limit = { 
+								has_homeland = scope:state_to_release
+								NOT = { is_primary_culture_of = ROOT }
+							}
+							save_scope_as = culture_to_release
+						}
+					}
+					add_primary_culture = scope:culture_to_release
+					
+					random_scope_pop = {
+						religion = { save_scope_as = religion_to_release }
+					}
+					set_state_religion = scope:religion_to_release
+					
+					create_character = {
+						ruler = yes
+						culture = scope:culture_to_release
+						religion = scope:religion_to_release
+					}
+					
+				}
+				every_scope_state = {
+					limit = { is_homeland_of_country_cultures = c:XFC capable_of_release = yes } 
+					set_state_owner = c:XFC
+				}
+				create_diplomatic_pact = {
+					country = c:XFC
+					type = semi_autonomous_colony
+				}
+				create_diplomatic_pact = {
+					country = c:XFC
+					type = currency_union
+				}
+			}
+		}
 		
 		ai_chance = { 
 			base = 90
@@ -206,6 +276,18 @@ generic_decolonisation_indy.2 = {
 	option = {
         name = generic_decolonisation_indy_1.option.2						# Maintain direct rule
 		default_option = yes
+		
+		# Natives are angry!
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = scope:culture_to_release }
+		 	}
+			add_radicals_in_state = {
+				culture = scope:culture_to_release
+				value = large_radicals
+			}
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
 		
 		ai_chance = {
 			base = 10 
