@@ -1,0 +1,187 @@
+intervene_in_war = {
+	should_notify_third_parties = yes
+
+	potential = {
+		
+		#Not a civil war country
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no }
+		
+		#THIS has independent foreign affairs
+		is_sufficiently_independent = yes
+		
+		#TARGET is at war, is the war leader and not at war with THIS
+		scope:target_country = { 
+			is_sufficiently_independent = yes
+			is_at_war = yes
+			NOT = { has_war_with = scope:actor }
+			any_scope_war = {
+				is_warleader = scope:target_country
+				NOT = { is_war_participant = scope:actor }
+			}
+		}
+		
+		#THIS can reach the TARGET
+		OR = {
+		
+			#THIS has direct access to the TARGET
+			scope:target_country = {
+				OR = { 
+					has_strategic_adjacency = scope:actor
+					any_scope_state = { is_coastal = yes }
+				}
+			}
+			
+			#THIS has access to the TARGET through an ally who is also at war with the TARGET
+			any_scope_ally = {
+				is_at_war = yes
+				any_scope_war = {
+					is_war_participant = scope:target_country
+					is_warleader = scope:target_country
+				}
+				NOT = { has_war_with = scope:target_country }
+				has_strategic_adjacency = scope:target_country
+			}
+			
+			#THIS has access to the TARGET through a subject
+			any_country = {
+				is_subject_of = scope:actor
+				has_strategic_adjacency = scope:target_country
+			}
+			
+			#THIS has access to the TARGET through an enemy 3P
+			any_country = {
+				has_war_with = scope:actor
+				has_strategic_adjacency = scope:target_country
+			}
+			
+		}
+		
+	}
+
+	possible = {
+	
+		# THIS can and wants to intervene
+		can_go_to_war = yes
+		
+		#THIS does not have restricted war rights
+		OR = { 
+			has_law = law_type:law_regionalist_fp
+			has_law = law_type:law_globalist_fp
+		}
+		
+		# THIS has good relations with TARGET
+		scope:target_country.relations:root > relations_threshold:neutral
+		
+	}
+	
+	accept_effect = {
+		
+		#TARGET gains relations with subject
+		scope:target_country = { 
+			change_relations = { country = scope:actor value = 100 } 
+		}
+		
+		#THIS joins the TARGET's war
+		every_diplomatic_play = {
+			limit = {
+				is_war = yes
+				is_diplomatic_play_participant = scope:target_country
+				NOT = { is_diplomatic_play_participant = scope:actor }
+			}
+			if = {
+				limit = {
+					initiator_is = scope:target_country
+				}
+				add_initiator_backers = {
+					scope:actor
+				}
+			}
+			else_if = {
+				limit = {
+					target_is = scope:target_country
+				}
+				add_target_backers = {
+					scope:actor
+				}
+			}
+		}
+		
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			
+			#THIS wants to help TARGET
+			OR = {
+			
+				#THIS wants to help TARGET in a containment war
+				any_country = { 
+					has_war_with = scope:target_country 
+					infamy >= infamy_threshold:pariah
+				}
+				
+				#THIS wants to help TARGET who is an ally or subject who is losing
+				scope:target_country = { 
+					OR = {
+						has_diplomatic_pact = { who = scope:target_country type = alliance }
+						has_diplomatic_pact = { who = scope:target_country type = defensive_pact } 
+						is_subject_of = scope:actor
+					}
+					any_scope_war = {
+						has_war_support = {
+							target = scope:target_country
+							value < 0
+						}
+					}
+				}
+				
+			}
+			
+			#THIS wants to avoid helping TARGET at all costs
+			NOR = {
+			
+				#Intervention will lead to nuclear war
+				AND = { 
+					any_country = { 
+						has_war_with = scope:target_country 
+						has_modifier = nuclear_capability
+					}
+					has_modifier = nuclear_capability
+				}
+				
+				#Enemy of TARGET has a stronger military than THIS
+				any_country = { 
+					has_war_with = scope:target_country 
+					OR = { 
+						navy_size > scope:actor.navy_size
+						army_size > scope:actor.army_size
+					}
+				}
+				
+				#Enemy of TARGET has good relations with THIS
+				any_country = { 
+					has_war_with = scope:target_country 
+					OR = {
+						has_diplomatic_pact = { who = scope:actor type = alliance }
+						has_diplomatic_pact = { who = scope:actor type = defensive_pact } 
+						is_subject_of = scope:actor
+					}
+				}
+				
+			}
+			
+			#THIS has a strong economy
+			in_default = no
+			has_healthy_economy = yes
+			
+		}
+		
+	}
+	
+}
