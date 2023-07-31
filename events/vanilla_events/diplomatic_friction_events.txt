@@ -1,0 +1,226 @@
+﻿namespace = diplomatic_friction
+
+diplomatic_friction.1 = { # Boost the trade unions
+	type = country_event
+	placement = ROOT
+
+	title = diplomatic_friction.1.t
+	desc = diplomatic_friction.1.d
+	flavor = diplomatic_friction.1.f
+
+	event_image = {
+		video = "votp_agitators_sneaking"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 3
+
+	trigger = {
+		country_rank >= rank_value:major_power
+		any_country = {
+			country_rank >= rank_value:major_power
+			has_diplomatic_pact = {
+				who = root
+     			type = rivalry 
+     		}
+     		relations:root <= relations_threshold:cold
+		}
+	}
+
+	immediate = {
+		random_country = {
+			limit = {
+				country_rank >= rank_value:major_power
+				has_diplomatic_pact = {
+					who = root
+	     			type = rivalry 
+	     		}
+	     		relations:root <= relations_threshold:cold
+			}
+			save_scope_as = rival_scope
+		}
+	}
+
+	option = { #Boost the trade union
+		name = diplomatic_friction.1.a
+		scope:rival_scope = {
+			ig:ig_trade_unions = {
+				add_modifier = {
+					name = foreign_trade_union_influence
+					months = normal_modifier_time
+				}
+			}	
+			hidden_effect = { post_notification = rival_supports_trade_unions }
+		}
+	}
+
+	option = { #Opt out
+		name = diplomatic_friction.1.b
+		default_option = yes
+		scope:rival_scope = {
+			ig:ig_trade_unions = {
+				add_modifier = {
+					name = foreign_trade_union_influence_denied
+					months = normal_modifier_time
+				}
+			}
+		}
+	}
+}
+
+diplomatic_friction.2 = { # Soldiers Cross the Border
+	type = country_event
+	placement = scope:rival_state
+
+	title = diplomatic_friction.2.t
+	desc = diplomatic_friction.2.d
+	flavor = diplomatic_friction.2.f
+
+	event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	duration = 3
+
+	trigger = {
+		is_at_war = no
+		country_rank >= rank_value:major_power
+		any_country = {
+			country_rank >= rank_value:major_power
+			has_diplomatic_pact = {
+				who = root
+     			type = rivalry 
+     		}
+     		relations:root <= relations_threshold:cold
+     		any_neighbouring_state = {
+     			owner = ROOT
+     		}
+			NOT = { this = ROOT }
+		}		
+	}
+
+	immediate = {
+		random_country = {
+			limit = {
+				country_rank >= rank_value:major_power
+				has_diplomatic_pact = {
+					who = ROOT
+	     			type = rivalry 
+	     		}
+	     		relations:ROOT <= relations_threshold:cold
+	     		any_neighbouring_state = {
+	     			owner = ROOT
+	     		}
+				NOT = { this = ROOT }
+			}
+			save_scope_as = rival_scope
+		}
+		save_scope_as = first_rival_country
+		random_neighbouring_state = { 
+			limit = { 
+				owner = scope:rival_scope 
+			}
+			save_scope_as = rival_state
+		}
+	}
+
+	option = { #
+		name = diplomatic_friction.2.a
+		scope:rival_scope = {
+			set_variable = first_rival_country_var
+			hidden_effect = {
+				trigger_event = { id = diplomatic_friction.3 days = 10 }
+			}
+			custom_tooltip = diplomatic_friction.2.a.tt
+			show_as_tooltip = {
+				scope:rival_scope = {
+					add_modifier = {
+						name = border_sovereignity_questioned 
+						months = normal_modifier_time
+					}
+					create_incident = {
+						country = ROOT
+						value = 20
+					}
+				}
+			}
+		}
+	}
+
+	option = { #Opt out
+		name = diplomatic_friction.2.b
+		default_option = yes
+		ig:ig_armed_forces = {
+			add_modifier = {
+				name = border_cowardice
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+diplomatic_friction.3 = { # Soldiers from another country cross the Border
+	type = country_event
+	placement = ROOT
+
+	title = diplomatic_friction.3.t
+	desc = diplomatic_friction.3.d
+	flavor = diplomatic_friction.3.f
+
+	event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	duration = 3
+
+	trigger = {
+		any_country = {
+			has_variable = first_rival_country_var
+			has_diplomatic_pact = {
+				who = ROOT
+	     		type = rivalry 
+	     	}
+	     	NOT = { this = ROOT }
+		}
+	}
+
+	immediate = {
+		random_country = {
+			limit = { 
+				has_variable = first_rival_country_var
+				has_diplomatic_pact = {
+					who = ROOT
+	     			type = rivalry 
+	     		}
+	     		NOT = { this = ROOT }
+			}
+			save_scope_as = rival_scope
+		}
+	}
+
+	option = { #
+		name = diplomatic_friction.3.a
+		create_incident = {
+			country = scope:first_rival_country
+			value = 20
+		}
+	}
+
+	option = { #
+		name = diplomatic_friction.3.b
+		default_option = yes
+		add_modifier = {
+			name = border_sovereignity_questioned 
+			months = normal_modifier_time
+		}
+	}
+}

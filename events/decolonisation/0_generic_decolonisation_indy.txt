@@ -167,7 +167,25 @@ generic_decolonisation_indy.2 = {
 	type = country_event
 	placement = scope:state_to_release
 
-    title = generic_decolonisation_indy_2.t 					# Title of the event; ADD LOCALISATION
+    title = {													# Title of the event; ADD LOCALISATION
+	
+		first_valid = {
+			triggered_desc = {
+				desc = generic_decolonisation_indy_2a.t
+				trigger = {
+					exists = scope:culture_to_release
+				}
+			}
+			triggered_desc = {
+				desc = generic_decolonisation_indy_2b.t
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	
+	}
+	
     desc = generic_decolonisation_indy_2.d 						# Description of the event; ADD LOCALISATION
     flavor = generic_decolonisation_indy_2.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
 
@@ -270,6 +288,7 @@ generic_decolonisation_indy.2 = {
 							set_variable = { name = XFC_timer months = 3 }
 						}
 					}
+					set_variable = { name = XFC_originator months = 12 }
 				}
 				if = {
 					limit = { exists = c:XFC }
@@ -385,13 +404,22 @@ generic_decolonisation_indy.3 = {
 	trigger = {
 		exists = c:XFC
 		OR = {
-			c:XFC = { 
-				is_subject_of = ROOT 
-				NOT = { has_variable = XFC_timer } 
+			AND = { 
+				NOT = { this ?= c:XFC }
+				has_subject_relation_with = c:XFC
+				c:XFC = {
+					is_subject_of = ROOT 
+					NOT = { has_variable = XFC_timer } 
+				}
+			}
+			AND = { 
+				NOT = { this ?= c:XFC }
+				c:XFC = { is_subject = no } 
+				has_variable = XFC_originator
 			}
 			AND = { 
 				this ?= c:XFC 
-				c:XFC = { is_subject = no } 
+				c:XFC = { is_subject = no }
 			}
 		}
 	}
@@ -411,16 +439,34 @@ generic_decolonisation_indy.3 = {
 		if = {
 			limit = { 
 				c:XFC = { 
-					is_subject_of = ROOT 
+					is_subject_of = ROOT
 					NOT = { has_variable = XFC_timer } 
 				} 
 			}
 			annex = c:XFC
 		}
 		else_if = {
-			limit = { c:XFC = { is_subject = no } }
+			limit = { 
+				c:XFC = { is_subject = no }
+				has_variable = XFC_originator
+			}
+			annex = c:XFC
+		}
+		else_if = {
+			limit = { 
+				c:XFC = { is_subject = no }
+				any_country = {
+					any_primary_culture = { is_primary_culture_of = c:XFC }
+				}
+			}
 			random_country = {
 				limit = { any_primary_culture = { is_primary_culture_of = c:XFC } }
+				annex = c:XFC
+			}
+		}
+		else = {
+			random_country = {
+				limit = { has_strategic_adjacency = c:XFC }
 				annex = c:XFC
 			}
 		}
