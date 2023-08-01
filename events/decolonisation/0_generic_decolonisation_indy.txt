@@ -95,7 +95,7 @@ generic_decolonisation_indy.1 = {
 		
 		#The COUNTRY_ADJ empire survives
 		custom_tooltip = {
-			text = generic_decolonisation_indy.1.1.tt
+			text = generic_decolonisation_indy.1.tt
 		
 			#War of Independence
 			create_diplomatic_play = {
@@ -162,14 +162,32 @@ generic_decolonisation_indy.1 = {
 
 }
 
-#Generic Independence (Step 1: Self-Government) TEST EVENT
+#Generic Independence (Step 1: Self-Government)
 generic_decolonisation_indy.2 = {
 	type = country_event
 	placement = scope:state_to_release
 
-    title = generic_decolonisation_indy_1.t 					# Title of the event; ADD LOCALISATION
+    title = {													# Title of the event; ADD LOCALISATION
+	
+		first_valid = {
+			triggered_desc = {
+				desc = generic_decolonisation_indy_2a.t
+				trigger = {
+					exists = scope:culture_to_release
+				}
+			}
+			triggered_desc = {
+				desc = generic_decolonisation_indy_2b.t
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	
+	}
+	
     desc = generic_decolonisation_indy_2.d 						# Description of the event; ADD LOCALISATION
-    flavor = generic_decolonisation_indy_3.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+    flavor = generic_decolonisation_indy_2.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
 
     event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
 
@@ -186,7 +204,7 @@ generic_decolonisation_indy.2 = {
 		#Owns Colonial States (ie. states that THIS does not have cores in and is unincorporated)
 		any_scope_state = {
 			capable_of_release = yes
-			turmoil > 0.15
+			turmoil > 0.25
 		}
 		
     }
@@ -196,7 +214,7 @@ generic_decolonisation_indy.2 = {
 		random_scope_state = {
 			limit = { 
 				capable_of_release = yes
-				turmoil > 0.15
+				turmoil > 0.25
 			}
 			save_scope_as = state_to_release
 			random_scope_culture = { 
@@ -209,84 +227,154 @@ generic_decolonisation_indy.2 = {
 		}
 		
 	}
+	
+	cancellation_trigger = {
+		NOR = {
+			exists = scope:state_to_release 
+			exists = scope:culture_to_release
+		}
+	}
     
     option = {
-        name = generic_decolonisation_indy_1.option.1						# Grant greater autonomy
+        name = generic_decolonisation_indy_2.option.1						# Grant greater autonomy
         highlighted_option = yes
 		
-		#Release 1 colony
-		custom_tooltip = {
-			text = self_governing_colony.tt
-			create_country = { 
-				tag = XFC
-				origin = ROOT
-				state = scope:state_to_release
-				on_created = {
-					set_release_vassal_effects = yes
-				}
+		change_infamy = -10
+		
+		if = {
+			limit = { exists = scope:culture_to_release }
+			random_country = {
+				limit = { country_has_primary_culture = scope:culture_to_release }
+				save_scope_as = third_party_country
 			}
-			if = {
-				limit = { exists = c:XFC }
-				c:XFC = {
-				
-					random_scope_state = {
-						random_scope_culture = { 
-							limit = { 
-								has_homeland = scope:state_to_release
-								NOT = { is_primary_culture_of = ROOT }
-							}
-							save_scope_as = culture_to_release
+		}
+		if = {
+			limit = { exists = scope:state_to_release }
+			random_country = {
+				limit = { any_primary_culture = { has_homeland = scope:state_to_release } }
+				save_scope_as = third_party_country
+			}
+		}
+		
+		if = {
+			limit = { exists = scope:third_party_country }
+			every_scope_state = {
+				limit = { is_homeland_of_country_cultures = scope:third_party_country capable_of_release = yes } 
+				set_state_owner = scope:third_party_country
+			}
+			change_relations = {
+				country = scope:third_party_country
+				value = 100
+			}
+		}
+		
+		#Release 1 colony
+		if = {
+			limit = { NOT = { exists = scope:third_party_country } }
+			custom_tooltip = {
+				text = self_governing_colony.tt
+				if = {
+					limit = { 
+						exists = scope:state_to_release 
+						exists = scope:culture_to_release
+						NOT = { exists = scope:third_party_country }
+					}
+					create_country = { 
+						tag = XFC
+						origin = ROOT
+						state = scope:state_to_release
+						on_created = {
+							set_release_vassal_effects = yes
+							set_variable = { name = XFC_timer months = 3 }
 						}
 					}
-					add_primary_culture = scope:culture_to_release
+					set_variable = { name = XFC_originator months = 12 }
+				}
+				if = {
+					limit = { exists = c:XFC }
 					
-					random_scope_pop = {
-						religion = { save_scope_as = religion_to_release }
+					c:XFC = {
+					
+						random_scope_state = {
+							random_scope_culture = { 
+								limit = { 
+									has_homeland = scope:state_to_release
+									NOT = { is_primary_culture_of = ROOT }
+								}
+								save_scope_as = culture_to_release
+							}
+						}
+						if = {
+							limit = { exists = scope:culture_to_release }
+							add_primary_culture = scope:culture_to_release
+						}
+						
+						random_scope_pop = {
+							religion = { save_scope_as = religion_to_release }
+						}
+						if = {
+							limit = { exists = scope:religion_to_release }
+							set_state_religion = scope:religion_to_release
+						}
+						
+						create_character = {
+							ruler = yes
+							culture = scope:culture_to_release
+							religion = scope:religion_to_release
+						}
+						
 					}
-					set_state_religion = scope:religion_to_release
 					
-					create_character = {
-						ruler = yes
-						culture = scope:culture_to_release
-						religion = scope:religion_to_release
+					every_scope_state = {
+						limit = { is_homeland_of_country_cultures = c:XFC capable_of_release = yes } 
+						set_state_owner = c:XFC
+					}
+					create_diplomatic_pact = {
+						country = c:XFC
+						type = semi_autonomous_colony
+					}
+					create_diplomatic_pact = {
+						country = c:XFC
+						type = currency_union
 					}
 					
-				}
-				every_scope_state = {
-					limit = { is_homeland_of_country_cultures = c:XFC capable_of_release = yes } 
-					set_state_owner = c:XFC
-				}
-				create_diplomatic_pact = {
-					country = c:XFC
-					type = semi_autonomous_colony
-				}
-				create_diplomatic_pact = {
-					country = c:XFC
-					type = currency_union
 				}
 			}
 		}
 		
-		ai_chance = { 
+		ai_chance = {
 			base = 90
+			modifier = { trigger = { game_date < 1980.1.1 has_global_variable = historical_railroading_active } add = -100 }
 		}
 		
     }
 	
 	option = {
-        name = generic_decolonisation_indy_1.option.2						# Maintain direct rule
+        name = generic_decolonisation_indy_2.option.2						# Maintain direct rule
 		default_option = yes
 		
 		# Natives are angry!
-		every_scope_state = {
-			limit = {
-		 		state_region = { is_homeland = scope:culture_to_release }
-		 	}
-			add_radicals_in_state = {
-				culture = scope:culture_to_release
-				value = large_radicals
+		if = {
+			limit = { exists = scope:culture_to_release }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = scope:culture_to_release }
+				}
+				add_radicals_in_state = {
+					culture = scope:culture_to_release
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
 			}
-			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		else_if = {
+			limit = { exists = scope:state_to_release }
+			scope:state_to_release = {
+				add_radicals_in_state = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
 		}
 		
 		ai_chance = {
@@ -294,5 +382,101 @@ generic_decolonisation_indy.2 = {
 		}
 		
     }
+
+}
+
+#Clean up XFC tag
+generic_decolonisation_indy.3 = {
+	type = country_event
+	placement = scope:state_to_release
+
+    title = generic_decolonisation_indy.3.t 					# Title of the event; ADD LOCALISATION
+    desc = generic_decolonisation_indy.3.d 						# Description of the event; ADD LOCALISATION
+    flavor = generic_decolonisation_indy.3.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_newspaper.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		exists = c:XFC
+		OR = {
+			AND = { 
+				NOT = { this ?= c:XFC }
+				has_subject_relation_with = c:XFC
+				c:XFC = {
+					is_subject_of = ROOT 
+					NOT = { has_variable = XFC_timer } 
+				}
+			}
+			AND = { 
+				NOT = { this ?= c:XFC }
+				c:XFC = { is_subject = no } 
+				has_variable = XFC_originator
+			}
+			AND = { 
+				this ?= c:XFC 
+				c:XFC = { is_subject = no }
+			}
+		}
+	}
+
+	immediate = {
+		
+		c:XFC = { 
+			capital = { 
+				save_scope_as = state_to_release
+			}
+			random_primary_culture = {
+				save_scope_as = primary_culture_scope
+			}
+			save_scope_as = failed_country_scope
+		}
+		
+		if = {
+			limit = { 
+				c:XFC = { 
+					is_subject_of = ROOT
+					NOT = { has_variable = XFC_timer } 
+				} 
+			}
+			annex = c:XFC
+		}
+		else_if = {
+			limit = { 
+				c:XFC = { is_subject = no }
+				has_variable = XFC_originator
+			}
+			annex = c:XFC
+		}
+		else_if = {
+			limit = { 
+				c:XFC = { is_subject = no }
+				any_country = {
+					any_primary_culture = { is_primary_culture_of = c:XFC }
+				}
+			}
+			random_country = {
+				limit = { any_primary_culture = { is_primary_culture_of = c:XFC } }
+				annex = c:XFC
+			}
+		}
+		else = {
+			random_country = {
+				limit = { has_strategic_adjacency = c:XFC }
+				annex = c:XFC
+			}
+		}
+		
+	}
+	
+	option = {
+        name = generic_decolonisation_indy_3.option				# Okay
+		
+		
+	}
 
 }
