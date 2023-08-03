@@ -733,65 +733,6 @@ united_nations.10 = {
 		
 		save_scope_as = un_peacekeeping_aggressor
 		
-		#Generate UNSC country to lead war of containment
-		if = {
-			limit = { 
-				any_country = { 
-					#exists = yes
-					OR = { has_modifier = unsc_permanent_member has_modifier = unsc_non_permanent_member }
-					NOT = { is_in_war_together = scope:un_peacekeeping_aggressor }
-					has_variable = un_peacekeeping_unsc_supporter_var
-					can_go_to_war = yes
-					any_scope_state = { is_homeland_of_country_cultures = ROOT }
-				}
-			}
-			random_country = {
-				limit = { 
-					#exists = yes
-					has_modifier = unsc_permanent_member
-					NOT = { is_in_war_together = scope:un_peacekeeping_aggressor }
-					has_variable = un_peacekeeping_unsc_supporter_var
-					can_go_to_war = yes
-				}
-				save_scope_as = un_peacekeeping_containment_war_leader
-			}
-		}
-		else_if = {
-			limit = { 
-				any_country = { 
-					#exists = yes
-					has_modifier = unsc_permanent_member
-					NOT = { is_in_war_together = scope:un_peacekeeping_aggressor }
-					has_variable = un_peacekeeping_unsc_supporter_var
-					can_go_to_war = yes
-				}
-			}
-			random_country = {
-				limit = { 
-					#exists = yes
-					has_modifier = unsc_permanent_member
-					NOT = { is_in_war_together = scope:un_peacekeeping_aggressor }
-					has_variable = un_peacekeeping_unsc_supporter_var
-					can_go_to_war = yes
-				}
-				save_scope_as = un_peacekeeping_containment_war_leader
-			}
-		}
-		else = {
-			random_country = {
-				limit = { 
-					#exists = yes
-					NOT = { is_in_war_together = scope:un_peacekeeping_aggressor }
-					has_variable = un_peacekeeping_unsc_supporter_var
-					can_go_to_war = yes
-				}
-				save_scope_as = un_peacekeeping_containment_war_leader
-			}
-		}
-		
-		#Clean up
-		trigger_event = { id = united_nations.12 }
-		
 	}
 
 	option = {
@@ -809,6 +750,14 @@ united_nations.10 = {
 		create_truce = {
 			country = scope:un_peacekeeping_applicant
 			months = 24
+		}
+		
+		#Mark THIS as a potential mandate
+		every_scope_state = { 
+			limit = {
+				NOT = { is_homeland_of_country_cultures = ROOT }
+			}
+			add_modifier = { name = un_potential_mandate_marker years = 5 }
 		}
 		
 		#International community is very happy
@@ -852,46 +801,23 @@ united_nations.10 = {
 		#International community is NOT happy
 		change_infamy = 100
 		
+		#Get UN supporters to join war on the UN applicant's side
 		custom_tooltip = {
 			text = un_peacekeeping_coalition_custom_tooltip
 			
-			#Create an alliance with UNSC containment war leader
+			#All supporters of the UN Resolution are given the option to join the peacekeeping mission
 			every_country = {
 				limit = { 
-					NOT = { 
-						has_diplomatic_pact = { who = ROOT type = alliance }
-					} 
-					has_modifier = unga_member
-					
-					has_variable = un_peacekeeping_voted_for_war
+					OR = { has_modifier = unsc_permanent_member has_modifier = unsc_non_permanent_member has_modifier = unga_member }
+					NOT = { is_in_war_together = scope:un_peacekeeping_aggressor }
+					has_variable = un_peacekeeping_unsc_supporter_var
+					can_go_to_war = yes
 				}
-				create_diplomatic_pact = {
-					country = scope:un_peacekeeping_containment_war_leader
-					type = alliance
-				}
+				trigger_event = { id = united_nations.101 }
 			}
 			
-			#War of containment begins!
-			random_country = {
-				limit = {
-					scope:un_peacekeeping_containment_war_leader ?= this
-				}
-				create_diplomatic_play = {
-					name = containment_war
-					type = dp_un_peacekeeping
-					
-					target_country = scope:un_peacekeeping_aggressor
-			
-					war = yes
-				}
-				
-				set_variable = un_peacekeeping_mandate
-			}
-			
-			#Mark THIS as a potential mandate
-			every_scope_state = { 
-				add_modifier = { name = un_potential_mandate_marker }
-			}
+			#Mark this as a target of a UN operation
+			set_variable = { name = UN_peacekeeping_mission_target years = 1 }
 			
 		}
 		
@@ -903,6 +829,124 @@ united_nations.10 = {
 			modifier = {
 				trigger = {
 					has_jingoistic_ruler = yes
+				}
+				add = 100
+			}
+		}
+		
+	}
+	
+}
+
+#UN Peacekeeping ultimatum - Option to join war
+united_nations.101 = {
+	type = country_event
+
+	title = UN_peacekeeping_join_war.t
+	desc = UN_peacekeeping_join_war.d
+	flavor = UN_peacekeeping_join_war.f
+
+	event_image = {
+		video = "gfx/event_pictures/europenorthamerica_before_the_battle.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	immediate = {
+	
+		random_country = {
+			limit = { 
+				has_variable = un_peacekeeping_applicant_var
+			}
+			save_scope_as = un_peacekeeping_applicant
+		}
+		
+		random_country = {
+			limit = { 
+				has_variable = UN_peacekeeping_mission_target
+			}
+			save_scope_as = un_peacekeeping_aggressor
+		}
+		
+	}
+
+	option = {
+		name = UN_peacekeeping_join_war.option.1 			#Join the Peacekeeping Mission
+		highlighted_option = yes
+		
+		#THIS joins TARGET's wars
+		custom_tooltip = {
+			text = un_intervene_in_war.tt
+		
+			#THIS joins the TARGET's war
+			every_diplomatic_play = {
+				limit = {
+					is_war = yes
+					
+					initiator_is = scope:un_peacekeeping_aggressor
+					target_is = scope:un_peacekeeping_applicant
+					
+					is_diplomatic_play_participant = scope:un_peacekeeping_applicant
+					NOT = { is_diplomatic_play_participant = ROOT }
+				}
+				add_target_backers = {
+					ROOT
+				}
+			}
+		
+		}
+		
+		#International community is happy
+		change_infamy = -10
+		
+		ai_chance = { 
+			base = 0
+			modifier = {
+				trigger = {
+					NOR = {
+						infamy >= infamy_threshold:pariah
+						in_default = yes
+						has_healthy_economy = no
+					}
+				}
+				add = 100
+			}
+		}
+		
+	}
+	
+	option = {
+		name = UN_peacekeeping_join_war.option.2 			#Do not join the Peacekeeping Mission
+		default_option = yes
+		
+		#Fellow coalition partners are not happy
+		every_country = {
+			limit = { 
+				OR = { has_modifier = unsc_permanent_member has_modifier = unsc_non_permanent_member has_modifier = unga_member }
+				NOT = { is_in_war_together = scope:un_peacekeeping_aggressor }
+				has_variable = un_peacekeeping_unsc_supporter_var
+				can_go_to_war = yes
+			}
+			change_relations = {
+				country = ROOT
+				value = -25
+			}
+		}
+		
+		ai_chance = { 
+			base = 0
+			modifier = {
+				trigger = {
+					OR = {
+						infamy >= infamy_threshold:pariah
+						in_default = yes
+						has_healthy_economy = no
+					}
 				}
 				add = 100
 			}
@@ -1037,6 +1081,7 @@ united_nations.12 = {
 			}
 			remove_modifier = un_potential_mandate_marker
 		}
+		every_country = { remove_variable = UN_peacekeeping_mission_target }
 		
 	}
 	
@@ -1062,46 +1107,56 @@ united_nations.13 = {
 	duration = 1
 	
 	trigger = {
-		has_variable = un_peacekeeping_mandate
 		
+		#Only 1 UN trust territory tag in the world at anytime
+		NOT = { exists = c:UNT }
+		
+		#THIS is not at war
 		is_at_war = no
 		
 		#Owns the potential mandate
 		any_scope_state = {
 			has_modifier = un_potential_mandate_marker
 			NOT = { is_homeland_of_country_cultures = ROOT }
-			is_incorporated = no
+			
+			#Only discriminated want self-rule
+			any_scope_culture = {
+				NOT = { is_primary_culture_of = ROOT }
+			}
 		}
+		
+		#There is a UNSC country to give a UN mandate to
+		any_country = { 
+			OR = { has_modifier = unsc_permanent_member has_modifier = unsc_non_permanent_member } 
+			is_at_war = no
+			infamy < infamy_threshold:pariah
+		}
+		
 	}
 
 	immediate = {
-	
-		set_variable = un_peacekeeping_mandate
 		
-		save_scope_as = un_mandate_trustee
-		
+		#Mark territories to be removed
 		random_scope_state = {
 			limit = {
 				has_modifier = un_potential_mandate_marker
 				NOT = { is_homeland_of_country_cultures = ROOT }
-				is_incorporated = no
 			}
 			save_scope_as = un_mandate_state_region
+			
+			random_scope_culture = {
+				limit = { 
+					has_homeland = scope:un_mandate_state_region
+					NOT = { is_primary_culture_of = ROOT }
+				}
+				save_scope_as = culture_to_release
+			}
+			
 		}
 		
-	}
-	
-	option = {
-		name = un_peacekeeping_mandate_yes				#We graciously accept
-		default_option = yes
-		highlighted_option = yes
-		
-		#Create trust territory if not yet formed
-		if = {
-		
-			limit = { 
-				NOT = { exists = c:UNT }
-			}
+		#Create trust territory
+		custom_tooltip = {
+			text = un_mandate_creation.tt
 		
 			#Release country
 			create_country = {
@@ -1122,137 +1177,162 @@ united_nations.13 = {
 					# Set diplomatic recognition
 					set_country_type = unrecognized
 				
-					#Set primary culture to be that of the UN Trustee
-					random_scope_pop = {
-						culture = { save_scope_as = UNT_primary_culture }
-					}
-					add_primary_culture = scope:UNT_primary_culture
-				
 				}
 			
 			}
 			
-			# Overlord create mandate pact
-			create_diplomatic_pact = {
-				country = c:UNT
-				type = mandate
-			}
-			
-		}
-		
-		every_scope_state = {
-			limit = {
-		 		has_modifier = un_potential_mandate_marker
-				NOT = { is_homeland_of_country_cultures = ROOT }
-				is_incorporated = no
-		 	}
-			set_state_owner = c:UNT
-		}
-		
-		#Clean Up
-		c:UNT = {
-		
-			#Clear UNT market
 			every_scope_state = {
-				remove_modifier = un_potential_mandate_marker
+				limit = {
+					has_modifier = un_potential_mandate_marker
+					NOT = { is_homeland_of_country_cultures = ROOT }
+				}
+				set_state_owner = c:UNT
 			}
 			
-			#Regenerate leaders
-			every_scope_character = {
-				kill_character = yes
+			if = {
+				limit = { 
+					exists = scope:culture_to_release 
+					exists = c:UNT 
+				}
+				c:UNT = { add_primary_culture = scope:culture_to_release }
 			}
 			
-			#UNT overlord can only hold territory for 5 years
-			set_variable = former_UNT_var
-			add_modifier = { name = un_potential_mandate_timer months = 60 }
-			
-			#Give away territories
-			trigger_event = { id = united_nations.14 }
-			
-		}
-		
-		#Will release more mandates if there are any left over
-		if = { 
-			limit = { 
-				NOT = { 
-					any_scope_state = {
-						has_modifier = un_potential_mandate_marker
-						NOT = { is_homeland_of_country_cultures = ROOT }
-						is_incorporated = no
-					
+			if = {
+				limit = { exists = c:UNT }
+				
+				c:UNT = {
+				
+					#Clear UNT marker
+					every_scope_state = {
+						remove_modifier = un_potential_mandate_marker
 					}
+					
+					#5 year timer to independence
+					add_modifier = { name = un_potential_mandate_timer months = 60 }
+					
+					#Mark this as a UNT
+					set_variable = { 
+						name = newly_created_UNT 
+						months = 2 
+					}
+					set_variable = former_UNT_var
 				}
 			}
-			remove_variable = un_peacekeeping_mandate
+			
+			#Find some country to give UNT to
+			random_country = { 
+				limit = { 
+					OR = { has_modifier = unsc_permanent_member has_modifier = unsc_non_permanent_member } 
+					is_at_war = no
+					infamy < infamy_threshold:pariah
+					exists = c:UNT
+				}
+				create_diplomatic_pact = {
+					country = c:UNT
+					type = mandate
+				}
+				trigger_event = { id = united_nations.14 }
+			}
+			
 		}
 		
-		ai_chance = { 
-			base = 1
-		}
 	}
 	
 	option = {
-		name = un_peacekeeping_mandate_no				#Keep the territories to ourselves!
-		
-		#Pass to another UNSC member
-		random_country = {
-			limit = { 
-				OR = { 
-					has_modifier = unsc_non_permanent_member 
-					has_modifier = unsc_permanent_member 
-				} 
-				is_at_war = no 
-				infamy < infamy_threshold:pariah
-			}
-			trigger_event = { id = united_nations.13 }
-		}
-		
-		#Will release more mandates if there are any left over
-		if = { 
-			limit = { 
-				NOT = { 
-					any_scope_state = {
-						has_modifier = un_potential_mandate_marker
-						NOT = { is_homeland_of_country_cultures = ROOT }
-						is_incorporated = no
-					
-					}
-				}
-			}
-			remove_variable = un_peacekeeping_mandate
-		}
-		
-		ai_chance = { 
-			base = 0
-		}
+		name = UN_peacekeeping_resolution_mandate.option
+		default_option = yes
 	}
 	
 }
 
-#Slowly distribute UNT territories
+#THIS is informed of mandate
 united_nations.14 = {
 	type = country_event
-	hidden = yes
+	
+	title = UN_peacekeeping_resolution_mandate_notice.t
+	desc = UN_peacekeeping_resolution_mandate_notice.d
+	flavor = UN_peacekeeping_resolution_mandate_notice.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
 	
 	trigger = {
-		exists = c:UNT
-		this = c:UNT
-		is_at_war = no
+		
 	}
 
 	immediate = {
 		
-		every_country = {
-			trigger_event = { id = united_nations.15 }
+		random_country = { 
+			limit = { 
+				OR = { 
+					has_variable = newly_created_UNT 
+					c:UNT ?= this
+				}
+				is_subject_of = ROOT
+			}
+			save_scope_as = UNT_mandate_country
 		}
 		
-		#Set primary culture to be that of the UN Trustee
-		random_scope_pop = {
-			limit = { pop_has_primary_culture = no }
-			culture = { save_scope_as = UNT_primary_culture }
-		}
-		add_primary_culture = scope:UNT_primary_culture
+	}
+	
+	option = {
+		name = un_peacekeeping_mandate_yes
+		highlighted_option = yes
 		
+		ai_chance = { 
+			base = 0
+			modifier = {
+				trigger = {
+					NOR = {
+						in_default = yes
+						has_healthy_economy = no
+					}
+				}
+				add = 100
+			}
+		}
+	}
+	
+	option = {
+		name = un_peacekeeping_mandate_no
+		default_option = yes
+		
+		#Set UNT free
+		random_country = { 
+			limit = { 
+				OR = { 
+					has_variable = newly_created_UNT 
+					c:UNT ?= this
+				}
+				is_subject_of = ROOT
+			}
+			make_independent = yes
+			change_relations = {
+				country = ROOT
+				value = 100
+			}
+		}
+		
+		ai_chance = { 
+			base = 0
+			modifier = {
+				trigger = {
+					OR = {
+						in_default = yes
+						has_healthy_economy = no
+					}
+				}
+				add = 100
+			}
+		}
 	}
 	
 }
@@ -1299,16 +1379,19 @@ united_nations.16 = {
 	
 	trigger = {
 	
-		NOT = { c:UNT ?= this }
-		
-		this = ROOT
-	
 		any_country = {
+		
+			#UNT
 			has_variable = former_UNT_var
-			NOT = { has_modifier = un_potential_mandate_timer }
-			
 			is_direct_subject_of = ROOT
 			is_subject_type = subject_type_mandate
+			
+			#UNT have must first converted into a proper country
+			NOT = { c:UNT ?= this }
+			
+			#Time is up
+			NOT = { has_modifier = un_potential_mandate_timer }
+			
 		}
 		
 		is_at_war = no
@@ -1320,11 +1403,16 @@ united_nations.16 = {
 	
 		random_country = {
 			limit = { 
+				#UNT
 				has_variable = former_UNT_var
-				NOT = { has_modifier = un_potential_mandate_timer }
-				
 				is_direct_subject_of = ROOT
 				is_subject_type = subject_type_mandate
+				
+				#UNT have must first converted into a proper country
+				NOT = { c:UNT ?= this }
+				
+				#Time is up
+				NOT = { has_modifier = un_potential_mandate_timer }
 			}
 			
 			remove_variable = former_UNT_var
@@ -1335,8 +1423,7 @@ united_nations.16 = {
 	}
 	
 	option = {
-		name = un_peacekeeping_mandate_liberate				#We graciously accept
-		default_option = yes
+		name = un_peacekeeping_mandate_liberate			#We graciously accept
 		highlighted_option = yes
 		
 		random_country = {
@@ -1356,6 +1443,7 @@ united_nations.16 = {
 	
 	option = {
 		name = un_peacekeeping_mandate_keep				#Keep the territories to ourselves!
+		default_option = yes
 		
 		change_infamy = 100
 		
