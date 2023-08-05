@@ -1,0 +1,231 @@
+﻿sanction_country = {
+	requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	unlocking_technologies = {
+		tech_geopolitics_1
+	}
+
+	potential = {
+	
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#THIS and Target are not revolutionary
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no } 
+		
+		#THIS and Target are not subjects
+		is_sufficiently_independent = yes
+		scope:target_country = { is_sufficiently_independent = yes }
+		
+		#THIS is not at war with TARGET
+		NOT = { has_war_with = scope:target_country }
+		
+	}
+	
+	possible = {
+	
+		#THIS is interested in Target
+		has_diplomatic_relevance = scope:target_country
+		
+		#THIS is not friendly with Target in anyway
+		NOR = { 
+			has_diplomatic_pact = { who = scope:target_country type = increase_relations }
+			has_diplomatic_pact = { who = scope:target_country type = bankroll }
+			has_diplomatic_pact = { who = scope:target_country type = alliance }
+			has_diplomatic_pact = { who = scope:target_country type = defensive_pact } 
+		}
+		
+		#THIS has poor or less relations with Target
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+			scope:target_country.relations:root <= relations_threshold:poor
+		}
+		
+		#Country can meddle in other's affairs
+		OR = { 
+		
+			#Country's laws permit foreign intervention
+			has_law = law_type:law_regionalist_fp
+			has_law = law_type:law_globalist_fp
+			
+			#Leader is jingoistic
+			ruler = {
+				OR = {
+					has_ideology = ideology:ideology_autocratic
+					has_ideology = ideology:ideology_power_hungry
+				}
+			}
+			
+			#Target is a rival of THIS
+			has_diplomatic_pact = { who = scope:target_country type = rivalry is_initiator = no }
+			
+		}
+		
+		#THIS is not neutral
+		NOT = { is_neutral = yes }
+		
+		#THIS is not broke
+		in_default = no
+		
+	}
+	
+	is_hostile = yes
+	
+	pact = {
+		cost = 50
+		is_two_sided_pact = no
+		infamy_affects_maintenance = yes
+		
+		#Sanctions punish TARGET by diverting money to THIS
+		income_transfer = 0.05
+		recipient_gets_income_transfer = no
+		income_transfer_based_on_recipient = no
+		
+		### Validation requirements ###
+		
+		should_auto_break = {
+			
+			OR = { 
+			
+				#THIS is friendly with Target in anyway
+				OR = { 
+					has_diplomatic_pact = { who = scope:target_country type = increase_relations }
+					has_diplomatic_pact = { who = scope:target_country type = bankroll }
+					has_diplomatic_pact = { who = scope:target_country type = alliance }
+					has_diplomatic_pact = { who = scope:target_country type = defensive_pact } 
+				}
+				
+				#THIS is friendly with Target
+				custom_tooltip = {
+					text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+					scope:target_country.relations:root >= relations_threshold:cordial
+				}
+				
+				#Country no longer wants to meddle in other's affairs
+				NOR = { 
+			
+					#Country's laws permit foreign intervention
+					has_law = law_type:law_regionalist_fp
+					has_law = law_type:law_globalist_fp
+					
+					#Leader is jingoistic
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+					
+					#Target is a rival of THIS
+					has_diplomatic_pact = { who = scope:target_country type = rivalry is_initiator = no }
+					
+				}
+				
+				#THIS is now neutral
+				is_neutral = yes
+			
+			}
+			
+		}
+		
+		should_invalidate = {
+		
+			OR = { 
+			
+				#THIS is at war with TARGET
+				has_war_with = scope:target_country
+		
+				#THIS has lost interest in TARGET
+				NOT = { has_diplomatic_relevance = scope:target_country }
+				
+				#THIS is broke
+				in_default = yes
+				
+			}
+			
+		}
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			
+			#AI only sanctions based on infamy and to protect allies
+			OR = {
+			
+				any_country = { 
+					has_war_with = scope:target_country
+					OR = {
+						has_diplomatic_pact = { who = ROOT type = alliance }
+						has_diplomatic_pact = { who = ROOT type = defensive_pact } 
+					}
+					relations:root >= relations_threshold:friendly
+				}
+				
+				AND = { 
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+					scope:target_country.infamy >= infamy_threshold:infamous
+				}
+				
+				AND = { 
+					ruler = {
+						has_ideology = ideology:ideology_liberal
+					}
+					scope:target_country.infamy = infamy_threshold:notorious
+				}
+				
+			}
+			
+		}
+		
+		will_break = {
+		
+			#AI only sanctions based on infamy and to protect allies
+			NOR = {
+			
+				any_country = { 
+					has_war_with = scope:target_country
+					OR = {
+						has_diplomatic_pact = { who = ROOT type = alliance }
+						has_diplomatic_pact = { who = ROOT type = defensive_pact } 
+					}
+					relations:root >= relations_threshold:friendly
+				}
+				
+				AND = { 
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+					scope:target_country.infamy >= infamy_threshold:infamous
+				}
+				
+				AND = { 
+					ruler = {
+						has_ideology = ideology:ideology_liberal
+					}
+					scope:target_country.infamy = infamy_threshold:notorious
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+}
