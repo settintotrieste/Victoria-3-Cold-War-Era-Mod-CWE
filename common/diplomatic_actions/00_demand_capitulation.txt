@@ -1,4 +1,5 @@
 demand_capitulation = {
+	requires_approval = yes
 	should_notify_third_parties = yes
 
 	potential = {
@@ -111,6 +112,8 @@ demand_capitulation = {
 	
 	accept_effect = {
 		
+		scope:target_country = { save_scope_as = target_country_scope }
+		
 		#TARGET gains relations with THIS
 		change_relations = {
 			country = scope:target_country
@@ -159,6 +162,9 @@ demand_capitulation = {
 	}
 	
 	decline_effect = {
+		
+		save_scope_as = actor_country_scope
+		scope:target_country = { save_scope_as = target_country_scope }
 		
 		#THIS gains infamy from supporting an Aggressive War
 		if = {
@@ -289,6 +295,133 @@ demand_capitulation = {
 			#THIS has a strong economy
 			in_default = no
 			has_healthy_economy = yes
+			
+		}
+		
+		check_acceptance_for_will_break = yes
+		check_acceptance_for_will_propose = yes
+	
+		accept_score = {
+			value = 0
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+				value = -100
+			}
+
+			#TARGET has a weaker army
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ARMY_STRENGTH"
+				value = "scope:actor.ai_army_comparison(root)"
+				add = 0.5
+				min = 0
+				max = 200
+			}
+			
+			#TARGET has similar ideology as THIS
+			if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" > 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					max = 20
+				}					
+			}
+			else_if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" < 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					min = -20
+				}					
+			}
+			
+			#TARGET has good relations with THIS
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RELATIONS"			
+				if = {
+					limit = {
+						"relations(scope:actor)" < relations_threshold:friendly
+					}
+					value = 0
+				}
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:amicable
+						"relations(scope:actor)" < relations_threshold:friendly
+					}
+					value = 25
+				}	
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:friendly
+					}
+					value = 50
+				}				
+			}
+			
+			#THIS is infamous and so is more likely to be ignored
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:infamous
+						"scope:actor.infamy" < infamy_threshold:notorious
+					}
+					value = -10
+				}	
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:notorious
+						"scope:actor.infamy" < infamy_threshold:pariah
+					}
+					value = -25
+				}
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:pariah
+					}
+					value = -50
+				}					
+			}					
+
+			#TARGET fears higher ranked countries
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RANK"
+	
+				if = {
+					limit = { scope:actor = { country_rank > root.country_rank } }
+					value = 50
+				}
+				
+				if = {
+					limit = { scope:actor = { country_rank < root.country_rank } }
+					value = -50
+				}				
+			}
+			
+			#There is a threat of nuclear war
+			add = {
+				desc = "THREAT_OF_NUCLEAR_WAR"
+				if = {
+					limit = {
+						scope:target_country = { 
+							has_modifier = nuclear_capability 
+							NOT = { has_jingoistic_ruler = yes }
+						}
+						scope:actor = { 
+							has_modifier = nuclear_capability 
+						}
+					}
+					value = 200
+				}
+			}
 			
 		}
 		
