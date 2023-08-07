@@ -23,21 +23,10 @@
 		#THIS is not broke
 		in_default = no
 		
-		#THIS is of a higher or equal rank than the Target
+		#THIS is of a higher rank than the Target OR is a Great Power and above
 		OR = { 
 			scope:target_country = { country_rank < root.country_rank }
-			AND = { 
-				country_rank = rank_value:super_power
-				scope:target_country = { country_rank = rank_value:super_power }
-			}
-			AND = { 
-				country_rank = rank_value:great_power
-				scope:target_country = { country_rank = rank_value:great_power }
-			}
-			AND = { 
-				country_rank = rank_value:major_power
-				scope:target_country = { country_rank = rank_value:major_power }
-			}
+			country_rank >= rank_value:great_power
 		}
 		
 		#THIS is sufficiently independent
@@ -76,7 +65,10 @@
 		}
 		
 		#THIS is not friendly with Target
-		scope:target_country.relations:root < relations_threshold:cordial
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_NEUTRAL_OR_LESS
+			scope:target_country.relations:root < relations_threshold:cordial
+		}
 		
 	}
 	
@@ -140,21 +132,10 @@
 				#THIS has lost interest in Target
 				NOT = { has_diplomatic_relevance = scope:target_country }
 				
-				#THIS is not of a higher or equal rank than the Target
+				#THIS is not of a higher rank than the Target OR is a Great Power and above
 				NOR = {
 					scope:target_country = { country_rank < root.country_rank }
-					AND = { 
-						country_rank = rank_value:super_power
-						scope:target_country = { country_rank = rank_value:super_power }
-					}
-					AND = { 
-						country_rank = rank_value:great_power
-						scope:target_country = { country_rank = rank_value:great_power }
-					}
-					AND = { 
-						country_rank = rank_value:major_power
-						scope:target_country = { country_rank = rank_value:major_power }
-					}
+					country_rank >= rank_value:great_power
 				}
 			
 			}
@@ -328,8 +309,10 @@
 			#Election Interference (50% chance per election) [ONLY possible if country has a ruling party & is having elections]
 			if = {
 				limit = { 
-					scope:target_country = { 
-						ruler.interest_group = {
+					scope:target_country = {
+						any_interest_group = { 
+							exists = leader 
+							leader = { is_ruler = yes }
 							has_party = yes
 						}
 						in_election_campaign = yes

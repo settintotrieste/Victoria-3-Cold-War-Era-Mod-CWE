@@ -16,7 +16,7 @@
 		scope:target_country = { is_revolutionary = yes }
 		
 		#Revolutionary country is at war
-		scope:target_country = { is_at_war = yes }
+		#scope:target_country = { is_at_war = yes }
 		
 		#THIS is sufficiently independent
 		is_sufficiently_independent = yes
@@ -247,47 +247,52 @@
 		
 		will_break = { 
 			
-			scaled_debt < 0.5
+			OR = { 
 			
-			#TARGET shares the same gov type
-			NOR = {
-				AND = { is_a_democracy = yes scope:target_country = { is_a_democracy = yes } }
-				AND = { is_a_nationalist_government = yes scope:target_country = { is_a_nationalist_government = yes } }
-				AND = { is_a_communist_government = yes scope:target_country = { is_a_communist_government = yes } }
-				AND = { is_a_theocratic_government = yes scope:target_country = { is_a_theocratic_government = yes } }
-			}
-			
-			#TARGET is at war with someone THIS hates
-			NOR = { 
+				#THIS has too much debt
+				scaled_debt > 0.5
 				
-				#Opposing country to TARGET is not the same ideologically
-				any_country = {
-					has_war_with = scope:target_country
-					NOR = {
-						AND = { is_a_democracy = yes scope:target_country = { is_a_democracy = yes } }
-						AND = { is_a_nationalist_government = yes scope:target_country = { is_a_nationalist_government = yes } }
-						AND = { is_a_communist_government = yes scope:target_country = { is_a_communist_government = yes } }
-						AND = { is_a_theocratic_government = yes scope:target_country = { is_a_theocratic_government = yes } }
-					}
+				#TARGET shares the same gov type
+				NOR = {
+					AND = { is_a_democracy = yes scope:target_country = { is_a_democracy = yes } }
+					AND = { is_a_nationalist_government = yes scope:target_country = { is_a_nationalist_government = yes } }
+					AND = { is_a_communist_government = yes scope:target_country = { is_a_communist_government = yes } }
+					AND = { is_a_theocratic_government = yes scope:target_country = { is_a_theocratic_government = yes } }
 				}
 				
-				#Opposing country to TARGET is a rival of THIS OR is allied to a country that has a rivalry to THIS
-				any_country = {
-					has_war_with = scope:target_country
-					OR = {
-						has_diplomatic_pact = {
-							who = ROOT
-							type = rivalry
+				#TARGET is at war with someone THIS hates
+				NOR = { 
+					
+					#Opposing country to TARGET is not the same ideologically
+					any_country = {
+						has_war_with = scope:target_country
+						NOR = {
+							AND = { is_a_democracy = yes scope:target_country = { is_a_democracy = yes } }
+							AND = { is_a_nationalist_government = yes scope:target_country = { is_a_nationalist_government = yes } }
+							AND = { is_a_communist_government = yes scope:target_country = { is_a_communist_government = yes } }
+							AND = { is_a_theocratic_government = yes scope:target_country = { is_a_theocratic_government = yes } }
 						}
-						any_scope_ally = { 
+					}
+					
+					#Opposing country to TARGET is a rival of THIS OR is allied to a country that has a rivalry to THIS
+					any_country = {
+						has_war_with = scope:target_country
+						OR = {
 							has_diplomatic_pact = {
 								who = ROOT
 								type = rivalry
 							}
+							any_scope_ally = { 
+								has_diplomatic_pact = {
+									who = ROOT
+									type = rivalry
+								}
+							}
 						}
 					}
+					
 				}
-				
+			
 			}
 			
 		}
@@ -303,6 +308,7 @@
 				max = 20
 			}
 			
+			#TARGET has similar ideology as THIS
 			if = {
 				limit = {
 					"scope:actor.ai_ideological_opinion(root)" > 0
@@ -324,6 +330,30 @@
 					multiply = 0.5
 					min = -20
 				}					
+			}
+			
+			#TARGET has good relations with THIS
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RELATIONS"			
+				if = {
+					limit = {
+						"relations(scope:actor)" < relations_threshold:friendly
+					}
+					value = 0
+				}
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:amicable
+						"relations(scope:actor)" < relations_threshold:friendly
+					}
+					value = 25
+				}	
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:friendly
+					}
+					value = 50
+				}				
 			}
 			
 		}
