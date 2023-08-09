@@ -1,0 +1,201 @@
+﻿je_bretton_woods_system_leader = {
+	icon = "gfx/interface/icons/goods_icons/gold.dds"
+
+	possible = {
+		
+		#Has Gold Standard
+		has_law = law_type:law_gold_standard
+		
+		#Most powerful country with the gold standard
+		custom_tooltip = {
+			text = je_bretton_woods_system_leader.3.tt
+			NOT = {
+				any_country = {
+					has_law = law_type:law_gold_standard
+					this.gdp > root.gdp
+				}
+			}
+		}
+		
+		#Any country has its currency pegged to a currency which is in turn pegged to a gold standard
+		any_country = {
+			has_law = law_type:law_semi_gold_standard
+		}
+		
+	}
+
+	immediate = {
+		
+		#THIS is the Gold Standard Leader
+		add_modifier = { name = gold_standard_leader }
+		set_variable = gold_standard_leader
+		
+		save_scope_as = bretton_woods_system_leader
+		
+	}
+
+	fail = {
+	
+		OR = { 
+		
+			#Abolished Gold Standard
+			NOT = { has_law = law_type:law_gold_standard }
+		
+			#There is a more powerful Gold Standard country
+			custom_tooltip = {
+				text = je_bretton_woods_system_leader.1.tt
+				any_country = {
+					has_law = law_type:law_gold_standard
+					this.gdp > root.gdp
+				}
+			}
+			
+			#Not a single country has a semi gold standard
+			custom_tooltip = {
+				text = je_bretton_woods_system_leader.2.tt
+				NOT = { 
+					any_country = {
+						has_law = law_type:law_semi_gold_standard
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	on_fail = {
+		
+		#Remove modifier
+		remove_modifier = gold_standard_leader
+		remove_variable = gold_standard_leader
+		
+	}
+
+	weight = 50
+
+	should_be_pinned_by_default = no
+
+	transferable = no
+
+	progressbar = no
+}
+
+je_bretton_woods_system_member = {
+	icon = "gfx/interface/icons/goods_icons/gold.dds"
+
+	possible = {
+		
+		#Has a Semi-Gold Standard
+		has_law = law_type:law_semi_gold_standard
+		
+		#Most powerful country with the gold standard
+		custom_tooltip = {
+			text = je_bretton_woods_system_member.2.tt
+			any_country = {
+				has_modifier = gold_standard_leader
+			}
+		}
+		
+		#Not part of a Currency Union
+		custom_tooltip = {
+			text = je_bretton_woods_system_member.4.tt
+			NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = currency_union is_initiator = yes } } }
+		}
+		
+	}
+	
+	immediate = {
+		
+		random_country = {
+			limit = { has_modifier = gold_standard_leader }
+			save_scope_as = bretton_woods_system_leader
+		}
+		
+	}
+
+	fail = {
+		
+		OR = {
+		
+			#No longer has a Semi-Gold Standard
+			NOT = { has_law = law_type:law_semi_gold_standard }
+		
+			#There is no longer a bretton woods leader
+			custom_tooltip = {
+				text = je_bretton_woods_system_member.1.tt
+				NOT = { 
+					any_country = {
+						has_modifier = gold_standard_leader
+					}
+				}
+			}
+			
+			#Has joined a Currency Union
+			custom_tooltip = {
+				text = je_bretton_woods_system_member.3.tt
+				any_country = { has_diplomatic_pact = { who = ROOT type = currency_union is_initiator = yes } }
+			}
+			
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+		
+		effect = {
+			
+			random_country = {
+				limit = { has_modifier = gold_standard_leader }
+				save_scope_as = bretton_woods_system_leader
+			}
+			
+			### Synchronise Monetary Policy of TARGET with THIS in reverse ###
+			if = {
+				limit = {
+					any_country = { has_modifier = gold_standard_leader has_law = law_type:law_very_deflationary_monetary_policy }
+					NOT = { has_law = law_type:law_very_expansionary_monetary_policy }
+				}
+				activate_law = law_type:law_very_expansionary_monetary_policy
+			}
+			else_if = {
+				limit = {
+					any_country = { has_modifier = gold_standard_leader has_law = law_type:law_deflationary_monetary_policy }
+					NOT = { has_law = law_type:law_expansionary_monetary_policy }
+				}
+				activate_law = law_type:law_expansionary_monetary_policy
+			}
+			else_if = {
+				limit = {
+					any_country = { has_modifier = gold_standard_leader has_law = law_type:law_neutral_monetary_policy }
+					NOT = { has_law = law_type:law_neutral_monetary_policy }
+				}
+				activate_law = law_type:law_neutral_monetary_policy
+			}
+			else_if = {
+				limit = {
+					any_country = { has_modifier = gold_standard_leader has_law = law_type:law_expansionary_monetary_policy }
+					NOT = { has_law = law_type:law_deflationary_monetary_policy }
+				}
+				activate_law = law_type:law_deflationary_monetary_policy
+			}
+			else_if = {
+				limit = {
+					any_country = { has_modifier = gold_standard_leader has_law = law_type:law_very_expansionary_monetary_policy }
+					NOT = { has_law = law_type:law_very_deflationary_monetary_policy }
+				}
+				activate_law = law_type:law_very_deflationary_monetary_policy
+			}
+			
+		}
+		
+	}
+
+	weight = 50
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = no
+}
