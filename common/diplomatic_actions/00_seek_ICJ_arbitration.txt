@@ -1,0 +1,244 @@
+﻿seek_ICJ_arbitration = {
+	requires_approval = no
+	
+	potential = {
+		
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#THIS and Target are not revolutionary
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no } 
+		
+		#THIS and Target are not subjects
+		is_sufficiently_independent = yes
+		scope:target_country = { is_sufficiently_independent = yes }
+		
+		#THIS and TARGET are UN members
+		is_country_type = recognized
+		scope:target_country = { is_country_type = recognized }
+		
+		#TARGET has overlapping homelands with THIS AND no enclaves will be created
+		scope:target_country = {
+			any_scope_state = { 
+				is_homeland_of_country_cultures = scope:actor 
+				is_homeland_of_country_cultures = scope:target_country
+				is_capital = no
+				OR = {
+					is_coastal = yes 
+					any_neighbouring_state = { owner = scope:actor }
+				}
+			}
+		}
+		
+		#THIS is not at war with TARGET
+		NOT = { has_war_with = scope:target_country }
+		
+		#THIS did not seek ICJ help recently
+		custom_tooltip = {
+			text = seek_ICJ_arbitration_2_tt
+			NOT = { has_variable = icj_judgement_rendered_timer }
+		}
+		
+	}
+	
+	possible = {
+		
+		#THIS is interested in the TARGET
+		has_diplomatic_relevance = scope:target_country
+		
+		#THIS does not have a truce with TARGET
+		NOT = { has_truce_with = scope:target_country }
+		
+		#TARGET and THIS are not at war
+		is_at_war = no
+		scope:target_country = { is_at_war = no }
+		
+		#THIS has poor relations with TARGET
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+			scope:target_country.relations:root <= relations_threshold:poor
+		}
+		
+		#THIS will consider peaceful options
+		ruler = {
+			NOR = {
+				has_ideology = ideology:ideology_autocratic
+				has_ideology = ideology:ideology_power_hungry
+			}
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Lose some relations with TARGET
+		change_relations = { country = scope:target_country value = -20 }
+		
+	}
+	
+	pact = {	
+		cost = 100
+		is_two_sided_pact = no
+		infamy_affects_maintenance = yes
+		
+		should_invalidate = {
+		
+			NAND = {
+			
+				#THIS is not decentralized
+				NOT = { is_country_type = decentralized }
+				scope:target_country = { NOT = { is_country_type = decentralized } }
+				
+				#THIS and Target are not revolutionary
+				is_revolutionary = no
+				scope:target_country = { is_revolutionary = no } 
+				
+				#THIS and Target are not subjects
+				is_sufficiently_independent = yes
+				scope:target_country = { is_sufficiently_independent = yes }
+				
+				#THIS and TARGET are UN members
+				is_country_type = recognized
+				scope:target_country = { is_country_type = recognized }
+				
+				#THIS & TARGET are not at war
+				is_at_war = no
+				scope:target_country = { is_at_war = no }
+				
+				#TARGET has overlapping homelands with THIS and no enclaves will be created
+				scope:target_country = {
+					any_scope_state = { 
+						is_homeland_of_country_cultures = scope:actor 
+						is_homeland_of_country_cultures = scope:target_country
+						is_capital = no
+						OR = {
+							is_coastal = yes 
+							any_neighbouring_state = { owner = scope:actor }
+						}
+					}
+				}
+			
+				#THIS is interested in the TARGET
+				has_diplomatic_relevance = scope:target_country
+				
+				#THIS is not at war with TARGET
+				NOT = { has_war_with = scope:target_country }
+				
+				#NOT has recent ICJ judgement
+				NOT = { has_variable = icj_judgement_rendered_timer }
+			
+			}
+			
+			break_effect = {
+			
+				change_relations = { country = scope:target_country value = 10 }
+				
+				#Cannot seek ICJ help for 2 years
+				custom_tooltip = {
+					text = seek_ICJ_arbitration_3_tt
+					set_variable = { name = icj_judgement_rendered_timer years = 2 }
+				}
+				
+			}
+			
+		}
+		
+		monthly_effect = {
+			
+			#ICJ takes on average 5 years to give judgement
+			custom_tooltip = {
+				text = seek_ICJ_arbitration_1_tt
+				if = {
+					limit = { 
+					
+						#ICJ can only deliver 1 judgement at a time
+						NOT = { 
+							any_country = { 
+								OR = { 
+									has_variable = icj_judgement_loser 
+									has_variable = icj_judgement_loser 
+								} 
+							} 
+						} 
+						
+					}
+					random_list = { 
+						60 = { }
+						1 = { 
+						
+							#Cannot seek ICJ help for 2 years
+							set_variable = { name = icj_judgement_rendered_timer years = 2 }
+						
+							#ICJ delivers judgement
+							random_list = { 
+							
+								#ICJ gives judgement for THIS
+								1 = { 
+									scope:actor = { set_variable = { name = icj_judgement_winner months = 6 } }
+									scope:target_country = { set_variable = { name = icj_judgement_loser months = 6 } }
+									scope:actor = { trigger_event = { id = icj_system.1 } }
+								}
+								
+								#ICJ gives judgement for TARGET
+								1 = { 
+									scope:actor = { set_variable = { name = icj_judgement_loser months = 6 } }
+									scope:target_country = { set_variable = { name = icj_judgement_winner months = 6 } }
+									scope:actor = { trigger_event = { id = icj_system.4 } }
+								}
+								
+							}
+							
+						}
+					}
+				}
+			}
+			
+		}
+		
+	}
+
+	ai = {
+
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			
+			#THIS still cares about international law
+			NOR = {
+				infamy >= infamy_threshold:pariah
+				ruler = {
+					OR = {
+						has_ideology = ideology:ideology_autocratic
+						has_ideology = ideology:ideology_power_hungry
+					}
+				}
+			}
+			
+			#AI will not use THIS if historical railroading is used during the key periods
+			NAND = { 
+				game_date < 2000.1.1
+				has_global_variable = historical_railroading_active 
+			}
+			
+		}
+		
+		will_break = {
+			
+			#THIS no longer cares about international law
+			infamy >= infamy_threshold:pariah
+			ruler = {
+				OR = {
+					has_ideology = ideology:ideology_autocratic
+					has_ideology = ideology:ideology_power_hungry
+				}
+			}
+			
+		}
+		
+	}
+	
+}

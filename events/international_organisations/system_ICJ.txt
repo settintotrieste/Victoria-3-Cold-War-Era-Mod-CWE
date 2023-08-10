@@ -1,0 +1,345 @@
+namespace = icj_system
+
+#ICJ Judgement Winner - Initiator
+icj_system.1 = {
+	title = icj_judgement_winner.t 					# Title of the event; ADD LOCALISATION
+    desc = icj_judgement_winner.d 					# Description of the event; ADD LOCALISATION
+    flavor = icj_judgement_winner.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		# Triggered by diplo action
+		
+	}
+
+	immediate = {
+	
+		save_scope_as = icj_judgement_winner
+	
+		#Mark ICJ Judgement Loser
+		random_country = {
+			limit = { has_variable = icj_judgement_loser }
+			save_scope_as = icj_judgement_loser
+		}
+		
+		#Send option for ICJ judgement loser to return homelands
+		random_country = {
+			limit = { has_variable = icj_judgement_loser }
+			trigger_event = { id = icj_system.2 }
+		}
+		
+	}
+
+	option = {
+        name = icj_judgement_winner.option			# Great!
+		
+    }
+
+}
+
+#ICJ Judgement Loser - Target
+icj_system.2 = {
+	title = icj_judgement_loser_target.t 				# Title of the event; ADD LOCALISATION
+    desc = icj_judgement_loser_target.d 				# Description of the event; ADD LOCALISATION
+    flavor = icj_judgement_loser_target.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		# Triggered by event above
+		
+	}
+
+	immediate = {
+	
+		save_scope_as = icj_judgement_loser
+	
+		#Mark ICJ Judgement Winner
+		random_country = {
+			limit = { has_variable = icj_judgement_winner }
+			save_scope_as = icj_judgement_winner
+		}
+		
+		#Mark territories to be returned
+		random_scope_state = { 
+			limit = { 
+				is_homeland_of_country_cultures = scope:icj_judgement_winner
+				is_homeland_of_country_cultures = ROOT
+				is_capital = no
+				OR = {
+					is_coastal = yes 
+					any_neighbouring_state = { owner = scope:icj_judgement_winner }
+				}
+			}
+			save_scope_as = icj_judgement_winner_states
+		}
+		random_country = {
+			limit = { has_variable = icj_judgement_winner }
+			random_primary_culture = {
+				limit = { has_homeland = scope:icj_judgement_winner_states }
+				save_scope_as = icj_judgement_winner_culture
+			}
+		}
+		
+	}
+
+	option = {
+        name = icj_judgement_loser.option.1			# Accept the judgement!
+        highlighted_option = yes
+		
+		#TARGET returns any homelands of THIS and gets better relations and loses infamy
+		every_scope_state = { 
+			limit = { 
+				is_homeland_of_country_cultures = scope:icj_judgement_winner
+				is_homeland_of_country_cultures = ROOT
+				is_capital = no
+				OR = {
+					is_coastal = yes 
+					any_neighbouring_state = { owner = scope:icj_judgement_winner }
+				}
+			}
+			#remove_homeland = scope:icj_judgement_winner_culture
+			set_state_owner = scope:icj_judgement_winner
+			owner = {
+				change_relations = { country = ROOT value = 20 }
+				change_infamy = -10
+			}
+		}
+		
+		#Reset ICJ modifiers
+		every_country = {
+			remove_variable = icj_judgement_winner
+			remove_variable = icj_judgement_loser
+		}
+		
+		ai_chance = { 
+			base = 0
+			
+			#Ruler wants to return territories
+			modifier = { 
+				trigger = { 
+					ruler = { 
+						OR = { 
+							has_ideology = ideology:ideology_democratic 
+							has_ideology = ideology:ideology_liberal 
+						} 
+					} 
+				}
+				add = 100 
+			}
+			modifier = { 
+				trigger = { 
+					infamy >= infamy_threshold:pariah
+					ruler = { 
+						NOR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				add = 100 
+			}
+			modifier = { 
+				trigger = { 
+					country_rank >= rank_value:great_power
+				}
+				add = -100 
+			}
+			
+		}
+		
+    }
+	
+	option = {
+        name = icj_judgement_loser.option.2 		# Refuse to enforce the judgement
+		default_option = yes
+		
+		#TARGET loses relations with THIS and gains infamy
+		every_scope_state = { 
+			limit = { 
+				is_homeland_of_country_cultures = scope:icj_judgement_winner
+				is_homeland_of_country_cultures = ROOT
+				is_capital = no
+				OR = {
+					is_coastal = yes 
+					any_neighbouring_state = { owner = scope:icj_judgement_winner }
+				}
+			}
+			owner = {
+				change_relations = { country = ROOT value = -20 }
+				change_infamy = 5
+			}
+		}
+		
+		#FROM is angry!
+		change_relations = {
+			country = scope:icj_judgement_winner
+			value = -25
+		}
+		
+		#Natives are angry
+		every_scope_state = {
+			limit = { is_homeland_of_country_cultures = scope:icj_judgement_winner }
+			random_scope_culture = {
+				limit = { 
+					is_primary_culture_of = scope:icj_judgement_winner 
+					has_homeland = PREV
+				}
+				save_scope_as = icj_judgement_winner_culture
+			}
+			add_radicals_in_state = {
+				value = large_radicals
+				culture = scope:icj_judgement_winner_culture
+			}
+		}
+		
+		#Inform winner that THIS refuses to hand over territories
+		random_country = {
+			limit = { scope:icj_judgement_winner ?= this }
+			trigger_event = { id = icj_system.3 }
+		}
+		
+		ai_chance = { 
+			base = 1
+		}
+		
+    }
+
+}
+
+#ICJ Judgement Non Compliance
+icj_system.3 = {
+	title = icj_judgement_rejection.t 					# Title of the event; ADD LOCALISATION
+    desc = icj_judgement_rejection.d 					# Description of the event; ADD LOCALISATION
+    flavor = icj_judgement_rejection.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		# Triggered by event above
+		
+	}
+
+	immediate = {
+	
+		save_scope_as = icj_judgement_winner
+	
+		#Mark ICJ Judgement Loser
+		random_country = {
+			limit = { has_variable = icj_judgement_loser }
+			save_scope_as = icj_judgement_loser
+		}
+		
+		#Reset ICJ modifiers
+		every_country = {
+			remove_variable = icj_judgement_winner
+			remove_variable = icj_judgement_loser
+		}
+		
+	}
+
+	option = {
+        name = icj_judgement_rejection.option			# Great!
+		
+		#Nationalists are unhappy with judgement
+		add_modifier = { 
+			name = nationalist_agitation 
+			years = 5
+			is_decaying = yes 
+		} 
+		
+    }
+
+}
+
+#ICJ Judgement Loser - Initiator
+icj_system.4 = {
+	title = icj_judgement_loser.t 				# Title of the event; ADD LOCALISATION
+    desc = icj_judgement_loser.d 				# Description of the event; ADD LOCALISATION
+    flavor = icj_judgement_loser.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		# Triggered by diplo action
+		
+	}
+
+	immediate = {
+	
+		save_scope_as = icj_judgement_loser
+	
+		#Mark ICJ Judgement Winner
+		random_country = {
+			limit = { has_variable = icj_judgement_winner }
+			save_scope_as = icj_judgement_winner
+			
+			#Mark territories to be returned
+			random_scope_state = { 
+				limit = { 
+					is_homeland_of_country_cultures = scope:icj_judgement_winner
+					is_homeland_of_country_cultures = ROOT
+					is_capital = no
+					OR = {
+						is_coastal = yes 
+						any_neighbouring_state = { owner = ROOT }
+					}
+				}
+				save_scope_as = icj_judgement_winner_states
+			}
+			
+		}
+		random_primary_culture = {
+			limit = { 
+				exists = scope:icj_judgement_winner_states
+				has_homeland = scope:icj_judgement_winner_states 
+			}
+			save_scope_as = icj_judgement_loser_culture
+		}
+		
+		#Reset ICJ modifiers
+		every_country = {
+			remove_variable = icj_judgement_winner
+			remove_variable = icj_judgement_loser
+		}
+		
+	}
+
+	option = {
+        name = icj_judgement_rejection.option			# Great!
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
+		}
+		
+    }
+
+}
