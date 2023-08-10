@@ -74,7 +74,7 @@ icj_system.2 = {
 		}
 		
 		#Mark territories to be returned
-		every_scope_state = { 
+		random_scope_state = { 
 			limit = { 
 				is_homeland_of_country_cultures = scope:icj_judgement_winner
 				is_homeland_of_country_cultures = ROOT
@@ -111,7 +111,7 @@ icj_system.2 = {
 					any_neighbouring_state = { owner = scope:icj_judgement_winner }
 				}
 			}
-			remove_homeland = scope:icj_judgement_winner_culture
+			#remove_homeland = scope:icj_judgement_winner_culture
 			set_state_owner = scope:icj_judgement_winner
 			owner = {
 				change_relations = { country = ROOT value = 20 }
@@ -260,6 +260,13 @@ icj_system.3 = {
 	option = {
         name = icj_judgement_rejection.option			# Great!
 		
+		#Nationalists are unhappy with judgement
+		add_modifier = { 
+			name = nationalist_agitation 
+			years = 5
+			is_decaying = yes 
+		} 
+		
     }
 
 }
@@ -293,29 +300,25 @@ icj_system.4 = {
 			save_scope_as = icj_judgement_winner
 			
 			#Mark territories to be returned
-			every_scope_state = { 
+			random_scope_state = { 
 				limit = { 
 					is_homeland_of_country_cultures = scope:icj_judgement_winner
 					is_homeland_of_country_cultures = ROOT
 					is_capital = no
 					OR = {
 						is_coastal = yes 
-						any_neighbouring_state = { owner = scope:icj_judgement_winner }
+						any_neighbouring_state = { owner = ROOT }
 					}
 				}
 				save_scope_as = icj_judgement_winner_states
 			}
-			random_country = {
-				limit = { has_variable = icj_judgement_winner }
-				random_primary_culture = {
-					limit = { has_homeland = scope:icj_judgement_winner_states }
-					save_scope_as = icj_judgement_winner_culture
-				}
-			}
 			
 		}
 		random_primary_culture = {
-			limit = { has_homeland = scope:icj_judgement_winner_states }
+			limit = { 
+				exists = scope:icj_judgement_winner_states
+				has_homeland = scope:icj_judgement_winner_states 
+			}
 			save_scope_as = icj_judgement_loser_culture
 		}
 		
@@ -328,94 +331,13 @@ icj_system.4 = {
 	}
 
 	option = {
-        name = icj_judgement_loser.option.1			# Accept the judgement!
-        highlighted_option = yes
+        name = icj_judgement_rejection.option			# Great!
 		
-		#THIS loses all homelands in TARGET
-		random_country = {
-			limit = { scope:icj_judgement_winner ?= this }
-			every_scope_state = { 
-				limit = { 
-					is_homeland_of_country_cultures = scope:icj_judgement_winner
-					is_homeland_of_country_cultures = ROOT
-					is_capital = no
-					OR = {
-						is_coastal = yes 
-						any_neighbouring_state = { owner = ROOT }
-					}
-				}
-				remove_homeland = scope:icj_judgement_loser_culture
-				owner = {
-					change_relations = { country = ROOT value = 20 }
-					change_infamy = -10
-				}
-			}
-		}
-		
-		ai_chance = { 
-			base = 0
-			
-			#Ruler wants to return territories
-			modifier = { 
-				trigger = { 
-					ruler = { 
-						OR = { 
-							has_ideology = ideology:ideology_democratic 
-							has_ideology = ideology:ideology_liberal 
-						} 
-					} 
-				}
-				add = 100 
-			}
-			modifier = { 
-				trigger = { 
-					infamy >= infamy_threshold:pariah
-					ruler = { 
-						NOR = {
-							has_ideology = ideology:ideology_autocratic
-							has_ideology = ideology:ideology_power_hungry
-						}
-					}
-				}
-				add = 100 
-			}
-			modifier = { 
-				trigger = { 
-					country_rank >= rank_value:great_power
-				}
-				add = -100 
-			}
-			
-		}
-		
-    }
-	
-	option = {
-        name = icj_judgement_loser.option.2 		# Refuse to enforce the judgement
-		default_option = yes
-		
-		#THIS gains infamy
-		random_country = {
-			limit = { scope:icj_judgement_winner ?= this }
-			every_scope_state = { 
-				limit = { 
-					is_homeland_of_country_cultures = scope:icj_judgement_winner
-					is_homeland_of_country_cultures = ROOT
-					is_capital = no
-					OR = {
-						is_coastal = yes 
-						any_neighbouring_state = { owner = ROOT }
-					}
-				}
-				owner = {
-					change_relations = { country = ROOT value = -20 }
-					change_infamy = 5
-				}
-			}
-		}
-		
-		ai_chance = { 
-			base = 1
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
 		}
 		
     }
