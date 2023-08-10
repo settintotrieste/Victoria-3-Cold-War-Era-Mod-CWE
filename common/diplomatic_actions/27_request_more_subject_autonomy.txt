@@ -53,8 +53,20 @@ request_more_subject_autonomy = {
 		}
 		
 		#OVERLORD loses infamy
-		scope:target_country = {
-			change_infamy = -10
+		if = {
+			limit = { scope:actor = { is_subject_type = subject_type_mandate } }
+			scope:target_country = {
+				change_infamy = -10
+				every_country = {
+					limit = { is_a_democracy = yes }
+					change_relations = { country = scope:actor value = 20 }
+				}
+			}
+		}
+		else = {
+			scope:target_country = {
+				change_infamy = -5
+			}
 		}
 		
 		#TARGET is converted into a dominion/satellite
@@ -172,8 +184,20 @@ request_more_subject_autonomy = {
 		}
 		
 		#OVERLORD gains infamy
-		scope:target_country = {
-			change_infamy = 5
+		if = {
+			limit = { scope:actor = { is_subject_type = subject_type_mandate } }
+			scope:target_country = {
+				change_infamy = 10
+				every_country = {
+					limit = { is_a_democracy = yes }
+					change_relations = { country = scope:actor value = -20 }
+				}
+			}
+		}
+		else = {
+			scope:target_country = {
+				change_infamy = 5
+			}
 		}
 		
 		# Natives are angry!
@@ -220,6 +244,12 @@ request_more_subject_autonomy = {
 				#Overlord is a tyrant
 				scope:target_country = { infamy >= infamy_threshold:pariah }
 				
+				#Mandate
+				AND = {
+					has_technology_researched = tech_geopolitics_4
+					is_subject_type = subject_type_mandate
+				}
+				
 			}
 			
 			#SAR subjects who share the same primary culture do not want more autonomy
@@ -230,10 +260,15 @@ request_more_subject_autonomy = {
 				}
 			}
 			
-			#Do not interfere with historical events
-			game_date >= 1980.1.1
-			has_technology_researched = tech_geopolitics_5
-			scope:actor = { NOT = { is_subject_type = subject_type_mandate } }
+			#Do not interfere with historical events UNLESS TARGET is a player country
+			OR = { 
+				AND = { 
+					game_date >= 1980.1.1
+					has_technology_researched = tech_geopolitics_5
+					scope:actor = { NOT = { is_subject_type = subject_type_mandate } }
+				}
+				scope:target_country = { is_player = yes }
+			}
 			
 		}
 		
