@@ -217,6 +217,14 @@ generic_decolonisation_indy.2 = {
 	
 	immediate = {
 		
+		#Always set state religion and primary culture as overlord first
+		random_scope_culture = { 
+			limit = { 
+				is_primary_culture_of = ROOT
+			}
+			save_scope_as = overlords_culture
+		}
+		
 		random_scope_state = {
 			limit = { 
 				capable_of_release = yes
@@ -283,7 +291,10 @@ generic_decolonisation_indy.2 = {
 		
 		#Release 1 colony
 		if = {
-			limit = { NOT = { exists = scope:third_party_country } }
+			limit = { 
+				NOT = { exists = scope:third_party_country } 
+				NOT = { exists = c:XFC }
+			}
 			custom_tooltip = {
 				text = self_governing_colony.tt
 				if = {
@@ -299,6 +310,28 @@ generic_decolonisation_indy.2 = {
 						on_created = {
 							set_release_vassal_effects = yes
 							set_variable = { name = XFC_timer months = 3 }
+							
+							#Always set state religion and primary culture as overlord first
+							if = {
+								limit = { 
+									exists = scope:overlords_culture 
+								}
+								random_scope_pop = {
+									limit = { has_pop_culture = scope:overlords_culture }
+									religion = { save_scope_as = religion_to_release }
+								}
+								c:XFC = {
+									add_primary_culture = scope:overlords_culture
+									if = { 
+										limit = { exists = scope:religion_to_release }
+										set_state_religion = scope:religion_to_release
+									}
+									else = {
+										set_state_religion = rel:atheist
+									}
+								}
+							}
+							
 						}
 					}
 					set_variable = { name = XFC_originator months = 12 }
@@ -423,6 +456,7 @@ generic_decolonisation_indy.3 = {
 				has_subject_relation_with = c:XFC
 				c:XFC = {
 					is_subject_of = ROOT 
+					NOT = { is_subject_type = subject_type_special_administrative_region }
 					NOT = { has_variable = XFC_timer } 
 				}
 			}
@@ -441,7 +475,8 @@ generic_decolonisation_indy.3 = {
 	immediate = {
 		
 		c:XFC = { 
-			capital = { 
+			random_scope_state = { 
+				limit = { is_capital = yes }
 				save_scope_as = state_to_release
 			}
 			random_primary_culture = {
@@ -497,7 +532,7 @@ generic_decolonisation_indy.3 = {
 					OR = { 
 						has_strategic_adjacency = c:XFC 
 						has_strategic_land_adjacency = c:XFC 
-						any_neighbouring_state = { owner = c:XFC }
+						any_scope_state = { any_neighbouring_state = { owner = c:XFC } }
 					} 
 				}
 				save_scope_as = to_whom_to_annex_to_XFC
@@ -514,7 +549,7 @@ generic_decolonisation_indy.3 = {
 						OR = { 
 							has_strategic_adjacency = c:XFC 
 							has_strategic_land_adjacency = c:XFC 
-							any_neighbouring_state = { owner = c:XFC }
+							any_scope_state = { any_neighbouring_state = { owner = c:XFC } }
 						} 
 					}
 					annex = c:XFC

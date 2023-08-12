@@ -121,7 +121,10 @@ devolution_system.1 = {
 		
 		#Release 1 SAR
 		if = {
-			limit = { NOT = { exists = scope:third_party_country } }
+			limit = { 
+				NOT = { exists = c:XFC }
+				NOT = { exists = scope:third_party_country } 
+			}
 			custom_tooltip = {
 				text = special_administrative_region.tt
 				if = {
@@ -280,7 +283,8 @@ devolution_system.2 = {
 	immediate = {
 		
 		c:XFC = { 
-			capital = { 
+			random_scope_state = { 
+				limit = { is_capital = yes }
 				save_scope_as = state_to_release
 			}
 			random_primary_culture = {
@@ -293,7 +297,6 @@ devolution_system.2 = {
 			limit = { 
 				c:XFC = { 
 					is_subject_of = ROOT
-					is_subject_type = subject_type_special_administrative_region
 					NOT = { has_variable = XFC_timer } 
 				} 
 			}
@@ -333,13 +336,39 @@ devolution_system.2 = {
 		}
 		else = {
 			random_country = {
-				limit = { has_strategic_adjacency = c:XFC }
+				limit = { 
+					OR = { 
+						has_strategic_adjacency = c:XFC 
+						has_strategic_land_adjacency = c:XFC 
+						any_scope_state = { any_neighbouring_state = { owner = c:XFC } }
+					} 
+				}
 				save_scope_as = to_whom_to_annex_to_XFC
 			}
 			c:XFC = { 
 				every_scope_state = {
-					set_state_owner = scope:to_whom_to_annex_to_XFC
+					if = {
+						limit = { exists = scope:to_whom_to_annex_to_XFC }
+						set_state_owner = scope:to_whom_to_annex_to_XFC
+					}
 				}
+				random_country = {
+					limit = { 
+						OR = { 
+							has_strategic_adjacency = c:XFC 
+							has_strategic_land_adjacency = c:XFC 
+							any_scope_state = { any_neighbouring_state = { owner = c:XFC } }
+						} 
+					}
+					annex = c:XFC
+				}
+			}
+			if = {
+				limit = { 
+					exists = c:XFC 
+					NOT = { c:XFC ?= this } 
+				}
+				annex = c:XFC
 			}
 		}
 		
@@ -348,6 +377,13 @@ devolution_system.2 = {
 	option = {
         name = devolution_system_2.option				# Okay
 		
+		if = {
+			limit = { 
+				exists = c:XFC 
+				NOT = { c:XFC ?= this } 
+			}
+			annex = c:XFC
+		}
 		
 	}
 

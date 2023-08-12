@@ -6,6 +6,10 @@ on_monthly_pulse_country = {
 		if = {
 			limit = { 
 				is_a_presidential_democracy = yes
+				any_interest_group = { 
+					exists = leader
+					leader = { is_ruler = yes }
+				}
 				NOT = { has_journal_entry = je_term_limits }
 			}
 			add_journal_entry = { type = je_term_limits }
@@ -71,6 +75,10 @@ on_monthly_pulse_country = {
 		if = {
 			limit = {
 				is_a_presidential_democracy = yes
+				any_interest_group = { 
+					exists = leader
+					leader = { is_ruler = yes }
+				}
 				ruler = {
 					OR = {
 						has_modifier = ignored_corruption
@@ -94,6 +102,10 @@ on_monthly_pulse_country = {
 		if = {
 			limit = {
 				is_a_parliamentary_democracy = yes
+				any_interest_group = { 
+					exists = leader
+					leader = { is_ruler = yes }
+				}
 				OR = {
 					ruler = {
 						OR = {
@@ -138,6 +150,10 @@ on_monthly_pulse_country = {
 			
 				#PM system
 				is_a_parliamentary_democracy = yes
+				any_interest_group = { 
+					exists = leader
+					leader = { is_ruler = yes }
+				}
 		
 				#Weak Government
 				government_legitimacy < 25
@@ -270,6 +286,95 @@ on_monthly_pulse_country = {
 				NOT = { has_journal_entry = je_bretton_woods_system_member }
 			}
 			add_journal_entry = { type = je_bretton_woods_system_member }
+		}
+		
+		### Ensure there is a primary culture for UNT and XFC ###
+		if = {
+			limit = { 
+				OR = { 
+					c:XFC ?= this
+					c:UNT ?= this
+				}
+			}
+			random_scope_state = {
+				save_scope_as = random_utility_tag_state
+			}
+			random_scope_culture = {
+				limit = { 
+					NOT = { is_primary_culture_of = ROOT } 
+					has_homeland = scope:random_utility_tag_state
+				}
+				save_scope_as = random_utility_tag_culture
+			}
+			if = {
+				limit = { exists = scope:random_utility_tag_culture }
+				add_primary_culture = scope:random_utility_tag_culture
+			}
+		}
+		if = {
+			limit = {
+				country_has_primary_culture = cu:no_culturia
+				any_primary_culture = { NOT = { culture = cu:no_culturia } }
+			}
+			remove_primary_culture = cu:no_culturia
+			every_scope_character = { 
+				limit = { culture = cu:no_culturia }
+				kill_character = yes
+			}
+		}
+		
+		### Character Clean Up ###
+		
+		#Remove generals who are too old
+		if = {
+			limit = { is_at_war = no }
+			every_scope_character = {
+				limit = { 
+					is_ruler = no
+					OR = { 
+						has_role = general
+						has_role = admiral
+					}
+					is_historical = no
+					is_busy = no
+					age >= 65
+				}
+				kill_character = yes
+			}
+		}
+		
+		#Generate missing leaders
+		if = { limit = { any_interest_group = { NOT = { exists = leader } } } random_interest_group = { limit = { NOT = { exists = leader } } save_scope_as = ig_with_no_leader_1 } if = { limit = { exists = scope:ig_with_no_leader_1 } create_character = { ig_leader = yes ideology = scope:ig_with_no_leader_1 } } }
+		if = { limit = { any_interest_group = { NOT = { exists = leader } } } random_interest_group = { limit = { NOT = { exists = leader } } save_scope_as = ig_with_no_leader_2 } if = { limit = { exists = scope:ig_with_no_leader_2 } create_character = { ig_leader = yes ideology = scope:ig_with_no_leader_2 } } }
+		if = { limit = { any_interest_group = { NOT = { exists = leader } } } random_interest_group = { limit = { NOT = { exists = leader } } save_scope_as = ig_with_no_leader_3 } if = { limit = { exists = scope:ig_with_no_leader_3 } create_character = { ig_leader = yes ideology = scope:ig_with_no_leader_3 } } }
+		if = { limit = { any_interest_group = { NOT = { exists = leader } } } random_interest_group = { limit = { NOT = { exists = leader } } save_scope_as = ig_with_no_leader_4 } if = { limit = { exists = scope:ig_with_no_leader_4 } create_character = { ig_leader = yes ideology = scope:ig_with_no_leader_4 } } }
+		if = { limit = { any_interest_group = { NOT = { exists = leader } } } random_interest_group = { limit = { NOT = { exists = leader } } save_scope_as = ig_with_no_leader_5 } if = { limit = { exists = scope:ig_with_no_leader_5 } create_character = { ig_leader = yes ideology = scope:ig_with_no_leader_5 } } }
+		if = { limit = { any_interest_group = { NOT = { exists = leader } } } random_interest_group = { limit = { NOT = { exists = leader } } save_scope_as = ig_with_no_leader_6 } if = { limit = { exists = scope:ig_with_no_leader_6 } create_character = { ig_leader = yes ideology = scope:ig_with_no_leader_6 } } }
+		if = { limit = { any_interest_group = { NOT = { exists = leader } } } random_interest_group = { limit = { NOT = { exists = leader } } save_scope_as = ig_with_no_leader_7 } if = { limit = { exists = scope:ig_with_no_leader_7 } create_character = { ig_leader = yes ideology = scope:ig_with_no_leader_7 } } }
+		if = { limit = { any_interest_group = { NOT = { exists = leader } } } random_interest_group = { limit = { NOT = { exists = leader } } save_scope_as = ig_with_no_leader_8 } if = { limit = { exists = scope:ig_with_no_leader_8 } create_character = { ig_leader = yes ideology = scope:ig_with_no_leader_8 } } }
+		
+		#Fix missing laws
+		if = {
+			limit = { 
+				NOR = {
+					has_law = law_type:law_no_voting
+					has_law = law_type:law_rigged_voting
+					has_law = law_type:law_gerrymandered_voting
+					has_law = law_type:law_harassment_voting
+					has_law = law_type:law_fair_voting
+				}
+			}
+			if = {
+				limit = { has_law = law_type:law_technocratic_legislature }
+				activate_law = law_type:law_rigged_voting
+			}
+			else_if = {
+				limit = { has_law = law_type:law_democratic_legislature }
+				activate_law = law_type:law_fair_voting
+			}
+			else = {
+				activate_law = law_type:law_no_voting
+			}
 		}
 		
 	}
