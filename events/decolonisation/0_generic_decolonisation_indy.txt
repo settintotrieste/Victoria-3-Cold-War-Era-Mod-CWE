@@ -217,6 +217,14 @@ generic_decolonisation_indy.2 = {
 	
 	immediate = {
 		
+		#Always set state religion and primary culture as overlord first
+		random_scope_culture = { 
+			limit = { 
+				is_primary_culture_of = ROOT
+			}
+			save_scope_as = overlords_culture
+		}
+		
 		random_scope_state = {
 			limit = { 
 				capable_of_release = yes
@@ -299,6 +307,28 @@ generic_decolonisation_indy.2 = {
 						on_created = {
 							set_release_vassal_effects = yes
 							set_variable = { name = XFC_timer months = 3 }
+							
+							#Always set state religion and primary culture as overlord first
+							if = {
+								limit = { 
+									exists = scope:overlords_culture 
+								}
+								random_scope_pop = {
+									limit = { has_pop_culture = scope:overlords_culture }
+									religion = { save_scope_as = religion_to_release }
+								}
+								c:XFC = {
+									add_primary_culture = scope:overlords_culture
+									if = { 
+										limit = { exists = scope:religion_to_release }
+										set_state_religion = scope:religion_to_release
+									}
+									else = {
+										set_state_religion = rel:atheist
+									}
+								}
+							}
+							
 						}
 					}
 					set_variable = { name = XFC_originator months = 12 }
