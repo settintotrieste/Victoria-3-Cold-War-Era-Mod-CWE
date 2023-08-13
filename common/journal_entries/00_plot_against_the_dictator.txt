@@ -1,0 +1,181 @@
+je_plot_against_the_dictator_system = {
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	possible = {
+	
+		#Dictatorship
+		custom_tooltip = {
+			text = je_plot_against_the_dictator_system_3.tt
+			is_a_dictatorship = yes
+			
+			#Block for historical characters
+			OR = {
+				NOT = { has_global_variable = historical_railroading_active }
+				ruler = { is_historical = no }
+			}
+		}
+		
+		#Party stands by ruler in an election
+		in_election_campaign = no
+		
+		#Conditions for dictator to be removed
+		OR = { 
+		
+			#Weak Government
+			government_legitimacy < 25
+			
+			#There is at least 1 powerful interest group in government who hates the ruler
+			any_interest_group = {
+				leader = { is_ruler = no }
+				is_in_government = yes
+				is_powerful = yes
+				ig_approval < -5 # Unhappy
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Mark dictator as a target
+		ruler = {
+			add_modifier = { name = contested_dictator years = 4 is_decaying = yes }
+			save_scope_as = targeted_dictator_scope
+		}
+		
+	}
+	
+	# Ruler has 200 days to avoid the plot
+	timeout = 200
+	
+	on_timeout = {
+	
+		# Dictator is not ousted
+		if = {
+			limit = { 
+			
+				NOR = { 
+		
+					#Weak Government
+					government_legitimacy < 25
+					
+					#There is at least 1 powerful interest group in government who hates the ruler
+					any_interest_group = {
+						leader = { is_ruler = no }
+						is_in_government = yes
+						is_powerful = yes
+						ig_approval < -5 # Unhappy
+					}
+			
+				}
+			
+			}
+			
+			#Leader's IG becomes more powerful
+			custom_tooltip = {
+				text = je_plot_against_the_dictator_system_1.tt
+				every_scope_character = {
+					limit = { has_modifier = contested_dictator }
+					remove_modifier = contested_dictator
+				}
+			}
+			random_interest_group = {
+				limit = { 
+					is_in_government = yes 
+					leader = { is_ruler = yes }
+				}
+				add_modifier = {
+					name = politically_strengthened_modifier
+					years = 5
+					is_decaying = yes
+				}
+			}
+			
+		}
+		
+		# Leader is ousted
+		if = {
+			limit = { 
+			
+				OR = { 
+		
+					#Weak Government
+					government_legitimacy < 25
+					
+					#There is at least 1 powerful interest group in government who hates the ruler
+					any_interest_group = {
+						leader = { is_ruler = no }
+						is_in_government = yes
+						is_powerful = yes
+						ig_approval < -5 # Unhappy
+					}
+			
+				}
+			
+			}
+	
+			#Leader's IG becomes less powerful
+			custom_tooltip = {
+				text = je_plot_against_the_dictator_system_2.tt
+			}
+			random_interest_group = {
+				limit = { 
+					is_in_government = yes 
+					leader = { is_ruler = yes }
+				}
+				add_modifier = {
+					name = party_in_chaos_modifier
+					years = 5
+					is_decaying = yes
+				}
+			}
+			
+			#Dictator is removed from office
+			random_list = { 
+				1 = { ruler = { kill_character = yes } }
+				1 = { ruler = { exile_character = yes } }
+			}
+			
+			#National instability
+			add_modifier = {
+				name = stirrings_of_revolution
+				years = 5
+				is_decaying = yes
+			}
+			
+		}
+		
+	}
+	
+	invalid = {
+	
+		#No longer a dictatorship OR dictator was changed mid way
+		OR = { 
+			NOT = { is_a_dictatorship = yes }
+			any_scope_character = { 
+				is_ruler = yes 
+				NOT = { has_modifier = contested_dictator }
+			}
+		}
+		
+	}
+	
+	on_invalid = {
+		
+		every_scope_character = {
+			limit = { has_modifier = contested_dictator }
+			remove_modifier = contested_dictator
+		}
+		
+	}
+	
+	weight = 200
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = no
+	
+}
