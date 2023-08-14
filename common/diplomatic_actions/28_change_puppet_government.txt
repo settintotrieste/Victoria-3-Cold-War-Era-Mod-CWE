@@ -1,5 +1,6 @@
-﻿demand_change_government = {
+demand_change_puppet_government = {
 	requires_approval = yes
+	can_use_obligations = no
 
 	unlocking_technologies = {
 		tech_geopolitics_2
@@ -122,34 +123,8 @@
 		#Start war of independence against TARGET
 		custom_tooltip = {
 			text = demand_change_government_1.tt
-			if = {
-				limit = { scope:target_country = { is_sufficiently_independent = yes } }
-				create_diplomatic_play = {
-					type = dp_make_dominion
-					target_country = scope:target_country
-					
-					add_war_goal = {
-						holder = scope:target_country
-						type = independence
-						target_country = scope:actor
-					}
-					
-				}
-			}
-			if = {
-				limit = { scope:target_country = { NOT = { is_sufficiently_independent = yes } } }
-				create_diplomatic_play = {
-					type = dp_make_puppet
-					target_country = scope:target_country
-					
-					add_war_goal = {
-						holder = scope:target_country
-						type = independence
-						target_country = scope:actor
-					}
-					
-				}
-			}
+			set_variable = { name = demand_puppet_gov_change_overlord months = 1 }
+			scope:target_country = { trigger_event = { id = revolution_system.2 } }
 		}
 		
 	}
@@ -162,33 +137,23 @@
 			
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
-				
-				#Liberal leaders will refuse acceptance even more if demander is autocratic
-				if = {
-					limit = {
-						exists = ruler
-						ruler = {
-							NOR = {
-								has_ideology = ideology:ideology_autocratic
-								has_ideology = ideology:ideology_power_hungry
-								has_ideology = ideology:ideology_elitist
-							}
-						}
-						scope:actor = {
-							exists = ruler
-							ruler = {
-								OR = {
-									has_ideology = ideology:ideology_autocratic
-									has_ideology = ideology:ideology_power_hungry
-									has_ideology = ideology:ideology_elitist
-								}
-							}
+				value = -100
+			}
+			
+			#Liberal leaders will refuse acceptance
+			if = {
+				limit = {
+					exists = ruler
+					ruler = {
+						NOR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+							has_ideology = ideology:ideology_elitist
 						}
 					}
-					value = -200
 				}
-				
-				else = {
+				add = {
+					desc = "COUNTRY_IS_DEMOCRATIC"
 					value = -100
 				}
 			}
