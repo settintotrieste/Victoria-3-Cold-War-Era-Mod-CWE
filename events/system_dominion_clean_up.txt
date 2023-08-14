@@ -1,0 +1,77 @@
+namespace = dominion_clean_up_system
+
+#Convert certain subjects into satellite states
+dominion_clean_up_system_system.1 = {
+	type = country_event
+
+	title = dominion_clean_up_system_system.1.t
+	desc = dominion_clean_up_system_system.1.d
+	flavor = dominion_clean_up_system_system.1.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+	
+		#THIS has a dominion
+		any_scope_country = { 
+			has_subject_relation_with = ROOT
+			is_subject_type = subject_type_dominion
+		}
+		
+		#THIS is not a monarchy
+		NOT = { is_a_monarchy = yes }
+		
+		#Prevent event from firing 2 times at the same time
+		NOT = { has_variable = dominion_clean_up_system_system }
+		
+	}
+
+	immediate = {
+	
+		#THIS becomes a satellite state
+		random_country = {
+			limit = { 
+				has_subject_relation_with = ROOT
+				is_subject_type = subject_type_dominion
+			}
+			save_scope_as = dominion_to_satellite_country
+		}
+		
+		#Prevent event from firing 2 times at the same time
+		set_variable = dominion_clean_up_system_system
+		
+	}
+
+	option = {
+		name = dominion_clean_up_system_system_option #Unfortunate
+		default_option = yes
+		
+		#Turn subject into a satellite state
+		custom_tooltip = {
+			text = DIPLO_ACTION_CREATE_SATELLITE_SUBJECT_TYPE
+			remove_diplomatic_pact = {
+				country = ROOT
+				type = scope:dominion_to_satellite_country
+			}
+			create_diplomatic_pact = {
+				country = scope:dominion_to_satellite_country
+				type = satellite
+			}
+		}
+		
+		#Event can fire again once option is selected
+		remove_variable = dominion_clean_up_system_system
+		
+	}
+	
+	
+}
