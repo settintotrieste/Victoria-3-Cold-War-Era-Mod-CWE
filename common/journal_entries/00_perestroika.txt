@@ -1,0 +1,155 @@
+je_perestroika = {
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	possible = {
+		
+		#Communist Dictatorship
+		has_government_type = gov_soviet_dictatorship
+		
+		#No economic liberalisation
+		has_law = law_type:law_command_economy
+		
+		#No political liberalisation
+		NOR = { 
+			has_law = law_type:law_limited_free_speech
+			has_law = law_type:law_full_free_speech
+		}
+		has_law = law_type:law_appointed_legislature
+		has_law = law_type:law_no_voting
+		
+		#Ruler is a reformer
+		any_interest_group = { 
+			exists = leader
+			leader = { 
+				is_ruler = yes
+				OR = { 
+					has_ideology = ideology:ideology_democratic
+					has_ideology = ideology:ideology_liberal
+				}
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		ruler = { save_scope_as = perestroika_ruler }
+		
+	}
+
+	complete = {
+	
+		#Socialist Republic
+		has_law = law_type:law_HOS_communist_leader
+		NOT = { has_law = law_type:law_appointed_legislature }
+		NOT = { has_law = law_type:law_no_voting }
+		OR = { 
+			has_law = law_type:law_limited_free_speech
+			has_law = law_type:law_full_free_speech
+		}
+		OR = {
+			has_law = law_type:law_restricted_trade_unions
+			has_law = law_type:law_full_trade_unions
+		}
+		OR = {
+			has_law = law_type:law_semi_command_economy
+			has_law = law_type:law_state_capitalism
+		}
+		NOT = { has_law = law_type:law_ethnostate }
+		
+	}
+	
+	on_complete = {
+		
+		#Prestige from victory!
+		add_modifier = { 
+			name = national_pride_modifier 
+			years = 5
+			is_decaying = yes 
+		}
+		
+	}
+	
+	fail = {
+	
+		OR = { 
+		
+			#THIS is no longer a Communist Government
+			NOT = { is_a_communist_government = yes }
+			
+			#Leader is no longer a reformer
+			NOT = { 
+				any_interest_group = { 
+					exists = leader
+					leader = { 
+						is_ruler = yes
+						OR = { 
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+			}
+			
+		}
+		
+	}
+	on_fail = {
+		
+		#National instability
+		add_modifier = {
+			name = stirrings_of_revolution
+			years = 5
+			is_decaying = yes
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+		
+			#Communist hardliners get angry!
+			random_interest_group = {
+				limit = { 
+					
+					OR = {
+					
+						#Interest group wants to preserve a dictatorship
+						leader = { 
+							NOR = { 
+								has_ideology = ideology:ideology_democratic
+								has_ideology = ideology:ideology_liberal
+							}
+						}
+						
+						#Interest group wants to preserve command economy
+						has_ideology = ideology:ideology_far_left_economy
+						
+					}
+					
+				}
+				save_scope_as = communist_hardliner_ig
+			}
+			random_list = {
+				5 = { }
+				1 = {
+					add_radicals = {
+						value = small_radicals
+						interest_group = scope:communist_hardliner_ig
+					}
+				}
+			}
+			
+		}
+		
+	}
+
+	weight = 200
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = no
+}
