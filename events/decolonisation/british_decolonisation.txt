@@ -2948,9 +2948,9 @@ british_decolonisation.21 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:GBR this = c:GBR											# Change TAG of the overlord ****
-		game_date >= 1959.1.1									# START DATE: Date colony became self governing ****
-		game_date < 1969.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		exists = c:GBR this = c:GBR								# Change TAG of the overlord ****
+		game_date >= 1955.4.6									# START DATE: Date colony became self governing ****
+		game_date < 1965.4.6									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
 		is_a_democratic_monarchy = yes							# Correct gov types
 		is_sufficiently_independent = yes						# is_vassal = no		
@@ -2992,7 +2992,7 @@ british_decolonisation.21 = {
 		#Release country
 		create_country = {
 			tag = SGP										# Change TAG of country being released ****
-			origin = THIS									# TAG where the created country takes tech from
+			origin = ROOT									# TAG where the created country takes tech from
 			state = scope:colonial_state
 			
 			on_created = {									# Set government laws & rulers here
@@ -3008,12 +3008,13 @@ british_decolonisation.21 = {
 				
 				# CREATE leader for colony ****
 				create_character = {
-					first_name = "guy_incognito_first_name"		# CHANGE
-					last_name = "guy_incognito_last_name"		# CHANGE
+					first_name = "David_Saul_Marshall_first_name"		# CHANGE
+					last_name = "David_Saul_Marshall_last_name"		# CHANGE
 					ruler = yes
-					#birth_date = 1910.1.1						# CHANGE
-					interest_group = ig_rural_folk					# CHANGE
+					birth_date = 1908.3.12						# CHANGE
+					interest_group = ig_trade_unions			# CHANGE
 					ideology = ideology_democratic				# CHANGE
+					culture = cu:sephardic
 					traits = {
 						charismatic								# CHANGE
 						persistent								# CHANGE
@@ -3068,6 +3069,142 @@ british_decolonisation.21 = {
 		
 		# Fire only once
 		set_variable = british_singapore_sgc						# Change variable ****
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Singapore (For flag change)
+british_decolonisation.211 = {
+    type = country_event
+
+    title = british_singapore_state.sgc.t 				# Title of the event; ADD LOCALISATION
+    desc = british_singapore_state.sgc.d 				# Description of the event; ADD LOCALISATION
+    #flavor = british_singapore_state.sgc.f 			# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:GBR this = c:GBR								# Change TAG of the overlord ****
+		game_date >= 1959.6.3									# START DATE: Date colony became self governing ****
+		game_date < 1969.6.3									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democratic_monarchy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		exists = c:SGP
+		exists = c:MSY
+		c:MSY = {
+			is_a_democracy = yes
+			OR = { 
+				is_sufficiently_independent = yes
+				is_direct_subject_of = ROOT
+			}
+		}
+		c:SGP = { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_not_sufficiently_independent = yes
+		}
+		has_diplomatic_pact = { 
+			who = c:SGP 
+			type = semi_autonomous_colony 
+			is_initiator = yes 
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = british_singapore_state_sgc }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+		
+		# Fire only once
+		set_variable = british_singapore_state_sgc						# Change variable ****
+		
+	}
+    
+    option = {
+        name = british_decolonisation.option.1				#Grant them self-government
+        default_option = yes highlighted_option = yes
+		
+		#Malaysia formation event enabled
+		c:SGP = { set_variable = singapore_road_to_malaysia }
+		
+		# Overlord create self governing colony pact with colony
+		if = {
+			limit = { exists = c:SGP }
+			remove_diplomatic_pact = {
+				country = c:SGP										# Change TAG ****
+				type = semi_autonomous_colony
+			}
+			create_diplomatic_pact = {
+				country = c:SGP										# Change TAG ****
+				type = puppet
+			}
+		}
+		
+		#Change ruler of colony
+		c:SGP = {
+		
+			#Create new leader
+			create_character = {
+				first_name = "Lee_Kuan_Yew_first_name"
+				last_name = "Lee_Kuan_Yew_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1923.9.16
+				interest_group = ig_petty_bourgeoisie
+				ideology = ideology_elitist
+				culture = cu:chinese
+				traits = {
+					charismatic
+					innovative
+					imposing
+				}
+			}
+			
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = british_decolonisation.option.2					# REFUSE
+		
+		c:SGP = {
+		
+			# Natives are angry!
+			every_scope_state = {
+				add_radicals_in_state = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+			#Colony is angry
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+			
+		}
+		
+		change_infamy = 10
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
@@ -3171,9 +3308,12 @@ british_decolonisation.22 = {
 		#Singapore joins Malaysia, if it is a subject of GBR
 		if = {
 			limit = { 
+				exists = c:SGP
 				c:SGP = {
 					is_direct_subject_of = ROOT
 					is_not_sufficiently_independent = yes 
+					
+					has_variable = singapore_road_to_malaysia
 				} 
 			}
 			c:SGP = {
@@ -3181,22 +3321,6 @@ british_decolonisation.22 = {
 				make_independent = yes
 				effect_starting_politics_parliamentary_republic = yes
 				effect_starting_politics_regime = yes
-				
-				#Create new leader
-				create_character = {
-					first_name = "Lee_Kuan_Yew_first_name"
-					last_name = "Lee_Kuan_Yew_last_name"
-					ruler = yes ig_leader = yes historical = yes
-					birth_date = 1923.9.16
-					interest_group = ig_petty_bourgeoisie
-					ideology = ideology_elitist
-					culture = cu:chinese
-					traits = {
-						charismatic
-						innovative
-						imposing
-					}
-				}
 				
 			}
 			c:MSY = {
