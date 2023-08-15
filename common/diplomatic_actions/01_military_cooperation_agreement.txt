@@ -19,7 +19,7 @@
 			#Must be a sovereign state
 			OR = { 
 				is_sufficiently_independent = yes
-				has_subject_relation_with = scope:actor
+				is_direct_subject_of = ROOT
 			}
 			
 		}
@@ -31,6 +31,9 @@
 		#THIS has greater military strength than TARGET
 		army_size > scope:target_country.army_size
 		
+		#THIS has greater country rank than TARGET
+		scope:target_country = { country_rank < root.country_rank }
+		
 	}
 	
 	possible = {
@@ -39,7 +42,19 @@
 		has_diplomatic_relevance = scope:target_country
 		
 		#THIS is willing to station troops abroad
-		has_interventionist_fp = yes
+		OR = { 
+			has_law = law_type:law_regionalist_fp
+			has_law = law_type:law_globalist_fp
+		}
+		NOT = { has_law = law_type:law_no_war }
+		exists = ruler
+		ruler = {
+			OR = {
+				has_ideology = ideology:ideology_autocratic
+				has_ideology = ideology:ideology_power_hungry
+				has_ideology = ideology:ideology_elitist
+			}
+		}
 		
 		#THIS has very good relations with TARGET
 		custom_tooltip = {
@@ -147,20 +162,56 @@
 		accept_score = {
 			value = 0
 			
-			add = {
-				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
-				value = -100
+			if = {
+				limit = { 
+					NOR = {
+						AND = { scope:actor = { is_a_democracy = yes } scope:target_country = { is_a_democracy = yes } }
+						AND = { scope:actor = { is_a_communist_government = yes } scope:target_country = { is_a_communist_government = yes } }
+						AND = { scope:actor = { is_a_nationalist_government = yes } scope:target_country = { is_a_nationalist_government = yes } }
+						AND = { scope:actor = { is_a_theocratic_government = yes } scope:target_country = { is_a_theocratic_government = yes } }
+					}
+					NOT = { is_subject_of = scope:actor }
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -1000
+				}
 			}
 
 			if = {
 				limit = { 
-					has_strategy = ai_strategy_armed_isolationism 
+					any_country = {
+						OR = { 
+							has_strategic_adjacency = scope:target_country
+							country_rank >= rank_value:great_power 
+						}
+						army_size > scope:target_country.army_size
+						"relations(scope:target_country)" < relations_threshold:neutral
+					}
 				}
 				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_ISOLATIONIST"
-					add = -25
+					desc = "DIPLOMATIC_ACCEPTANCE_HOSTILE_COUNTRY"
+					add = 50
 				}
-			}			
+			}
+			if = {
+				limit = { 
+					NOT = { 
+						any_country = {
+							OR = { 
+								has_strategic_adjacency = scope:target_country
+								country_rank >= rank_value:great_power 
+							}
+							army_size > scope:target_country.army_size
+							"relations(scope:target_country)" < relations_threshold:neutral
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_NO_HOSTILE_COUNTRY"
+					add = -100
+				}
+			}
 			
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_ARMY_STRENGTH"
@@ -189,7 +240,7 @@
 					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
 					value = "scope:actor.ai_ideological_opinion(root)"
 					multiply = 0.5
-					min = -50
+					min = -200
 				}					
 			}
 			
