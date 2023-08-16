@@ -1,0 +1,201 @@
+je_war_system = {
+	icon = "gfx/interface/icons/event_icons/bicorne_hat.dds"
+
+	possible = {
+		
+		#Country is at war
+		is_at_war = yes
+		
+	}
+
+	immediate = {
+		
+		#General
+		random_scope_character = {
+			limit = { 
+				is_interest_group_type = ig_armed_forces 
+			}
+			save_scope_as = supreme_commander_scope
+		}
+		random_scope_character = {
+			limit = { 
+				is_ruler = yes
+			}
+			save_scope_as = war_ruler_scope
+		}
+		
+	}
+
+	complete = {
+		
+		#War is over
+		is_at_war = no
+		
+		#THIS won the war
+		custom_tooltip = {
+			text = je_war_system_1.tt
+			has_variable = has_won_a_war
+		}
+		
+	}
+	
+	on_complete = {
+		
+		#Effects
+		remove_variable = has_won_a_war
+		trigger_event = { id = war_system.1 }
+		
+	}
+	
+	fail = {
+		
+		#War is over
+		is_at_war = no
+		
+		#Inconclusive war or defeated
+		custom_tooltip = {
+			text = je_war_system_2.tt
+			NOT = { has_variable = has_won_a_war }
+		}
+		
+	}
+	on_fail = {
+		
+		#Effects
+		if = {
+			limit = { has_variable = has_lost_a_war }
+			remove_variable = has_lost_a_war
+			trigger_event = { id = war_system.2 }
+		}
+		else = {
+			trigger_event = { id = war_system.3 }
+		}
+		
+	}
+	
+	on_weekly_pulse = {
+	
+		effect = {
+			
+			#Effects for Interim Wars
+			if = {
+				limit = { 
+					has_variable = has_won_a_war 
+					NOT = { has_variable = has_lost_a_war }
+				}
+				remove_variable = has_won_a_war
+				trigger_event = { id = war_system.1 }
+			}
+			else_if = {
+				limit = { 
+					NOT = { has_variable = has_won_a_war }
+					has_variable = has_lost_a_war 
+				}
+				remove_variable = has_lost_a_war
+				trigger_event = { id = war_system.2 }
+			}
+			else_if = { 
+				limit = {
+					has_variable = has_won_a_war 
+					has_variable = has_lost_a_war
+				}
+				remove_variable = has_won_a_war
+				remove_variable = has_lost_a_war
+				trigger_event = { id = war_system.3 }
+			}
+			
+			#General
+			random_scope_character = {
+				limit = { 
+					is_interest_group_type = ig_armed_forces 
+				}
+				save_scope_as = supreme_commander_scope
+			}
+			random_scope_character = {
+				limit = { 
+					is_ruler = yes
+				}
+				save_scope_as = war_ruler_scope
+			}
+			
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			#Military Unrest
+			if = {
+				limit = { any_scope_war = { has_war_support = { target = ROOT value < 0 } } }
+				random_list = {
+					2 = { }
+					1 = { 
+						add_radicals = {
+							value = small_radicals
+							pop_type = soldiers
+						}
+						add_radicals = {
+							value = small_radicals
+							pop_type = officers
+						}
+					}
+				}
+			}
+			
+			#Civil Disobedience
+			if = {
+				limit = { any_scope_war = { has_war_support = { target = ROOT value < 0 } } }
+				random_list = {
+					2 = { }
+					1 = { 
+						add_radicals = {
+							value = small_radicals
+							strata = middle
+						}
+					}
+					1 = { 
+						add_radicals = {
+							value = small_radicals
+							strata = rich
+						}
+					}
+				}
+			}
+			
+			#Discriminated get angry
+			random_scope_culture = {
+				limit = { NOT = { is_primary_culture_of = ROOT } }
+				save_scope_as = angry_pop_culture_war
+			}
+			if = {
+				limit = { exists = scope:angry_pop_culture_war }
+				every_scope_state = {
+					limit = { 
+						NOT = { is_homeland_of_country_cultures = ROOT }
+					}
+					random_list = {
+						2 = { }
+						1 = { 
+							add_radicals_in_state = {
+								value = small_radicals
+								culture = scope:angry_pop_culture_war
+							}
+						}
+					}
+				}
+			}
+			
+		}
+		
+	}
+
+	weight = 200
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = no
+}
