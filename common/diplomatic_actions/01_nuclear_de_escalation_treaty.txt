@@ -1,0 +1,316 @@
+﻿nuclear_de_escalation_treaty = {
+	requires_approval = yes
+	can_use_obligations = yes
+	
+	unlocking_technologies = {
+		tech_geopolitics_3
+	}
+	
+	potential = {
+		
+		#Not a revolutionary state
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no }
+		
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#Both parties are sovereign states
+		is_sufficiently_independent = yes
+		scope:target_country = { is_sufficiently_independent = yes }
+		
+		#THIS and TARGET have nukes
+		has_modifier = nuclear_capability
+		scope:target_country = { has_modifier = nuclear_capability }
+		
+		# THIS has poor relations with TARGET
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+			scope:target_country.relations:root <= relations_threshold:poor
+		}
+		
+		#THIS is of equal rank to TARGET
+		OR = { 
+			AND = { 
+				country_rank = rank_value:super_power
+				scope:target_country = { country_rank = rank_value:super_power }
+			}
+			AND = { 
+				country_rank = rank_value:great_power
+				scope:target_country = { country_rank = rank_value:great_power }
+			}
+			AND = { 
+				OR = { country_rank = rank_value:major_power country_rank = rank_value:unrecognized_major_power }
+				scope:target_country = { OR = { country_rank = rank_value:major_power country_rank = rank_value:unrecognized_major_power } }
+			}
+			AND = { 
+				OR = { country_rank = rank_value:minor_power country_rank = rank_value:unrecognized_regional_power }
+				scope:target_country = { OR = { country_rank = rank_value:minor_power country_rank = rank_value:unrecognized_regional_power } }
+			}
+			AND = { 
+				OR = { country_rank = rank_value:insignificant_power country_rank = rank_value:unrecognized_power }
+				scope:target_country = { OR = { country_rank = rank_value:insignificant_power country_rank = rank_value:unrecognized_power } }
+			}
+		}
+		
+	}
+	
+	possible = {
+		
+		#THIS is interested in the TARGET
+		has_diplomatic_relevance = scope:target_country
+		
+		#Leader is not jingoistic
+		NOT = { has_jingoistic_ruler = yes }
+		
+		#Countries are not at war
+		is_at_war = no
+		scope:target_country = { is_at_war = no }
+		
+	}
+	
+	accept_effect = {
+		change_relations = { country = scope:target_country value = 25 }
+		change_infamy = 10
+		scope:target_country = { change_infamy = -10 }
+		
+		#Reset ABM
+		if = {
+			limit = { has_law = law_type:law_moderate_civil_defence_law }
+			activate_law = law_type:law_weak_civil_defence_law
+		}
+		if = {
+			limit = { has_law = law_type:law_strong_civil_defence_law }
+			activate_law = law_type:law_weak_civil_defence_law
+		}
+		if = {
+			limit = { has_law = law_type:law_very_strong_civil_defence_law }
+			activate_law = law_type:law_weak_civil_defence_law
+		}
+		
+	}
+	
+	decline_effect = {
+		change_relations = { country = scope:target_country value = -25 }
+	}
+	
+	pact = {
+		cost = 50
+		infamy_affects_maintenance = yes
+		
+		relations_progress_per_day = 1
+		relations_improvement_max = 0
+
+		should_invalidate = {
+			
+			#THIS and TARGET somehow no longer have nukes
+			NOT = { has_modifier = nuclear_capability }
+			scope:target_country = { NOT = { has_modifier = nuclear_capability } }
+			
+			#THIS is no longer sufficiently independent
+			NOT = { is_sufficiently_independent = yes }
+			scope:target_country = { NOT = { is_sufficiently_independent = yes } }
+			
+		}
+		
+		break_effect = {
+		
+			#Nuclear power remains low for a while
+			if = {
+				limit = {  
+					NOT = { 
+						any_country = {
+							NOT = { scope:target_country ?= this }
+							has_diplomatic_pact = { who = ROOT type = nuclear_de_escalation_treaty }
+						}
+					}
+				}
+				remove_modifier = recently_reduced_nukes
+				add_modifier = { name = recently_reduced_nukes years = 5 }
+			}
+			
+			#Breaker gains infamy and loses relations
+			scope:target_country = { 
+				change_relations = { country = scope:actor value = -25 }
+			}
+			change_infamy = 10
+			
+		}
+		
+	}
+
+	ai = {
+		check_acceptance_for_will_break = yes
+		check_acceptance_for_will_propose = yes
+	
+		accept_score = {
+			value = 0
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+				value = -100
+			}
+
+			if = {
+				limit = {
+					scope:target_country = { 
+						NOT = { has_jingoistic_ruler = yes }
+					}
+				}
+				add = {
+					desc = "RULER_IS_PEACE_LOVING"
+					value = 100
+				}
+			}
+			
+			#TARGET is fearful of strong army of THIS
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ARMY_STRENGTH"
+				value = "scope:actor.ai_army_comparison(root)"
+				add = 0.5
+				min = -25
+				max = 50
+			}
+
+			#TARGET is ideologically aligned with THIS
+			if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" > 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					max = 50
+				}
+			}
+			else_if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" < 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					min = -50
+				}					
+			}
+			
+			#TARGET must have friendly relations with THIS
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RELATIONS"				
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:hostile
+						"relations(scope:actor)" < relations_threshold:cold
+					}
+					value = -25
+				}					
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:cold
+						"relations(scope:actor)" < relations_threshold:poor
+					}
+					value = -50
+				}					
+			}
+			
+			#THIS must have low infamy
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:infamous
+						"scope:actor.infamy" < infamy_threshold:notorious
+					}
+					value = -25
+				}	
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:notorious
+						"scope:actor.infamy" < infamy_threshold:pariah
+					}
+					value = -50
+				}
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:pariah
+					}
+					value = -100
+				}					
+			}
+
+			#TARGET does not have higher rank than THIS
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RANK"
+				if = {
+					limit = { scope:actor = { country_rank > root.country_rank } }
+					value = 50
+				}
+				if = {
+					limit = { scope:actor = { country_rank < root.country_rank } }
+					value = -50
+				}				
+			}
+			
+			#There is no immediate threat
+			add = {
+				desc = "NO_IMMEDIATE_NUCLEAR_THREAT"
+				if = {
+					limit = {
+						scope:target_country = { 
+							NOT = { 
+								any_country = { 
+									has_modifier = nuclear_capability
+									has_strategic_adjacency = scope:target_country
+									has_diplomatic_relevance = scope:target_country
+									relations:scope:target_country < relations_threshold:neutral
+								}
+							}
+						}
+					}
+					value = -100
+				}
+			}
+			
+		}
+
+		propose_score = {
+			value = 10
+		}
+
+		propose_break_score = {
+			value = 10
+		}
+		
+		use_obligation_chance = {
+			value = 0
+	
+			add = {
+				if = {
+					limit = {
+						scope:target_country = { country_rank = root.country_rank }
+					}					
+					value = 25
+				}			
+			}
+	
+			add = {
+				if = {
+					limit = {
+						scope:target_country = { country_rank > root.country_rank }
+					}					
+					value = 50
+				}			
+			}
+			
+		}
+		
+		owe_obligation_chance = {
+			value = 0			
+		}
+		
+	}
+	
+}
