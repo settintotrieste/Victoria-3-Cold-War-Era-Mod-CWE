@@ -26,10 +26,6 @@
 		is_revolutionary = no
 		scope:target_country = { is_revolutionary = no }
 		
-	}
-
-	possible = {
-		
 		#Only desperate countries think of nuclear weapons
 		OR = { 
 			any_scope_war = {
@@ -40,6 +36,10 @@
 			}
 			is_player = yes
 		}
+		
+	}
+
+	possible = {
 		
 		#Only radical leaders think of launching nukes
 		ruler = {
@@ -60,20 +60,26 @@
 	
 	accept_effect = {
 		
+		save_scope_as = THIS_country_scope
+		scope:target_country = { save_scope_as = TARGET_country_scope }
+		
 		#Immediate white peace with truce
-		every_diplomatic_play = {
-			limit = {
-				OR = { 
-					AND = { initiator_is = scope:target_country target_is = scope:actor }
-					AND = { initiator_is = scope:actor target_is = scope:target_country }
+		custom_tooltip = {
+			text = enter_into_a_white_peace.tt
+			every_diplomatic_play = {
+				limit = {
+					OR = { 
+						AND = { initiator_is = scope:target_country target_is = scope:actor }
+						AND = { initiator_is = scope:actor target_is = scope:target_country }
+					}
 				}
+				end_play = yes
 			}
-			end_play = yes
-		}
-		scope:actor = { 
-			create_truce = {
-				country = scope:target_country
-				months = 24
+			scope:actor = { 
+				create_truce = {
+					country = scope:target_country
+					months = 24
+				}
 			}
 		}
 		
@@ -263,46 +269,10 @@
 	
 	ai = {
 	
+		check_acceptance_for_will_propose = yes
+	
 		propose_score = {
-			value = 0
-			
-			add = {
-				desc = "ENEMY_COUNTRY_IS_GOING_TO_CAPITULATE"
-				value = 50
-				any_scope_war = {
-					OR = { 
-						has_war_exhaustion = { target = scope:target_country value > 90 }
-						has_war_support = { target = scope:target_country value < 10 }
-					}
-				}
-			}
-			add = {
-				desc = "ENEMY_HAS_NUKES"
-				value = -100
-				scope:target_country = { has_modifier = nuclear_capability }
-			}
-			
-			add = {
-				desc = "THIS_COUNTRY_IS_GOING_TO_CAPITULATE"
-				value = 25
-				any_scope_war = { has_war_support = { target = scope:actor value < 10 } }
-			}
-			add = {
-				desc = "THIS_COUNTRY_IS_RECKLESS"
-				value = 25
-				ruler = {
-					OR = {
-						has_ideology = ideology:ideology_autocratic
-						has_ideology = ideology:ideology_power_hungry
-					}
-				}
-			}
-			add = {
-				desc = "THIS_COUNTRY_IS_MILITARILY_WEAK"
-				value = 50
-				scope:target_country = { army_size > scope:actor.army_size }
-			}
-			
+			value = 10
 		}
 	
 		accept_score = {
@@ -314,7 +284,42 @@
 				}
 				add = {
 					desc = "THIS_DOES_NOT_HAVE_NUKES"
+					value = 200
+				}
+			}
+			
+			add = {
+				desc = "ENEMY_COUNTRY_IS_GOING_TO_CAPITULATE"
+				if = {
+					limit = {
+						scope:actor = { 
+							any_scope_war = {
+								OR = { 
+									has_war_exhaustion = { target = scope:actor value > 90 }
+									has_war_support = { target = scope:actor value < 10 }
+								}
+							}
+						}
+					}
+					value = 50
+				}
+			}
+			add = {
+				desc = "ENEMY_HAS_NUKES"
+				if = { 
+					limit = { 
+						scope:actor = { has_modifier = nuclear_capability }
+						scope:target_country = { has_modifier = nuclear_capability }
+					}
 					value = 100
+				}
+			}
+			
+			add = {
+				desc = "THIS_COUNTRY_IS_GOING_TO_CAPITULATE"
+				if = { 
+					limit = { scope:target_country = { any_scope_war = { has_war_support = { target = scope:target_country value < 10 } } } }
+					value = 25
 				}
 			}
 			
@@ -348,7 +353,7 @@
 				}
 				add = {
 					desc = "THIS_COUNTRY_IS_RECKLESS"
-					value = -50
+					value = -100
 				}
 			}
 			
@@ -388,6 +393,9 @@
 				else_if = {
 					limit = { scope:target_country = { any_scope_building = { is_building_type = building_urban_center has_active_production_method = pm_city_civil_defence_1 } } }
 					value = -10
+				}
+				else = {
+					value = 0
 				}
 			}
 			
