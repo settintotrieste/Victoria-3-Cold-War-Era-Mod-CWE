@@ -567,15 +567,12 @@ dp_annex_subject = {
 	
 	possible = {
 		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
 		aggressive_diplomatic_plays_permitted = yes
 		scope:target_country = {
-			NOT = { is_country_type = decentralized }
 			is_direct_subject_of = root
-			OR = {
-				has_diplomatic_pact = { who = root type = dominion }
-				has_diplomatic_pact = { who = root type = puppet }
-				has_diplomatic_pact = { who = root type = vassal }
-			}
+			is_not_sufficiently_independent = yes
 		}
 
 		#THIS does not have restricted war rights
@@ -829,7 +826,15 @@ dp_annex_war = {
 		scope:target_country = { is_revolutionary = no }
 		
 		#THIS has a higher rank than TARGET
-		country_rank > scope:target_country.country_rank
+		OR = { 
+			country_rank > scope:target_country.country_rank
+			scope:target_country = { 
+				any_scope_state = { 
+					is_homeland_of_country_cultures = ROOT
+					is_homeland_of_country_cultures = scope:target_country 
+				} 
+			}
+		}
 		
 		#THIS does not have a subject relationship with TARGET
 		NOT = { is_subject_of = scope:target_country }
@@ -845,9 +850,20 @@ dp_annex_war = {
 		}
 		
 		#THIS does not have restricted war rights
-		NOR = { 
-			has_law = law_type:law_no_war
-			has_law = law_type:law_defensive_war
+		OR = {
+		
+			NOR = { 
+				has_law = law_type:law_no_war
+				has_law = law_type:law_defensive_war
+			}
+			
+			scope:target_country = { 
+				any_scope_state = { 
+					is_homeland_of_country_cultures = ROOT
+					is_homeland_of_country_cultures = scope:target_country 
+				} 
+			}
+			
 		}
 		#Ruler is jingoistic
 		ruler = {
