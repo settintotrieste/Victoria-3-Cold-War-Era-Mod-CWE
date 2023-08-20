@@ -1,0 +1,548 @@
+﻿namespace = assassination_events
+
+assassination_events.1 = { #there's a plot to kill your ruler
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = assassination_events.1.t
+	desc = assassination_events.1.d
+	flavor = assassination_events.1.f
+
+	event_image = {
+		video = "southamerica_public_figure_assassination"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	trigger = {
+		any_interest_group = {
+			is_powerful = yes
+			ig_approval <= -10
+		}
+		radical_fraction = { #in the whole country
+			value >= 0.15
+		}
+		ruler = {
+			age >= 18
+		}
+		NOT = { has_variable = assassination_cooldown }
+		NOT = { has_variable = ongoing_serial_killer_je }
+	}
+	
+	immediate = {
+		ruler = { save_scope_as = assassination_ruler_scope }
+		set_variable = {
+			name = assassination_cooldown
+			months = stupidly_long_modifier_time #50 years
+		}
+	}
+	
+	option = {
+		name = assassination_events.1.a 
+		default_option = yes
+		add_journal_entry = {
+			type = je_assassination
+			target = scope:assassination_ruler_scope
+		}
+	}
+
+	option = {
+		name = assassination_events.1.b
+		trigger = {
+			scope:assassination_ruler_scope.interest_group = {
+				is_in_government = no
+			}
+		}
+		set_variable = killing_own_ruler
+		custom_tooltip = kill_own_ruler_tt
+		add_journal_entry = {
+			type = je_assassination
+			target = scope:assassination_ruler_scope
+		}
+	}
+}
+
+assassination_events.2 = { #suspicious meeting
+	type = country_event
+	placement = root
+
+	title = assassination_events.2.t
+	desc = assassination_events.2.d
+	flavor = assassination_events.2.f
+
+	duration = 3
+
+	event_image = {
+
+		video = "middleeast_police_breaking_door"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	trigger = {
+		#triggered on the JE yearly pulse
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				var:je_assassination_progress >= 3 #if you have high progress you get the correct IG
+			}
+			random_interest_group = {
+				limit = {
+					has_variable = enemy_ig_var
+				}
+				save_scope_as = suspicious_ig
+				set_variable = suspicious_ig_var
+			}
+		}
+		else = {
+			random_interest_group = {
+				save_scope_as = suspicious_ig
+				set_variable = suspicious_ig_var
+			}
+		}
+		random_interest_group = {
+			limit = {
+				NOT = { has_variable = suspicious_ig_var }
+				ig_approval <= 0
+			}
+			save_scope_as = second_suspicious_ig
+		}
+	}
+
+	option = { #let them be
+		default_option = yes
+		name = assassination_events.2.a
+		scope:suspicious_ig = {
+			add_modifier = {
+				name = assassination_ig_not_monitored_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #it's definitely them
+		name = assassination_events.2.b
+		custom_tooltip = advance_assassination_progress_tt
+		change_variable = {
+			name = je_assassination_progress
+			add = 1
+		}
+		scope:suspicious_ig = {
+			add_modifier = {
+				name = assassination_ig_monitored
+				months = normal_modifier_time
+			}
+		}
+	}
+	
+	option = { #we suspect this other IG
+		name = assassination_events.2.c
+		trigger = {
+			any_interest_group = {
+				NOT = { has_variable = suspicious_ig_var }
+				ig_approval <= 0
+			}
+		}
+		custom_tooltip = advance_assassination_progress_tt
+		change_variable = {
+			name = je_assassination_progress
+			add = 1
+		}
+		scope:second_suspicious_ig = {
+			add_modifier = {
+				name = assassination_ig_monitored
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+assassination_events.3 = { #The Snitch 
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = assassination_events.3.t
+	desc = assassination_events.3.d
+	flavor = assassination_events.3.f
+
+	event_image = {
+		video = "southamerica_public_figure_assassination"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	trigger = {
+		#triggered by the JE
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = { is_marginal = no }
+			save_scope_as = snitch_ig
+			leader = {
+				save_scope_as = snitch_leader
+			}
+		}
+		random_interest_group = {
+			limit = {
+				NOT = { this = scope:snitch_ig }
+				is_marginal = no
+			}
+			save_scope_as = snitched_ig
+		}
+	}
+
+	option = { #believe them
+		name = assassination_events.3.a
+		custom_tooltip = advance_assassination_progress_tt
+		change_variable = {
+			name = je_assassination_progress
+			add = 1
+		}
+		scope:snitched_ig = {
+			add_modifier = {
+				name = suspicious_modifier #pol str
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #don't
+		name = assassination_events.3.b
+		default_option = yes
+		scope:snitch_leader = {
+			add_modifier = {
+				name = snitch_modifier #popularity
+				months = normal_modifier_time
+			}
+		}
+	}
+	
+	option = { #don't and also accuse them
+		name = assassination_events.3.c 
+		custom_tooltip = advance_assassination_progress_tt
+		change_variable = {
+			name = je_assassination_progress
+			add = 1
+		}
+		scope:snitch_ig = {
+			add_modifier = {
+				name = suspicious_modifier
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+assassination_events.4 = { #accusatory talk in the high spheres
+	type = country_event
+	placement = scope:high_spheres_state
+
+	duration = 3
+
+	title = assassination_events.4.t
+	desc = assassination_events.4.d
+	flavor = assassination_events.4.f
+
+	event_image = {
+		video = "europenorthamerica_london_center"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	trigger = {
+		any_scope_state = {
+			any_scope_building = {
+				is_building_type = building_urban_center
+				level >= 10
+			}
+			OR = {
+				has_building = building_university
+				has_building = building_communications_network
+			}
+		}
+		any_interest_group = {
+			is_marginal = no
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				any_scope_building = {
+				is_building_type = building_urban_center
+				level >= 10
+				}
+				OR = {
+					has_building = building_university
+					has_building = building_communications_network
+				}
+			}
+			save_scope_as = high_spheres_state
+		}
+		if = {
+			limit = {
+				var:je_assassination_progress >= 3 #if you have high progress you get the correct IG
+			}
+			random_interest_group = {
+				limit = {
+					has_variable = enemy_ig_var
+				}
+				save_scope_as = suspicious_ig
+			}
+		}
+		else = {
+			random_interest_group = {
+				limit = {
+					is_marginal = no
+				}
+				save_scope_as = suspicious_ig
+			}
+		}
+	}
+
+	option = { #sounds suspicious
+		name = assassination_events.4.a
+		custom_tooltip = advance_assassination_progress_tt
+		change_variable = {
+			name = je_assassination_progress
+			add = 1
+		}
+		scope:suspicious_ig = {
+			add_modifier = {
+				name = assassination_ig_monitored
+				months = normal_modifier_time
+			}
+		}
+		scope:high_spheres_state = {
+			add_loyalists_in_state = {
+				strata = rich
+				value = 0.1
+			}
+		}
+	}
+
+	option = { #WHO is saying this
+		name = assassination_events.4.b
+		default_option = yes
+		scope:high_spheres_state = {
+			add_radicals_in_state = {
+				strata = rich
+				value = 0.05
+			}
+		}
+	}
+	
+	option = { #we clearly need to improve our security
+		name = assassination_events.4.c
+		custom_tooltip = advance_assassination_progress_tt
+		change_variable = {
+			name = je_assassination_progress
+			add = 1
+		}
+		add_modifier = {
+			name = hightened_security
+			months = normal_modifier_time
+		}
+	}
+}
+
+assassination_events.5 = { #Failure to stop assassination
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = assassination_events.5.t
+	desc = assassination_events.5.d
+	flavor = assassination_events.5.f
+
+	event_image = {
+		video = "southamerica_public_figure_assassination"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+
+	trigger = {
+		#triggered by the JE
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				has_variable = enemy_ig_var
+			}
+			save_scope_as = suspicious_ig
+		}
+		random_scope_character = {
+			limit = { has_variable = assassination_ruler_var }
+			save_scope_as = assassination_ruler_scope
+		}
+	}
+
+	option = {
+		name = assassination_events.5.a
+		default_option = yes
+		scope:assassination_ruler_scope = {
+			kill_character = yes
+		}
+		add_modifier = {
+			name = assassination_success_modifier #great authority hit
+			months = normal_modifier_time
+		}
+	}
+}
+
+assassination_events.6 = { #ruler deposed
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = assassination_events.6.t
+	desc = assassination_events.6.d
+	flavor = assassination_events.6.f
+
+	event_image = {
+		video = "southamerica_public_figure_assassination"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	trigger = {
+		#triggered by the JE
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				has_variable = enemy_ig_var
+			}
+			save_scope_as = suspicious_ig
+		}
+		random_scope_character = {
+			limit = { has_variable = assassination_ruler_var }
+			save_scope_as = assassination_ruler_scope
+		}
+	}
+
+	option = { #poor guy
+		name = assassination_events.6.a
+		default_option = yes
+		scope:assassination_ruler_scope = {
+			add_modifier = {
+				name = deposed_ruler_modifier #he loses a lot of popularity
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+
+assassination_events.7 = { #Stopped the assassination
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = assassination_events.7.t
+	desc = assassination_events.7.d
+	flavor = assassination_events.7.f
+
+	event_image = {
+		video = "southamerica_public_figure_assassination"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	trigger = {
+		#triggered by the JE
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				has_variable = enemy_ig_var
+			}
+			save_scope_as = suspicious_ig
+		}
+		random_scope_character = {
+			limit = { has_variable = assassination_ruler_var }
+			save_scope_as = assassination_ruler_scope
+		}
+	}
+
+	option = { #awesome
+		name = assassination_events.7.a
+		default_option = yes
+		add_modifier =  {
+			name = assassination_caught_em_modifier #legitimacy
+			months = short_modifier_time
+		}
+	}
+}
+
+assassination_events.8 = { #ruler died of other cause
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = assassination_events.8.t
+	desc = assassination_events.8.d
+	flavor = assassination_events.8.f
+
+	event_image = {
+		video = "southamerica_public_figure_assassination"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	trigger = {
+		#triggered by the JE
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				has_variable = enemy_ig_var
+			}
+			save_scope_as = suspicious_ig
+		}
+		random_scope_character = {
+			limit = { has_variable = assassination_ruler_var }
+			save_scope_as = assassination_ruler_scope
+		}
+	}
+
+	option = { #well that was all
+		name = assassination_events.8.a
+		default_option = yes
+		add_modifier = {
+			name = assassination_dead_ruler_modifier #legitimacy loss
+			months = normal_modifier_time
+		}
+	}
+}

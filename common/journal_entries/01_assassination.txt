@@ -1,0 +1,193 @@
+﻿je_assassination = {
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+	
+	immediate = {
+		random_interest_group = {
+			limit = {
+				is_powerful = yes
+				ig_approval <= -10
+			}
+			save_scope_as = enemy_ig
+			set_variable = enemy_ig_var
+		}
+		ruler = {
+			save_scope_as = assassination_ruler_scope
+			set_variable = assassination_ruler_var
+		}
+		set_variable = {
+			name = je_assassination_var #their progress
+			value = 0
+		}
+		set_variable = {
+			name = je_assassination_progress #your progress
+			value = 0
+		}
+		set_variable = ongoing_assassination_je #so you don't get the serial killer JE at the same time
+	}		
+	
+	on_monthly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					has_variable = killing_own_ruler
+				}
+				change_variable = {
+					name = je_assassination_var
+					add = 1
+				}
+			}
+			else_if = {
+				limit = {
+					institution_investment_level = {
+						institution = institution_police
+						value >= 4
+					}
+				}
+				random_list = {
+					60 = { #you stall the plot
+					}
+					40 = {
+						change_variable = {
+							name = je_assassination_var
+							add = 1
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = {
+					OR = {
+						has_law = law_type:law_draconian_policing
+						has_law = law_type:law_secret_police
+					}
+				}
+				random_list = {
+					40 = { #you stall the plot
+					}
+					60 = {
+						change_variable = {
+							name = je_assassination_var
+							add = 1
+						}
+					}
+				}
+			}
+			else = {
+				change_variable = {
+					name = je_assassination_var
+					add = 1
+				}
+			}
+		}
+		random_events = {
+			12 = 0
+			1 = assassination_events.2
+			1 = assassination_events.3
+			1 = assassination_events.4
+		}		
+	}
+
+	complete = {
+		custom_tooltip = {
+			text = je_assassination_caught_em_tt
+			var:je_assassination_progress >= 4
+		}
+	}
+
+	on_complete = {
+		custom_tooltip = {
+			text = assassination_completion_tt
+			trigger_event = { id = assassination_events.7 }
+		}
+		remove_variable = ongoing_assassination_je
+	}
+
+	fail = {
+		custom_tooltip = {
+			text = je_assassination_timeout_tt
+			scope:journal_entry = {
+				is_goal_complete = yes
+			}
+		}
+	}
+
+	on_fail = {
+		trigger_event = { id = assassination_events.5 }
+		remove_variable = ongoing_assassination_je
+	}
+
+	invalid = {
+		custom_tooltip = {
+			text = je_assassination_tt
+			OR = {
+				any_scope_character = {
+					has_variable = assassination_ruler_var
+					is_ruler = no 
+				}
+				NOT = {
+					any_scope_character = {
+						has_variable = assassination_ruler_var
+					}
+				}
+			}
+		}
+	}
+
+	on_invalid = {
+		if = { #they're not the ruler anymore (small event to account for all cases)
+			limit = {
+				scope:assassination_ruler_scope = {
+					is_ruler = no
+					is_character_alive = yes
+				}
+			}
+			trigger_event = { id = assassination_events.6 }
+		}
+		else_if = { #they died of other causes / another small event
+			limit = {
+				NOT = {
+					any_scope_character = {
+						has_variable = assassination_ruler_var
+					}
+				}
+			}
+			trigger_event = { id = assassination_events.8 }
+		}
+		remove_variable = ongoing_assassination_je
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_assassination_low
+				trigger = {
+					var:je_assassination_progress < 2
+				}
+			}
+			triggered_desc = {
+				desc = je_assassination_middle
+				trigger = {
+					var:je_assassination_progress = 2
+				}
+			}
+			triggered_desc = {
+				desc = je_assassination_high
+				trigger = {
+					var:je_assassination_progress > 2
+				}
+			}
+		}
+	}
+	
+	current_value = {
+		value = root.var:je_assassination_var
+	}
+
+	goal_add_value = {
+		add = 24
+	}
+
+	progressbar = yes
+
+	weight = 100
+}
