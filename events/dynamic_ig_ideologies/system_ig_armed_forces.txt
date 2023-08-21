@@ -149,3 +149,194 @@ ig_armed_forces_ideology_system.1 = {
     }
 
 }
+
+### Military IG will change its ideology to match ruler's IG if in government and country is a dictatorship ###
+
+#Change Economic Ideology
+ig_armed_forces_ideology_system.2 = {
+    type = country_event
+
+    title = ig_armed_forces_economic_ideology_dictatorship.t 				# Title of the event; ADD LOCALISATION
+    desc = ig_armed_forces_economic_ideology_dictatorship.d 					# Description of the event; ADD LOCALISATION
+    flavor = ig_armed_forces_economic_ideology_dictatorship.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {											# What triggers the event, if using other events or journal entries leave empty
+		
+		#Country is a dictatorship
+		is_a_dictatorship = yes
+		
+		#Triggers to change IG's ideology
+		ig:ig_armed_forces = {
+			
+			#Armed Forces is not in the government
+			is_in_government = yes
+			
+			#Armed Forces is not currently part of a revolution
+			is_insurrectionary = no
+			
+			#Armed Forces is HAPPY with the government
+			ig_approval >= happy
+			
+			#Do not change Economic Ideology if leader is historical OR ruler is from the AF IG
+			leader = { 
+				is_historical = no 
+				is_ruler = no
+			}
+			
+		}
+		
+		#Event only fires to change to opposing Economic Ideology
+		OR = {
+		
+			AND = { 
+				any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_far_right_economy }
+				ig:ig_armed_forces = { NOT = { has_ideology = ideology:ideology_far_right_economy } }
+			}
+			AND = { 
+				any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_right_economy }
+				ig:ig_armed_forces = { NOT = { has_ideology = ideology:ideology_right_economy } }
+			}
+			AND = { 
+				any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_centre_economy }
+				ig:ig_armed_forces = { NOT = { has_ideology = ideology:ideology_centre_economy } }
+			}
+			AND = { 
+				any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_left_economy }
+				ig:ig_armed_forces = { NOT = { has_ideology = ideology:ideology_left_economy } }
+			}
+			AND = { 
+				any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_far_left_economy }
+				ig:ig_armed_forces = { NOT = { has_ideology = ideology:ideology_far_left_economy } }
+			}
+			
+		}
+		
+    }
+	
+	cooldown = { months = normal_modifier_time }
+	
+	immediate = {
+		save_scope_as = ig_armed_forces_country
+		
+		random_interest_group = {
+			limit = { leader = { is_ruler = yes } }
+			save_scope_as = rulers_IG_scope
+			leader = { save_scope_as = rulers_scope }
+		}
+		
+		ig:ig_armed_forces = {
+			save_scope_as = armed_forces_ig
+			leader = {
+				save_scope_as = armed_forces_ig_leader
+			}
+		}
+		
+	}
+    
+    option = {
+        name = ig_armed_forces_ideology_system.option		# Interesting
+		
+		#Change the IG's Economic Ideology
+		
+			if = {
+				limit = { 
+					any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_far_right_economy }
+					ig:ig_armed_forces = { NOT = { has_ideology = ideology:ideology_far_right_economy } }
+				}
+				ig:ig_armed_forces = {
+					add_ideology = ideology_far_right_economy
+					remove_ideology = ideology_right_economy
+					remove_ideology = ideology_centre_economy
+					remove_ideology = ideology_left_economy
+					remove_ideology = ideology_far_left_economy
+				}
+			}
+			if = {
+				limit = { 
+					any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_right_economy }
+					ig:ig_armed_forces = { NOT = { has_ideology = ideology:ideology_right_economy } }
+				}
+				ig:ig_armed_forces = {
+					remove_ideology = ideology_far_right_economy
+					add_ideology = ideology_right_economy
+					remove_ideology = ideology_centre_economy
+					remove_ideology = ideology_left_economy
+					remove_ideology = ideology_far_left_economy
+				}
+			}
+			if = {
+				limit = { 
+					any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_centre_economy }
+					ig:ig_armed_forces = { NOT = { has_ideology = ideology:ideology_centre_economy } }
+				}
+				ig:ig_armed_forces = {
+					remove_ideology = ideology_far_right_economy
+					remove_ideology = ideology_right_economy
+					add_ideology = ideology_centre_economy
+					remove_ideology = ideology_left_economy
+					remove_ideology = ideology_far_left_economy
+				}
+			}
+			if = {
+				limit = { 
+					any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_left_economy }
+					ig:ig_armed_forces = { NOT = { has_ideology = ideology:ideology_left_economy } }
+				}
+				ig:ig_armed_forces = {
+					remove_ideology = ideology_far_right_economy
+					remove_ideology = ideology_right_economy
+					remove_ideology = ideology_centre_economy
+					add_ideology = ideology_left_economy
+					remove_ideology = ideology_far_left_economy
+				}
+			}
+			if = {
+				limit = { 
+					any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_far_left_economy }
+					ig:ig_armed_forces = { NOT = { has_ideology = ideology:ideology_far_left_economy } }
+				}
+				ig:ig_armed_forces = {
+					remove_ideology = ideology_far_right_economy
+					remove_ideology = ideology_right_economy
+					remove_ideology = ideology_centre_economy
+					remove_ideology = ideology_left_economy
+					add_ideology = ideology_far_left_economy
+				}
+			}
+			
+		#Purge all non IG generals
+		custom_tooltip = {
+			text = ig_armed_forces_ideology_system.2.tt
+			every_scope_character = {
+				limit = { 
+					is_ruler = no
+					OR = {
+						has_role = general
+						has_role = admiral
+					}
+					OR = { 
+						NOT = { has_global_variable = historical_railroading_active }
+						is_historical = no 
+					}
+					NOR = { 
+						is_interest_group_type = scope:rulers_IG_scope
+						is_interest_group_type = ig_armed_forces 
+					}
+				}
+				random_list = { 
+					5 = { kill_character = yes }
+					1 = { exile_character = yes }
+				}
+			}
+		}
+		
+    }
+
+}
