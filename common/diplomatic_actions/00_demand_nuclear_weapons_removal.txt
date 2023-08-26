@@ -17,63 +17,38 @@ demand_nuclear_weapons_removal = {
 		scope:target_country = { is_sufficiently_independent = yes }
 		
 		#Nuclear weapons stationed in TARGET or TARGET itself has made nuclear weapons
-		any_country = {
-			OR = { 
-				has_diplomatic_pact = { who = scope:target_country type = station_nuclear_weapons is_initiator = yes }
-				has_modifier = nuclear_capability
+		OR = { 
+			custom_tooltip = {
+				text = demand_nuclear_weapons_removal_4.tt
+				any_country = { 
+					NOR = {
+						has_diplomatic_pact = { who = scope:actor type = alliance }
+						has_diplomatic_pact = { who = scope:actor type = defensive_pact } 
+						is_subject_of = scope:actor
+					}
+					has_diplomatic_pact = { who = scope:target_country type = station_nuclear_weapons is_initiator = yes } 
+				}
 			}
+			scope:target_country = { has_modifier = nuclear_capability }
+		}
+		custom_tooltip = {
+			text = demand_nuclear_weapons_removal_3.tt
+			NOT = { scope:target_country = { has_diplomatic_pact = { who = scope:actor type = station_nuclear_weapons is_initiator = no } } }
 		}
 		
-		#THIS has a higher country tier than the TARGET
-		OR = {
+		#TARGET does not have an alliance of somekind with THIS OR is overlord of TARGET
+		NOR = {
+			has_diplomatic_pact = { who = scope:target_country type = alliance }
+			has_diplomatic_pact = { who = scope:target_country type = defensive_pact } 
+			is_subject_of = root
+		}
 		
-			AND = { 
-				country_tier = hegemony 
-				scope:target_country = { NOT = { country_tier = hegemony } } 
-			}
-			AND = { 
-				country_tier = empire 
-				scope:target_country = { 
-					NOR = { 
-						country_tier = hegemony 
-						country_tier = empire 
-					} 
-				} 
-			}
-			AND = { 
-				country_tier = kingdom
-				scope:target_country = { 
-					NOR = { 
-						country_tier = hegemony 
-						country_tier = empire 
-						country_tier = kingdom
-					} 
-				} 
-			}
-			AND = { 
-				country_tier = grand_principality
-				scope:target_country = { 
-					NOR = { 
-						country_tier = hegemony 
-						country_tier = empire 
-						country_tier = kingdom
-						country_tier = grand_principality
-					} 
-				} 
-			}
-			AND = { 
-				country_tier = principality
-				scope:target_country = { 
-					NOR = { 
-						country_tier = hegemony 
-						country_tier = empire 
-						country_tier = kingdom
-						country_tier = grand_principality
-						country_tier = principality
-					} 
-				} 
-			}
-			
+		#TARGET and THIS are not invovled in the same diplo play
+		NOT = {
+			any_diplomatic_play = { 
+				initiator_is = scope:actor
+				target_is = scope:target_country
+			} 
 		}
 		
 	}
@@ -100,18 +75,17 @@ demand_nuclear_weapons_removal = {
 		}
 		
 		#THIS has a higher rank than TARGET
-		scope:target_country = { country_rank < root.country_rank }
+		scope:target_country = { country_rank <= root.country_rank }
 		
 	}
 	
 	accept_effect = {
 		
 		#Enact denuclearisation law which will auto terminate any nuclear program
-		activate_law = law_type:law_wmd_banned
+		scope:target_country = { activate_law = law_type:law_wmd_banned }
 		
-		#THIS gains relations with TARGET
-		change_relations = { country = scope:target_country value = 100 }
-		change_infamy = -25
+		#TARGET loses infamy
+		scope:target_country = { change_infamy = -25 }
 	
 		#TARGET cannot station nukes on its soil for 10 years
 		scope:target_country = { 
@@ -128,6 +102,10 @@ demand_nuclear_weapons_removal = {
 		every_country = { 
 			limit = { has_diplomatic_pact = { who = scope:target_country type = station_nuclear_weapons is_initiator = yes } }
 			remove_diplomatic_pact = { country = scope:target_country type = station_nuclear_weapons } 
+		}
+		create_truce = {
+			country = scope:target_country
+			months = 60
 		}
 		
 	}
@@ -153,7 +131,7 @@ demand_nuclear_weapons_removal = {
 		custom_tooltip = {
 			text = demand_nuclear_weapons_removal_1.tt
 			set_variable = { name = demand_puppet_gov_change_overlord months = 1 }
-			scope:target_country = { trigger_event = { id = revolution_system.2 } }
+			scope:target_country = { trigger_event = { id = revolution_system.3 } }
 		}
 		
 	}
@@ -189,15 +167,15 @@ demand_nuclear_weapons_removal = {
 			
 			#THIS has poor relations with TARGET
 			OR = { 
-				AND = { 
-					scope:target_country = { has_modifier = nuclear_capability }
-					scope:target_country.relations:root < relations_threshold:poor
-				}
+				scope:target_country.relations:root < relations_threshold:poor
 				any_country = {
 					has_diplomatic_pact = { who = scope:target_country type = station_nuclear_weapons is_initiator = yes }
 					relations:root < relations_threshold:poor
 				}
 			}
+			
+			#THIS will not want to be nuked by TARGET
+			scope:target_country = { NOT = { has_modifier = nuclear_capability } }
 			
 		}
 	
@@ -205,7 +183,12 @@ demand_nuclear_weapons_removal = {
 			value = 0
 			
 			if = {
-				limit = { NOT = { has_variable = recently_lost_war } }
+				limit = { 
+					OR = { 
+						scope:actor = { has_modifier = nuclear_capability }
+						NOT = { has_variable = recently_lost_war }
+					}
+				}
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
 					value = -100
