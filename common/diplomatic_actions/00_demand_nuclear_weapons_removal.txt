@@ -1,0 +1,306 @@
+demand_nuclear_weapons_removal = {
+	requires_approval = yes
+	can_use_obligations = no
+	
+	potential = {
+		
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#THIS and TARGET are not revolutionary
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no } 
+		
+		#THIS is not a subject
+		is_sufficiently_independent = yes
+		scope:target_country = { is_sufficiently_independent = yes }
+		
+		#Nuclear weapons stationed in TARGET or TARGET itself has made nuclear weapons
+		any_country = {
+			OR = { 
+				has_diplomatic_pact = { who = scope:target_country type = station_nuclear_weapons is_initiator = yes }
+				has_modifier = nuclear_capability
+			}
+		}
+		
+		#THIS has a higher country tier than the TARGET
+		OR = {
+		
+			AND = { 
+				country_tier = hegemony 
+				scope:target_country = { NOT = { country_tier = hegemony } } 
+			}
+			AND = { 
+				country_tier = empire 
+				scope:target_country = { 
+					NOR = { 
+						country_tier = hegemony 
+						country_tier = empire 
+					} 
+				} 
+			}
+			AND = { 
+				country_tier = kingdom
+				scope:target_country = { 
+					NOR = { 
+						country_tier = hegemony 
+						country_tier = empire 
+						country_tier = kingdom
+					} 
+				} 
+			}
+			AND = { 
+				country_tier = grand_principality
+				scope:target_country = { 
+					NOR = { 
+						country_tier = hegemony 
+						country_tier = empire 
+						country_tier = kingdom
+						country_tier = grand_principality
+					} 
+				} 
+			}
+			AND = { 
+				country_tier = principality
+				scope:target_country = { 
+					NOR = { 
+						country_tier = hegemony 
+						country_tier = empire 
+						country_tier = kingdom
+						country_tier = grand_principality
+						country_tier = principality
+					} 
+				} 
+			}
+			
+		}
+		
+	}
+	
+	possible = {
+		
+		#THIS is not at war with TARGET
+		NOT = { has_war_with = scope:target_country }
+		
+		#THIS is legally and politically capable of intervention
+		OR = { 
+			has_interventionist_fp = yes
+			AND = { 
+				is_a_dictatorship = yes
+				
+				#THIS has a stronger military than TARGET
+				scope:target_country = {
+					OR = {
+						navy_size < scope:actor.navy_size
+						army_size < scope:actor.army_size
+					}
+				}
+			}
+		}
+		
+		#THIS has a higher rank than TARGET
+		scope:target_country = { country_rank < root.country_rank }
+		
+	}
+	
+	accept_effect = {
+		
+		#Enact denuclearisation law which will auto terminate any nuclear program
+		activate_law = law_type:law_wmd_banned
+		
+		#THIS gains relations with TARGET
+		change_relations = { country = scope:target_country value = 100 }
+		change_infamy = -25
+	
+		#TARGET cannot station nukes on its soil for 10 years
+		scope:target_country = { 
+			save_scope_as = target_country_indy_scope
+			custom_tooltip = {
+				text = demand_nuclear_weapons_removal_2.tt
+				remove_variable = no_nuclear_weapons_agreement
+				set_variable = { name = no_nuclear_weapons_agreement years = 10 }
+			}
+		}
+		
+		#TARGET will dissolve all station nuclear weapons pacts
+		create_diplomatic_pact = { country = scope:target_country type = non_aggression_pact }
+		every_country = { 
+			limit = { has_diplomatic_pact = { who = scope:target_country type = station_nuclear_weapons is_initiator = yes } }
+			remove_diplomatic_pact = { country = scope:target_country type = station_nuclear_weapons } 
+		}
+		
+	}
+	
+	decline_effect = {
+		
+		#TARGET domestic effects
+		scope:target_country = { 
+			
+			#TARGET loses relations with THIS
+			change_relations = { country = scope:actor value = -100 }
+			
+			#Country ruler becomes a hero
+			random_scope_character = { 
+				limit = { is_ruler = yes } 
+				add_modifier = { name = the_man_of_the_hour years = 5 is_decaying = yes } 
+			}
+			
+			save_scope_as = target_country_indy_scope
+		}
+		
+		#Start war of independence against TARGET
+		custom_tooltip = {
+			text = demand_nuclear_weapons_removal_1.tt
+			set_variable = { name = demand_puppet_gov_change_overlord months = 1 }
+			scope:target_country = { trigger_event = { id = revolution_system.2 } }
+		}
+		
+	}
+
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+		
+		check_acceptance_for_will_propose = yes
+	
+		will_propose = {
+			
+			#TARGET is a threat to THIS
+			scope:target_country = {
+			
+				#TARGET is autocratic
+				AND = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+			
+				#TARGET is bordering THIS
+				has_strategic_adjacency = scope:actor 
+				
+			}
+			
+			#THIS has poor relations with TARGET
+			OR = { 
+				AND = { 
+					scope:target_country = { has_modifier = nuclear_capability }
+					scope:target_country.relations:root < relations_threshold:poor
+				}
+				any_country = {
+					has_diplomatic_pact = { who = scope:target_country type = station_nuclear_weapons is_initiator = yes }
+					relations:root < relations_threshold:poor
+				}
+			}
+			
+		}
+	
+		accept_score = {
+			value = 0
+			
+			if = {
+				limit = { NOT = { has_variable = recently_lost_war } }
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -100
+				}
+			}
+			
+			#Liberal leaders will always accept
+			if = {
+				limit = {
+					exists = ruler
+					ruler = {
+						NOR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+							has_ideology = ideology:ideology_elitist
+						}
+					}
+				}
+				add = {
+					desc = "RULER_IS_DEMOCRATIC"
+					value = 100
+				}
+			}
+			
+			#TARGET is fearful of strong army of THIS
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ARMY_STRENGTH"
+				value = "scope:actor.ai_army_comparison(root)"
+				add = 0.5
+				min = -100
+				max = 100
+			}
+			
+			#TARGET is fearful of a nuclear war
+			add = {
+				desc = "ENEMY_HAS_NUKES"
+				if = { 
+					limit = { 
+						scope:actor = { has_modifier = nuclear_capability }
+					}
+					value = 100
+				}
+			}
+
+			#TARGET is ideologically aligned with THIS
+			if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" > 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					max = 100
+				}
+			}
+			else_if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" < 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					min = -100
+				}					
+			}
+			
+			#THIS must have low infamy
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:infamous
+						"scope:actor.infamy" < infamy_threshold:notorious
+					}
+					value = -25
+				}	
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:notorious
+						"scope:actor.infamy" < infamy_threshold:pariah
+					}
+					value = -50
+				}
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:pariah
+					}
+					value = -100
+				}					
+			}
+			
+		}
+		
+	}
+	
+}
