@@ -56,9 +56,6 @@
 		NOT = { has_law = law_type:law_isolationism }
 		scope:target_country = { NOT = { has_law = law_type:law_isolationism } }
 		
-		NOT = { has_law = law_type:law_command_economy }
-		scope:target_country = { NOT = { has_law = law_type:law_command_economy } }
-		
 		#THIS is interested in multilateral institutions
 		OR = { 
 			has_law = law_type:law_regionalist_fp
@@ -66,7 +63,10 @@
 		}
 		
 		#THIS has sufficient money in the investment pool (100 mil)
-		investment_pool > 100000000
+		OR = { 
+			AND = { country_has_an_investment_pool = yes investment_pool > 100000000 }
+			AND = { NOT = { country_has_an_investment_pool = yes } gold_reserves > 100000000 }
+		}
 		
 	}
 	
@@ -103,7 +103,10 @@
 				scope:target_country = { has_law = law_type:law_command_economy }
 				
 				#THIS does not have sufficient money in the investment pool (100 mil)
-				NOT = { investment_pool > 100000000 }
+				NOR = { 
+					AND = { country_has_an_investment_pool = yes investment_pool > 100000000 }
+					AND = { NOT = { country_has_an_investment_pool = yes } gold_reserves > 100000000 }
+				}
 				
 			}
 			
@@ -131,18 +134,93 @@
 			scope:target_country = { save_scope_as = recipient_investment_pool }
 			
 			#Transfer investment pool money from THIS to TARGET (100K per incorporated state)
-			custom_tooltip = {
-				text = multilateral_development_bank_1.tt
-				scope:target_country = { 
-					every_scope_state = {
-						limit = { 
-							is_incorporated = yes 
+			if = {
+				limit = { 
+					country_has_an_investment_pool = yes 
+					scope:target_country = { country_has_an_investment_pool = yes }
+				}
+				custom_tooltip = {
+					text = multilateral_development_bank_1.tt
+					scope:target_country = { 
+						every_scope_state = {
+							limit = { 
+								is_incorporated = yes 
+							}
+							owner = { 
+								if = {
+									limit = { scope:actor = { investment_pool > 100000000 } }
+									scope:target_country = { add_investment_pool = 100000 }
+									scope:actor = { add_investment_pool = -100000 }
+								}
+							}
 						}
-						owner = { 
-							if = {
-								limit = { scope:actor = { investment_pool > 100000000 } }
-								scope:target_country = { add_investment_pool = 100000 }
-								scope:actor = { add_investment_pool = -100000 }
+					}
+				}
+			}
+			if = {
+				limit = { 
+					country_has_an_investment_pool = yes 
+					scope:target_country = { NOT = { country_has_an_investment_pool = yes } }
+				}
+				custom_tooltip = {
+					text = multilateral_development_bank_2.tt
+					scope:target_country = { 
+						every_scope_state = {
+							limit = { 
+								is_incorporated = yes 
+							}
+							owner = { 
+								if = {
+									limit = { scope:actor = { investment_pool > 100000000 } }
+									scope:target_country = { add_treasury = 100000 }
+									scope:actor = { add_investment_pool = -100000 }
+								}
+							}
+						}
+					}
+				}
+			}
+			if = {
+				limit = { 
+					NOT = { country_has_an_investment_pool = yes }
+					scope:target_country = { country_has_an_investment_pool = yes }
+				}
+				custom_tooltip = {
+					text = multilateral_development_bank_3.tt
+					scope:target_country = { 
+						every_scope_state = {
+							limit = { 
+								is_incorporated = yes 
+							}
+							owner = { 
+								if = {
+									limit = { scope:actor = { gold_reserves > 100000000 } }
+									scope:target_country = { add_investment_pool = 100000 }
+									scope:actor = { add_treasury = -100000 }
+								}
+							}
+						}
+					}
+				}
+			}
+			if = {
+				limit = { 
+					NOT = { country_has_an_investment_pool = yes }
+					scope:target_country = { NOT = { country_has_an_investment_pool = yes } }
+				}
+				custom_tooltip = {
+					text = multilateral_development_bank_4.tt
+					scope:target_country = { 
+						every_scope_state = {
+							limit = { 
+								is_incorporated = yes 
+							}
+							owner = { 
+								if = {
+									limit = { scope:actor = { gold_reserves > 100000000 } }
+									scope:target_country = { add_treasury = 100000 }
+									scope:actor = { add_treasury = -100000 }
+								}
 							}
 						}
 					}
@@ -192,7 +270,7 @@
 				
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_NO_MUTUAL_TRADE_ROUTES"
-					value = -1000
+					value = -50
 				}				
 			}
 			else = {
