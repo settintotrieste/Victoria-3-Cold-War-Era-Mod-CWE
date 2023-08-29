@@ -198,6 +198,8 @@ NAI = {
 
 	DIPLO_PLAY_BACK_DOWN_CHANCE_THRESHOLD = 0 # If ( confidence + boldness ) is less than this, consider backing down 
 	DIPLO_PLAY_BACK_DOWN_CHANCE_ESCALATION = 30 # Above this escalation, AI will consider backing down
+	DIPLO_PLAY_BACK_DOWN_INCREASE_CHANCE_THRESHOLD = -50 # If ( confidence + boldness ) is less than this, increase the chance of backing down
+	DIPLO_PLAY_BACK_DOWN_INCREASE_CHANCE_MULTIPLIER = 2.0 # If ( confidence + boldness ) is less than DIPLO_PLAY_BACK_DOWN_INCREASE_CHANCE_THRESHOLD, increase the chance of backing down by this factor
 	DIPLO_PLAY_BACK_DOWN_GUARANTEED_THRESHOLD = -75 # If ( confidence + boldness ) is less than this, always back down before the play goes to war
 	DIPLO_PLAY_BACK_DOWN_GUARANTEED_ESCALATION = 95 # Above this escalation, AI will always back down if it's supposed to
 	DIPLO_PLAY_BACK_DOWN_CHANCE_LOW_ESCALATION = 0.1 # 1.0 = 1% (chance each tick) - used before countdown to war starts
@@ -308,7 +310,9 @@ NAI = {
 	DIPLO_PLAY_IDEOLOGICAL_OPINION_FACTOR = 1 # Ideological opinion is multiplied by this and added to acceptance to join a side
 	DIPLO_PLAY_IDEOLOGICAL_OPINION_REVOLUTION_MULT = 3 # DIPLO_PLAY_IDEOLOGICAL_OPINION_FACTOR is multiplied by this in a revolution play
 	DIPLO_PLAY_SECESSION_OWN_SECESSION_RISK_FACTOR = -100 # Add this amount of reluctance for AI to back a secession of a culture that has enough pops in their own country to secede
-	DIPLO_PLAY_NON_ALLY_RECOGNITION_FACTOR = -100 # Add this amount of reluctance for AI to back a recognition demand from a non-allied unrecognized power
+	DIPLO_PLAY_NON_ALLY_UNRECOGNIZED_BASE_FACTOR = -25 #  Add this amount of reluctance for AI to back a non-allied unrecognized power against a recognized one 
+	DIPLO_PLAY_NON_ALLY_UNRECOGNIZED_INCONSEQUENTAL_ENEMY_DEMANDS_FACTOR = -50 #  Add this amount of reluctance for AI to back a non-allied unrecognized power against a recognized power that isn't demanding significant territorial concessions (conquer/make subject etc)
+	DIPLO_PLAY_NON_ALLY_UNRECOGNIZED_CONSEQUENTAL_DEMANDS_FACTOR = -100 # Add this amount of reluctance for AI to back significant demands from a non-allied unrecognized power
 
 	# Diplo play scoring for relations levels
 	DIPLO_PLAY_RELATIONS_HOSTILE_FACTOR = -50
@@ -615,6 +619,7 @@ NAI = {
 	PRODUCTION_BUILDING_DISFAVORED_GOODS_FACTOR = -0.25 # Add this value to a building for each unit of money worth of building goods output that the AI disfavors
 	PRODUCTION_BUILDING_MISSING_QUALIFICATIONS_MULT = 0.50 # Multiply score by this if there's not enough qualifications to staff the building (disabled for now)
 	PRODUCTION_BUILDING_DESIRED_INFRASTRUCTURE_SURPLUS = 2 # If infrastructure 'surplus' in state is less than this, AI wants to improve it
+	PRODUCTION_BUILDING_FREE_INFRASTRUCTURE_TARGET_WHEN_LACKING_WORKFORCE = 5 # When lacking workforce, the AI will stop building in the state once available infrastructure is this or less
 	PRODUCTION_BUILDING_EXCESSIVE_INFRASTRUCTURE_SURPLUS = 10 # If infra 'surplus' in state is at least this, AI doesn't want to improve it
 	PRODUCTION_BUILDING_REDUCE_SHORTAGE_MULT = 5 # Multiply score by this if we're reducing the state region's shortages
 	PRODUCTION_BUILDING_INCREASE_SHORTAGE_MULT = 0.01 # Multiply score by this if we're increasing the state region's shortages
@@ -699,6 +704,7 @@ NAI = {
 	AI_PEACE_DESIRE_FROM_BANKRUPTCY = 100 # Add this amount of peace desire when bankrupt
 	AI_PEACE_DESIRE_FROM_GOLD_RESERVES = -25 # Subtract this amount of peace desire at 100% gold reserves
 	AI_PEACE_DESIRE_FROM_FORCE_BALANCE = 50 # Up to this amount is added or subtracted from war support based on DIPLO_PLAY_FORCE_BALANCE_SCALE of the two sides
+	AI_PEACE_DESIRE_FACTOR_FROM_ANNEXATION = 0.5 # If peace will cause the country to be annexed then all positive peace desire factors will be multiplied by this value
 	
 	# AI country-specific goal data
 	SECRET_GOAL_STICKINESS = 2.0 # The higher this is, the less likely the AI is to change an established secret goal during recalculation
@@ -770,6 +776,9 @@ NAI = {
 	TRADE_ROUTE_PLAYER_SUGGESTION_MIN_SCORE_MULT = 1.0 # If trade route has at least (min AI score to create * this) in score, suggest it as a possible route for player
 	
 	TRADE_ROUTE_RANDOM_FACTOR = 1.0 # The higher this is, the more random the AI will be about where it makes trade routes
+	TRADE_ROUTE_GOOD_SUPPLY_TO_DEMAND_RATIO_THRESHOLD = 0.25 # AI will only consider setting up trade routes for goods whose supply:demand ratio is off balance by this much
+	TRADE_ROUTE_MARKET_GDP_RATIO_THRESHOLD = 0.2 # AI will only consider trading with markets whose GDP is greater than their own GDP times this value
+	TRADE_ROUTE_IGNORE_MARKET_GDP_RATIO_PROBABILITY = 0.1 # When AI considers possible trade routes, market GDP differences will be ignored with this probability.
 	TRADE_ROUTE_EXPORT_VS_IMPORT_TOLERANCE = 1.5 # The AI is OK with having up to this amount more import than export routes or vice versa
 	TRADE_ROUTE_TRADE_VALUE_FACTOR = 1.0 # The expected final trade volume * base price of goods is multiplied by this
 	TRADE_ROUTE_SUGGESTION_COMPETITION_FACTOR = -0.75 # The amount of sell/buy orders generated by routes that directly compete with this route is multiplied by this for suggesting routes to the player
@@ -875,6 +884,9 @@ NPolitics = {
 	MARGINAL_IG_CUTOFF = 0.01			# Interest Groups who are already relevant will only become marginal again if they drop below this value.
 	
 	RECENT_PARTY_DAYS = 14				# Party is considered recently formed if activated within RECENT_PARTY_DAYS days range
+	
+	MAX_GOVERNMENT_ALTERNATIVES_TO_CONSIDER_AI = 12			# When evaluating government reform options (for AI), only consider this many constellations (sorted by average clout, descending) [>=1]
+	MAX_GOVERNMENT_ALTERNATIVES_TO_CONSIDER_PLAYER = 256	# When evaluating government reform options (the 3 suggested to the player in the UI), only consider this many constellations (sorted by average clout, descending) [>=3]
 	
 	DEFAULT_LAW_ACTIVATION_DATE = "1836.1.1"	
 	
@@ -1227,8 +1239,14 @@ NMilitary = {
 	CONVOY_RAIDING_DELAY_BASE_DAYS = 5						# atleast this many days between each admiral raiding attempt
 	CONVOY_RAIDING_DELAY_MAX_RANDOM_DAYS_FACTOR = 10		# up to this many extra days between each admiral raiding attempt
 	CONVOY_RAIDING_CONVOY_ATTACK_CHANCE = 0.2				# Chance each attempt that convoy raiders find convoys to attack from each country along the shipping lane (1 = 100%)
-	CONVOY_RAIDING_STRENGTH_MULT = 0.1						# How strong each Convoy raiding point is ( num flotillas * ce offense )
-	CONVOY_RAIDING_DAYS_UNTIL_DECAY = 28					# How many days it takes for convoy raiding effect to decay fully 
+	CONVOY_RAIDING_STRENGTH_MULT = 0.08						# How strong each Convoy raiding point is ( num flotillas * ce offense )
+	CONVOY_RAIDING_DAMAGE_RANDOM_FACTOR = 0.5				# Actual convoy raiding damage is increased by up to this to provide some random variability
+	CONVOY_RAIDING_DEFENSE_MULT = 0.05						# How much is Convoy raiding strength reduced by patrolling flotillas  ( num flotillas * ce defense )
+	CONVOY_RAIDING_MAX_DEFENSE = 0.75						# Convoy raiding damage cannot be reduced below this by convoy raiding defense
+	
+	# Convoy recovery rate after being raided is based on a global and a local rate, using whichever is lower
+	CONVOY_RAIDING_GLOBAL_RECOVERY_RATE = 0.003				# The rate at which damaged convoys are replaced each day, relative to total number of produced convoys in the raided country
+	CONVOY_RAIDING_LOCAL_RECOVERY_RATE = 0.01				# The rate at which damaged convoys are replaced each day, relative to total number of convoys passing through the sea node
 
 	MIN_OFFENSE_DEFENSE = 1									# The absolute lowest Offense or Defense a unit can have
 
@@ -1502,7 +1520,6 @@ NPops = {
 	MAX_NUM_OBSESSIONS = 3						# A culture can only have this number of obsessions at the same time
 	OBSESSION_SPAWN_CHANCE = 0.1				# Per year (1.0 = 1%), multiplied by goods supply and market size mult
 	OBSESSION_SPAWN_CHANCE_MAX_SUPPLY_MULT = 3.0		# Supply relative to demand above this isn't factored into spawn chance
-	SUBSTITUTION_WEIGHT_MULT = 5.0				# The weight of a substitutable good that has 100% of the supply share
 	TABOO_DEMAND_MULT = 0.5						# Demand of a taboo is multiplied by this
 	MAX_DEMAND_ADJUSTMENT_BASE_AMOUNT = 0.01	# Controls how much a pop can change demand of a substituable goods in a single update (base)
 	MAX_DEMAND_ADJUSTMENT_SCALED_AMOUNT = 0.09	# Controls how much a pop can change demand of a substituable goods in a single update (scaled)
@@ -1671,10 +1688,11 @@ NTechnology = {
 }
 
 NCharacters = {
-	RULER_MIN_AGE_FOR_HEIR = 21 # Before this age, don't randomly generate heirs for rulers
-	RULER_AGE_FOR_HEIR_CHANCE_BOOST = 30 # A year after this age start boosting chance of heir generation
-	RULER_HEIR_GENERATION_CHANCE = 0.001 # Per day
-	RULER_HEIR_CHANCE_BOOST_SCALE = 0.001 # Added to RULER_HEIR_CHANCE_BOOST for each year after RULER_AGE_FOR_HEIR_CHANCE_BOOST
+	NUM_RANDOM_NAME_TRIES_FOR_UNIQUENESS = 3	# When generating random names for characters, try this many times to find a unique name within the country [>=1]
+	RULER_MIN_AGE_FOR_HEIR = 20 				# Before this age, don't randomly generate heirs for rulers
+	RULER_AGE_FOR_HEIR_CHANCE_BOOST = 30 		# A year after this age start boosting chance of heir generation
+	RULER_HEIR_GENERATION_CHANCE = 0.001 		# Per day
+	RULER_HEIR_CHANCE_BOOST_SCALE = 0.001 		# Added to RULER_HEIR_CHANCE_BOOST for each year after RULER_AGE_FOR_HEIR_CHANCE_BOOST
 	AGE_GENERATION_STARTVAL = 40
 	AGE_GENERATION_DICE_ROLL_MAGNITUDE = 6
 	AGE_GENERATION_NUM_DICE_ROLLS = 5

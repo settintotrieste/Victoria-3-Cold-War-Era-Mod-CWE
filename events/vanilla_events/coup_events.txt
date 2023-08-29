@@ -180,6 +180,23 @@ coup.1 = {
 				limit = {
 					scope:coup_ig = {
 						law_stance = {
+							law = law_type:law_HOS_religious_leader
+							value >= approve
+						}
+					}
+				}
+				set_variable = { name = coup_for_law value = 5 }
+				random_law = {
+					limit = {
+						type = law_type:law_HOS_religious_leader
+					}
+					save_scope_as = coup_desired_law
+				}
+			}
+			else_if = {
+				limit = {
+					scope:coup_ig = {
+						law_stance = {
 							law = law_type:law_HOS_monarch
 							value >= approve
 						}
@@ -424,6 +441,8 @@ coup.2 = {
 
 	duration = 3
 
+	
+
 	title = coup.2.t
 	desc = {
 		first_valid = {
@@ -540,6 +559,11 @@ coup.2 = {
 		if = {
 			limit = {
 				has_law = law_type:law_HOS_monarch
+				NOT = {
+					scope:coup_desired_law = {
+						type = law_type:law_appointed_legislature
+					}
+				}
 			}
 			set_variable = {
 				name = abolishing_monarchy_var
@@ -614,13 +638,15 @@ coup.2 = {
 			}
 			else_if = {
 				limit = {
-					ruler.interest_group = {
+					ruler.interest_group ?= {
 						NOT = {
 							is_same_interest_group_type = scope:coup_ig
 						}
 					}
-					heir.interest_group = {
-						is_same_interest_group_type = scope:coup_ig
+					heir ?= {
+						THIS.interest_group = {
+							is_same_interest_group_type = scope:coup_ig
+						}
 					}
 				}
 				ruler = {
@@ -630,10 +656,10 @@ coup.2 = {
 			}
 			else = {
 				hidden_effect = {
-					heir = {
+					heir ?= {
 						kill_character = yes
 					}
-					ruler = {
+					ruler ?= {
 						kill_character = yes
 					}
 				}
@@ -807,6 +833,68 @@ coup.2 = {
 		name = coup.2.e
 		trigger = {
 			scope:coup_desired_law = {
+				type = law_type:law_HOS_religious_leader
+			}
+		}
+		default_option = yes
+		
+		#Become independent if THIS is a subject
+		if = {
+			limit = { 
+				exists = overlord
+			}
+			change_relations = {
+				country = overlord
+				value = -100
+			}
+			make_independent = yes
+		}
+		
+		scope:coup_ig = {
+			hidden_effect = {
+				if = {
+					limit = {
+						has_modifier = modifier_unrivaled_in_government
+					}
+					remove_modifier = modifier_unrivaled_in_government
+				}
+			}
+			add_modifier = {
+				name = modifier_unrivaled_in_government
+				months = long_modifier_time
+				is_decaying = yes
+			}
+		}
+		if = {
+			limit = {
+				any_country = {
+					has_variable = coup_sponsor
+					this.var:coup_sponsor = root
+				}
+			}
+			root = { set_owes_obligation_to = { country = scope:coup_sponsor_obligation_target setting = yes } }	
+			scope:coup_sponsor_obligation_target = {
+				remove_variable = coup_sponsor
+			}
+		}
+		scope:coup_ig = {
+			leader = {
+				set_character_as_ruler = yes
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					has_law = law_type:law_technocratic_legislature
+				}
+			}
+			activate_law = law_type:law_technocratic_legislature
+		}
+	}
+	option = {
+		name = coup.2.g
+		trigger = {
+			scope:coup_desired_law = {
 				type = law_type:law_HOS_communist_leader
 			}
 		}
@@ -858,7 +946,6 @@ coup.2 = {
 		}
 		if = {
 			limit = {
-				
 				NOT = {
 					has_law = law_type:law_single_party_state
 				}
@@ -866,68 +953,6 @@ coup.2 = {
 			activate_law = law_type:law_single_party_state
 		}
 		else_if = {
-			limit = {
-				NOT = {
-					has_law = law_type:law_technocratic_legislature
-				}
-			}
-			activate_law = law_type:law_technocratic_legislature
-		}
-	}
-	option = {
-		name = coup.2.g
-		trigger = {
-			scope:coup_desired_law = {
-				type = law_type:law_HOS_religious_leader
-			}
-		}
-		default_option = yes
-		
-		#Become independent if THIS is a subject
-		if = {
-			limit = { 
-				exists = overlord
-			}
-			change_relations = {
-				country = overlord
-				value = -100
-			}
-			make_independent = yes
-		}
-		
-		scope:coup_ig = {
-			hidden_effect = {
-				if = {
-					limit = {
-						has_modifier = modifier_unrivaled_in_government
-					}
-					remove_modifier = modifier_unrivaled_in_government
-				}
-			}
-			add_modifier = {
-				name = modifier_unrivaled_in_government
-				months = long_modifier_time
-				is_decaying = yes
-			}
-		}
-		if = {
-			limit = {
-				any_country = {
-					has_variable = coup_sponsor
-					this.var:coup_sponsor = root
-				}
-			}
-			root = { set_owes_obligation_to = { country = scope:coup_sponsor_obligation_target setting = yes } }	
-			scope:coup_sponsor_obligation_target = {
-				remove_variable = coup_sponsor
-			}
-		}
-		scope:coup_ig = {
-			leader = {
-				set_character_as_ruler = yes
-			}
-		}
-		if = {
 			limit = {
 				NOT = {
 					has_law = law_type:law_technocratic_legislature
@@ -997,10 +1022,16 @@ coup.3 = {
 			OR = {
 				has_law = law_type:law_censorship
 				has_law = law_type:law_outlawed_dissent
+			}
+			OR  = {
 				has_law = law_type:law_secret_police
 				has_law = law_type:law_balanced_policing
 				has_law = law_type:law_strict_policing
 				has_law = law_type:law_draconian_policing
+			}
+			OR  = {
+				institution:institution_police.investment >= 3
+				institution:institution_home_affairs.investment >= 3
 			}
 		}
 		create_character = {
@@ -1022,8 +1053,8 @@ coup.3 = {
 				}
 			}
 		}
-		add_radicals_in_state = {
-			value = very_large_radicals
+		add_radicals = {
+			value = medium_radicals
 			interest_group = scope:coup_ig
 		}
 	}
@@ -1035,7 +1066,7 @@ coup.3 = {
 			any_interest_group = {
 				is_marginal = no
 				law_stance = {
-					law = scope:coup_desired_law
+					law = scope:coup_desired_law.type
 					value < neutral
 				}
 			}
@@ -1044,7 +1075,7 @@ coup.3 = {
 			limit = {
 				is_marginal = no
 				law_stance = {
-					law = scope:coup_desired_law
+					law = scope:coup_desired_law.type
 					value < neutral
 				}
 			}
@@ -1060,11 +1091,11 @@ coup.3 = {
 				name = coup_prevented
 				months = long_modifier_time
 				is_decaying = yes
-				multiplier = -3 # -6 approval
+				multiplier = -5 # -10 approval
 			}
 			set_variable = { name = coup_guilty days = 3650 }
 		}
-		add_radicals_in_state = {
+		add_radicals = {
 			value = large_radicals
 			interest_group = scope:coup_ig
 		}
@@ -1079,11 +1110,11 @@ coup.3 = {
 				name = coup_prevented
 				months = long_modifier_time
 				is_decaying = yes
-				multiplier = -2 # -4 approval
+				multiplier = -4 # -8 approval
 			}
 			set_variable = { name = coup_guilty days = 3650 }
 		}
-		add_radicals_in_state = {
+		add_radicals = {
 			value = medium_radicals
 			interest_group = scope:coup_ig
 		}
@@ -1102,7 +1133,7 @@ coup.4 = {
 	flavor = coup.4.f
 
 	event_image = {
-		video = "unspecific_politicians_arguing"
+		video = "europenorthamerica_london_center"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -1147,7 +1178,7 @@ coup.4 = {
 			scope:coup_ig = {
 				is_powerful = no
 				law_stance = {
-					law = scope:coup_desired_law
+					law = scope:coup_desired_law.type
 					value >= approve
 				}
 			}
@@ -1183,7 +1214,7 @@ coup.4 = {
 				NOT = { THIS = scope:coup_ig }
 				is_marginal = no
 				law_stance = {
-					law = scope:coup_desired_law
+					law = scope:coup_desired_law.type
 					value < approve
 				}
 			}
@@ -1251,14 +1282,14 @@ coup.5 = {
 	option = {
 		name = coup.5.a
 		default_option = yes
-		add_radicals_in_state = {
+		add_radicals = {
 			value = medium_radicals
 		}
 		every_interest_group = {
 			limit = {
 				is_marginal = no
 				law_stance = {
-					law = scope:coup_desired_law
+					law = scope:coup_desired_law.type
 					value < approve
 				}
 			}
@@ -1275,14 +1306,14 @@ coup.5 = {
 
 	option = {
 		name = coup.5.b
-		add_radicals_in_state = {
+		add_radicals = {
 			value = small_radicals
 		}
 		every_interest_group = {
 			limit = {
 				is_marginal = no
 				law_stance = {
-					law = scope:coup_desired_law
+					law = scope:coup_desired_law.type
 					value < approve
 				}
 			}
@@ -1358,7 +1389,7 @@ coup_pulse_events.1 = {
 
 	cancellation_trigger = {
 		scope:accused_general = {
-			exists = no
+			is_character_alive = no
 		}
 	}
 
@@ -1381,7 +1412,9 @@ coup_pulse_events.1 = {
 		if = {
 			limit = {
 				scope:accused_general = {
-					is_same_interest_group_type = scope:coup_ig
+					interest_group = {
+						is_same_interest_group_type = scope:coup_ig
+					}
 				}
 			}
 			change_variable = {
@@ -1394,7 +1427,7 @@ coup_pulse_events.1 = {
 			limit = {
 				scope:accused_general = {
 					law_stance = {
-						law = scope:coup_desired_law
+						law = scope:coup_desired_law.type
 						value < neutral
 					}
 				}
@@ -1415,7 +1448,9 @@ coup_pulse_events.1 = {
 		if = {
 			limit = {
 				scope:accused_general = {
-					is_same_interest_group_type = scope:coup_ig
+					interest_group = {
+						is_same_interest_group_type = scope:coup_ig
+					}
 				}
 			}
 			change_variable = {
@@ -1543,8 +1578,6 @@ coup_pulse_events.3 = {
 	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
 
 	duration = 3
-
-	
 
 	cooldown = { months = normal_modifier_time }
 
@@ -1690,7 +1723,7 @@ coup_pulse_events.4 = {
 				}
 				add_modifier = {
 					name = modifier_wary_investors_building
-					months = 12Work
+					months = 12
 				}
 			}
 			random_scope_building = {
@@ -1740,6 +1773,8 @@ coup_pulse_events.5 = {
 	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
 
 	duration = 3
+
+	
 
 	cooldown = { months = normal_modifier_time }
 
@@ -1810,6 +1845,8 @@ coup_pulse_events.6 = {
 	icon = "gfx/interface/icons/event_icons/event_protest.dds"
 
 	duration = 3
+
+	
 
 	cooldown = { months = normal_modifier_time }
 
@@ -1893,6 +1930,8 @@ coup_pulse_events.7 = {
 	icon = "gfx/interface/icons/event_icons/event_skull.dds"
 
 	duration = 3
+
+	
 
 	cooldown = { months = normal_modifier_time }
 
@@ -1978,6 +2017,8 @@ coup_pulse_events.8 = {
 
 	duration = 3
 
+	
+
 	cooldown = { months = normal_modifier_time }
 
 	trigger = {
@@ -1993,6 +2034,15 @@ coup_pulse_events.8 = {
 			NOT = {
 				this = root
 			}
+			NOT = {
+				has_variable = coup_sponsor
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		scope:coup_sponsor_country = {
+			has_variable = coup_sponsor
 		}
 	}
 
@@ -2009,6 +2059,9 @@ coup_pulse_events.8 = {
 				}
 				NOT = {
 					this = root
+				}
+				NOT = {
+					has_variable = coup_sponsor
 				}
 			}
 			save_scope_as = coup_sponsor_country
@@ -2059,6 +2112,8 @@ coup_pulse_events.9 = {
 	icon = "gfx/interface/icons/event_icons/event_skull.dds"
 
 	duration = 3
+
+	
 
 	cooldown = { months = normal_modifier_time }
 
@@ -2139,6 +2194,8 @@ coup_pulse_events.10 = {
 
 	duration = 3
 
+	
+
 	cooldown = { months = normal_modifier_time }
 
 	trigger = {
@@ -2210,6 +2267,8 @@ coup_pulse_events.11 = {
 	icon = "gfx/interface/icons/event_icons/bicorne_hat.dds"
 
 	duration = 3
+
+	
 
 	cooldown = { months = long_modifier_time }
 
@@ -2330,6 +2389,8 @@ coup_pulse_events.12 = {
 
 	duration = 3
 
+	
+
 	cooldown = { months = long_modifier_time }
 
 	trigger = {
@@ -2443,6 +2504,8 @@ coup_pulse_events.13 = {
 
 	duration = 3
 
+	
+
 	cooldown = { months = long_modifier_time }
 
 	trigger = {
@@ -2554,6 +2617,8 @@ coup_pulse_events.14 = {
 	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
 
 	duration = 3
+
+	
 
 	cooldown = { months = long_modifier_time }
 
@@ -2668,6 +2733,8 @@ coup_pulse_events.15 = {
 	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
 
 	duration = 3
+
+	
 
 	cooldown = { months = long_modifier_time }
 
@@ -2784,6 +2851,8 @@ coup_pulse_events.16 = {
 	icon = "gfx/interface/icons/event_icons/event_industry.dds"
 
 	duration = 3
+
+	
 
 	cooldown = { months = long_modifier_time }
 
@@ -2902,6 +2971,8 @@ coup_pulse_events.17 = {
 
 	duration = 3
 
+	
+
 	cooldown = { months = long_modifier_time }
 
 	trigger = {
@@ -3017,6 +3088,8 @@ coup_pulse_events.18 = {
 	icon = "gfx/interface/icons/event_icons/event_protest.dds"
 
 	duration = 3
+
+	
 
 	cooldown = { months = long_modifier_time }
 
@@ -3139,6 +3212,8 @@ coup_aftermath_events.1 = {
 
 	duration = 3
 
+	
+
 	cooldown = { months = normal_modifier_time }
 
 	trigger = {
@@ -3252,6 +3327,8 @@ coup_aftermath_events.2 = {
 
 	duration = 3
 
+	
+
 	cooldown = { months = normal_modifier_time }
 
 	trigger = {
@@ -3332,6 +3409,8 @@ coup_aftermath_events.3 = {
 	icon = "gfx/interface/icons/event_icons/event_protest.dds"
 
 	duration = 3
+
+	
 
 	cooldown = { months = normal_modifier_time }
 
@@ -3439,6 +3518,8 @@ coup_aftermath_events.4 = {
 	icon = "gfx/interface/icons/event_icons/event_protest.dds"
 
 	duration = 3
+
+	
 
 	cooldown = { months = normal_modifier_time }
 
