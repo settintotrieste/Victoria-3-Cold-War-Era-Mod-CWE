@@ -9,18 +9,36 @@
 		has_modifier = nuclear_capability
 		NOT = { has_modifier = nuclear_attack_cooldown }
 		
-		#THIS is at war
-		is_at_war = yes
+		#THIS is at war OR a country that THIS has stationed nuclear weapons in is at war
+		OR = { 
+			is_at_war = yes
+			any_country = {
+				has_diplomatic_pact = { who = scope:actor type = station_nuclear_weapons is_initiator = no }
+				is_at_war = yes
+			}
+		}
 		
 		#Can only threaten an enemy war leader
-		any_scope_war = {
-			is_warleader = scope:target_country
-			is_war_participant = scope:actor
-			is_war_participant = scope:target_country
+		OR = {
+			AND = {
+				any_scope_war = {
+					is_warleader = scope:target_country
+					is_war_participant = scope:actor
+					is_war_participant = scope:target_country
+				}
+				scope:target_country = { is_diplomatic_play_enemy_of = scope:actor }
+				has_war_with = scope:target_country
+				NOT = { is_in_war_together = scope:target_country }
+			}
+			any_country = {
+				has_diplomatic_pact = { who = scope:actor type = station_nuclear_weapons is_initiator = no }
+				has_war_with = scope:target_country
+				any_scope_war = {
+					is_warleader = scope:target_country
+				}
+				is_diplomatic_play_enemy_of = scope:target_country
+			}
 		}
-		scope:target_country = { is_diplomatic_play_enemy_of = scope:actor }
-		has_war_with = scope:target_country
-		NOT = { is_in_war_together = scope:target_country }
 		
 		#Civil war countries do not nuke each other
 		is_revolutionary = no
@@ -76,6 +94,37 @@
 				end_play = yes
 			}
 			scope:actor = { 
+				create_truce = {
+					country = scope:target_country
+					months = 24
+				}
+			}
+		}
+		
+		#Nuclear umbrella system
+		random_country = {
+			limit = {
+				has_diplomatic_pact = { who = scope:actor type = station_nuclear_weapons is_initiator = no }
+				has_war_with = scope:target_country
+				any_scope_war = {
+					is_warleader = scope:target_country
+				}
+				is_diplomatic_play_enemy_of = scope:target_country
+			}
+			save_scope_as = THIS_umbrella_country_scope
+		}
+		custom_tooltip = {
+			text = enter_into_a_white_peace_umbrella.tt
+			every_diplomatic_play = {
+				limit = {
+					OR = { 
+						AND = { initiator_is = scope:target_country target_is = scope:THIS_umbrella_country_scope }
+						AND = { initiator_is = scope:THIS_umbrella_country_scope target_is = scope:target_country }
+					}
+				}
+				end_play = yes
+			}
+			scope:THIS_umbrella_country_scope = { 
 				create_truce = {
 					country = scope:target_country
 					months = 24
@@ -279,7 +328,8 @@
 			exists = ruler
 			ruler = { has_ideology = ideology:ideology_autocratic }
 			
-			#THIS is losing the war
+			#THIS is losing the war against TARGET
+			has_war_with = scope:target_country
 			any_scope_war = {
 				OR = { 
 					has_war_exhaustion = { target = scope:actor value > 90 }
