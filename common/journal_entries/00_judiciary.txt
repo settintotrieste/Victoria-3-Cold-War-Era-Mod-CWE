@@ -1,0 +1,128 @@
+﻿je_judiciary = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	scripted_button = je_judiciary_appoint_judges_button
+	scripted_button = je_judiciary_expand_court_button
+
+	possible = {
+		
+		#Judiciary has power
+		NOT = { has_law = law_type:law_kangaroo_law }
+		
+	}
+
+	immediate = {
+		
+		#Default is an even split
+		set_variable = {
+			name = judiciary_progressiveness
+			value = 6
+		}
+		
+		#Default Supreme Court size is 12
+		set_variable = {
+			name = judiciary_size
+			value = 12
+		}
+		
+	}
+	
+	invalid = {
+	
+		#Judiciary no longer has any power
+		has_law = law_type:law_kangaroo_law
+		
+	}
+	
+	on_invalid = {
+		
+		#Reset judicial progressiveness
+		remove_variable = judiciary_progressiveness
+		remove_variable = judiciary_size
+		remove_variable = judiciary_size_majority
+		
+	}
+
+	current_value = {
+		value =	root.var:judiciary_progressiveness
+	}
+
+	goal_add_value = {
+		value = root.var:judiciary_size
+	}
+
+	on_monthly_pulse = {
+		
+		effect = {
+			
+			#Appoint judges automatically if judiciary is not politicised (gravitate to neutrality)
+			if = {
+				limit = { root.var:judiciary_progressiveness > root.var:judiciary_size_majority }
+				change_variable = { 
+					name = judiciary_progressiveness
+					add = -1
+				}
+			}
+			if = {
+				limit = { root.var:judiciary_progressiveness < root.var:judiciary_size_majority }
+				change_variable = { 
+					name = judiciary_progressiveness
+					add = 1
+				}
+			}
+			
+			#Determine judiciary majority
+			set_variable = { 
+				name = judiciary_size_majority 
+				value = root.var:judiciary_size
+			}
+			change_variable = { 
+				name = judiciary_size_majority 
+				divide = 2
+			}
+			
+			#Chance of changing laws if court is progressive
+			if = {
+				limit = { 
+					root.var:judiciary_progressiveness > root.var:judiciary_size_majority
+				}
+				
+				#Can alter Political Policies + State Structure Laws
+				if = {
+					limit = { has_law = law_type:law_civil_law }
+					random_list = {
+						11 = {
+							
+						}
+						1 = {
+							
+						}
+					}
+				}
+				
+				#Can alter Political Policies + State Structure Laws
+				if = {
+					limit = { has_law = law_type:law_common_law }
+					random_list = {
+						11 = {
+							
+						}
+						1 = {
+							
+						}
+					}
+				}
+			}
+			
+		}
+		
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = no
+
+	transferable = no
+
+	progressbar = no
+}
