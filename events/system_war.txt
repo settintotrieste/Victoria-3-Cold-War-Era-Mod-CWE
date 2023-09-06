@@ -233,3 +233,559 @@ war_system.3 = {
     }
 
 }
+
+#War Exhaustion
+war_system.4 = {
+    type = country_event
+	placement = scope:war_protest_state
+
+    title = anti_war_protest_war_exhaustion.t 					# Title of the event; ADD LOCALISATION
+    desc = anti_war_protest_war_exhaustion.d 					# Description of the event; ADD LOCALISATION
+    flavor = anti_war_protest_war_exhaustion.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/africa_public_protest.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_protest.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {											# What triggers the event, if using other events or journal entries leave empty
+		
+		#Country has negative war support
+		any_scope_war = { has_war_support = { target = ROOT value < 0 } }
+		
+		NOT = { has_variable = anti_war_protest_war_exhaustion }
+		
+    }
+	
+	immediate = {
+		
+		#Select a state to have the protest
+		random_scope_state = {
+			limit = {
+				is_incorporated = yes
+			}
+			save_scope_as = war_protest_state
+		}
+		
+	}
+    
+    option = {
+        name = anti_war_protest.option							# Let them protest
+		default_option = yes
+		
+		#Gain radicals from IGs who are peace loving
+		anger_pacifists_medium = yes 
+		scope:war_protest_state = { 
+			custom_tooltip = {
+				text = apply_pm_offense_defense_readjustment_minor_state.tt
+				every_scope_building = {
+					limit = {
+						OR = {
+							is_building_type = building_naval_base
+							is_building_type = building_barracks
+							is_building_type = building_conscription_center
+						}
+					}
+					if = {
+						limit = { has_modifier = pm_offense_defense_readjustment_minor }
+						remove_modifier = pm_offense_defense_readjustment_minor
+						add_modifier = { 
+							name = pm_offense_defense_readjustment_minor 
+							months = 6 
+							is_decaying = yes 
+						}
+					}
+					else = {
+						add_modifier = { 
+							name = pm_offense_defense_readjustment_minor 
+							months = 6 
+							is_decaying = yes 
+						}
+					}
+				}
+			}
+		}
+		
+		#Less war support for any ongoing wars
+		if = {
+			limit = { is_at_war = yes any_diplomatic_play = { is_war = yes is_diplomatic_play_participant = ROOT } }
+			every_diplomatic_play = {
+				limit = {
+					is_war = yes
+					is_diplomatic_play_participant = ROOT
+				}
+				add_diplomatic_play_war_support = { target = ROOT value = -1 }
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+    }
+	
+	option = {
+        name = anti_war_protest_crush.option					# Crush the protestors
+		trigger = {
+			OR = {
+				NOT = { has_law = law_type:law_full_free_speech }
+				has_modifier = wartime_measures_martial_law
+			}
+		}
+		
+		#Gain radicals from IGs who are peace loving
+		scope:war_protest_state = { anger_pacifists_small = yes }
+		
+		#Timer of 3 months
+		set_variable = { name = anti_war_protest_war_exhaustion months = 3 }
+		
+		#Gain infamy
+		change_infamy = 1
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+    }
+
+}
+
+#Protest against fighting brother states
+war_system.5 = {
+    type = country_event
+
+    title = anti_war_protest_frenemies.t 						# Title of the event; ADD LOCALISATION
+    desc = anti_war_protest_war_frenemies.d 					# Description of the event; ADD LOCALISATION
+    flavor = anti_war_protest_war_frenemies.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/africa_public_protest.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_protest.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {											# What triggers the event, if using other events or journal entries leave empty
+		
+		#THIS is fighting a culturally similar state who has a similar government type
+		any_country = {
+			is_at_war = yes
+			has_war_with = ROOT
+			any_primary_culture = {
+				shares_heritage_and_other_trait_with_any_primary_culture = ROOT 
+			}
+			NOR = {
+				AND = { is_a_democracy = yes ROOT = { is_some_kind_of_democracy = yes } }
+				AND = { is_a_communist_government = yes ROOT = { is_a_communist_government = yes } }
+				AND = { is_a_nationalist_government = yes ROOT = { is_a_nationalist_government = yes } }
+				AND = { is_a_theocratic_government = yes ROOT = { is_a_theocratic_government = yes } }
+			}
+		}
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = anti_war_protest.option							# Let them protest
+		default_option = yes
+		
+		#Gain radicals from IGs who are peace loving
+		anger_pacifists_medium = yes
+		
+		#Less war support for any ongoing wars
+		if = {
+			limit = { is_at_war = yes any_diplomatic_play = { is_war = yes is_diplomatic_play_participant = ROOT } }
+			every_diplomatic_play = {
+				limit = {
+					is_war = yes
+					is_diplomatic_play_participant = ROOT
+				}
+				add_diplomatic_play_war_support = { target = ROOT value = -2 }
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+    }
+	
+	option = {
+        name = anti_war_protest_crush.option					# Crush the protestors
+		trigger = {
+			OR = {
+				NOT = { has_law = law_type:law_full_free_speech }
+				has_modifier = wartime_measures_martial_law
+			}
+		}
+		
+		#Gain radicals from IGs who are peace loving
+		anger_pacifists_small = yes
+		
+		#Gain infamy
+		change_infamy = 2
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+    }
+
+}
+
+#Criticism of the Military
+war_system.6 = {
+    type = country_event
+
+    title = anti_war_protest_blame_military.t 					# Title of the event; ADD LOCALISATION
+    desc = anti_war_protest_blame_military.d 					# Description of the event; ADD LOCALISATION
+    flavor = anti_war_protest_blame_military.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:unpopular_general
+
+    icon = "gfx/interface/icons/event_icons/event_protest.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {											# What triggers the event, if using other events or journal entries leave empty
+		
+		any_scope_war = { has_war_support = { target = ROOT value < 0 } }
+		
+		#There is an unpopular field commander
+		any_scope_character = {
+			OR = {
+				has_role = general
+				has_role = admiral
+			}
+			NOT = { has_role = politician }
+			popularity < 25
+			is_busy = no
+			is_in_battle = no
+		}
+		
+    }
+	
+	immediate = {
+		
+		#Mark an unpopular General
+		random_scope_character = {
+			limit = {
+				OR = {
+					has_role = general
+					has_role = admiral
+				}
+				NOT = { has_role = politician }
+				popularity < 25
+				is_busy = no
+				is_in_battle = no
+			}
+			save_scope_as = unpopular_general
+		}
+		
+	}
+    
+    option = {
+        name = anti_war_protest_sack_general.option				# Sack the General
+		highlighted_option = yes
+		
+		custom_tooltip = {
+			text = sack_unpopular_general.tt
+			scope:unpopular_general = {
+				kill_character = {
+					hidden = yes
+					value = yes
+				}
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+    }
+	
+	option = {
+        name = anti_war_protest_keep_general.option				# Keep the General
+		default_option = yes
+		
+		#Gain radicals from IGs who are jinogistic
+		anger_jingoist_small = yes
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+    }
+
+}
+
+#High Command in Chaos
+war_system.7 = {
+    type = country_event
+
+    title = anti_war_protest_sack_army_chief.t 					# Title of the event; ADD LOCALISATION
+    desc = anti_war_protest_sack_army_chief.d 					# Description of the event; ADD LOCALISATION
+    flavor = anti_war_protest_sack_army_chief.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	gui_window = event_window_2char
+
+	left_icon = scope:unpopular_army_chief
+	right_icon = scope:opposing_general
+
+    icon = "gfx/interface/icons/event_icons/event_protest.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {											# What triggers the event, if using other events or journal entries leave empty
+		
+		any_scope_war = { has_war_support = { target = ROOT value < -25 } }
+		
+		#There is an unpopular field commander
+		any_scope_character = {
+			has_role = politician
+			is_interest_group_type = ig_armed_forces
+			is_busy = no
+			is_in_battle = no
+		}
+		
+		#There is an general opposing
+		any_scope_character = {
+			OR = {
+				has_role = general
+				has_role = admiral
+			}
+			NOT = { has_role = politician }
+			NOT = { is_interest_group_type = ig_armed_forces }
+			is_busy = no
+			is_in_battle = no
+		}
+		
+		#Timer of 6 months
+		NOT = { ig:ig_armed_forces = { has_modifier = military_infighting } }
+		NOT = { has_variable = anti_war_protest_sack_army_chief }
+		
+    }
+	
+	immediate = {
+		
+		#Mark Chief of the Armed Forces
+		random_scope_character = {
+			limit = {
+				has_role = politician
+				is_interest_group_type = ig_armed_forces
+				is_busy = no
+				is_in_battle = no
+			}
+			save_scope_as = unpopular_army_chief
+		}
+		
+		#Mark opposing General
+		random_scope_character = {
+			limit = {
+				OR = {
+					has_role = general
+					has_role = admiral
+				}
+				NOT = { has_role = politician }
+				NOT = { is_interest_group_type = ig_armed_forces }
+				is_busy = no
+				is_in_battle = no
+			}
+			save_scope_as = opposing_general
+		}
+		
+		#Timer of 6 months
+		set_variable = { name = anti_war_protest_sack_army_chief months = 6 }
+		
+	}
+    
+    option = {
+        name = anti_war_protest_sack_army_chief.option				# Sack the General
+		highlighted_option = yes
+		
+		custom_tooltip = {
+			text = sack_army_chief.tt
+			scope:unpopular_army_chief = {
+				kill_character = {
+					hidden = yes
+					value = yes
+				}
+			}
+		}
+		
+		custom_tooltip = {
+			text = apply_pm_offense_defense_readjustment_minor.tt
+			every_scope_building = {
+				limit = {
+					OR = {
+						is_building_type = building_naval_base
+						is_building_type = building_barracks
+						is_building_type = building_conscription_center
+					}
+				}
+				if = {
+					limit = { has_modifier = pm_offense_defense_readjustment_minor }
+					remove_modifier = pm_offense_defense_readjustment_minor
+					add_modifier = { 
+						name = pm_offense_defense_readjustment_minor 
+						months = 6 
+						is_decaying = yes 
+					}
+				}
+				else = {
+					add_modifier = { 
+						name = pm_offense_defense_readjustment_minor 
+						months = 6 
+						is_decaying = yes 
+					}
+				}
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+    }
+	
+	option = {
+        name = anti_war_protest_keep_army_chief.option				# Keep the General
+		default_option = yes
+		
+		#Sack opposer
+		custom_tooltip = {
+			text = sack_opposing_general.tt
+			scope:opposing_general = {
+				kill_character = {
+					hidden = yes
+					value = yes
+				}
+			}
+		}
+		
+		if = {
+			limit = { ig:ig_armed_forces = { NOT = { has_modifier = military_infighting } } }
+			ig:ig_armed_forces = { add_modifier = { name = military_infighting months = 5 is_decaying = yes } }
+		}
+		
+		add_radicals = {
+			value = medium_radicals
+			pop_type = soldiers
+		}
+		add_radicals = {
+			value = large_radicals
+			pop_type = officers
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+    }
+
+}
