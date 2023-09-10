@@ -1083,6 +1083,23 @@ on_diplomatic_pact_third_party_auto_break = {
 on_country_released_as_independent = {
 	effect = {
 		
+		#Create Personal Union if monarchy
+		if = {
+			limit = { 
+				scope:target = {
+					is_sufficiently_independent = yes
+					is_a_monarchy = yes
+				}
+				ROOT = { is_a_monarchy = yes }
+			}
+			ROOT = { 
+				create_diplomatic_pact = {
+					country = scope:target
+					type = personal_union
+				}
+			}
+		}
+		
 	}
 }
 
@@ -1090,121 +1107,55 @@ on_country_released_as_independent = {
 # scope:target = Released Country
 on_country_released_as_own_subject = {
 	effect = {
+		
+		#SAR
 		if = {
-			limit = {
-				c:NEN ?= scope:target
+			limit = { 
+				scope:target = { 
+					is_direct_subject_of = ROOT 
+					NOT = { is_sufficiently_independent = yes }
+					capital = { is_homeland_of_country_cultures = ROOT }
+				}
 			}
-			scope:target = {
-				create_character = {
-					ig_leader = yes
-					interest_group = ig_rural_folk
-					ideology = ideology_luddite
+			scope:target = { make_independent = yes }
+			ROOT = { 
+				create_diplomatic_pact = {
+					country = scope:target
+					type = special_administrative_region
 				}
 			}
 		}
+		
+		#Puppet
 		if = {
-			limit = {
-				scope:target = {
-					country_has_primary_culture = cu:ashkenazi
+			limit = { 
+				scope:target = { 
+					is_direct_subject_of = ROOT 
+					NOT = { is_sufficiently_independent = yes }
+					capital = { NOT = { is_homeland_of_country_cultures = ROOT } }
 				}
-				NOT = {
-					s:STATE_PALESTINE = {
-						is_homeland = cu:ashkenazi
-					}
-				}
-			}
-			s:STATE_PALESTINE = {
-				add_homeland = sephardic
-				add_homeland = ashkenazi
-			}
-		}
-		scope:target = {
-			if = {
-				limit = {
-					country_has_state_religion = rel:theravada
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_theravada_monks
-					remove_ideology = ideology_moralist
-					add_ideology = ideology_buddhist_moralist
+				OR = {
+					AND = { ROOT = { country_is_in_europe = yes } scope:target = { country_is_in_europe = yes } }
+					AND = { ROOT = { country_is_in_north_america = yes } scope:target = { country_is_in_north_america = yes } }
+					AND = { ROOT = { country_is_in_central_america = yes } scope:target = { country_is_in_central_america = yes } }
+					AND = { ROOT = { country_is_in_south_america = yes } scope:target = { country_is_in_south_america = yes } }
+					AND = { ROOT = { country_is_in_africa = yes } scope:target = { country_is_in_africa = yes } }
+					AND = { ROOT = { country_is_in_middle_east = yes } scope:target = { country_is_in_middle_east = yes } }
+					AND = { ROOT = { country_is_in_central_asia = yes } scope:target = { country_is_in_central_asia = yes } }
+					AND = { ROOT = { country_is_in_india = yes } scope:target = { country_is_in_india = yes } }
+					AND = { ROOT = { country_is_in_east_asia = yes } scope:target = { country_is_in_east_asia = yes } }
+					AND = { ROOT = { country_is_in_southeast_asia = yes } scope:target = { country_is_in_southeast_asia = yes } }
 				}
 			}
-			if = {
-				limit = {
-					exists = c:RUS
-					c:RUS = scope:target
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_orthodox_church
-					remove_ideology = ideology_patriarchal
-					add_ideology = ideology_russian_patriarch
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:orthodox
-					OR = {
-						NOT = { exists = c:RUS }
-						NOT = { c:RUS = scope:target }
-					}
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_orthodox_church
-					remove_ideology = ideology_patriarchal
-					add_ideology = ideology_orthodox_patriarch
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:hindu
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_hindu_priesthood
-					remove_ideology = ideology_hindu_moralist
-					add_ideology = ideology_hindu_moralist
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:gelugpa
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_vajrayana_monks
-					remove_ideology = ideology_moralist
-					add_ideology = ideology_buddhist_moralist
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:mahayana
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_mahayana_monks
-					remove_ideology = ideology_moralist
-					add_ideology = ideology_buddhist_moralist
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:sikh
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_sikh_priesthood
-					remove_ideology = ideology_moralist
-					add_ideology = ideology_sikh_moralist
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:oriental_orthodox
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_oriental_orthodox_church
-					remove_ideology = ideology_patriarchal
-					add_ideology = ideology_oriental_orthodox_patriarch
+			scope:target = { make_independent = yes }
+			ROOT = { 
+				create_diplomatic_pact = {
+					country = scope:target
+					type = puppet
 				}
 			}
 		}
+		
 	}
 }
 
@@ -1212,109 +1163,55 @@ on_country_released_as_own_subject = {
 # scope:target = Released Country
 on_country_released_as_overlord_subject = {
 	effect = {
+		
+		#SAR
 		if = {
-			limit = {
-				scope:target = {
-					country_has_primary_culture = cu:ashkenazi
-				}
-				NOT = {
-					s:STATE_PALESTINE = {
-						is_homeland = cu:ashkenazi
-					}
+			limit = { 
+				scope:target = { 
+					is_direct_subject_of = ROOT 
+					NOT = { is_sufficiently_independent = yes }
+					capital = { is_homeland_of_country_cultures = ROOT }
 				}
 			}
-			s:STATE_PALESTINE = {
-				add_homeland = sephardic
-				add_homeland = ashkenazi
-			}
-		}
-		scope:target = {
-			if = {
-				limit = {
-					country_has_state_religion = rel:theravada
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_theravada_monks
-					remove_ideology = ideology_moralist
-					add_ideology = ideology_buddhist_moralist
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:orthodox
-					OR = {
-						NOT = { exists = c:RUS }
-						NOT = { c:RUS = scope:target }
-					}
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_orthodox_church
-					remove_ideology = ideology_patriarchal
-					add_ideology = ideology_orthodox_patriarch
-				}
-			}
-			if = {
-				limit = {
-					exists = c:RUS
-					c:RUS = scope:target
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_orthodox_church
-					remove_ideology = ideology_patriarchal
-					add_ideology = ideology_russian_patriarch
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:hindu
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_hindu_priesthood
-					remove_ideology = ideology_hindu_moralist
-					add_ideology = ideology_hindu_moralist
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:gelugpa
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_vajrayana_monks
-					remove_ideology = ideology_moralist
-					add_ideology = ideology_buddhist_moralist
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:mahayana
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_mahayana_monks
-					remove_ideology = ideology_moralist
-					add_ideology = ideology_buddhist_moralist
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:sikh
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_sikh_priesthood
-					remove_ideology = ideology_moralist
-					add_ideology = ideology_sikh_moralist
-				}
-			}
-			if = {
-				limit = {
-					country_has_state_religion = rel:oriental_orthodox
-				}
-				ig:ig_devout = {
-					set_interest_group_name = ig_oriental_orthodox_church
-					remove_ideology = ideology_patriarchal
-					add_ideology = ideology_oriental_orthodox_patriarch
+			scope:target = { make_independent = yes }
+			ROOT = { 
+				create_diplomatic_pact = {
+					country = scope:target
+					type = special_administrative_region
 				}
 			}
 		}
+		
+		#Puppet
+		if = {
+			limit = { 
+				scope:target = { 
+					is_direct_subject_of = ROOT 
+					NOT = { is_sufficiently_independent = yes }
+					capital = { NOT = { is_homeland_of_country_cultures = ROOT } }
+				}
+				OR = {
+					AND = { ROOT = { country_is_in_europe = yes } scope:target = { country_is_in_europe = yes } }
+					AND = { ROOT = { country_is_in_north_america = yes } scope:target = { country_is_in_north_america = yes } }
+					AND = { ROOT = { country_is_in_central_america = yes } scope:target = { country_is_in_central_america = yes } }
+					AND = { ROOT = { country_is_in_south_america = yes } scope:target = { country_is_in_south_america = yes } }
+					AND = { ROOT = { country_is_in_africa = yes } scope:target = { country_is_in_africa = yes } }
+					AND = { ROOT = { country_is_in_middle_east = yes } scope:target = { country_is_in_middle_east = yes } }
+					AND = { ROOT = { country_is_in_central_asia = yes } scope:target = { country_is_in_central_asia = yes } }
+					AND = { ROOT = { country_is_in_india = yes } scope:target = { country_is_in_india = yes } }
+					AND = { ROOT = { country_is_in_east_asia = yes } scope:target = { country_is_in_east_asia = yes } }
+					AND = { ROOT = { country_is_in_southeast_asia = yes } scope:target = { country_is_in_southeast_asia = yes } }
+				}
+			}
+			scope:target = { make_independent = yes }
+			ROOT = { 
+				create_diplomatic_pact = {
+					country = scope:target
+					type = puppet
+				}
+			}
+		}
+		
 	}
 }
 
@@ -1387,6 +1284,19 @@ on_capitulation = {
             days = 100
             value = yes
         }
+		every_scope_cobelligerent = {
+			limit = { has_subject_relation_with = ROOT }
+			set_variable = {
+				name = recently_lost_war
+				days = 1825
+				value = yes
+			}
+			set_variable = {
+				name = has_lost_a_war
+				days = 100
+				value = yes
+			}
+		}
 	}
 }
 
@@ -1403,6 +1313,18 @@ on_self_capitulated_notification = {
             days = 100
             value = yes
         }
+		every_scope_cobelligerent = {
+			limit = { has_subject_relation_with = ROOT }
+			set_variable = {
+				name = recent_capitulation
+				months = short_modifier_time
+			}
+			set_variable = {
+				name = has_lost_a_war
+				days = 100
+				value = yes
+			}
+		}
 	}
 }
 
@@ -2178,8 +2100,21 @@ on_wargoal_enforced = {
             name = has_won_a_war
             days = 100
             value = yes
-        }   
-	}	
+        }
+		every_scope_cobelligerent = {
+			limit = { has_subject_relation_with = ROOT }
+			set_variable = {
+				name = recently_won_war
+				days = 1825
+				value = yes
+			}
+			set_variable = {
+				name = has_won_a_war
+				days = 100
+				value = yes
+			}
+		}
+	}
 }
 
 # Root = Interest Group
@@ -2194,68 +2129,6 @@ on_ig_resigned_government = {
 			}
 			root = {
 				set_variable = resigned_from_gov_coup
-			}
-		}
-		
-		if = {
-			limit = {
-				owner = {
-					c:FRA ?= this
-					has_law = law_type:law_HOS_monarch
-					NOT = { has_journal_entry = je_cement_the_rightful_dynasty }
-					OR = {
-						AND = {
-							ruler = {
-								has_variable = legitimist_leader
-							}
-							NOT = {
-								any_interest_group = {
-									leader = {
-										OR = {
-											has_ideology = ideology:ideology_orleanist
-											has_ideology = ideology:ideology_bonapartist
-										}
-									}
-								}
-							}
-						}
-						AND = {
-							ruler = {
-								has_variable = orleanist_leader
-							}
-							NOT = {
-								any_interest_group = {
-									leader = {
-										OR = {
-											has_ideology = ideology:ideology_legitimist
-											has_ideology = ideology:ideology_bonapartist
-										}
-									}
-								}
-							}
-						}
-						AND = {
-							ruler = {
-								has_variable = bonapartist_leader
-							}
-							NOT = {
-								any_interest_group = {
-									leader = {
-										OR = {
-											has_ideology = ideology:ideology_orleanist
-											has_ideology = ideology:ideology_legitimist
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			owner = {
-				add_journal_entry = {
-					type = je_cement_the_rightful_dynasty
-				}
 			}
 		}
 	}
