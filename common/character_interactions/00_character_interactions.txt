@@ -41,6 +41,12 @@ grant_command_to_ruler = {
 		value = 5
 		if = {
 			limit = {
+				NOT = { is_interest_group_type = ig_armed_forces }
+			}
+			add = -50
+		}
+		if = {
+			limit = {
 				NOT = {
 					owner = {	
 						any_scope_general = {
@@ -64,9 +70,9 @@ grant_command_to_ruler = {
 		}
 		if = {
 			limit = {
-				NOT = { is_interest_group_type = ig_armed_forces }
+				is_interest_group_type = ig_armed_forces
 			}
-			add = -50
+			add = 25
 		}
 		if = {
 			limit = {
@@ -151,7 +157,7 @@ grant_leadership_to_agitator = {
 		}
 		
 		# Foreigners cannot be IG leaders unless the country is multicultural
-		owner = {
+		scope:actor ?= {
 			has_law = law_type:law_multicultural
 		}
 		
@@ -161,6 +167,7 @@ grant_leadership_to_agitator = {
 				culture_is_discriminated_in = scope:actor
 			}
 		}
+		
 	}
 
 	effect = {
@@ -229,7 +236,7 @@ grant_command_to_agitator = {
 		exists = owner.capital.land_hq
 		
 		#Foreigners cannot be military leaders unless the country is multicultural
-		owner = {
+		scope:actor ?= {
 			has_law = law_type:law_multicultural
 		}
 		
@@ -239,6 +246,7 @@ grant_command_to_agitator = {
 				culture_is_discriminated_in = scope:actor
 			}
 		}
+		
 	}
 
 	effect = {
@@ -299,7 +307,7 @@ marry_ruler_or_heir = {
 			is_heir = yes
 		}
 		scope:actor ?= {
-			has_law = law_type:law_HOS_monarch OR = { has_law = law_type:law_HOG_none has_law = law_type:law_HOG_president_prime_minister }
+			is_a_regime_monarchy = yes
 			religion = {
 				has_discrimination_trait = christian
 			}
@@ -312,7 +320,7 @@ marry_ruler_or_heir = {
 	possible = {
 		any_country = {
 			NOT = { THIS = scope:actor }
-			has_law = law_type:law_HOS_monarch OR = { has_law = law_type:law_HOG_none has_law = law_type:law_HOG_president_prime_minister }
+			is_a_regime_monarchy = yes
 			religion = scope:actor.religion
 			ruler = {
 				age > 36
@@ -343,7 +351,7 @@ abdicate_monarch = {
 		owner = scope:actor
 		is_ruler = yes
 		owner = {
-			has_law = law_type:law_HOS_monarch OR = { has_law = law_type:law_HOG_none has_law = law_type:law_HOG_president_prime_minister }
+			is_a_regime_monarchy = yes
 		}
 		exists = owner.heir
 	}
@@ -440,9 +448,12 @@ exile_character = {
 
 	possible = {
 		owner = {
-			NOR = {
-				has_law = law_type:law_full_free_speech
-				has_law = law_type:law_closed_borders
+			OR = { 
+				has_law = law_type:law_outlawed_dissent
+				AND = { 
+					is_a_dictatorship = yes
+					NOT = { has_law = law_type:law_full_free_speech }
+				}
 			}
 		}
 		OR = {
@@ -538,6 +549,20 @@ exile_character = {
 				add_radicals = {
 					value = small_radicals
 					interest_group = scope:relevant_ig
+				}
+			}
+		}
+		# Boring characters should be made interesting when being exiled
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_elitist
+			}
+			random_list = { 
+				1 = {
+					set_ideology = ideology:ideology_power_hungry
+				}
+				1 = {
+					set_ideology = ideology:autocratic
 				}
 			}
 		}
@@ -672,7 +697,6 @@ demobilize_general = {
 	show_requirements = yes
 
 	possible = {
-		exists = var:num_months_mobilized
 		custom_tooltip = {
 			text = demobilize_general_tt
 			var:num_months_mobilized >= num_months_before_permit_demobilization
@@ -742,11 +766,13 @@ invite_exile = {
 			}
 		}
 		# cannot invite culturally discriminated exiles
-		culture = {
-			NOT = { culture_is_discriminated_in = scope:actor }
+		NOT = {
+			culture = {
+				culture_is_discriminated_in = scope:actor
+			}
 		}
 		# Cannot invite exiles if you have Closed Borders
-		scope:actor ?= {
+		scope:actor = {
 			NOT = { has_law = law_type:law_closed_borders }
 		}
 	}
@@ -757,27 +783,6 @@ invite_exile = {
 		custom_tooltip = invite_exile_start_join_movement_effect
 		hidden_effect = {
 			remove_modifier = in_exile_modifier
-		}
-		hidden_effect = {
-			if = {
-				limit = {
-					has_variable = mazzini_var
-					has_dlc_feature = voice_of_the_people_content
-				}
-				scope:actor = {
-					trigger_event = { id = historical_agitators.7 days = 3 }
-				}
-			}
-			if = {
-				limit = {
-					has_variable = garibaldi_var
-					has_dlc_feature = voice_of_the_people_content
-				}
-				set_variable = {
-					name = garibaldi_cooldown_var
-					months = short_modifier_time
-				}
-			}
 		}
 	}
 
