@@ -1,0 +1,110 @@
+namespace = reserve_powers_system
+
+#Ceremonial President's Veto
+reserve_powers_system.1 = {
+	type = country_event
+
+	title = reserve_powers_veto.t
+	desc = reserve_powers_veto.d
+	flavor = reserve_powers_veto.f
+
+	event_image = {
+		video = "gfx/event_pictures/middleeast_courtroom_upheaval.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		#Triggered by JE
+		
+	}
+
+	immediate = {
+		
+		random_interest_group = {
+			limit = { 
+				leader = { has_variable = ceremonial_head_of_state }
+				is_in_government = yes 
+			}
+			leader = { save_scope_as = ceremonial_head_of_state }
+			save_scope_as = ceremonial_head_of_state_ig
+		}
+		
+	}
+
+	option = {
+		name = reserve_powers_system_accept_option #Accept the presidential veto
+		default_option = yes
+		
+		add_enactment_setback = 3
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = reserve_powers_system_reject_option #Reject the presidential veto
+		trigger = {
+			OR = {
+				AND = { 
+					has_journal_entry = je_upper_house
+					has_variable = upper_house_has_super_majority
+					government_legitimacy > 66
+				}
+				AND = { 
+					NOT = { has_journal_entry = je_upper_house }
+					government_legitimacy > 66
+				}
+			}
+		}
+		
+		set_variable = ceremonial_head_of_state_veto_overruled
+		
+		add_enactment_setback = 1
+		
+		#Opposition IGs are angry
+		every_interest_group = {
+			limit = { is_in_government = yes }
+			remove_modifier = ig_angry_with_government
+			add_modifier = { name = ig_angry_with_government years = 2 is_decaying = yes }
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
