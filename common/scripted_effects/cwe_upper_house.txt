@@ -1,7 +1,5 @@
 calculate_upper_house_composition = {
 
-	post_notification = upper_house_composition_updated
-
 	#Calculate upper_house size
 	set_variable = {
 		name = upper_house_size_var
@@ -147,7 +145,7 @@ calculate_upper_house_composition = {
 			}
 		}
 	}
-	else_if = {
+	if = {
 		limit = { 
 			ig:ig_petty_bourgeoisie = { is_in_government = yes } 
 		}
@@ -188,7 +186,7 @@ calculate_upper_house_composition = {
 			}
 		}
 	}
-	else_if = {
+	if = {
 		limit = { 
 			ig:ig_trade_unions = { is_in_government = yes } 
 		}
@@ -229,7 +227,7 @@ calculate_upper_house_composition = {
 			}
 		}
 	}
-	else_if = {
+	if = {
 		limit = { 
 			ig:ig_landowners = { is_in_government = yes } 
 		}
@@ -270,7 +268,7 @@ calculate_upper_house_composition = {
 			}
 		}
 	}
-	else_if = {
+	if = {
 		limit = { 
 			ig:ig_devout = { is_in_government = yes } 
 		}
@@ -311,7 +309,7 @@ calculate_upper_house_composition = {
 			}
 		}
 	}
-	else_if = {
+	if = {
 		limit = { 
 			ig:ig_rural_folk = { is_in_government = yes } 
 		}
@@ -352,7 +350,7 @@ calculate_upper_house_composition = {
 			}
 		}
 	}
-	else_if = {
+	if = {
 		limit = { 
 			ig:ig_bureaucrats = { is_in_government = yes } 
 		}
@@ -393,7 +391,7 @@ calculate_upper_house_composition = {
 			}
 		}
 	}
-	else_if = {
+	if = {
 		limit = { 
 			ig:ig_armed_forces = { is_in_government = yes } 
 		}
@@ -435,6 +433,71 @@ calculate_upper_house_composition = {
 		}
 	}
 	
+	#Bipartisan pacts
+	if = {
+		limit = { 
+			root.var:pro_government_senators_var < root.var:upper_house_size_var 
+			has_variable = has_bipartisan_plan
+		}
+		random_interest_group = {
+			limit = { 
+				is_in_government = no
+				is_marginal = no
+				ig_approval > happy
+				has_variable = bipartisan_participant
+			}
+			save_scope_as = bipartisan_participant_ig
+		}
+		if = {
+			limit = { exists = scope:bipartisan_participant_ig }
+			every_scope_state = {
+				limit = { 
+					is_incorporated = yes
+					NOT = { state_region = s:STATE_DISTRICT_OF_COLUMBIA }
+					ig_state_pol_strength_share = {
+						target = scope:bipartisan_participant_ig
+						value >= root.var:upper_house_upper_limit_var
+					}
+				}
+				owner = { 
+					change_variable = {
+						name = pro_government_senators_var
+						add = 2
+					}
+				}
+			}
+			every_scope_state = {
+				limit = { 
+					is_incorporated = yes
+					NOT = { state_region = s:STATE_DISTRICT_OF_COLUMBIA }
+					ig_state_pol_strength_share = {
+						target = scope:bipartisan_participant_ig
+						value >= root.var:upper_house_lower_limit_var
+					}
+					ig_state_pol_strength_share = {
+						target = scope:bipartisan_participant_ig
+						value < root.var:upper_house_upper_limit_var
+					}
+				}
+				owner = { 
+					change_variable = {
+						name = pro_government_senators_var
+						add = 1
+					}
+				}
+			}
+		}
+	}
+	
+	#Full House
+	if = {
+		limit = { root.var:pro_government_senators_var > root.var:upper_house_size_var }
+		set_variable = {
+			name = pro_government_senators_var
+			value = root.var:upper_house_size_var
+		}
+	}
+	
 	#Determine if a simple majority exists
 	set_variable = {
 		name = upper_house_majority_var
@@ -466,5 +529,7 @@ calculate_upper_house_composition = {
 		remove_variable = upper_house_has_filibuster_majority
 		remove_variable = upper_house_has_super_majority
 	}
+	
+	post_notification = upper_house_composition_updated
 
 }

@@ -1,0 +1,123 @@
+namespace = cabinet_system
+
+#Minister Resigns
+cabinet_system.1 = {
+	type = country_event
+
+	title = cabinet_minister_resigns.t
+	desc = cabinet_minister_resigns.d
+	flavor = cabinet_minister_resigns.f
+
+	event_image = {
+		video = "gfx/event_pictures/middleeast_courtroom_upheaval.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		#Angry Cabinet Member
+		any_interest_group = {
+			leader = { is_ruler = no }
+			OR = { 
+				leader = { has_modifier = cabinet_minister }
+				has_modifier = cabinet_minister_ig
+			}
+			OR = {
+				ig_approval <= unhappy
+				AND = {
+					enacting_any_law = yes
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < disapprove
+					}
+				}
+			}
+		}
+		
+		NOT = { has_variable = cabinet_system_1_fired }
+		
+	}
+
+	immediate = {
+		
+		random_interest_group = {
+			limit = { 
+				leader = { is_ruler = no }
+				OR = { 
+					leader = { has_modifier = cabinet_minister }
+					has_modifier = cabinet_minister_ig
+				}
+				OR = {
+					ig_approval <= unhappy
+					AND = {
+						enacting_any_law = yes
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < disapprove
+						}
+					}
+				}
+			}
+			save_scope_as = angry_cabinet_ig
+		}
+		
+		set_variable = cabinet_system_1_fired
+		
+	}
+
+	option = {
+		name = cabinet_system_option #Who cares about a loser!
+		default_option = yes
+		
+		#Minister resigns
+		if = {
+			limit = { exists = scope:angry_cabinet_ig }
+			scope:angry_cabinet_ig = { 
+				leader = { 
+					remove_modifier = cabinet_minister 
+					set_variable = { name = new_cabinet_minister months = 3 }
+				}
+				remove_modifier = cabinet_minister_ig
+				hidden_effect = {
+					remove_modifier = ig_angry_with_government
+					remove_modifier = THIS_is_ruler
+				}
+				add_modifier = { name = ig_angry_with_government years = 2 is_decaying = yes }
+			}
+		}
+		
+		#Ruler is weakened
+		random_interest_group = {
+			limit = { leader = { is_ruler = yes } }
+			hidden_effect = {
+				remove_modifier = politically_weakened_interest_group
+			}
+			add_modifier = { name = politically_weakened_interest_group years = 1 is_decaying = yes }
+		}
+		random_scope_character = {
+			limit = { is_ruler = yes }
+			hidden_effect = {
+				remove_modifier = politically_weakened_character
+			}
+			add_modifier = { name = politically_weakened_character years = 1 is_decaying = yes }
+		}
+		
+		#Set law back
+		if = {
+			limit = {
+				enacting_any_law = yes
+			}
+			add_enactment_setback = 1
+		}
+		
+		remove_variable = cabinet_system_1_fired
+		
+	}
+	
+}
