@@ -1,0 +1,275 @@
+je_constitutionalise_national_values_button = {
+	name = "je_constitutionalise_national_values_button"
+	desc = "je_constitutionalise_national_values_button_desc"
+
+	visible = { 
+		
+		#Country has a constitution
+		has_law = law_type:law_constitutional_supremacy
+		
+		#Country has not constitutionalised national value
+		NOR = {
+			has_variable = liberty_nv_constitutionalised
+			has_variable = equality_nv_constitutionalised
+			has_variable = order_nv_constitutionalised
+		}
+		
+	}
+
+	possible = {
+	
+		#Government can pass a constitutional amendment
+		government_has_legislative_super_majority = yes
+		
+		#Already has a national value
+		OR = { 
+			has_modifier = order_national_value
+			has_modifier = equality_national_value
+			has_modifier = liberty_national_value
+		}
+		
+	}
+
+	effect = {
+		
+		#Clear variables
+		remove_variable = liberty_nv_constitutionalised
+		remove_variable = equality_nv_constitutionalised
+		remove_variable = order_nv_constitutionalised
+		
+		#Constitutionalise National Value
+		custom_tooltip = {
+			text = constitutionalise_national_value.tt
+			if = {
+				limit = { has_modifier = liberty_national_value }
+				set_variable = liberty_nv_constitutionalised
+			}
+			if = {
+				limit = { has_modifier = equality_national_value }
+				set_variable = equality_nv_constitutionalised
+			}
+			if = {
+				limit = { has_modifier = order_national_value }
+				set_variable = order_nv_constitutionalised
+			}
+		}
+		
+		#Interest Groups love this
+		if = {
+			limit = { has_modifier = order_national_value }
+			every_interest_group = {
+				limit = { 
+					NOT = { has_modifier = happy_with_national_value }
+					OR = { 
+						has_ideology = ideology:ideology_totalitarian
+						has_ideology = ideology:ideology_authoritarian
+					}
+				}
+				add_modifier = { name = happy_with_national_value }
+			}
+			every_interest_group = {
+				limit = { 
+					has_modifier = happy_with_national_value
+					NOR = { 
+						has_ideology = ideology:ideology_totalitarian
+						has_ideology = ideology:ideology_authoritarian
+					}
+				}
+				remove_modifier = happy_with_national_value
+			}
+		}
+		if = {
+			limit = { has_modifier = equality_national_value }
+			every_interest_group = {
+				limit = { 
+					NOT = { has_modifier = happy_with_national_value }
+					has_ideology = ideology:ideology_communitarian
+				}
+				add_modifier = { name = happy_with_national_value }
+			}
+			every_interest_group = {
+				limit = { 
+					has_modifier = happy_with_national_value
+					NOT = { has_ideology = ideology:ideology_communitarian }
+				}
+				remove_modifier = happy_with_national_value
+			}
+		}
+		if = {
+			limit = { has_modifier = liberty_national_value }
+			every_interest_group = {
+				limit = { 
+					NOT = { has_modifier = happy_with_national_value }
+					has_ideology = ideology:ideology_individualist
+				}
+				add_modifier = { name = happy_with_national_value }
+			}
+			every_interest_group = {
+				limit = { 
+					has_modifier = happy_with_national_value
+					NOT = { has_ideology = ideology:ideology_individualist }
+				}
+				remove_modifier = happy_with_national_value
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		modifier = { 
+			trigger = { 
+			
+				OR = {
+				
+					AND = {
+						has_modifier = order_national_value
+						any_interest_group = { 
+							leader = { 
+								is_ruler = yes 
+							}
+							is_in_government = yes
+							is_strongest_ig_in_government = yes
+							OR = { 
+								has_ideology = ideology:ideology_totalitarian
+								has_ideology = ideology:ideology_authoritarian
+							}
+						}
+					}
+					AND = {
+						has_modifier = equality_national_value
+						any_interest_group = { 
+							leader = { 
+								is_ruler = yes 
+							}
+							is_in_government = yes
+							is_strongest_ig_in_government = yes
+							has_ideology = ideology:ideology_communitarian
+						}
+					}
+					AND = {
+						has_modifier = liberty_national_value
+						any_interest_group = { 
+							leader = { 
+								is_ruler = yes 
+							}
+							is_in_government = yes
+							is_strongest_ig_in_government = yes
+							has_ideology = ideology:ideology_individualist
+						}
+					}
+					
+				}
+				
+			}
+			add = 10 
+		}
+		
+	}
+	
+}
+
+je_unconstitutionalise_national_values_button = {
+	name = "je_unconstitutionalise_national_values_button"
+	desc = "je_unconstitutionalise_national_values_button_desc"
+
+	visible = { 
+		
+		#Country has a constitution
+		has_law = law_type:law_constitutional_supremacy
+		
+		#Country has not constitutionalised national value
+		OR = {
+			has_variable = liberty_nv_constitutionalised
+			has_variable = equality_nv_constitutionalised
+			has_variable = order_nv_constitutionalised
+		}
+		
+	}
+
+	possible = {
+	
+		#Government can pass a constitutional amendment
+		government_has_legislative_super_majority = yes
+		
+		#Already has a national value
+		OR = { 
+			has_modifier = order_national_value
+			has_modifier = equality_national_value
+			has_modifier = liberty_national_value
+		}
+		
+	}
+
+	effect = {
+		
+		#Remove Constitutionalised National Value
+		remove_variable = liberty_nv_constitutionalised
+		remove_variable = equality_nv_constitutionalised
+		remove_variable = order_nv_constitutionalised
+		
+		#Political effects
+		every_interest_group = {
+			limit = { 
+				has_modifier = happy_with_national_value
+			}
+			remove_modifier = happy_with_national_value
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		modifier = { 
+			trigger = { 
+			
+				OR = {
+				
+					AND = {
+						has_modifier = order_national_value
+						any_interest_group = { 
+							leader = { 
+								is_ruler = yes 
+							}
+							is_in_government = yes
+							is_strongest_ig_in_government = yes
+							NOR = { 
+								has_ideology = ideology:ideology_totalitarian
+								has_ideology = ideology:ideology_authoritarian
+							}
+						}
+					}
+					AND = {
+						has_modifier = equality_national_value
+						any_interest_group = { 
+							leader = { 
+								is_ruler = yes 
+							}
+							is_in_government = yes
+							is_strongest_ig_in_government = yes
+							NOT = { has_ideology = ideology:ideology_communitarian }
+						}
+					}
+					AND = {
+						has_modifier = liberty_national_value
+						any_interest_group = { 
+							leader = { 
+								is_ruler = yes 
+							}
+							is_in_government = yes
+							is_strongest_ig_in_government = yes
+							NOT = { has_ideology = ideology:ideology_individualist }
+						}
+					}
+					
+				}
+				
+			}
+			add = 10 
+		}
+		
+	}
+	
+}

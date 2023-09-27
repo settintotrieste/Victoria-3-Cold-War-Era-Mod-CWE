@@ -1,6 +1,9 @@
 ﻿je_national_values = {
 	icon = "gfx/interface/icons/event_icons/tutorial_icon.dds"
 
+	scripted_button = je_constitutionalise_national_values_button
+	scripted_button = je_unconstitutionalise_national_values_button
+
 	possible = {
 		
 		
@@ -9,7 +12,52 @@
 
 	immediate = {
 		
+		#Reset any left over constitutionalised national value
+		remove_variable = liberty_nv_constitutionalised
+		remove_variable = equality_nv_constitutionalised
+		remove_variable = order_nv_constitutionalised
+		
+		every_interest_group = {
+			limit = { 
+				has_modifier = happy_with_national_value
+			}
+			remove_modifier = happy_with_national_value
+		}
+		
+		#Set up national value
 		determine_national_value = yes
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+		
+			#Clear all constitutionalise NV effects
+			if = {
+				limit = {
+					NOT = { has_law = law_type:law_constitutional_supremacy }
+					OR = {
+						has_variable = liberty_nv_constitutionalised
+						has_variable = equality_nv_constitutionalised
+						has_variable = order_nv_constitutionalised
+					}
+				}
+				
+				remove_variable = liberty_nv_constitutionalised
+				remove_variable = equality_nv_constitutionalised
+				remove_variable = order_nv_constitutionalised
+				
+				every_interest_group = {
+					limit = { 
+						has_modifier = happy_with_national_value
+					}
+					remove_modifier = happy_with_national_value
+				}
+				
+			}
+			
+		}
 		
 	}
 
@@ -17,7 +65,25 @@
 	
 		effect = {
 		
-			determine_national_value = yes
+			#Update National Value only if national value is not constitutionalised
+			if = {
+				limit = {
+					NAND = {
+						has_law = law_type:law_constitutional_supremacy
+						OR = {
+							has_variable = liberty_nv_constitutionalised
+							has_variable = equality_nv_constitutionalised
+							has_variable = order_nv_constitutionalised
+						}
+						OR = { 
+							has_modifier = order_national_value
+							has_modifier = equality_national_value
+							has_modifier = liberty_national_value
+						}
+					}
+				}
+				determine_national_value = yes
+			}
 			
 		}
 		
