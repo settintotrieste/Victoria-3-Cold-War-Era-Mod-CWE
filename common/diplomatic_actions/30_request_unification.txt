@@ -1,0 +1,257 @@
+request_unification = {
+	requires_approval = yes
+	can_use_obligations = no
+
+	potential = {
+		
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#Not a civil war country
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no } 
+		
+		#THIS is an overlord of TARGET
+		scope:target_country = {
+			is_direct_subject_of = scope:actor
+			OR = { 
+				is_subject_type = subject_type_dominion
+				is_subject_type = subject_type_semi_autonomous_colony
+				is_subject_type = subject_type_mandate
+				
+				is_subject_type = subject_type_satellite
+				is_subject_type = subject_type_puppet
+				
+				is_subject_type = subject_type_confederal_state
+				is_subject_type = subject_type_special_administrative_region
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#THIS is interested in the TARGET
+		has_diplomatic_relevance = scope:target_country
+		
+		#THIS is sufficiently independent
+		is_sufficiently_independent = yes
+		
+		#THIS is not at war
+		is_at_war = no
+		
+		# THIS has good relations with TARGET OR TARGET has no choice
+		OR = {
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_AMICABLE_OR_GREATER
+				scope:target_country.relations:root >= relations_threshold:amicable
+			}
+			scope:target_country = {
+				is_direct_subject_of = scope:actor
+				NOT = { is_sufficiently_independent = yes }
+			}
+		}
+		
+		## There is a reason to unite both countries ##
+		
+		#Cultural similarity
+		scope:target_country = { any_primary_culture = { is_primary_culture_of = scope:actor } }
+		OR = {
+			scope:target_country = { capital = { is_homeland_of_country_cultures = scope:actor } }
+			scope:target_country = { is_subject_type = subject_type_confederal_state }
+		}
+		
+		#Ideological similarity
+		OR = {
+			custom_tooltip = {
+				text = has_same_gov_type_tt
+				OR = {
+					AND = { is_a_democracy = yes scope:target_country = { is_a_democracy = yes } }
+					AND = { is_a_communist_government = yes scope:target_country = { is_a_communist_government = yes } }
+					AND = { is_a_nationalist_government = yes scope:target_country = { is_a_nationalist_government = yes } }
+					AND = { is_a_theocratic_government = yes scope:target_country = { is_a_theocratic_government = yes } }
+				}
+			}
+			AND = {
+				OR = { is_a_presidential_regime = yes is_a_parliamentary_regime = yes } scope:target_country = { OR = { is_a_presidential_regime = yes is_a_parliamentary_regime = yes } }
+				OR = {
+					AND = { conservative_ruling_coalition = yes scope:target_country = { conservative_ruling_coalition = yes } }
+					AND = { liberal_ruling_coalition = yes scope:target_country = { liberal_ruling_coalition = yes } }
+					AND = { communist_ruling_coalition = yes scope:target_country = { communist_ruling_coalition = yes } }
+					AND = { socialist_ruling_coalition = yes scope:target_country = { socialist_ruling_coalition = yes } }
+					AND = { nationalist_ruling_coalition = yes scope:target_country = { nationalist_ruling_coalition = yes } }
+				}
+			}
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#OVERLORD unites with TARGET
+		annex = scope:target_country
+		
+		#Unified state is always a Federation
+		effect_starting_politics_constitutional_federal_state = yes
+		
+	}
+	
+	decline_effect = {
+	
+		#OVERLORD loses relations with subject
+		scope:target_country = { 
+			change_relations = { country = scope:actor value = -100 } 
+		}
+		
+	}
+	
+	ai = {
+	
+		check_acceptance_for_will_propose = yes
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+		
+			#Does not have historical railroading
+			NAND = { 
+				has_global_variable = historical_railroading_active 
+				game_date < 2000.1.1
+			}
+			
+		}
+		
+		accept_score = {
+			value = 0
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+				value = -100
+			}
+			
+			#No economic incentive to unite
+			if = {
+				limit = { 
+					"scope:actor.num_mutual_trade_route_levels_with_country(root)" < 1
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_NO_MUTUAL_TRADE_ROUTES"
+					value = -100
+				}
+			}
+			
+			#No strategic incentive to unite
+			if = {
+				limit = { 
+					scope:actor = {
+						NOT = { has_strategic_adjacency = scope:target_country }
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_NOT_NEIGHBOURING_COUNTRY"
+					value = -100
+				}
+			}
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:infamous
+						"scope:actor.infamy" < infamy_threshold:notorious
+					}
+					value = -25
+				}	
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:notorious
+						"scope:actor.infamy" < infamy_threshold:pariah
+					}
+					value = -50
+				}
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:pariah
+					}
+					value = -100
+				}					
+			}
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RANK"
+				if = {
+					limit = { scope:actor = { country_rank < root.country_rank } }
+					value = -100
+				}
+			}
+			
+			#THIS has a strong economy
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_GDP"
+				value = "scope:actor.ai_gdp_comparison(root)"
+				multiply = 2
+				min = -20
+				max = 20
+			}
+			
+			#Level of integration
+			if = {
+				limit = {
+					scope:actor = {
+						has_diplomatic_pact = { who = scope:target_country type = currency_union }
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_HAS_CURRENCY_UNION"
+					value = 20
+				}
+			}
+			if = {
+				limit = {
+					scope:actor = {
+						has_diplomatic_pact = { who = scope:target_country type = customs_union }
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_HAS_CUSTOMS_UNION"
+					value = 20
+				}
+			}
+			if = {
+				limit = {
+					scope:actor = {
+						has_diplomatic_pact = { who = scope:target_country type = legal_union }
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_HAS_LEGAL_UNION"
+					value = 20
+				}
+			}
+			if = {
+				limit = {
+					OR = { 
+						scope:actor = {
+							OR = { 
+								has_diplomatic_pact = { who = scope:target_country type = alliance }
+								has_diplomatic_pact = { who = scope:target_country type = defensive_pact }
+							}
+						}
+						scope:target_country = {
+							is_subject_of = scope:actor
+							NOT = { is_sufficiently_independent = yes }
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_HAS_ALLIANCE"
+					value = 20
+				}
+			}
+			
+		}
+		
+	}
+	
+}
