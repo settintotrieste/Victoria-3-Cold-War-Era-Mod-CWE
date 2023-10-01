@@ -12,22 +12,6 @@ request_unification = {
 		is_revolutionary = no
 		scope:target_country = { is_revolutionary = no } 
 		
-		#THIS is an overlord of TARGET
-		scope:target_country = {
-			is_direct_subject_of = scope:actor
-			OR = { 
-				is_subject_type = subject_type_dominion
-				is_subject_type = subject_type_semi_autonomous_colony
-				is_subject_type = subject_type_mandate
-				
-				is_subject_type = subject_type_satellite
-				is_subject_type = subject_type_puppet
-				
-				is_subject_type = subject_type_confederal_state
-				is_subject_type = subject_type_special_administrative_region
-			}
-		}
-		
 	}
 
 	possible = {
@@ -49,11 +33,33 @@ request_unification = {
 			}
 			scope:target_country = {
 				is_direct_subject_of = scope:actor
-				NOT = { is_sufficiently_independent = yes }
+				is_not_sufficiently_independent = yes
 			}
 		}
 		
 		## There is a reason to unite both countries ##
+		
+		#THIS is an overlord of TARGET OR has a higher rank than TARGET
+		OR = {
+			scope:target_country = {
+				is_direct_subject_of = scope:actor
+				OR = { 
+					is_subject_type = subject_type_dominion
+					is_subject_type = subject_type_semi_autonomous_colony
+					is_subject_type = subject_type_mandate
+					
+					is_subject_type = subject_type_satellite
+					is_subject_type = subject_type_puppet
+					
+					is_subject_type = subject_type_confederal_state
+					is_subject_type = subject_type_special_administrative_region
+				}
+			}
+			scope:target_country = {
+				country_rank < root.country_rank
+				is_sufficiently_independent = yes
+			}
+		}
 		
 		#Cultural similarity
 		scope:target_country = { any_primary_culture = { is_primary_culture_of = scope:actor } }
@@ -74,13 +80,17 @@ request_unification = {
 				}
 			}
 			AND = {
-				OR = { is_a_presidential_regime = yes is_a_parliamentary_regime = yes } scope:target_country = { OR = { is_a_presidential_regime = yes is_a_parliamentary_regime = yes } }
-				OR = {
-					AND = { conservative_ruling_coalition = yes scope:target_country = { conservative_ruling_coalition = yes } }
-					AND = { liberal_ruling_coalition = yes scope:target_country = { liberal_ruling_coalition = yes } }
-					AND = { communist_ruling_coalition = yes scope:target_country = { communist_ruling_coalition = yes } }
-					AND = { socialist_ruling_coalition = yes scope:target_country = { socialist_ruling_coalition = yes } }
-					AND = { nationalist_ruling_coalition = yes scope:target_country = { nationalist_ruling_coalition = yes } }
+				OR = { is_a_presidential_regime = yes is_a_parliamentary_regime = yes } 
+				scope:target_country = { OR = { is_a_presidential_regime = yes is_a_parliamentary_regime = yes } }
+				custom_tooltip = {
+					text = has_same_ruling_coalition_ideology_tt
+					OR = {
+						AND = { conservative_ruling_coalition = yes scope:target_country = { conservative_ruling_coalition = yes } }
+						AND = { liberal_ruling_coalition = yes scope:target_country = { liberal_ruling_coalition = yes } }
+						AND = { communist_ruling_coalition = yes scope:target_country = { communist_ruling_coalition = yes } }
+						AND = { socialist_ruling_coalition = yes scope:target_country = { socialist_ruling_coalition = yes } }
+						AND = { nationalist_ruling_coalition = yes scope:target_country = { nationalist_ruling_coalition = yes } }
+					}
 				}
 			}
 		}
@@ -100,9 +110,7 @@ request_unification = {
 	decline_effect = {
 	
 		#OVERLORD loses relations with subject
-		scope:target_country = { 
-			change_relations = { country = scope:actor value = -100 } 
-		}
+		change_relations = { country = scope:target_country value = -100 } 
 		
 	}
 	
@@ -231,7 +239,7 @@ request_unification = {
 			}
 			if = {
 				limit = {
-					OR = { 
+					OR = {
 						scope:actor = {
 							OR = { 
 								has_diplomatic_pact = { who = scope:target_country type = alliance }
@@ -246,6 +254,17 @@ request_unification = {
 				}
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_HAS_ALLIANCE"
+					value = 20
+				}
+			}
+			if = {
+				limit = {
+					scope:target_country = {
+						is_subject_of = scope:actor
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IS_SUBJECT_OF_THIS"
 					value = 20
 				}
 			}
