@@ -1,0 +1,214 @@
+je_political_trials_system = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	#scripted_button = je_political_trials_system_drop_case_button
+
+	possible = {
+		
+		#There is a character to be tried and convicted
+		any_scope_character = {
+			has_modifier = indicted_character
+			NOR = { 
+				has_modifier = convicted_character 
+				has_modifier = unjustly_convicted_character
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		#Mark character to be tried
+		random_scope_character = {
+			limit = { has_modifier = indicted_character }
+			save_scope_as = indicted_character_scope
+			interest_group = {
+				save_scope_as = indicted_character_ig_scope
+			}
+		}
+		
+		#Trial duration
+		set_variable = {
+			name = trial_progress_var
+			value = 0
+		}
+		
+	}
+	
+	current_value = {
+		value =	root.var:trial_progress_var
+	}
+
+	goal_add_value = {
+		add = 12
+	}
+	
+	complete = {
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+	}
+	
+	on_complete = {
+	
+		#Guaranteed conviction if indicted character committed crimes OR there was a kangaroo court
+		if = {
+			limit = {
+				scope:indicted_character_scope = {
+					
+					#Corruption scandal
+					has_modifier = ignored_corruption
+					has_modifier = corrupt_connections_exposed
+					has_modifier = corrupt_connections_exposed_minor
+					has_modifier = dealing_with_corruption
+					
+					#Traitor
+					has_modifier = treasonous_traitor
+					
+					#Abuse of Power
+					has_modifier = seizing_power
+					
+				}
+			}
+			scope:indicted_character_scope = {
+				remove_modifier = indicted_character
+				add_modifier = { name = convicted_character years = 10 }
+			}
+			scope:indicted_character_ig_scope = {
+				hidden_effect = { 
+					remove_modifier = convicted_character_ig
+					remove_modifier = unjustly_convicted_character_ig 
+				}
+				add_modifier = { name = convicted_character_ig years = 5 is_decaying = yes }
+			}
+		}
+		else_if = {
+			limit = {
+				has_law = law_type:law_politicised_judiciary 
+				has_law = law_type:law_kangaroo_law 
+			}
+			scope:indicted_character_scope = {
+				remove_modifier = indicted_character
+				add_modifier = { name = unjustly_convicted_character years = 10 }
+			}
+			scope:indicted_character_ig_scope = {
+				hidden_effect = { 
+					remove_modifier = convicted_character_ig
+					remove_modifier = unjustly_convicted_character_ig
+				}
+				add_modifier = { name = unjustly_convicted_character_ig = 5 is_decaying = yes }
+			}
+		}
+		
+		#50% chance of conviction if no crimes committed IF court is somewhat crooked
+		else_if = {
+			limit = {
+				OR = { 
+					NOT = { has_law = law_type:law_independent_judiciary }
+					NOT = { has_law = law_type:law_common_law }
+				}
+			}
+			
+			random_list = { 
+			
+				#Character is acquitted
+				1 = { 
+					scope:indicted_character_scope = {
+						remove_modifier = indicted_character
+						add_modifier = { name = acquitted_character years = 10 is_decaying = yes }
+					}
+				}
+				
+				#Character is convicted
+				1 = { 
+					scope:indicted_character_scope = {
+						remove_modifier = indicted_character
+						add_modifier = { name = convicted_character years = 10 }
+					}
+					scope:indicted_character_ig_scope = {
+						hidden_effect = { remove_modifier = convicted_character_ig }
+						add_modifier = { name = convicted_character_ig years = 5 is_decaying = yes }
+					}
+				}
+				
+			}
+			
+		}
+		
+		#Guaranteed acquittal if courts are independent
+		else = {
+			
+			scope:indicted_character_scope = {
+				remove_modifier = indicted_character
+				add_modifier = { name = acquitted_character years = 10 is_decaying = yes }
+			}
+			
+		}
+		
+		
+	}
+
+	on_monthly_pulse = {
+		
+		effect = {
+		
+			#Add trial ticker
+			if = {
+				limit = { 
+					has_law = law_type:law_politicised_judiciary
+					has_law = law_type:law_kangaroo_law
+				}
+				change_variable = {
+					name = trial_progress_var
+					add = 3
+				}
+			}
+			else_if = {
+				limit = { 
+					OR = { 
+						NOT = { has_law = law_type:law_independent_judiciary }
+						NOT = { has_law = law_type:law_common_law }
+					}
+				}
+				change_variable = {
+					name = trial_progress_var
+					add = 2
+				}
+			}
+			else = {
+				change_variable = {
+					name = trial_progress_var
+					add = 1
+				}
+			}
+			
+			#Add domestic reaction
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:indicted_character_ig_scope
+			}
+			
+		}
+		
+	}
+	
+	invalid = {
+		
+		NOT = { exists = scope:indicted_character_scope }
+		
+	}
+	
+	on_invalid = {
+		
+		
+	}
+	
+	weight = 200
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = yes
+	
+}
