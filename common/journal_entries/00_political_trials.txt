@@ -1,7 +1,8 @@
 je_political_trials_system = {
 	icon = "gfx/interface/icons/event_icons/event_scales.dds"
 
-	#scripted_button = je_political_trials_system_drop_case_button
+	scripted_button = je_political_trials_drop_charges_button
+	scripted_button = je_political_trials_bribe_judge_button
 
 	possible = {
 		
@@ -21,6 +22,7 @@ je_political_trials_system = {
 		#Mark character to be tried
 		random_scope_character = {
 			limit = { has_modifier = indicted_character }
+			set_variable = indicted_character_je
 			save_scope_as = indicted_character_scope
 			interest_group = {
 				save_scope_as = indicted_character_ig_scope
@@ -50,6 +52,11 @@ je_political_trials_system = {
 	}
 	
 	on_complete = {
+	
+		#Clear variable
+		scope:indicted_character_scope = {
+			remove_variable = indicted_character_je
+		}
 	
 		#Guaranteed conviction if indicted character committed crimes OR there was a kangaroo court
 		if = {
@@ -86,8 +93,13 @@ je_political_trials_system = {
 		}
 		else_if = {
 			limit = {
-				has_law = law_type:law_politicised_judiciary 
-				has_law = law_type:law_kangaroo_law 
+				OR = { 
+					AND = { 
+						has_law = law_type:law_politicised_judiciary 
+						has_law = law_type:law_kangaroo_law 
+					}
+					has_variable = political_trials_bribed_judge
+				}
 			}
 			scope:indicted_character_scope = {
 				remove_modifier = indicted_character
@@ -221,6 +233,7 @@ je_political_trials_system = {
 	on_fail = {
 	
 		scope:indicted_character_scope = {
+			remove_variable = indicted_character_je
 			remove_modifier = indicted_character
 			add_modifier = { name = acquitted_character years = 2 is_decaying = yes }
 		}

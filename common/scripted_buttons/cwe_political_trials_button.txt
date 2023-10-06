@@ -1,0 +1,170 @@
+je_political_trials_drop_charges_button = {
+	name = "je_political_trials_drop_charges_button"
+	desc = "je_political_trials_drop_charges_button_desc"
+
+	visible = { 
+		
+		
+		
+	}
+
+	possible = {
+		
+		#Cabinet agrees with this
+		custom_tooltip = {
+			text = has_no_low_cabinet_unity.tt
+			NOT = { has_variable = low_cabinet_unity }
+		}
+		
+	}
+
+	effect = {
+		
+		random_scope_character = {
+			limit = { 
+				has_modifier = indicted_character
+				has_variable = indicted_character_je
+			}
+			save_scope_as = indicted_character_scope
+		}
+		
+		scope:indicted_character_scope = {
+			remove_modifier = indicted_character
+			remove_variable = indicted_character_je
+			add_modifier = { name = acquitted_character years = 5 is_decaying = yes }
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		modifier = { 
+			trigger = { 
+				
+				exists = ruler
+				ruler = {
+					NOR = {
+						has_ideology = ideology:ideology_autocratic
+						has_ideology = ideology:ideology_power_hungry
+						has_ideology = ideology:ideology_elitist
+					}
+				}
+				
+			}
+			add = 10 
+		}
+		
+	}
+	
+}
+
+je_political_trials_bribe_judge_button = {
+	name = "je_political_trials_bribe_judge_button"
+	desc = "je_political_trials_bribe_judge_button_desc"
+
+	visible = { 
+		
+		#Not redundant
+		NAND = {
+			has_law = law_type:law_politicised_judiciary 
+			has_law = law_type:law_kangaroo_law
+		}
+		
+	}
+
+	possible = {
+	
+		#Cabinet agrees with this
+		custom_tooltip = {
+			text = has_no_low_cabinet_unity.tt
+			NOT = { has_variable = low_cabinet_unity }
+		}
+		
+		#Has not already bribed judge
+		custom_tooltip = {
+			text = political_trials_bribe_judge.tt
+			NOT = { has_variable = political_trials_bribed_judge }
+		}
+		
+	}
+
+	effect = {
+		
+		#Only 1 time
+		set_variable = political_trials_bribed_judge
+		
+		#Domestic reaction
+		random_scope_character = {
+			limit = { 
+				has_modifier = indicted_character
+				has_variable = indicted_character_je
+			}
+			interest_group = {
+				save_scope_as = indicted_character_ig_scope
+			}
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = scope:indicted_character_ig_scope
+		}
+		
+		#Increase corruption in country
+		if = {
+			limit = { has_law = law_type:law_very_high_anti_corruption }
+			activate_law = law_type:law_high_anti_corruption
+		}
+		else_if = {
+			limit = { has_law = law_type:law_high_anti_corruption }
+			activate_law = law_type:law_medium_anti_corruption
+		}
+		else_if = {
+			limit = { has_law = law_type:law_medium_anti_corruption }
+			activate_law = law_type:law_low_anti_corruption
+		}
+		else_if = {
+			limit = { has_law = law_type:law_low_anti_corruption }
+			activate_law = law_type:law_very_low_anti_corruption
+		}
+		
+		#Ruler can get tainted with corruption
+		if = {
+			limit = { 
+				exists = ruler
+				ruler = { NOT = { has_modifier = corrupt_connections_exposed } }
+			}
+			random_list = {
+				3 = { }
+				1 = { 
+					add_modifier = { 
+						name = corrupt_connections_exposed 
+						years = 2 
+						is_decaying = yes 
+					} 
+				}
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		modifier = { 
+			trigger = { 
+				
+				exists = ruler
+				ruler = {
+					OR = {
+						has_ideology = ideology:ideology_autocratic
+						has_ideology = ideology:ideology_power_hungry
+					}
+				}
+				
+			}
+			add = 10 
+		}
+		
+	}
+	
+}
