@@ -162,9 +162,9 @@ political_trials_system.2 = {
 			add_modifier = { name = embarassed_by_witch_hunt years = 5 is_decaying = yes }
 		}
 		
-		scope:convicted_character_scope = {
-			kill_character = yes
-		}
+		#Chance of killing character
+		scope:convicted_character_scope = { set_variable = state_assassination_target }
+		trigger_event = { id = political_trials_system.3 popup = yes }
 		
 		add_radicals = {
 			value = very_large_radicals
@@ -185,6 +185,148 @@ political_trials_system.2 = {
 				add = 25
 			}
 		}
+    }
+
+}
+
+#Assassination of Character
+political_trials_system.3 = {
+    type = country_event
+
+    title = {
+		first_valid = {
+			triggered_desc = {
+				desc = character_assassination.YES.t
+				trigger = { has_variable = character_assassinated_YES }
+			}
+			triggered_desc = {
+				desc = character_assassination.NO.t
+				trigger = { NOT = { has_variable = character_assassinated_YES } }
+			}
+		}
+	}
+    desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = character_assassination.YES.d
+				trigger = { has_variable = character_assassinated_YES }
+			}
+			triggered_desc = {
+				desc = character_assassination.NO.d
+				trigger = { NOT = { has_variable = character_assassinated_YES } }
+			}
+		}
+	}
+    flavor = character_assassination.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_public_figure_assassination.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_skull.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {											# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by JE
+		
+    }
+	
+	immediate = {
+		
+		#Reset flags
+		remove_variable = character_assassinated_YES
+		
+		random_scope_character = {
+			limit = { has_variable = state_assassination_target }
+			remove_variable = state_assassination_target
+			
+			save_scope_as = assassination_character_scope
+			interest_group = { save_scope_as = assassination_character_ig_scope }
+		}
+		
+		#Chance for assassination
+		random_list = {
+
+			10 = {
+				
+			}
+
+			1 = {
+
+				#Character Assassinated
+				set_variable = character_assassinated_YES
+				
+				#More likely to have a successful assassination if Secret Police is strong
+				modifier = {
+					if = { limit = { institution_investment_level = { institution = institution_home_affairs value >= 1 } } }
+					add = 1
+				}
+				modifier = {
+					if = { limit = { institution_investment_level = { institution = institution_home_affairs value >= 2 } } }
+					add = 2
+				}
+				modifier = {
+					if = { limit = { institution_investment_level = { institution = institution_home_affairs value >= 3 } } }
+					add = 3
+				}
+				modifier = {
+					if = { limit = { institution_investment_level = { institution = institution_home_affairs value >= 4 } } }
+					add = 4
+				}
+				modifier = {
+					if = { limit = { institution_investment_level = { institution = institution_home_affairs value >= 5 } } }
+					add = 5
+				}
+				
+			}
+			
+		}
+		
+	}
+    
+    option = {
+        name = character_assassination.option
+		default_option = yes
+		
+		#Reset flags
+		remove_variable = character_assassinated_YES
+		
+		#Assassinate Character
+		if = {
+			limit = { has_variable = character_assassinated_YES }
+			scope:assassination_character_scope = {
+				kill_character = yes
+			}
+			add_radicals = {
+				value = very_large_radicals
+				interest_group = scope:assassination_character_ig_scope
+			}
+		}
+		else = {
+		
+			#Character has a chance of exile
+			random_list = {
+				1 = {
+					scope:assassination_character_scope = {
+						exile_character_with_martyrdom = yes
+					}
+				}
+				1 = {
+					
+				}
+			}
+			
+			add_radicals = {
+				value = large_radicals
+				interest_group = scope:assassination_character_ig_scope
+			}
+		
+		}
+		
+		#Infamy
+		change_infamy = 5
+		
     }
 
 }
