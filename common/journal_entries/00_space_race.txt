@@ -1,0 +1,141 @@
+﻿je_space_race_system = {
+	icon = "gfx/interface/icons/event_icons/analytical_philosophy.dds"
+
+	scripted_button = je_space_race_space_rocket_button
+
+	possible = {
+	
+		#Has a space program
+		OR = {
+			has_law = law_type:law_space_program_public
+			has_law = law_type:law_space_program_private
+		}
+		
+		#Not bankrupt
+		in_default = no
+		
+		#Not having a revolution
+		has_revolution = no
+		
+	}
+	
+	immediate = {
+		
+		set_variable = { name = space_program_progress value = 0 }
+		
+	}
+
+	complete = {
+		
+		#Completed all possible space programs
+		has_variable = space_rocket_milestone
+		
+	}
+	
+	on_complete = {
+		
+		#Prestige from victory!
+		add_modifier = { 
+			name = national_pride_modifier 
+			years = 10
+			is_decaying = yes 
+		}
+		
+		#Clear variables
+		remove_variable = space_program_ongoing
+		
+	}
+	
+	fail = {
+	
+		OR = {
+		
+			#No longer has a space program
+			NOR = {
+				has_law = law_type:law_space_program_public
+				has_law = law_type:law_space_program_private
+			}
+			
+			#THIS is bankrupt
+			in_default = yes
+			
+			#Having a revolution
+			has_revolution = yes
+		
+		}
+		
+	}
+	
+	on_fail = {
+		
+		#Clear variables
+		remove_variable = space_program_ongoing
+		
+		#Stop all space programs
+		remove_modifier = developing_space_rocket
+		
+	}
+	
+	current_value = {
+		value =	root.var:space_program_progress
+	}
+	
+	goal_add_value = {
+		add = 60
+	}
+	
+	on_monthly_pulse = {
+		
+		#Add monthly progress
+		if = {
+			limit = { has_variable = space_program_ongoing }
+			change_variable = {
+				name = space_program_progress
+				add = 1
+			}
+		}
+		
+		#Space Race Events to either speed up or slow down progress
+		random_events = {
+			20 = 0
+			1 = space_race_events.1
+			
+		}
+		
+		#Space program completed
+		if = {
+			limit = {
+				scope:journal_entry = {
+					is_goal_complete = yes
+				}
+			}
+			
+			#Reset progress
+			set_variable = { name = space_program_progress value = 0 }
+			
+			#Complete space program
+			if = {
+				limit = { has_modifier = developing_space_rocket }
+				set_variable = space_rocket_milestone
+			}
+			
+			#Prestige from victory!
+			add_modifier = { 
+				name = national_pride_modifier 
+				years = 2
+				is_decaying = yes 
+			}
+			
+		}
+		
+	}
+	
+	weight = 100
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = yes
+	
+}
