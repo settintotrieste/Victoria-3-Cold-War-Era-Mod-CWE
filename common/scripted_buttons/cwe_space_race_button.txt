@@ -1,17 +1,32 @@
 je_space_race_space_rocket_button = {
-	name = "je_space_race_space_rocket_button_button"
+	name = "je_space_race_space_rocket_button"
 	desc = "je_space_race_space_rocket_button_desc"
 
 	visible = { 
 		
 		NOT = { has_variable = space_rocket_milestone }
 		
-		NOT = { has_modifier = developing_space_rocket }
 	}
 
 	possible = {
 		
-		gold_reserves > 1000000
+		OR = { 
+			AND = { 
+				has_law = law_type:law_space_program_public
+				gold_reserves > 5000000
+			}
+			AND = { 
+				has_law = law_type:law_space_program_private
+				gold_reserves > 2500000
+				investment_pool > 2500000
+			}
+		}
+		
+		weekly_net_income > 100000
+		
+		NOT = { has_modifier = developing_space_rocket }
+		
+		NOT = { has_variable = space_program_ongoing }
 		
 	}
 
@@ -20,7 +35,18 @@ je_space_race_space_rocket_button = {
 		#Mark this country as having a space program
 		set_variable = space_program_ongoing
 		
-		#Add development cost
+		#Start up cost
+		if = {
+			limit = { has_law = law_type:law_space_program_public }
+			add_treasury = - 5000000
+		}
+		if = {
+			limit = { has_law = law_type:law_space_program_private }
+			add_treasury = -2500000
+			add_investment_pool = -2500000
+		}
+		
+		#Add ongoing development cost
 		hidden_effect = { remove_modifier = developing_space_rocket }
 		add_modifier = { name = developing_space_rocket }
 		
@@ -33,12 +59,12 @@ je_space_race_space_rocket_button = {
 		modifier = { 
 			trigger = { 
 				country_rank >= rank_value:great_power
-				NOR = { 
-					is_at_war = yes
-					has_healthy_economy = no
-				}
+				#NOR = { 
+				#	is_at_war = yes
+				#	has_healthy_economy = no
+				#}
 			}
-			add = 10 
+			add = 50 
 		}
 		
 	}

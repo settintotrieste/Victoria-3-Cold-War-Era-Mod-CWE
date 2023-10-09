@@ -1,5 +1,5 @@
 ﻿je_space_race_system = {
-	icon = "gfx/interface/icons/event_icons/analytical_philosophy.dds"
+	icon = "gfx/interface/icons/invention_icons/analytical_philosophy.dds"
 
 	scripted_button = je_space_race_space_rocket_button
 
@@ -21,14 +21,20 @@
 	
 	immediate = {
 		
-		set_variable = { name = space_program_progress value = 0 }
+		set_variable = { 
+			name = space_program_progress 
+			value = 0 
+		}
 		
 	}
 
 	complete = {
 		
 		#Completed all possible space programs
-		has_variable = space_rocket_milestone
+		custom_tooltip = {
+			text = completed_space_race_je.tt
+			has_variable = space_rocket_milestone
+		}
 		
 	}
 	
@@ -72,7 +78,7 @@
 		remove_variable = space_program_ongoing
 		
 		#Stop all space programs
-		remove_modifier = developing_space_rocket
+		if = { limit = { has_modifier = developing_space_rocket } remove_modifier = developing_space_rocket }
 		
 	}
 	
@@ -86,46 +92,46 @@
 	
 	on_monthly_pulse = {
 		
-		#Add monthly progress
-		if = {
-			limit = { has_variable = space_program_ongoing }
-			change_variable = {
-				name = space_program_progress
-				add = 1
-			}
-		}
+		effect = {
 		
-		#Space Race Events to either speed up or slow down progress
-		random_events = {
-			20 = 0
-			1 = space_race_events.1
-			
-		}
-		
-		#Space program completed
-		if = {
-			limit = {
-				scope:journal_entry = {
-					is_goal_complete = yes
+			#Add monthly progress
+			if = {
+				limit = { has_variable = space_program_ongoing }
+				change_variable = {
+					name = space_program_progress
+					add = 1
 				}
 			}
 			
-			#Reset progress
-			set_variable = { name = space_program_progress value = 0 }
+			#Space Race Events to either speed up or slow down progress
+			#random_events = {
+			#	20 = 0
+			#	1 = space_race_events.1
+			#	
+			#}
 			
-			#Complete space program
+			#Space program completed
 			if = {
-				limit = { has_modifier = developing_space_rocket }
-				set_variable = space_rocket_milestone
+				limit = {
+					scope:journal_entry = {
+						is_goal_complete = yes
+					}
+				}
+				
+				#Reset progress
+				set_variable = { name = space_program_progress value = 0 }
+				remove_variable = space_program_ongoing
+				
+				#Complete space program
+				if = {
+					limit = { has_modifier = developing_space_rocket }
+					remove_modifier = developing_space_rocket
+					set_variable = space_rocket_milestone
+					trigger_event = { id = space_race_events.1 }
+				}
+				
 			}
-			
-			#Prestige from victory!
-			add_modifier = { 
-				name = national_pride_modifier 
-				years = 2
-				is_decaying = yes 
-			}
-			
+		
 		}
 		
 	}
