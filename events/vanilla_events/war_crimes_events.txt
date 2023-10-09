@@ -1,0 +1,176 @@
+﻿namespace = war_crimes
+
+war_crimes.1 = {
+	type = country_event
+	placement = ROOT
+	
+	title = war_crimes.1.t
+	desc = war_crimes.1.d
+	flavor = war_crimes.1.f
+	
+	event_image = {
+		video = "middleeast_battlefield_trenches"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+	
+	duration = 3
+
+	trigger = {
+		
+		#Has a decent sized army
+		army_size >= 10
+		
+		#Has a character who would commit war crimes
+		any_scope_war = {
+			any_scope_front = {
+				any_scope_character = {
+					owner = ROOT
+					OR = {
+					
+						#Once a war criminal always a war criminal
+						has_trait = war_criminal
+						
+						#Prone to commit crimes
+						has_trait = reckless
+						has_trait = wrathful
+						has_trait = cruel
+						has_trait = hedonist
+						has_trait = psychological_affliction
+						has_trait = bandit
+						has_trait = pillager
+						
+					}
+					is_attacker_in_battle = yes
+				}
+				any_scope_state = {
+					NOT = { owner = ROOT }
+				}
+			}
+		}
+		
+	}
+	immediate = {
+		random_scope_war = {
+			limit = {
+				any_scope_front = {
+					any_scope_character = {
+						owner = ROOT
+						OR = {
+						
+							#Once a war criminal always a war criminal
+							has_trait = war_criminal
+							
+							#Prone to commit crimes
+							has_trait = reckless
+							has_trait = wrathful
+							has_trait = cruel
+							has_trait = hedonist
+							has_trait = psychological_affliction
+							has_trait = bandit
+							has_trait = pillager
+							
+						}
+						is_attacker_in_battle = yes
+					}
+					any_scope_state = {
+						NOT = { owner = ROOT }
+					}
+				}
+			}
+			random_scope_front = {
+				limit = {
+					any_scope_general = {
+						owner = ROOT
+						OR = {
+						
+							#Once a war criminal always a war criminal
+							has_trait = war_criminal
+							
+							#Prone to commit crimes
+							has_trait = reckless
+							has_trait = wrathful
+							has_trait = cruel
+							has_trait = hedonist
+							has_trait = psychological_affliction
+							has_trait = bandit
+							has_trait = pillager
+							
+						}
+						is_attacker_in_battle = yes
+					}
+					any_scope_state = {
+						NOT = { owner = ROOT }
+					}
+				}
+				random_scope_general = {
+					limit = {
+						owner = ROOT
+						OR = {
+						
+							#Once a war criminal always a war criminal
+							has_trait = war_criminal
+							
+							#Prone to commit crimes
+							has_trait = reckless
+							has_trait = wrathful
+							has_trait = cruel
+							has_trait = hedonist
+							has_trait = psychological_affliction
+							has_trait = bandit
+							has_trait = pillager
+							
+						}
+						is_attacker_in_battle = yes
+					}
+					save_scope_as = war_crimes_perpetrator
+				}
+				random_scope_state = {
+					limit = {
+						NOT = { owner = ROOT }
+					}
+					save_scope_as = war_crimes_state
+				}
+			}
+		}
+	}
+
+	option = { # we will win by any means necessary
+		name = war_crimes.1.a
+		default_option = yes
+		scope:war_crimes_perpetrator = {
+			add_trait = war_criminal
+		}
+		scope:war_crimes_state = {
+			add_modifier = { # mortality, welfare
+				name = devastated_by_war_crimes
+				months = normal_modifier_time
+				multiplier = 2
+			}
+			add_devastation = 25
+		}
+		change_infamy = 5
+	}
+	
+	option = { # try the general for war crimes
+		name = war_crimes.1.b
+		scope:war_crimes_perpetrator = {
+			kill_character = yes
+		}
+		scope:war_crimes_state = { 
+			add_modifier = { # mortality, welfare
+				name = devastated_by_war_crimes
+				months = normal_modifier_time
+			}
+		}
+		hidden_effect = { remove_modifier = laws_against_war_crimes }
+		add_modifier = { # reduced kill rate
+			name = laws_against_war_crimes
+			months = long_modifier_time
+		}
+		change_infamy = 2
+	}
+	
+}
