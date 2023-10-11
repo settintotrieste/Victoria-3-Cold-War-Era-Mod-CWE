@@ -67,6 +67,7 @@
 		
 		#Clear variables
 		remove_variable = space_program_ongoing
+		remove_variable = space_program_peril
 		
 	}
 	
@@ -91,9 +92,19 @@
 		
 		#Clear variables
 		remove_variable = space_program_ongoing
+		remove_variable = space_program_peril
 		
 		#Stop all space programs
 		if = { limit = { has_modifier = developing_space_rocket } remove_modifier = developing_space_rocket }
+		if = { limit = { has_modifier = developing_satellite } remove_modifier = developing_satellite }
+		if = { limit = { has_modifier = developing_astronaut } remove_modifier = developing_astronaut }
+		if = { limit = { has_modifier = developing_space_probe } remove_modifier = developing_space_probe }
+		if = { limit = { has_modifier = developing_moon_mission } remove_modifier = developing_moon_mission }
+		if = { limit = { has_modifier = developing_space_station } remove_modifier = developing_space_station }
+		if = { limit = { has_modifier = developing_space_telescope } remove_modifier = developing_space_telescope }
+		if = { limit = { has_modifier = developing_mars_mission } remove_modifier = developing_mars_mission }
+		if = { limit = { has_modifier = developing_moon_base } remove_modifier = developing_moon_base }
+		if = { limit = { has_modifier = developing_mars_base } remove_modifier = developing_mars_base }
 		
 	}
 	
@@ -118,12 +129,33 @@
 				}
 			}
 			
-			#Space Race Events to either speed up or slow down progress
-			#random_events = {
-			#	20 = 0
-			#	1 = space_race_events.1
-			#	
-			#}
+			#Peril
+			if = {
+				limit = {
+					NOT = { has_variable = space_program_peril }
+				}
+				set_variable = { 
+					name = space_program_peril
+					value = 0 
+				}
+			}
+			if = {
+				limit = { root.var:space_program_peril > 0 }
+				random_list = {
+					100 = { }
+					1 = {
+						
+						#Total Failure = back to zero progress
+						trigger_event = { id = space_race_system.201 }
+						
+						#Higher peril = higher chance of a total failure
+						modifier = {
+							multiply = root.var:space_program_peril
+						}
+						
+					}
+				}
+			}
 			
 			#Space program completed
 			if = {
@@ -135,6 +167,7 @@
 				
 				#Reset progress
 				set_variable = { name = space_program_progress value = 0 }
+				set_variable = { name = space_program_peril value = 0 }
 				remove_variable = space_program_ongoing
 				
 				#Complete space program
@@ -201,6 +234,14 @@
 				
 			}
 		
+		}
+		
+		#Space Race Events to either speed up or slow down progress
+		random_events = {
+			6 = 0
+			1 = space_race_system.101
+			1 = space_race_system.102
+			1 = space_race_system.103
 		}
 		
 	}
