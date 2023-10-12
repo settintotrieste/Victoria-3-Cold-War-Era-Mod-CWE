@@ -1,0 +1,240 @@
+﻿namespace = generals
+
+# IG demands commander promotion
+generals.1 = {
+	type = country_event
+	placement = ROOT
+	
+	title = generals.1.t
+	desc = generals.1.d
+	flavor = generals.1.f
+	
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+	
+	trigger = {
+		OR = {
+			AND = {
+				any_scope_character = {
+					has_role = general
+					popularity >= 25
+					commander_rank <= 2
+					is_ruler = no
+				}
+				any_scope_character = {
+					has_role = general
+					commander_rank >= 3
+					is_ruler = no
+				}
+			}
+			AND = {
+				any_scope_character = {
+					has_role = general
+					popularity >= 50
+					commander_rank <= 3
+					is_ruler = no
+				}
+				any_scope_character = {
+					has_role = general
+					commander_rank >= 4
+					is_ruler = no
+				}
+			}
+			AND = {
+				any_scope_character = {
+					has_role = general
+					popularity >= 75
+					commander_rank <= 4
+					is_ruler = no
+				}
+				any_scope_character = {
+					has_role = general
+					commander_rank >= 5
+					is_ruler = no
+				}
+			}
+		}
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				any_scope_character = {
+					has_role = general
+					popularity >= 75
+					commander_rank <= 4
+					is_ruler = no
+				}
+				any_scope_character = {
+					has_role = general
+					commander_rank >= 5
+					is_ruler = no
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_role = general
+					popularity >= 75
+					commander_rank <= 4
+					is_ruler = no
+				}
+				save_scope_as = low_rank_general
+				interest_group = {
+					save_scope_as = low_rank_general_ig
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_role = general
+					commander_rank >= 5
+					is_ruler = no
+				}
+				save_scope_as = high_rank_general
+				interest_group = {
+					if = {
+						limit = {
+							NOT = { THIS = scope:low_rank_general_ig }
+						}
+						save_scope_as = high_rank_general_ig
+					}
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				any_scope_character = {
+					has_role = general
+					popularity >= 50
+					commander_rank <= 3
+					is_ruler = no
+				}
+				any_scope_character = {
+					has_role = general
+					commander_rank >= 4
+					is_ruler = no
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_role = general
+					popularity >= 50
+					commander_rank <= 3
+					is_ruler = no
+				}
+				save_scope_as = low_rank_general
+				interest_group = {
+					save_scope_as = low_rank_general_ig
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_role = general
+					commander_rank >= 4
+					is_ruler = no
+				}
+				save_scope_as = high_rank_general
+				interest_group = {
+					if = {
+						limit = {
+							NOT = { THIS = scope:low_rank_general_ig }
+						}
+						save_scope_as = high_rank_general_ig
+					}
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				any_scope_character = {
+					has_role = general
+					popularity >= 25
+					commander_rank <= 2
+					is_ruler = no
+				}
+				any_scope_character = {
+					has_role = general
+					commander_rank >= 3
+					is_ruler = no
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_role = general
+					popularity >= 25
+					commander_rank <= 2
+					is_ruler = no
+				}
+				save_scope_as = low_rank_general
+				interest_group = {
+					save_scope_as = low_rank_general_ig
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_role = general
+					commander_rank >= 3
+					is_ruler = no
+				}
+				save_scope_as = high_rank_general
+				interest_group = {
+					if = {
+						limit = {
+							NOT = { THIS = scope:low_rank_general_ig }
+						}
+						save_scope_as = high_rank_general_ig
+					}
+				}
+			}
+		}
+	}
+
+	option = { # promote
+		name = generals.1.a
+		default_option = yes
+		scope:low_rank_general = {
+			add_commander_rank = 1
+		}
+		scope:low_rank_general_ig = {
+			add_modifier = {
+				name = low_rank_general_ig_opinion_add
+				months = short_modifier_time
+			}
+		}
+	}
+
+	option = { # do not promote
+		name = generals.1.b
+		scope:low_rank_general = {
+			add_modifier = {
+				name = denied_promotion
+				months = normal_modifier_time
+			}
+		}
+		scope:low_rank_general_ig = {
+			add_modifier = {
+				name = low_rank_general_ig_opinion_remove
+				months = short_modifier_time
+			}
+		}
+		if = {
+			limit = {
+				exists = scope:high_rank_general_ig
+			}
+			scope:high_rank_general_ig = {
+				add_modifier = {
+					name = high_rank_general_opinion
+					months = short_modifier_time
+				}
+			}
+		}
+	}
+}
