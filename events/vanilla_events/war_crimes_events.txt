@@ -144,14 +144,53 @@ war_crimes.1 = {
 			add_trait = war_criminal
 		}
 		scope:war_crimes_state = {
+		
 			add_modifier = { # mortality, welfare
 				name = devastated_by_war_crimes
 				months = normal_modifier_time
 				multiplier = 2
 			}
-			add_devastation = 25
+			
+			#Opportunity to loot monuments
+			if = {
+				limit = { 
+					any_scope_building = { 
+						OR = { 
+							is_building_group = bg_monuments_hidden
+							is_building_group = bg_monuments
+						}
+					}
+				}
+				add_devastation = 50
+				owner = { 
+					if = { 
+						limit = { NOT = { THIS = ROOT } }
+						ROOT = { 
+							add_treasury = 100000
+							change_infamy = 5
+						}
+						save_scope_as = war_crimes_victim
+						custom_tooltip = {
+							text = lose_10_war_support_event.tt
+							every_diplomatic_play = {
+								limit = {
+									is_war = yes
+									is_diplomatic_play_participant = scope:war_crimes_victim
+								}
+								add_diplomatic_play_war_support = { target = scope:war_crimes_victim value = -10 }
+							}
+						}
+					}
+				}
+				
+			}
+			else = { 
+				add_devastation = 25
+				owner = { change_infamy = 5 }
+			}
+			
 		}
-		change_infamy = 5
+		
 	}
 	
 	option = { # try the general for war crimes
