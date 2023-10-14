@@ -1,0 +1,78 @@
+je_kmt_becomes_taiwan_button = {
+	name = "je_kmt_becomes_taiwan_button"
+	desc = "je_kmt_becomes_taiwan_button_desc"
+
+	visible = { 
+		
+		#Taiwan
+		c:ROC ?= this
+		NOT = { exists = c:TAI }
+		
+		#Capital is Taiwan
+		s:STATE_FORMOSA = { contains_capital_of = ROOT }
+		any_scope_state = { count = 1 }
+		
+	}
+
+	possible = {
+	
+		#Government is willing
+		is_a_democracy = yes
+		is_sufficiently_independent = yes
+		is_at_war = no
+		
+	}
+
+	effect = {
+		
+		#PRC becomes China & wants to conquer Taiwan
+		if = {
+			limit = { 
+				exists = c:PRC 
+				NOT = { exists = c:CHI }
+			}
+			c:PRC = {
+				set_secret_goal = {
+					country = ROOT
+					secret_goal = conquer
+				}
+				change_relations = { country = ROOT value = -100 }
+				change_tag = CHI
+			}
+		}
+		
+		#Become Taiwan
+		change_tag = TAI
+		
+		#Lose infamy
+		change_infamy = -25
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if government is progressive & Mainland China is a dictatorship
+		modifier = { 
+			trigger = { 
+				game_date >= 2000.1.1
+				OR = {
+					has_modifier = libertarian_ruling_party_ideology
+					has_modifier = liberal_ruling_party_ideology
+					has_modifier = progressive_ruling_party_ideology
+				}
+				exists = ruler
+				ruler = {
+					OR = {
+						has_ideology = ideology:ideology_democratic
+						has_ideology = ideology:ideology_liberal
+					}
+				}
+				c:PRC ?= { is_a_dictatorship = yes }
+			}
+			add = 10
+		}
+		
+	}
+	
+}
