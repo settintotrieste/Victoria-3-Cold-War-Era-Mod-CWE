@@ -10,7 +10,7 @@ eastern_europe_indy.1 = {
 
     event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
 
-    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
     on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
 
     duration = 1 # Duration to fire if triggers are met
@@ -87,6 +87,114 @@ eastern_europe_indy.1 = {
 				value = -100
 			}
 		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Baltic States
+eastern_europe_indy.2 = {
+    type = country_event
+	
+    title = soviet_baltic_states.indy.t 					# Title of the event; ADD LOCALISATION
+    desc = soviet_baltic_states.indy.d 					# Description of the event; ADD LOCALISATION
+    #flavor = soviet_baltic_states.indy.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:SOV
+		this = c:SOV											# Change TAG of the overlord ****
+		game_date >= 1991.9.6									# START DATE: Date colony became self governing ****
+		game_date < 2001.9.6									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_dictatorship = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Soviet Union has countries to release
+		any_scope_state = {
+			state_region = { 
+				OR = { 
+					is_homeland = cu:estonian
+					is_homeland = cu:lithuanian
+					is_homeland = cu:latvian
+				} 
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = soviet_baltic_states_indy }		# CHANGE ****
+		
+    }
+	
+	immediate = { 
+		
+		# Fire only once
+		set_variable = soviet_baltic_states_indy				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_union_dissolution.option.1			# Grant them independence
+        highlighted_option = yes
+		
+		# Release Baltic States, if not already released
+		if = { 
+			limit = { NOT = { exists = c:EST } has_state_in_state_region = STATE_ESTONIA }
+			create_country = { tag = EST state = s:STATE_ESTONIA.region_state:SOV origin = THIS on_created = { soviet_SSR_dissolution_laws = yes } }
+			if = { limit = { exists = c:EST } every_scope_state = { limit = { state_region = { is_homeland = cu:estonian } } set_state_owner = c:EST } }
+		}
+		if = { 
+			limit = { NOT = { exists = c:LIT } has_state_in_state_region = STATE_LITHUANIA }
+			create_country = { tag = LIT state = s:STATE_LITHUANIA.region_state:SOV origin = THIS on_created = { soviet_SSR_dissolution_laws = yes } }
+			if = { limit = { exists = c:LIT } every_scope_state = { limit = { state_region = { is_homeland = cu:lithuanian } } set_state_owner = c:LIT } }
+		}
+		if = { 
+			limit = { NOT = { exists = c:LAT } has_state_in_state_region = STATE_LATVIA }
+			create_country = { tag = LAT state = s:STATE_LATVIA.region_state:SOV origin = THIS on_created = { soviet_SSR_dissolution_laws = yes } }
+			if = { limit = { exists = c:LAT } every_scope_state = { limit = { state_region = { is_homeland = cu:latvian } } set_state_owner = c:LAT } }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = eastern_europe_indy.option.2						# REFUSE
+		default_option = yes
+		
+		# Baltic Nationalism
+		every_scope_state = {
+			limit = { 
+				state_region = { 
+					OR = { 
+						is_homeland = cu:estonian
+						is_homeland = cu:lithuanian
+						is_homeland = cu:latvian
+					} 
+				}
+			}
+			add_radicals_in_state = {
+				value = very_large_radicals
+			}
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes }
+		}
+		
+		change_infamy = 25
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
