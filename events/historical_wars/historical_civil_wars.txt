@@ -11,7 +11,7 @@ historical_civil_wars.1 = {
 
     event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
 
-    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
     on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
 
     duration = 1 # Duration to fire if triggers are met
@@ -116,7 +116,7 @@ historical_civil_wars.2 = {
 
     event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
 
-    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
     on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
 
     duration = 1 # Duration to fire if triggers are met
@@ -452,6 +452,1002 @@ historical_civil_wars.2 = {
 					value = small_radicals
 				}
 			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+### Yugoslav Wars ###
+
+#Slovenia
+historical_civil_wars.3 = {
+    type = country_event
+	placement = scope:yugoslav_war_indy_state
+
+    title = yugoslav_war.SLO.t 								# Title of the event; ADD LOCALISATION
+    desc = yugoslav_war.SLO.d 								# Description of the event; ADD LOCALISATION
+    #flavor = yugoslav_war.SLO.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:YUG this = c:YUG										# Change TAG of the overlord ****
+		
+		#When
+		OR = { 
+		
+			#Historical date
+			AND = { 
+				game_date >= 1991.6.27
+				game_date < 2001.6.27
+				has_global_variable = historical_railroading_active
+			}
+			
+			#Has a Democratic Revolution when economy is bad
+			AND = {
+				any_political_movement = {
+					is_revolutionary_movement = yes
+					OR = {
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_communist_leader
+								value < neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_president
+								value > neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_multicultural
+								value > strongly_approve
+							}
+						}
+					}
+				}
+				OR = {
+					in_default = yes
+					has_healthy_economy = no
+				}
+			}
+			
+		}
+		
+		is_a_communist_dictatorship = yes								# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		#is_at_war = no													# war = no
+		
+		#Owns country to release
+		NOT = { 														# Colony to be released must not already exist on the map
+			exists = c:SLO												# Change TAG of the colony ****
+		}
+		owns_entire_state_region = STATE_SLOVENIA
+		
+		# Event has not been fired before
+		NOT = { has_variable = yugoslav_war_SLO_hccw }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = { is_homeland = cu:slovene } }
+			save_scope_as = yugoslav_war_indy_state
+		}
+	
+		# Fire only once
+		set_variable = yugoslav_war_SLO_hccw				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = SLO										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = s:STATE_SLOVENIA.region_state:YUG
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:SLO }
+			create_diplomatic_play = {
+				name = yugoslav_war
+				type = dp_annex_war_historical
+				target_country = c:SLO
+				
+				war = yes
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Release country
+		create_country = {
+			tag = SLO										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = s:STATE_SLOVENIA.region_state:YUG
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Croatia
+historical_civil_wars.4 = {
+    type = country_event
+	placement = scope:yugoslav_war_indy_state
+
+    title = yugoslav_war.CRO.t 								# Title of the event; ADD LOCALISATION
+    desc = yugoslav_war.CRO.d 								# Description of the event; ADD LOCALISATION
+    #flavor = yugoslav_war.CRO.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:YUG this = c:YUG										# Change TAG of the overlord ****
+		
+		#When
+		OR = { 
+		
+			#Historical date
+			AND = { 
+				game_date >= 1991.3.31
+				game_date < 2001.3.31
+				has_global_variable = historical_railroading_active
+			}
+			
+			#Has a Democratic Revolution when economy is bad
+			AND = {
+				any_political_movement = {
+					is_revolutionary_movement = yes
+					OR = {
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_communist_leader
+								value < neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_president
+								value > neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_multicultural
+								value > strongly_approve
+							}
+						}
+					}
+				}
+				OR = {
+					in_default = yes
+					has_healthy_economy = no
+				}
+			}
+			
+		}
+		
+		is_a_communist_dictatorship = yes								# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		#is_at_war = no													# war = no
+		
+		#Owns country to release
+		NOT = { 														# Colony to be released must not already exist on the map
+			exists = c:CRO												# Change TAG of the colony ****
+		}
+		owns_entire_state_region = STATE_CROATIA
+		
+		# Event has not been fired before
+		NOT = { has_variable = yugoslav_war_CRO_hccw }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = { is_homeland = cu:croat } }
+			save_scope_as = yugoslav_war_indy_state
+		}
+	
+		# Fire only once
+		set_variable = yugoslav_war_CRO_hccw				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = CRO										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = s:STATE_CROATIA.region_state:YUG
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:CRO }
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:croat } }
+				set_state_owner = c:CRO
+			}
+			create_diplomatic_play = {
+				name = yugoslav_war
+				type = dp_annex_war_historical
+				target_country = c:CRO
+				
+				war = yes
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Release country
+		create_country = {
+			tag = CRO										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = s:STATE_CROATIA.region_state:YUG
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:CRO }
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:croat } }
+				set_state_owner = c:CRO
+			}
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Bosnia
+historical_civil_wars.5 = {
+    type = country_event
+	placement = scope:yugoslav_war_indy_state
+
+    title = yugoslav_war.BOS.t 								# Title of the event; ADD LOCALISATION
+    desc = yugoslav_war.BOS.d 								# Description of the event; ADD LOCALISATION
+    #flavor = yugoslav_war.BOS.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:YUG this = c:YUG										# Change TAG of the overlord ****
+		
+		#When
+		OR = { 
+		
+			#Historical date
+			AND = { 
+				game_date >= 1992.4.6
+				game_date < 2002.4.6
+				has_global_variable = historical_railroading_active
+			}
+			
+			#Has a Democratic Revolution when economy is bad
+			AND = {
+				any_political_movement = {
+					is_revolutionary_movement = yes
+					OR = {
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_communist_leader
+								value < neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_president
+								value > neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_multicultural
+								value > strongly_approve
+							}
+						}
+					}
+				}
+				OR = {
+					in_default = yes
+					has_healthy_economy = no
+				}
+			}
+			
+		}
+		
+		is_a_communist_dictatorship = yes								# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		#is_at_war = no													# war = no
+		
+		#Owns country to release
+		NOT = { 														# Colony to be released must not already exist on the map
+			exists = c:BOS												# Change TAG of the colony ****
+		}
+		owns_entire_state_region = STATE_BOSNIA
+		
+		# Event has not been fired before
+		NOT = { has_variable = yugoslav_war_BOS_hccw }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = { is_homeland = cu:bosniak } }
+			save_scope_as = yugoslav_war_indy_state
+		}
+	
+		# Fire only once
+		set_variable = yugoslav_war_BOS_hccw				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = BOS										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = s:STATE_BOSNIA.region_state:YUG
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:BOS }
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:bosniak } }
+				set_state_owner = c:BOS
+			}
+			create_diplomatic_play = {
+				name = yugoslav_war
+				type = dp_annex_war_historical
+				target_country = c:BOS
+				
+				war = yes
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Release country
+		create_country = {
+			tag = BOS										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = s:STATE_BOSNIA.region_state:YUG
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:BOS }
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:bosniak } }
+				set_state_owner = c:BOS
+			}
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Kosovo
+historical_civil_wars.6 = {
+    type = country_event
+	placement = scope:yugoslav_war_indy_state
+
+    title = yugoslav_war.KOS.t 								# Title of the event; ADD LOCALISATION
+    desc = yugoslav_war.KOS.d 								# Description of the event; ADD LOCALISATION
+    #flavor = yugoslav_war.KOS.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:YUG this = c:YUG										# Change TAG of the overlord ****
+		
+		#When
+		OR = { 
+		
+			#Historical date
+			AND = { 
+				game_date >= 1995.5.27
+				game_date < 2005.5.27
+				has_global_variable = historical_railroading_active
+			}
+			
+			#Has a Democratic Revolution when economy is bad
+			AND = {
+				any_political_movement = {
+					is_revolutionary_movement = yes
+					OR = {
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_communist_leader
+								value < neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_president
+								value > neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_multicultural
+								value > strongly_approve
+							}
+						}
+					}
+				}
+				OR = {
+					in_default = yes
+					has_healthy_economy = no
+				}
+			}
+			
+		}
+		
+		is_a_communist_dictatorship = yes								# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		#is_at_war = no													# war = no
+		
+		#Owns country to release
+		NOT = { 														# Colony to be released must not already exist on the map
+			exists = c:KOS												# Change TAG of the colony ****
+		}
+		owns_entire_state_region = STATE_SOUTHERN_SERBIA
+		
+		# Event has not been fired before
+		NOT = { has_variable = yugoslav_war_KOS_hccw }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = { is_homeland = cu:kosovan } }
+			save_scope_as = yugoslav_war_indy_state
+		}
+	
+		# Fire only once
+		set_variable = yugoslav_war_KOS_hccw				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = KOS										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			province = p:xA5D3A9
+			province = p:xB852BB
+			province = p:x4773E6
+			province = p:x45E06A
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:KOS }
+			create_diplomatic_play = {
+				name = yugoslav_war
+				type = dp_annex_war_historical
+				target_country = c:KOS
+				
+				war = yes
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Release country
+		create_country = {
+			tag = KOS										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			province = p:xA5D3A9
+			province = p:xB852BB
+			province = p:x4773E6
+			province = p:x45E06A
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Macedonia
+historical_civil_wars.7 = {
+    type = country_event
+	placement = scope:yugoslav_war_indy_state
+
+    title = yugoslav_war.MCD.t 								# Title of the event; ADD LOCALISATION
+    desc = yugoslav_war.MCD.d 								# Description of the event; ADD LOCALISATION
+    #flavor = yugoslav_war.MCD.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:YUG this = c:YUG										# Change TAG of the overlord ****
+		
+		#When
+		OR = { 
+		
+			#Historical date
+			AND = { 
+				game_date >= 2001.1.22
+				game_date < 2011.1.22
+				has_global_variable = historical_railroading_active
+			}
+			
+			#Has a Democratic Revolution when economy is bad
+			AND = {
+				any_political_movement = {
+					is_revolutionary_movement = yes
+					OR = {
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_communist_leader
+								value < neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_president
+								value > neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_multicultural
+								value > strongly_approve
+							}
+						}
+					}
+				}
+				OR = {
+					in_default = yes
+					has_healthy_economy = no
+				}
+			}
+			
+		}
+		
+		#is_a_communist_dictatorship = yes								# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		#is_at_war = no													# war = no
+		
+		#Owns country to release
+		NOT = { 														# Colony to be released must not already exist on the map
+			exists = c:MCD												# Change TAG of the colony ****
+		}
+		owns_entire_state_region = STATE_SKOPIA
+		
+		# Event has not been fired before
+		NOT = { has_variable = yugoslav_war_MCD_hccw }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = { is_homeland = cu:macedonian } }
+			save_scope_as = yugoslav_war_indy_state
+		}
+	
+		# Fire only once
+		set_variable = yugoslav_war_MCD_hccw				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = MCD										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = s:STATE_SKOPIA.region_state:YUG
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:MCD }
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:macedonian } }
+				set_state_owner = c:MCD
+			}
+			create_diplomatic_play = {
+				name = yugoslav_war
+				type = dp_annex_war_historical
+				target_country = c:MCD
+				
+				war = yes
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Release country
+		create_country = {
+			tag = MCD										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = s:STATE_SKOPIA.region_state:YUG
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:MCD }
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:macedonian } }
+				set_state_owner = c:MCD
+			}
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
 		}
 		
 		ai_chance = { 
