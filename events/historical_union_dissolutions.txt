@@ -1136,6 +1136,7 @@ historical_union_dissolution.6 = {
 			effect_starting_politics_presidential_republic = yes
 			effect_starting_politics_democratic = yes
 			effect_starting_politics_constitutional_federal_state = yes
+			effect_starting_politics_economic_policy_interventionism = yes
 		
 			#Historical Ruler
 			if = {
@@ -1195,6 +1196,165 @@ historical_union_dissolution.6 = {
 		}
 		
 		change_infamy = 25
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Dissolve Czechoslovakia
+historical_union_dissolution.7 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = CZH_dissolution.t 						# Title of the event; ADD LOCALISATION
+    desc = CZH_dissolution.d 						# Description of the event; ADD LOCALISATION
+    #flavor = CZH_dissolution.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:CZH
+		this = c:CZH											# Change TAG of the overlord ****
+		
+		#When
+		OR = { 
+		
+			#Historical date
+			AND = { 
+				game_date >= 1992.12.31
+				game_date < 2002.12.31
+				has_global_variable = historical_railroading_active
+			}
+			
+			#Has a Democratic Revolution when economy is bad
+			AND = {
+				any_political_movement = {
+					is_revolutionary_movement = yes
+					OR = {
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_communist_leader
+								value < neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_president
+								value > neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_multicultural
+								value > strongly_approve
+							}
+						}
+					}
+				}
+				OR = {
+					in_default = yes
+					has_healthy_economy = no
+				}
+			}
+			
+		}
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:SLV										# Change TAG of the colony ****
+		}
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:slovak }			# Change homeland identity to match colony to be released ****
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = CZH_dissolution_hud }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH ROOT SECTION
+		random_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:slovak }		# Change homeland identity to match colony to be released ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = CZH_dissolution_hud						# Change variable ****
+	
+	}
+    
+    option = {
+        name = historical_union_dissolution.option.1			# Accept secesssion
+        highlighted_option = yes
+		
+		#Subject becomes independent
+		create_country = {
+			tag = SLV										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				soviet_SSR_dissolution_laws = yes
+				
+			}
+		}
+		if = {
+			limit = { exists = c:SLV }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:slovak }	# Change homeland identity to match colony to be released ****
+				}
+				set_state_owner = c:SLV								# Change TAG to colony ****
+			}
+		}
+		
+		#Return to being Czechia
+		change_tag = BOH
+		remove_primary_culture = czechoslovakian
+		remove_primary_culture = slovak
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_dissolution.option.2			# Refuse secesssion
+		default_option = yes
+		
+		# Internal unrest
+		custom_tooltip = {
+			text = everyone_is_angry_custom_tooltip
+			add_radicals = {
+				culture = cu:slovak
+				value = large_radicals
+			}
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:slovak } }
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+		}
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 

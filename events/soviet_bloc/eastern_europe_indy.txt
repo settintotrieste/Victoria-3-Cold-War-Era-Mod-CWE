@@ -203,3 +203,340 @@ eastern_europe_indy.2 = {
     }
 
 }
+
+#Weaken Eastern Bloc
+eastern_europe_indy.3 = {
+    type = country_event
+	
+    title = soviet_weaken_eastern_bloc.indy.t 					# Title of the event; ADD LOCALISATION
+    desc = soviet_weaken_eastern_bloc.indy.d 					# Description of the event; ADD LOCALISATION
+    flavor = soviet_weaken_eastern_bloc.indy.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:SOV
+		this = c:SOV											# Change TAG of the overlord ****
+		OR = {
+		
+			in_default = yes
+			has_healthy_economy = no
+			has_revolution = yes
+			
+			has_journal_entry = je_perestroika
+			
+			AND = {
+				game_date >= 1989.10.25
+				has_global_variable = historical_railroading_active
+			}
+			
+		}
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		has_journal_entry = je_perestroika
+		
+		#Warsaw Pact leader
+		has_modifier = warsaw_pact_leader
+		any_country = {
+			has_modifier = warsaw_pact_member
+			is_direct_subject_of = yes
+			is_subject_type = subject_type_satellite
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = soviet_weaken_eastern_bloc_indy }		# CHANGE ****
+		
+    }
+	
+	immediate = { 
+		
+		# Fire only once
+		set_variable = soviet_weaken_eastern_bloc_indy					# Change variable ****
+		
+	}
+    
+    option = {
+        name = eastern_europe_indy.option.1						# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		custom_tooltip = {
+			text = weaken_the_warsaw_pact.tt
+			every_country = {
+				limit = { 
+					is_direct_subject_of = ROOT 
+					OR = { 
+						is_subject_type = subject_type_satellite
+						is_subject_type = subject_type_mandate
+						is_subject_type = subject_type_puppet
+					}
+				}
+				make_independent = yes
+				ROOT = {
+					create_diplomatic_pact = {
+						country = THIS
+						type = satellite
+					}
+				}
+			}
+		}
+		
+		#World is happy
+		change_infamy = -50
+		every_country = {
+			limit = { 
+				is_a_democracy = yes 
+				is_sufficiently_independent = yes
+				country_rank >= rank_value:great_power 
+			}
+			change_relations = { country = ROOT value = 100 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = eastern_europe_indy.option.2						# REFUSE
+		default_option = yes
+		
+		#Unrest in the Warsaw Pact
+		every_country = {
+			limit = { 
+				is_direct_subject_of = ROOT 
+				OR = { 
+					is_subject_type = subject_type_satellite
+					is_subject_type = subject_type_mandate
+					is_subject_type = subject_type_puppet
+				}
+			}
+			custom_tooltip = {
+				text = everyone_is_angry_custom_tooltip
+				add_radicals = {
+					value = very_large_radicals
+				}
+				every_scope_state = {
+					limit = { is_incorporated = yes }
+					add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes }
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Democratisation of Eastern Bloc
+eastern_europe_indy.4 = {
+    type = country_event
+
+    title = eastern_bloc_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = eastern_bloc_revolution.d 							# Description of the event; ADD LOCALISATION
+    flavor = eastern_bloc_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Eastern Bloc country
+		NOT = { c:SOV ?= this }
+		OR = { 
+			country_is_in_europe = yes
+			c:MGL ?= this
+		}
+		
+		#Soviet Union exists or THIS became independent
+		OR = {
+		
+			#Soviet Union exists
+			AND = { 
+				exists = c:SOV
+				NOT = { this = c:SOV }
+				c:SOV ?= {
+					is_a_communist_government = yes							# Correct gov types
+					is_sufficiently_independent = yes						# is_vassal = no		
+					is_at_war = no	
+					has_journal_entry = je_perestroika
+				}
+			}
+			
+			#No longer a Subject
+			is_subject = no
+			
+		}
+		
+		#When
+		OR = { 
+		
+			#Historical date
+			AND = { 
+				c:POL ?= this
+				game_date >= 1989.6.4
+				game_date < 1999.6.4
+				has_global_variable = historical_railroading_active
+			}
+			AND = { 
+				c:EGR ?= this
+				game_date >= 1990.3.18
+				game_date < 2000.3.18
+				has_global_variable = historical_railroading_active
+			}
+			AND = { 
+				c:HUN ?= this
+				game_date >= 1990.3.25
+				game_date < 2000.3.25
+				has_global_variable = historical_railroading_active
+			}
+			AND = { 
+				c:ROM ?= this
+				game_date >= 1990.3.20
+				game_date < 2000.3.20
+				has_global_variable = historical_railroading_active
+			}
+			AND = { 
+				c:CZH ?= this
+				game_date >= 1990.6.8
+				game_date < 2000.6.8
+				has_global_variable = historical_railroading_active
+			}
+			AND = { 
+				c:BUL ?= this
+				game_date >= 1990.6.10
+				game_date < 2000.6.10
+				has_global_variable = historical_railroading_active
+			}
+			AND = { 
+				c:MGL ?= this
+				game_date >= 1990.6.22
+				game_date < 2000.6.22
+				has_global_variable = historical_railroading_active
+			}
+			AND = { 
+				OR = { c:YUG ?= this c:SER ?= this }
+				game_date >= 1990.12.9
+				game_date < 2000.12.9
+				has_global_variable = historical_railroading_active
+			}
+			AND = { 
+				c:ALB ?= this
+				game_date >= 1991.3.31
+				game_date < 2001.3.31
+				has_global_variable = historical_railroading_active
+			}
+			
+			#Has a Democratic Revolution when economy is bad
+			AND = {
+				any_political_movement = {
+					is_revolutionary_movement = yes
+					OR = {
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_communist_leader
+								value < neutral
+							}
+						}
+						any_supporting_interest_group = {
+							law_stance = {
+								law = law_type:law_HOS_president
+								value > neutral
+							}
+						}
+					}
+				}
+				OR = {
+					in_default = yes
+					has_healthy_economy = no
+				}
+			}
+			
+			#No longer a Subject & Cold War is over
+			AND = { 
+				is_subject = no
+				NOT = { cold_war_ongoing = yes }
+			}
+			
+		}
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = eastern_bloc_revolution_hgc }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = eastern_bloc_revolution_hgc				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#THIS becomes independent
+		if = {
+			limit = { is_subject = yes }
+			make_independent = yes
+		}
+		
+		#Enact new regime
+		effect_starting_politics_presidential_republic = yes
+		effect_starting_politics_democratic = yes
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strate = poor
+		}
+		add_radicals = {
+			value = very_large_radicals
+			strate = middle
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

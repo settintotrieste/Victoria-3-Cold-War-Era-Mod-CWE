@@ -336,3 +336,134 @@ historical_union_formation.5 = {
     }
 
 }
+
+#Union State of Russia and Belarus
+historical_union_formation.6 = {
+    type = country_event
+
+    title = RUS_BYE_union.t 				# Title of the event; ADD LOCALISATION
+    desc = RUS_BYE_union.d 					# Description of the event; ADD LOCALISATION
+    #flavor = RUS_BYE_union.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:RUS
+		this ?= c:RUS											# Change TAG of the overlord ****
+		game_date >= 1997.4.2									# START DATE: Date colony became self governing ****
+		game_date < 2017.4.2									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_some_kind_of_democracy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Union candidate conditions
+		exists = c:BYE
+		c:BYE = { 												# Change TAG of the colony ****
+			is_some_kind_of_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = RUS_BYE_union_huf }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = RUS_BYE_union_huf								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_union_formation.option.1				# Accept annexation by FROM
+        highlighted_option = yes
+		
+		#Option for Belarus to accept
+		c:BYE = { 
+			trigger_event = { id = historical_union_formation.7 } 
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_formation.option.2				# Refuse annexation by FROM
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Union State of Russia and Belarus - recipient
+historical_union_formation.7 = {
+    type = country_event
+
+    title = RUS_BYE_union.t 				# Title of the event; ADD LOCALISATION
+    desc = RUS_BYE_union.d 					# Description of the event; ADD LOCALISATION
+    #flavor = RUS_BYE_union.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+    
+    option = {
+        name = historical_union_formation.option.1			# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		make_independent = yes
+		c:RUS = {
+			create_diplomatic_pact = {
+				country = ROOT
+				type = confederal_state
+			}
+		}
+		
+		ai_chance = { 
+			base = 99 
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_formation.option.2			# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:RUS
+			value = -100
+		}
+		
+		ai_chance = { 
+			base = 1 
+		}
+		
+    }
+
+}
