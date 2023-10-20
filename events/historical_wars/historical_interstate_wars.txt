@@ -2132,3 +2132,89 @@ historical_interstate_wars.20 = {
     }
 
 }
+
+### Annexation of Western Sahara ###
+
+historical_interstate_wars.21 = {
+    type = country_event
+
+    title = morocco_sahara_war.t 								# Title of the event; ADD LOCALISATION
+    desc = morocco_sahara_war.d 								# Description of the event; ADD LOCALISATION
+    #flavor = morocco_sahara_war.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:MOR
+		this = c:MOR											# Change TAG of the overlord ****
+		game_date >= 1975.10.31									# START DATE: Date colony became self governing ****
+		game_date < 1985.10.31									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		#is_a_communist_government = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_not_neutral = yes									# No legal or political restrictions on going to war
+		
+		#Recipent conditions
+		exists = c:WSA
+		c:WSA = { 												# Change TAG of the transferee ****
+			is_at_war = no
+			is_sufficiently_independent = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = morocco_sahara_war_hiw }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = morocco_sahara_war_hiw					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_interstate_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#War
+		create_diplomatic_play = {
+			name = morocco_sahara_war
+			type = dp_annex_war_historical
+			target_country = c:WSA
+			
+			#war = yes
+			
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_interstate_wars.option.2				# Peace option
+		default_option = yes
+		
+		#Minor discontent
+		add_radicals = {
+			value = small_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

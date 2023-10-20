@@ -1382,3 +1382,116 @@ historical_union_dissolution.7 = {
     }
 
 }
+
+#Dissolve Serbia & Montenegro
+historical_union_dissolution.8 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = SER_MON_dissolution.t 						# Title of the event; ADD LOCALISATION
+    desc = SER_MON_dissolution.d 						# Description of the event; ADD LOCALISATION
+    #flavor = SER_MON_dissolution.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:SER
+		this = c:SER											# Change TAG of the overlord ****
+		game_date >= 2006.6.3
+		game_date < 2016.6.3
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:MON										# Change TAG of the colony ****
+		}
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:montenegrin }		# Change homeland identity to match colony to be released ****
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SER_MON_dissolution_hud }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH ROOT SECTION
+		random_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:montenegrin }	# Change homeland identity to match colony to be released ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = SER_MON_dissolution_hud					# Change variable ****
+	
+	}
+    
+    option = {
+        name = historical_union_dissolution.option.1			# Accept secesssion
+        highlighted_option = yes
+		
+		#Subject becomes independent
+		create_country = {
+			tag = MON										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				soviet_SSR_dissolution_laws = yes
+				
+			}
+		}
+		if = {
+			limit = { exists = c:MON }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:montenegrin }	# Change homeland identity to match colony to be released ****
+				}
+				set_state_owner = c:MON								# Change TAG to colony ****
+			}
+		}
+		
+		#Remove Montenegrin
+		remove_primary_culture = montenegrin
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_dissolution.option.2			# Refuse secesssion
+		default_option = yes
+		
+		# Internal unrest
+		add_radicals = {
+			culture = cu:montenegrin
+			value = large_radicals
+		}
+		every_scope_state = {
+			limit = { state_region = { is_homeland = cu:montenegrin } }
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
