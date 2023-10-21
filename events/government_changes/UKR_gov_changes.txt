@@ -1,0 +1,130 @@
+namespace = UKR_gov_changes
+
+# Maidan Revolution
+UKR_gov_changes.1 = {
+    type = country_event
+
+    title = UKR_2014_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = UKR_2014_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = UKR_2014_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:UKR
+		this = c:UKR											# Change TAG of the overlord ****
+		game_date >= 2014.2.18									# START DATE: Date colony became self governing ****
+		game_date < 2024.2.18									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		OR = {
+			is_a_republican_democracy = yes
+			is_a_republican_regime = yes
+		}
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#High corruption
+		OR = {
+			NOT = { has_law = law_type:law_very_high_anti_corruption }
+			has_global_variable = historical_railroading_active
+		}
+		
+		#Russian problem
+		exists = c:RUS
+		is_direct_subject_of = c:RUS
+		c:RUS ?= {
+			is_a_republican_regime = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = UKR_2014_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = UKR_2014_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Free from Russia
+		make_independent = yes
+		set_relations = { country = c:RUS value = -100 }
+		
+		#Enact new regime
+		effect_starting_politics_democratic = yes
+		effect_liberal_ruling_coalition = yes
+		
+		#Crimea declares independence free
+		if = {
+			limit = {
+				exists = c:CRI
+				c:CRI ?= {
+					is_subject_type = subject_type_special_administrative_region
+					is_direct_subject_of = c:UKR
+				}
+			}
+			c:CRI = {
+				make_independent = yes
+				set_relations = { country = c:RUS value = 100 }
+				set_relations = { country = ROOT value = -100 }
+			}
+		}
+		
+		#Russian separatism
+		every_scope_state = {
+			limit = { state_region = { is_homeland = cu:russian } }
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		add_radicals = {
+			culture = cu:russian
+			value = very_large_radicals
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_regime = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			strata = middle
+		}
+		add_radicals = {
+			value = large_radicals
+			strata = lower
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
