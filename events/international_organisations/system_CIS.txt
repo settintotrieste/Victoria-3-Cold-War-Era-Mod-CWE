@@ -1,0 +1,359 @@
+namespace = CIS_system
+
+#Set CIS leader
+CIS_system.1 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = {
+		
+			#No CIS leader and there is an eligible one
+			AND = { 
+			
+				NOT = { any_country = { has_modifier = CIS_leader } }
+				
+				any_country = { 
+					has_modifier = CIS_member 
+					OR = { 
+						is_some_kind_of_democracy = yes
+						is_a_republican_regime = yes
+					}
+					country_rank >= rank_value:great_power
+				}
+				
+			}
+			
+			#CIS leader is wrong
+			AND = { 
+				has_modifier = CIS_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOR = { 
+						is_some_kind_of_democracy = yes
+						is_a_republican_regime = yes
+					}
+					NOT = { country_rank >= rank_value:great_power }
+				}
+			}
+			
+			#Overlapping modifiers
+			any_country = { has_modifier = CIS_leader has_modifier = CIS_member }
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Clear CIS leader
+		every_country = {
+			limit = { has_modifier = CIS_leader }
+			remove_modifier = CIS_leader
+			if = { 
+				limit = { NOT = { has_modifier = CIS_member } }
+				add_modifier = { name = CIS_member }
+			}
+		}
+	
+		#Set CIS leader
+		if = {
+			limit = { 
+				NOT = { any_country = { has_modifier = CIS_leader } }
+				
+				any_country = { 
+					has_modifier = CIS_member 
+					OR = { 
+						is_some_kind_of_democracy = yes
+						is_a_republican_regime = yes
+					}
+					country_rank >= rank_value:great_power
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = CIS_member 
+					OR = { 
+						is_some_kind_of_democracy = yes
+						is_a_republican_regime = yes
+					}
+					country_rank >= rank_value:great_power
+				}
+				add_modifier = { name = CIS_leader }
+			}
+		}
+		else_if = {
+			limit = {
+				has_modifier = CIS_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOT = { country_rank >= rank_value:great_power }
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = CIS_member 
+					OR = { 
+						is_some_kind_of_democracy = yes
+						is_a_republican_regime = yes
+					}
+					country_rank >= rank_value:great_power
+				}
+				add_modifier = { name = CIS_leader }
+			}
+		}
+		
+		#Clean up memberships
+		if = { 
+			limit = { has_modifier = CIS_leader has_modifier = CIS_member }
+			remove_modifier = CIS_member
+		}
+		
+	}
+
+}
+
+#Dissolve CIS
+CIS_system.2 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = { 
+		
+			#THIS is the sole member of CIS
+			AND = { 
+				OR = { has_modifier = CIS_member has_modifier = CIS_leader }
+				NOT = { any_country = { has_modifier = CIS_member } }
+			}
+			
+			#No CIS leader
+			AND = { 
+				NOT = { has_modifier = CIS_leader }
+				NOT = { any_country = { has_modifier = CIS_leader } }
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Everyone leaves CIS
+		remove_modifier = CIS_member
+		remove_modifier = CIS_leader
+		
+		every_country = {
+			remove_modifier = CIS_member
+			remove_modifier = CIS_leader
+		}
+		
+	}
+
+}
+
+#Kick ineligible countries out of CIS
+CIS_system.3 = {
+	type = country_event
+	title = CIS_expulsion.t 					# Title of the event; ADD LOCALISATION
+    desc = CIS_expulsion.d 					# Description of the event; ADD LOCALISATION
+    flavor = CIS_expulsion.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/diplo_icons/CIS_member.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		OR = { 
+			has_modifier = CIS_member
+			#has_modifier = CIS_leader
+			has_variable = CIS_application_var
+		}
+		
+		OR = { 
+			NOT = { is_sufficiently_independent = yes }
+			NOT = { infamy < infamy_threshold:pariah }
+			NOR = { 
+				is_some_kind_of_democracy = yes
+				is_a_republican_regime = yes
+			}
+		}
+		
+	}
+
+	immediate = {
+	
+		#THIS leaves CIS
+		remove_modifier = CIS_member
+		remove_modifier = CIS_leader
+		
+		#Terminate any applications
+		remove_variable = CIS_application_var
+		
+		#Block reapplication for 5 years
+		set_variable = {
+			name = left_CIS_var
+			months = 60
+		}
+		
+	}
+	
+	option = {
+        name = CIS_application_rejection.1				# Unfortunate
+		
+    }
+
+}
+
+#Option for CIS leader to accept or reject application for membership
+CIS_system.4 = {
+	title = CIS_application_choice.t 					# Title of the event; ADD LOCALISATION
+    desc = CIS_application_choice.d 					# Description of the event; ADD LOCALISATION
+    #flavor = CIS_application_choice.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/diplo_icons/CIS_member.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		has_modifier = CIS_leader
+		
+		any_country = {
+			has_variable = CIS_application_var
+			
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+	}
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_variable = CIS_application_var }
+			save_scope_as = CIS_applicant
+		}
+		
+		ROOT = {
+			save_scope_as = CIS_leader
+		}
+		
+	}
+
+	option = {
+        name = CIS_application_choice.option.1			# Accept application from PREV
+        highlighted_option = yes
+		
+		#Accept FROM into CIS
+		scope:CIS_applicant = {
+			#FROM joins CIS
+			add_modifier = { name = CIS_member }
+			remove_variable = CIS_application_var
+		}
+		
+		#Inform applicant of successful outcome
+		scope:CIS_applicant = { trigger_event = { id = CIS_system.6 } }
+		
+		#FROM is happy with THIS
+		set_relations = {
+			country = scope:CIS_applicant
+			value = 25
+		}
+		
+		ai_chance = { 
+			base = 99
+		}
+		
+    }
+	
+	option = {
+        name = CIS_application_choice.option.2 # Refuse application from PREV
+		default_option = yes
+		
+		#Inform applicant of unsuccessful outcome
+		scope:CIS_applicant = { 
+			trigger_event = { id = CIS_system.5 } 
+			remove_variable = CIS_application_var
+		}
+		
+		#FROM is angry!
+		change_relations = {
+			country = scope:CIS_applicant
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 1
+		}
+		
+    }
+
+}
+
+#Notification of rejection
+CIS_system.5 = {
+	title = CIS_application_rejection.t 				# Title of the event; ADD LOCALISATION
+    desc = CIS_application_rejection.d 				# Description of the event; ADD LOCALISATION
+    #flavor = CIS_application_rejection.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/diplo_icons/CIS_member.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = CIS_leader }
+			save_scope_as = CIS_leader
+		}
+		
+	}
+
+	option = {
+        name = CIS_application_rejection.1				# Unfortunate
+		
+    }
+
+}
+
+#Notification of acceptance
+CIS_system.6 = {
+	title = CIS_application_acceptance.t 				# Title of the event; ADD LOCALISATION
+    desc = CIS_application_acceptance.d 				# Description of the event; ADD LOCALISATION
+    #flavor = CIS_application_acceptance.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/diplo_icons/CIS_member.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = CIS_leader }
+			save_scope_as = CIS_leader
+		}
+		
+	}
+
+	option = {
+        name = CIS_application_acceptance.1				# Fortunate
+		
+    }
+
+}

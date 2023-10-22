@@ -1,0 +1,195 @@
+form_CIS_decision = {
+
+	is_shown = {
+		
+		#Historical founder
+		c:RUS ?= this
+		
+		#CIS does not already exist
+		NOR = { has_modifier = CIS_member has_modifier = CIS_leader }
+		NOT = { any_country = { OR = { has_modifier = CIS_member has_modifier = CIS_leader } } }
+		
+		#THIS is a democracy
+		OR = { 
+			is_some_kind_of_democracy = yes
+			is_a_republican_regime = yes
+		}
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no
+	}
+
+	possible = {
+	
+		#THIS is at least a Great Power
+		country_rank >= rank_value:great_power
+		
+		#Country is independent
+		is_sufficiently_independent = yes
+	
+		#Country is not at war
+		is_at_war = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+		#There is someone to create CIS with
+		any_country = {
+			OR = { 
+				is_some_kind_of_democracy = yes
+				is_a_republican_regime = yes
+			}
+			is_in_our_sphere_of_influence = yes
+			is_revolutionary = no
+			relations:root >= relations_threshold:amicable
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS forms CIS by being the first member & leader
+		add_modifier = { name = CIS_leader }
+		
+	}
+
+	ai_chance = {
+		base = 100		
+	}
+	
+}
+
+join_CIS_decision = {
+
+	is_shown = {
+	
+		#Is not currently applying for CIS membership
+		NOT = { has_variable = CIS_application_var }
+		
+		#Not already in CIS
+		NOT = { has_modifier = CIS_leader }
+		NOT = { has_modifier = CIS_member }
+		
+		#CIS does already exists
+		any_country = { has_modifier = CIS_leader }
+		
+		#Former USSR states only
+		capital = {
+			state_region = { is_homeland = cu:soviet }	
+		}
+		
+		#THIS is a democracy
+		OR = { 
+			is_some_kind_of_democracy = yes
+			is_a_republican_regime = yes
+		}
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no
+		
+		#CIS Leader is higher rank than THIS
+		any_country = {
+			has_modifier = CIS_leader
+			country_rank > root.country_rank
+		}
+		
+	}
+
+	possible = {
+	
+		#Did not leave CIS recently
+		NOT = { has_variable = left_CIS_var }
+	
+		#Country is independent
+		is_sufficiently_independent = yes
+	
+		#Country is not at war
+		is_at_war = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+		#Friendly with CIS leader
+		any_country = {
+			has_modifier = CIS_leader
+			relations:root >= relations_threshold:amicable
+			NOT = { has_attitude = { who = ROOT attitude <= antagonistic } }
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS applies for CIS
+		set_variable = {
+			name = CIS_application_var
+			months = 12
+		}
+		
+		#Choice for CIS leader to accpet or decline
+		random_country = { 
+			limit = { has_modifier = CIS_leader }
+			trigger_event = { id = CIS_system.4 }
+		}
+		
+	}
+
+	ai_chance = {
+		base = 100
+	}
+	
+}
+
+leave_CIS_decision = {
+
+	is_shown = {
+		
+		#THIS is in CIS
+		OR = { has_modifier = CIS_member has_modifier = CIS_leader }
+		
+	}
+
+	possible = {
+	
+		#Conditions to leave CIS
+		OR = {
+		
+			NOR = { 
+				is_some_kind_of_democracy = yes
+				is_a_republican_regime = yes
+			}
+		
+			NOT = { is_sufficiently_independent = yes }
+			
+			any_country = {
+				has_modifier = CIS_leader
+			
+				NOT = { relations:root >= relations_threshold:poor }
+				has_attitude = { who = ROOT attitude <= antagonistic }
+			}
+			
+			is_player = yes
+			
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS leaves CIS
+		remove_modifier = CIS_member
+		remove_modifier = CIS_leader
+		
+		#Block reapplication for 5 years
+		set_variable = {
+			name = left_CIS_var
+			months = 60
+		}
+		
+	}
+
+	ai_chance = {
+		base = 100		
+	}
+	
+}
