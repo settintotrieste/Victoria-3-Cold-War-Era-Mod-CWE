@@ -1,0 +1,145 @@
+calculate_world_tension = {
+
+	#Always reset to 0 first
+	set_global_variable = {
+		name = world_tension_amount
+		value = 1
+	}
+	set_global_variable = {
+		name = world_tension_countries
+		value = 0
+	}
+	
+	#Calculate global tension level
+	
+	#Count total number of countries
+	every_country = {
+		change_global_variable = {
+			name = world_tension_countries
+			add = 1
+		}
+	}
+	
+	#From wars
+	every_country = {
+		limit = { is_at_war = yes }
+		if = {
+			limit = { country_rank = rank_value:super_power }
+			change_global_variable = {
+				name = world_tension_amount
+				add = 5
+			}
+		}
+		if = {
+			limit = { country_rank = rank_value:great_power }
+			change_global_variable = {
+				name = world_tension_amount
+				add = 4
+			}
+		}
+		if = {
+			limit = { country_rank = rank_value:major_power }
+			change_global_variable = {
+				name = world_tension_amount
+				add = 2
+			}
+		}
+		if = {
+			limit = { country_rank < rank_value:major_power }
+			change_global_variable = {
+				name = world_tension_amount
+				add = 1
+			}
+		}
+	}
+	
+	#From poor relations
+	every_country = {
+		if = {
+			limit = { country_rank = rank_value:super_power num_rivals > 0 }
+			change_global_variable = {
+				name = world_tension_amount
+				add = 5
+			}
+		}
+		if = {
+			limit = { country_rank = rank_value:great_power num_rivals > 0 }
+			change_global_variable = {
+				name = world_tension_amount
+				add = 4
+			}
+		}
+		if = {
+			limit = { country_rank = rank_value:major_power num_rivals > 0 }
+			change_global_variable = {
+				name = world_tension_amount
+				add = 2
+			}
+		}
+		if = {
+			limit = { country_rank < rank_value:major_power num_rivals > 0 }
+			change_global_variable = {
+				name = world_tension_amount
+				add = 1
+			}
+		}
+	}
+	
+	#Get average world tension
+	change_global_variable = {
+		name = world_tension_amount
+		divide = global_var:world_tension_countries
+	}
+	
+	#Display
+	set_variable = {
+		name = world_tension_amount_display
+		value = global_var:world_tension_amount
+	}
+	change_variable = {
+		name = world_tension_amount_display
+		divide = 10
+	}
+	change_variable = {
+		name = world_tension_amount_display
+		multiply = 100
+	}
+	
+	#Get world tension level
+	if = {
+		limit = { 
+			global_var:world_tension_amount >= 0 
+			global_var:world_tension_amount < 2
+		}
+		set_global_variable = very_low_world_tension
+	}
+	if = {
+		limit = { 
+			global_var:world_tension_amount >= 2 
+			global_var:world_tension_amount < 4
+		}
+		set_global_variable = low_world_tension
+	}
+	if = {
+		limit = { 
+			global_var:world_tension_amount >= 4
+			global_var:world_tension_amount < 6
+		}
+		set_global_variable = medium_world_tension
+	}
+	if = {
+		limit = { 
+			global_var:world_tension_amount >= 6
+			global_var:world_tension_amount < 8
+		}
+		set_global_variable = high_world_tension
+	}
+	if = {
+		limit = { 
+			global_var:world_tension_amount >= 8
+			#global_var:world_tension_amount < 10
+		}
+		set_global_variable = very_high_world_tension
+	}
+
+}
