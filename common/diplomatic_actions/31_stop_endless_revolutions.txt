@@ -68,15 +68,10 @@
 		#Rebel IGs join the Gov
 		if = {
 			limit = { 
-				scope:target_country = { right_wing_ruling_coalition = yes } 
+				scope:target_country = { exists = ruler } 
 			}
-			effect_conservative_ruling_coalition = yes
-		}
-		if = {
-			limit = { 
-				scope:target_country = { left_wing_ruling_coalition = yes } 
-			}
-			effect_socialist_ruling_coalition = yes
+			scope:target_country = { ruler = { interest_group = { save_scope_as = rebel_ig_ruler } } }
+			scope:rebel_ig_ruler = { add_ruling_interest_group = yes }
 		}
 		
 		#Annex Revolutionary
@@ -85,21 +80,34 @@
 	}
 	
 	decline_effect = {
-	
-		change_relations = { country = scope:target_country value = -25 }
 		
-		random_scope_war = {
-			limit = {
-				is_warleader = scope:actor
-				is_warleader = scope:target_country
+		if = {
+			limit = { army_size_including_conscripts > 0 }
+			random_scope_war = {
+				limit = {
+					is_warleader = scope:actor
+					is_warleader = scope:target_country
+				}
+				add_war_war_support = {
+					target = scope:actor
+					value = -10
+				}
+				add_war_war_support = {
+					target = scope:target_country
+					value = -10
+				}
 			}
-			add_war_war_support = {
-				target = scope:actor
-				value = -10
-			}
-			add_war_war_support = {
-				target = scope:target_country
-				value = -10
+		}
+		else = {
+			random_scope_war = {
+				limit = {
+					is_warleader = scope:actor
+					is_warleader = scope:target_country
+				}
+				add_war_war_support = {
+					target = scope:actor
+					value = -10
+				}
 			}
 		}
 		
@@ -146,6 +154,9 @@
 						has_healthy_economy = no
 					}
 				}
+				
+				#THIS has no army to fight a civil war
+				army_size_including_conscripts = 0
 
 			}
 			
@@ -154,9 +165,78 @@
 		accept_score = {
 			value = 0
 			
+			if = {
+				limit = { 
+					scope:target_country = { 
+						army_size_including_conscripts > 0
+					} 
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -100
+				}
+			}
+			
 			add = {
-				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
-				value = -100
+				desc = "RULER_IS_DEMOCRATIC"
+	
+				if = {
+					limit = { 
+						scope:target_country = {
+							exists = ruler
+							ruler = {
+								has_ideology = ideology:ideology_liberal
+							}
+						}
+					}
+					value = 75
+				}
+				if = {
+					limit = { 
+						scope:target_country = {
+							exists = ruler
+							ruler = {
+								has_ideology = ideology:ideology_democratic
+							}
+						}
+					}
+					value = 50
+				}
+				if = {
+					limit = { 
+						scope:target_country = {
+							exists = ruler
+							ruler = {
+								has_ideology = ideology:ideology_elitist
+							}
+						}
+					}
+					value = 50
+				}
+				
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_DOMESTIC_ECONOMIC_STATE"
+	
+				if = {
+					limit = { 
+						scope:target_country = {
+							in_default = yes
+						}
+					}
+					value = 50
+				}
+				if = {
+					limit = { 
+						scope:target_country = {
+							in_default = no
+							has_healthy_economy = no
+						}
+					}
+					value = 25
+				}
+				
 			}
 			
 			add = {
@@ -173,10 +253,6 @@
 									value < 75
 								}
 							}
-							OR = {
-								in_default = yes
-								has_healthy_economy = no
-							}
 						}
 					}
 					value = 25
@@ -191,10 +267,6 @@
 									target = scope:target_country
 									value < 50
 								}
-							}
-							OR = {
-								in_default = yes
-								has_healthy_economy = no
 							}
 						}
 					}
@@ -211,10 +283,6 @@
 									value < 25
 								}
 							}
-							OR = {
-								in_default = yes
-								has_healthy_economy = no
-							}
 						}
 					}
 					value = 25
@@ -230,13 +298,9 @@
 									value < 0
 								}
 							}
-							OR = {
-								in_default = yes
-								has_healthy_economy = no
-							}
 						}
 					}
-					value = 30
+					value = 25
 				}
 				
 			}
