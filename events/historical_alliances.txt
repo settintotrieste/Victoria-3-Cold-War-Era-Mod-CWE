@@ -1,0 +1,231 @@
+namespace = historical_alliances_system
+
+# Southeast Asia Treaty Organisation (Uses a simple event because the org was historically impotent)
+historical_alliances_system.1 = {
+    type = country_event
+
+    title = SEATO_form.t 							# Title of the event; ADD LOCALISATION
+    desc = SEATO_form.d 							# Description of the event; ADD LOCALISATION
+    flavor = SEATO_form.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 1954.9.8									# START DATE: Date colony became self governing ****
+		game_date < 1977.6.30									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		#is_at_war = no											# war = no
+		
+		OR = { 
+			has_law = law_type:law_regionalist_fp
+			has_law = law_type:law_globalist_fp
+		}
+		is_not_neutral = yes
+		
+		#Cold War conditions
+		cold_war_ongoing = yes
+		country_rank = rank_value:super_power
+		any_country = { 
+			OR = { 
+				country_is_in_southeast_asia = yes
+				country_is_in_east_asia = yes
+				country_is_in_india = yes
+			}
+			is_a_communist_government = yes
+			is_not_neutral = yes
+		}
+		
+		#Available countries
+		any_country = { 
+			OR = { 
+				country_is_in_southeast_asia = yes
+				country_is_in_east_asia = yes
+				country_is_in_india = yes
+			}
+			is_some_kind_of_democracy = yes
+			is_sufficiently_independent = yes
+			is_not_neutral = yes
+			right_wing_ruling_coalition = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SEATO_form_hae }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		#No clash
+		every_country = {
+			remove_variable = SEATO_form_hae
+		}
+	
+		# Fire only once
+		set_variable = SEATO_form_hae								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		every_country = { 
+			limit = {
+				OR = { 
+					country_is_in_southeast_asia = yes
+					country_is_in_east_asia = yes
+					country_is_in_india = yes
+				}
+				is_some_kind_of_democracy = yes
+				is_sufficiently_independent = yes
+				is_not_neutral = yes
+				right_wing_ruling_coalition = yes
+			}
+			trigger_event = { id = historical_alliances_system.2 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Southeast Asia Treaty Organisation (Uses a simple event because the org was historically impotent)
+historical_alliances_system.2 = {
+    type = country_event
+
+    title = SEATO_form.t 							# Title of the event; ADD LOCALISATION
+    desc = SEATO_form.d 							# Description of the event; ADD LOCALISATION
+    flavor = SEATO_form.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		random_country = {
+			limit = { has_variable = SEATO_form_hae }
+			save_scope_as = SEATO_leader
+		}
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#USA will protect this country through a defensive pact
+		if = {
+			limit = { 
+				is_subject_type = subject_type_protectorate
+				is_direct_subject_of = scope:SEATO_leader
+			}
+			hidden_effect = {
+				set_relations = {
+					country = scope:SEATO_leader
+					value = 100
+				}
+			}
+			scope:SEATO_leader = {
+				remove_diplomatic_pact = {
+					country = ROOT
+					type = protectorate
+				}
+				create_diplomatic_pact = {
+					country = ROOT
+					type = satellite
+				}
+				create_diplomatic_pact = {
+					country = ROOT
+					type = defensive_pact
+				}
+			}
+		}
+		else_if = {
+			limit = { is_subject = no }
+			hidden_effect = {
+				set_relations = {
+					country = scope:SEATO_leader
+					value = 90
+				}
+			}
+			scope:SEATO_leader = {
+				create_diplomatic_pact = {
+					country = ROOT
+					type = protectorate
+				}
+				create_diplomatic_pact = {
+					country = ROOT
+					type = defensive_pact
+				}
+			}
+		}
+		else = {
+			hidden_effect = {
+				set_relations = {
+					country = scope:SEATO_leader
+					value = 80
+				}
+			}
+			scope:SEATO_leader = {
+				create_diplomatic_pact = {
+					country = ROOT
+					type = defensive_pact
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		change_relations = {
+			country = scope:SEATO_leader
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

@@ -1,0 +1,248 @@
+﻿stop_endless_revolutions = {
+	requires_approval = yes
+	can_use_obligations = no
+	
+	potential = {
+		
+		#THIS is in a revolution
+		has_revolution = yes
+		
+		#TARGET is a revolutionary state of THIS
+		is_revolutionary = no
+		scope:target_country = { 
+			is_revolutionary = yes 
+			civil_war_origin_country = scope:actor
+		}
+		
+		#THIS is at war with TARGET
+		has_war_with = scope:target_country
+		
+	}
+	
+	possible = {
+		
+		#THIS and TARGET are in control of the war
+		any_scope_war = {
+			is_warleader = scope:actor
+			is_warleader = scope:target_country
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Political compromise to end protracted civil war
+		
+		#THIS accepts rebel's government type & interest group
+		
+		#Level of democracy
+		if = {
+			limit = { 
+				scope:target_country = { has_law = law_type:law_appointed_legislature } 
+			}
+			activate_law = law_type:law_appointed_legislature
+			activate_law = law_type:law_no_voting
+		}
+		else_if = {
+			limit = { 
+				scope:target_country = { has_law = law_type:law_technocratic_legislature } 
+			}
+			activate_law = law_type:law_technocratic_legislature
+			activate_law = law_type:law_gerrymandered_voting
+		}
+		else_if = {
+			limit = { 
+				scope:target_country = { 
+					ruler = { has_ideology = ideology:ideology_liberal } 
+					has_law = law_type:law_democratic_legislature 
+				} 
+			}
+			activate_law = law_type:law_democratic_legislature
+			activate_law = law_type:law_fair_voting
+		}
+		else = {
+			activate_law = law_type:law_democratic_legislature
+			activate_law = law_type:law_harassment_voting
+		}
+		
+		#Rebel IGs join the Gov
+		if = {
+			limit = { 
+				scope:target_country = { right_wing_ruling_coalition = yes } 
+			}
+			effect_conservative_ruling_coalition = yes
+		}
+		if = {
+			limit = { 
+				scope:target_country = { left_wing_ruling_coalition = yes } 
+			}
+			effect_socialist_ruling_coalition = yes
+		}
+		
+		#Annex Revolutionary
+		annex = scope:target_country
+		
+	}
+	
+	decline_effect = {
+	
+		change_relations = { country = scope:target_country value = -25 }
+		
+		random_scope_war = {
+			limit = {
+				is_warleader = scope:actor
+				is_warleader = scope:target_country
+			}
+			add_war_war_support = {
+				target = scope:actor
+				value = -10
+			}
+			add_war_war_support = {
+				target = scope:target_country
+				value = -10
+			}
+		}
+		
+	}
+
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			
+			OR = {
+			
+				#Revolutionary war is going nowhere BUT revolutionary country is winning
+				any_scope_war = {
+					is_warleader = scope:actor
+					is_warleader = scope:target_country
+					
+					has_war_support = {
+						target = scope:actor
+						value <= 0
+					}
+					has_war_support = {
+						target = scope:target_country
+						value > 0
+					}
+				}
+			
+				#THIS is not able to sustain the war any further
+				AND = {
+					any_scope_war = {
+						is_warleader = scope:actor
+						is_warleader = scope:target_country
+						
+						has_war_support = {
+							target = scope:actor
+							value <= 0
+						}
+					}
+					OR = {
+						in_default = yes
+						has_healthy_economy = no
+					}
+				}
+
+			}
+			
+		}
+		
+		accept_score = {
+			value = 0
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+				value = -100
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_WAR_SUPPORT_LEVEL"
+	
+				if = {
+					limit = { 
+						scope:target_country = {
+							any_scope_war = {
+								is_warleader = scope:actor
+								is_warleader = scope:target_country
+								has_war_support = {
+									target = scope:target_country
+									value < 75
+								}
+							}
+							OR = {
+								in_default = yes
+								has_healthy_economy = no
+							}
+						}
+					}
+					value = 25
+				}
+				if = {
+					limit = { 
+						scope:target_country = {
+							any_scope_war = {
+								is_warleader = scope:actor
+								is_warleader = scope:target_country
+								has_war_support = {
+									target = scope:target_country
+									value < 50
+								}
+							}
+							OR = {
+								in_default = yes
+								has_healthy_economy = no
+							}
+						}
+					}
+					value = 25
+				}
+				if = {
+					limit = { 
+						scope:target_country = {
+							any_scope_war = {
+								is_warleader = scope:actor
+								is_warleader = scope:target_country
+								has_war_support = {
+									target = scope:target_country
+									value < 25
+								}
+							}
+							OR = {
+								in_default = yes
+								has_healthy_economy = no
+							}
+						}
+					}
+					value = 25
+				}
+				if = {
+					limit = { 
+						scope:target_country = {
+							any_scope_war = {
+								is_warleader = scope:actor
+								is_warleader = scope:target_country
+								has_war_support = {
+									target = scope:target_country
+									value < 0
+								}
+							}
+							OR = {
+								in_default = yes
+								has_healthy_economy = no
+							}
+						}
+					}
+					value = 30
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+}
