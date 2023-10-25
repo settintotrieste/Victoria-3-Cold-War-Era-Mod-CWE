@@ -1,0 +1,128 @@
+je_conduct_great_purge_button = {
+	name = "je_conduct_great_purge_button"
+	desc = "je_conduct_great_purge_button_desc"
+
+	visible = { 
+		
+		exists = ruler
+		
+	}
+
+	possible = {
+		
+		#Ruler is autocratic
+		ruler = {
+			OR = {
+				has_ideology = ideology:ideology_autocratic
+				has_ideology = ideology:ideology_power_hungry
+			}
+		}
+		
+		#Ruler has the loyal support of the army
+		ig:ig_armed_forces = { ig_approval > 10 }
+		
+		#Not already conducting a purge
+		NOT = { has_modifier = conducting_great_purge }
+		
+		#No clash with another purge mechanic
+		NOT = { has_journal_entry = je_plot_against_the_dictator_system }
+		
+	}
+
+	effect = {
+		
+		#Add purge modifier
+		add_modifier = { 
+			name = conducting_great_purge 
+			years = 5 
+			is_decaying = yes 
+		}
+		
+		#Purge everyone
+		ruler = {
+			interest_group = {
+				save_scope_as = rulers_IG_scope
+			}
+		}
+		#Purge opposition politicians
+		custom_tooltip = {
+			text = je_conduct_great_purge_politicians.tt
+			every_scope_character = {
+				limit = { 
+					is_ruler = no
+					NOT = { is_interest_group_type = scope:rulers_IG_scope }
+					OR = { 
+						has_role = politician
+						has_role = agitator
+					}
+				}
+				random_list = { 
+					1 = { kill_character = yes }
+					1 = { exile_character = yes }
+					1 = { 
+						if = {
+							limit = { 
+								NOR = { 
+									has_modifier = convicted_character
+									has_modifier = unjustly_convicted_character
+								} 
+							}
+							remove_modifier = indicted_character 
+							add_modifier = { name = unjustly_convicted_character years = 10 } 
+						}
+					}
+				}
+			}
+		}
+		#Purge opposition generals
+		custom_tooltip = {
+			text = je_conduct_great_purge_generals.tt
+			every_scope_character = {
+				limit = { 
+					is_ruler = no
+					NOT = { is_interest_group_type = scope:rulers_IG_scope }
+					OR = {
+						has_role = general
+						has_role = admiral
+					}
+					NOR = { 
+						has_role = politician
+						has_role = agitator
+					}
+				}
+				kill_character = yes
+			}
+		}
+		
+		#Gain infamy
+		change_infamy = 5
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if government is progressive & Mainland China is a dictatorship
+		modifier = { 
+			trigger = { 
+				NOT = { has_global_variable = historical_railroading_active }
+				game_date >= 2000.1.1
+				OR = {
+					has_modifier = libertarian_ruling_party_ideology
+					has_modifier = progressive_ruling_party_ideology
+				}
+				exists = ruler
+				ruler = {
+					OR = {
+						has_ideology = ideology:ideology_democratic
+						has_ideology = ideology:ideology_liberal
+					}
+				}
+				c:PRC ?= { is_a_dictatorship = yes }
+			}
+			add = 10
+		}
+		
+	}
+	
+}

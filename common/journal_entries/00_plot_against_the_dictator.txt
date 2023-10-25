@@ -105,18 +105,20 @@ je_plot_against_the_dictator_system = {
 			}
 			
 			#Conduct purge of other IGs
-			random_interest_group = {
-				limit = { leader = { is_ruler = yes } }
-				save_scope_as = rulers_IG_scope
+			ruler = {
+				interest_group = {
+					save_scope_as = rulers_IG_scope
+				}
 			}
 			custom_tooltip = {
 				text = je_plot_against_the_dictator_system_4.tt
 				every_scope_character = {
 					limit = { 
 						is_ruler = no
-						NOR = {
-							has_role = general
-							has_role = admiral
+						NOT = { is_interest_group_type = scope:rulers_IG_scope }
+						OR = { 
+							has_role = politician
+							has_role = agitator
 						}
 						OR = { 
 							NOT = { has_global_variable = historical_railroading_active }
@@ -126,6 +128,18 @@ je_plot_against_the_dictator_system = {
 					random_list = { 
 						1 = { kill_character = yes }
 						1 = { exile_character = yes }
+						1 = { 
+							if = {
+								limit = { 
+									NOR = { 
+										has_modifier = convicted_character
+										has_modifier = unjustly_convicted_character
+									} 
+								}
+								remove_modifier = indicted_character 
+								add_modifier = { name = unjustly_convicted_character years = 10 } 
+							}
+						}
 					}
 				}
 			}
@@ -136,15 +150,19 @@ je_plot_against_the_dictator_system = {
 					every_scope_character = {
 						limit = { 
 							is_ruler = no
+							NOT = { is_interest_group_type = scope:rulers_IG_scope }
 							OR = {
 								has_role = general
 								has_role = admiral
+							}
+							NOR = { 
+								has_role = politician
+								has_role = agitator
 							}
 							OR = { 
 								NOT = { has_global_variable = historical_railroading_active }
 								is_historical = no 
 							}
-							NOT = { is_interest_group_type = scope:rulers_IG_scope }
 						}
 						random_list = { 
 							5 = { kill_character = yes }
@@ -232,6 +250,7 @@ je_plot_against_the_dictator_system = {
 				is_ruler = yes 
 				NOT = { has_modifier = contested_dictator }
 			}
+			NOT = { exists = ruler }
 		}
 		
 	}
