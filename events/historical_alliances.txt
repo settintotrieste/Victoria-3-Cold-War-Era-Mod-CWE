@@ -229,3 +229,230 @@ historical_alliances_system.2 = {
     }
 
 }
+
+# Central Treaty Organisation (Uses a simple event because the org was historically impotent)
+historical_alliances_system.3 = {
+    type = country_event
+
+    title = CENTO_form.t 							# Title of the event; ADD LOCALISATION
+    desc = CENTO_form.d 							# Description of the event; ADD LOCALISATION
+    flavor = CENTO_form.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:GBR ?= this											# Change TAG of the overlord ****
+		game_date >= 1955.2.24									# START DATE: Date colony became self governing ****
+		game_date < 1979.3.16									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		#is_at_war = no											# war = no
+		
+		OR = { 
+			has_law = law_type:law_regionalist_fp
+			has_law = law_type:law_globalist_fp
+		}
+		is_not_neutral = yes
+		
+		#Cold War conditions
+		cold_war_ongoing = yes
+		country_rank >= rank_value:great_power
+		any_country = { 
+			OR = { 
+				country_is_in_middle_east = yes
+				country_is_in_india = yes
+			}
+			is_a_communist_government = yes
+			is_not_neutral = yes
+		}
+		
+		#Available countries
+		any_country = { 
+			OR = { 
+				country_is_in_middle_east = yes
+				country_is_in_india = yes
+			}
+			is_some_kind_of_democracy = yes
+			is_sufficiently_independent = yes
+			is_not_neutral = yes
+			right_wing_ruling_coalition = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = CENTO_form_hae }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		#No clash
+		every_country = {
+			remove_variable = CENTO_form_hae
+		}
+	
+		# Fire only once
+		set_variable = CENTO_form_hae								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		every_country = { 
+			limit = {
+				OR = { 
+					country_is_in_middle_east = yes
+					country_is_in_india = yes
+				}
+				is_some_kind_of_democracy = yes
+				is_sufficiently_independent = yes
+				is_not_neutral = yes
+				right_wing_ruling_coalition = yes
+			}
+			trigger_event = { id = historical_alliances_system.2 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Central Treaty Organisation (Uses a simple event because the org was historically impotent)
+historical_alliances_system.4 = {
+    type = country_event
+
+    title = CENTO_form.t 							# Title of the event; ADD LOCALISATION
+    desc = CENTO_form.d 							# Description of the event; ADD LOCALISATION
+    flavor = CENTO_form.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		random_country = {
+			limit = { has_variable = CENTO_form_hae }
+			save_scope_as = CENTO_leader
+		}
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#GBR will protect this country through a defensive pact
+		if = {
+			limit = { 
+				is_subject_type = subject_type_protectorate
+				is_direct_subject_of = scope:CENTO_leader
+			}
+			hidden_effect = {
+				set_relations = {
+					country = scope:CENTO_leader
+					value = 100
+				}
+			}
+			scope:CENTO_leader = {
+				remove_diplomatic_pact = {
+					country = ROOT
+					type = protectorate
+				}
+				create_diplomatic_pact = {
+					country = ROOT
+					type = satellite
+				}
+				create_diplomatic_pact = {
+					country = ROOT
+					type = defensive_pact
+				}
+			}
+		}
+		else_if = {
+			limit = { is_subject = no }
+			hidden_effect = {
+				set_relations = {
+					country = scope:CENTO_leader
+					value = 90
+				}
+			}
+			scope:CENTO_leader = {
+				create_diplomatic_pact = {
+					country = ROOT
+					type = protectorate
+				}
+				create_diplomatic_pact = {
+					country = ROOT
+					type = defensive_pact
+				}
+			}
+		}
+		else = {
+			hidden_effect = {
+				set_relations = {
+					country = scope:CENTO_leader
+					value = 80
+				}
+			}
+			scope:CENTO_leader = {
+				create_diplomatic_pact = {
+					country = ROOT
+					type = defensive_pact
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		change_relations = {
+			country = scope:CENTO_leader
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
