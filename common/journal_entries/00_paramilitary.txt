@@ -5,21 +5,12 @@
 
 	is_shown_when_inactive = {
 	
-		#Has Concentration Camps
-		OR = { 
-			has_law = law_type:law_slavery_political
-			has_law = law_type:law_slavery_cultural
-		}
+		#Has Secret Police
+		has_law = law_type:law_secret_police
 		
 	}
 
 	possible = {
-		
-		#Has Concentration Camps
-		OR = { 
-			has_law = law_type:law_slavery_political
-			has_law = law_type:law_slavery_cultural
-		}
 		
 		#Has a strong military
 		OR = {
@@ -27,30 +18,47 @@
 			has_law = law_type:law_mass_conscription
 		}
 		
+		#Politicised Military
+		has_law = law_type:law_politicised_bureaucrats
+		
 	}
 
 	immediate = {
 		
+		#Set interest group for Paramilitary Group
+		ruler = { interest_group = { save_scope_as = paramilitary_IG } }
 		
+		#Paramilitary groups always start off as loyal
+		set_variable = { 
+			name = paramilitary_groups_loyalty
+			value = 100
+		}
+		set_variable = { 
+			name = paramilitary_groups_loyalty_monthly
+			value = 0
+		}
 		
 	}
 
 	fail = {
 	
-		NAND = {
-	
-			#Has Concentration Camps
-			OR = { 
-				has_law = law_type:law_slavery_political
-				has_law = law_type:law_slavery_cultural
+		OR = {
+		
+			NAND = {
+		
+				has_law = law_type:law_secret_police
+				
+				OR = {
+					has_law = law_type:law_professional_army
+					has_law = law_type:law_mass_conscription
+				}
+				
+				has_law = law_type:law_politicised_bureaucrats
+			
 			}
 			
-			#Has a strong military
-			OR = {
-				has_law = law_type:law_professional_army
-				has_law = law_type:law_mass_conscription
-			}
-		
+			NOT = { exists = scope:paramilitary_IG }
+			
 		}
 		
 	}
@@ -62,23 +70,226 @@
 			remove_modifier = conducting_great_purge
 		}
 		
+		remove_variable = paramilitary_groups_loyalty
+		
 	}
 	
-	status_desc = {
-		first_valid = {
-			triggered_desc = {
-				desc = je_conducting_great_purge
-				trigger = {
-					has_modifier = conducting_great_purge
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			#Failsafe
+			if = {
+				limit = { NOT = { has_variable = paramilitary_groups_loyalty } }
+				set_variable = { 
+					name = paramilitary_groups_loyalty
+					value = 100
 				}
 			}
-			triggered_desc = {
-				desc = je_not_conducting_great_purge
-				trigger = {
-					
+			
+			### Calculate loyalty ###
+			
+			set_variable = { 
+				name = paramilitary_groups_loyalty_monthly
+				value = 0
+			}
+			
+			#Gain loyalty (Max: +10/month)
+			if = {
+				limit = { 
+					scope:paramilitary_IG = { ig_approval > 0 } 
+				}
+				set_variable = { 
+					name = paramilitary_groups_loyalty_monthly
+					value = 2
 				}
 			}
+			if = {
+				limit = { 
+					scope:paramilitary_IG = { ig_approval > 5 } 
+				}
+				set_variable = { 
+					name = paramilitary_groups_loyalty_monthly
+					value = 4
+				}
+			}
+			if = {
+				limit = { 
+					scope:paramilitary_IG = { ig_approval > 10 } 
+				}
+				set_variable = { 
+					name = paramilitary_groups_loyalty_monthly
+					value = 6
+				}
+			}
+			if = {
+				limit = { 
+					scope:paramilitary_IG = { ig_approval > 15 } 
+				}
+				set_variable = { 
+					name = paramilitary_groups_loyalty_monthly
+					value = 8
+				}
+			}
+			if = {
+				limit = { 
+					scope:paramilitary_IG = { ig_approval >= 20 } 
+				}
+				set_variable = { 
+					name = paramilitary_groups_loyalty_monthly
+					value = 10
+				}
+			}
+			
+			#Lose loyalty (Max: -20/month)
+			if = {
+				limit = { 
+					scope:paramilitary_IG = { ig_approval < 0 }
+				}
+				set_variable = { 
+					name = paramilitary_groups_loyalty_monthly
+					value = -4
+				}
+			}
+			if = {
+				limit = { 
+					scope:paramilitary_IG = { ig_approval < -5 } 
+				}
+				set_variable = { 
+					name = paramilitary_groups_loyalty_monthly
+					value = -8
+				}
+			}
+			if = {
+				limit = { 
+					scope:paramilitary_IG = { ig_approval < -10 } 
+				}
+				set_variable = { 
+					name = paramilitary_groups_loyalty_monthly
+					value = -12
+				}
+			}
+			if = {
+				limit = { 
+					scope:paramilitary_IG = { ig_approval < -15 } 
+				}
+				set_variable = { 
+					name = paramilitary_groups_loyalty_monthly
+					value = -16
+				}
+			}
+			if = {
+				limit = { 
+					scope:paramilitary_IG = { ig_approval <= -20 } 
+				}
+				set_variable = { 
+					name = paramilitary_groups_loyalty_monthly
+					value = -20
+				}
+			}
+			
+			#Corruption slows down reduction & speeds up increase
+			if = {
+				limit = { 
+					NOT = { root.var:paramilitary_groups_loyalty_monthly = 0 }
+					root.var:paramilitary_groups_loyalty_monthly < 0
+				}
+				if = {
+					limit = { has_law = law_type:law_very_low_anti_corruption }
+					change_variable = {
+						name = paramilitary_groups_loyalty_monthly
+						divide = 5
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_low_anti_corruption }
+					change_variable = {
+						name = paramilitary_groups_loyalty_monthly
+						divide = 4
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_medium_anti_corruption }
+					change_variable = {
+						name = paramilitary_groups_loyalty_monthly
+						divide = 3
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_high_anti_corruption }
+					change_variable = {
+						name = paramilitary_groups_loyalty_monthly
+						divide = 2
+					}
+				}
+			}
+			if = {
+				limit = { 
+					NOT = { root.var:paramilitary_groups_loyalty_monthly = 0 } 
+					NOT = { root.var:paramilitary_groups_loyalty_monthly < 0 }
+				}
+				if = {
+					limit = { has_law = law_type:law_very_low_anti_corruption }
+					change_variable = {
+						name = paramilitary_groups_loyalty_monthly
+						add = 10
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_low_anti_corruption }
+					change_variable = {
+						name = paramilitary_groups_loyalty_monthly
+						add = 8
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_medium_anti_corruption }
+					change_variable = {
+						name = paramilitary_groups_loyalty_monthly
+						add = 4
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_high_anti_corruption }
+					change_variable = {
+						name = paramilitary_groups_loyalty_monthly
+						add = 2
+					}
+				}
+			}
+			
+			#Total
+			change_variable = {
+				name = paramilitary_groups_loyalty
+				add = root.var:paramilitary_groups_loyalty_monthly
+			}
+			
+			#If more than 100
+			if = {
+				limit = { root.var:paramilitary_groups_loyalty > 100 }
+				set_variable = { 
+					name = paramilitary_groups_loyalty
+					value = 100
+				}
+			}
+			
+			#If less than 0
+			if = {
+				limit = { root.var:paramilitary_groups_loyalty < 0 }
+				set_variable = { 
+					name = paramilitary_groups_loyalty
+					value = 0
+				}
+			}
+			
 		}
+		
+		#Once a year chance of a Palace Coup
+		random_events = {
+			11 = 0
+			1 = revolution_system.5
+		}
+		
 	}
 
 	weight = 11

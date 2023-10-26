@@ -320,3 +320,160 @@ revolution_system.4 = {
 	}
 	
 }
+
+#Palace Coup
+revolution_system.5 = {
+	type = country_event
+
+	title = palace_coup.t
+	desc = palace_coup.d
+	flavor = palace_coup.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_politicians_arguing.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 1
+	
+	cooldown = { months = very_long_modifier_time }
+
+	trigger = {
+		
+		#Paramilitary group is angry with ruler
+		root.var:paramilitary_groups_loyalty = 0
+		
+		#No ongoing plot
+		NOT = { has_journal_entry = je_plot_against_the_dictator_system }
+		
+	}
+
+	immediate = {
+		
+		ruler = { 
+			save_scope_as = palace_coup_ruler
+			interest_group = { save_scope_as = palace_coup_ruler_ig }
+		}
+		
+	}
+
+	option = {
+		name = palace_coup_accept_option 				# Accept the coup
+		default_option = yes
+		
+		#Ruler's IG is weakened
+		scope:palace_coup_ruler_ig = {
+			hidden_effect = { remove_modifier = party_in_chaos_modifier }
+			add_modifier = {
+				name = party_in_chaos_modifier
+				years = 5
+				is_decaying = yes
+			}
+		}
+		
+		#Ruler is removed from office
+		random_list = {
+			1 = { 
+				scope:palace_coup_ruler = { kill_character = yes }
+			}
+			1 = { 
+				scope:palace_coup_ruler = { exile_character = yes }
+			}
+		}
+		
+		#New Reactionary Ruler is installed
+		create_character = {
+			ruler = yes ig_leader = yes
+			female = no
+			interest_group = scope:palace_coup_ruler_ig
+			ideology = ideology_autocratic
+		}
+
+		#New dictatorship
+		effect_starting_politics_dictatorship = yes
+		every_interest_group = {
+			limit = { NOT = { is_interest_group_type = scope:palace_coup_ruler_ig } }
+			remove_ruling_interest_group = yes
+		}
+		
+		#Paramilitary becomes loyal again
+		set_variable = { 
+			name = paramilitary_groups_loyalty
+			value = 100
+		}
+		
+		ai_chance = {
+			base = 50
+		}
+		
+	}
+	
+	option = {
+		name = palace_coup_reject_option 		# Reject the coup
+		
+		#Coup leader is killed
+		if = {
+			limit = { 
+				scope:palace_coup_ruler_ig = { 
+					leader = { is_ruler = no }
+				} 
+			}
+			scope:palace_coup_ruler_ig = { 
+				leader = { save_scope_as = coup_leader_character }
+			}
+			random_list = {
+				1 = { 
+					scope:coup_leader_character = { kill_character = yes }
+				}
+				1 = { 
+					scope:coup_leader_character = { exile_character = yes }
+				}
+			}
+		}
+		
+		#Paramilitary becomes loyal again
+		set_variable = { 
+			name = paramilitary_groups_loyalty
+			value = 100
+		}
+		
+		#Armed Forces gains Clout
+		ig:ig_armed_forces = {
+			hidden_effect = { remove_modifier = politically_strengthened_modifier }
+			add_modifier = {
+				name = politically_strengthened_modifier
+				years = 5
+				is_decaying = yes
+			}
+		}
+		
+		#National instability
+		hidden_effect = {
+			remove_modifier = stirrings_of_revolution
+		}
+		add_modifier = {
+			name = stirrings_of_revolution
+			years = 5
+			is_decaying = yes
+		}
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		#Fighting damages the capital
+		random_scope_state = {
+			limit = { is_capital = yes }
+			add_devastation = 20
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+	}
+	
+}
