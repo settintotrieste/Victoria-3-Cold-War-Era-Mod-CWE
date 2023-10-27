@@ -3884,6 +3884,18 @@ british_decolonisation.26 = {
 			#owner = ROOT										# Overlord must own the state to be released
 		}
 		
+		#In case of revolts in CYR
+		NAND = {
+			exists = c:CYR
+			c:CYR ?= { 
+				OR = { 
+					is_sufficiently_independent = yes
+					is_direct_subject_of = ROOT
+				}
+				has_revolution = yes
+			}
+		}
+		
 		# Event has not been fired before
 		NOT = { has_variable = british_libya_sgc }				# CHANGE ****
 		
@@ -3924,31 +3936,19 @@ british_decolonisation.26 = {
 				effect_starting_politics_trade_policy_protectionism = yes
 				effect_starting_politics_anti_nuclear_policy = yes
 				
-				# CREATE leader for colony ****
-				create_character = {
-					first_name = "guy_incognito_first_name"		# CHANGE
-					last_name = "guy_incognito_last_name"		# CHANGE
-					ruler = yes
-					#birth_date = 1910.1.1						# CHANGE
-					interest_group = ig_rural_folk					# CHANGE
-					ideology = ideology_democratic				# CHANGE
-					traits = {
-						charismatic								# CHANGE
-						persistent								# CHANGE
-						meticulous								# CHANGE
-					}
-				}
-				
 				# Set diplomatic recognition
 				set_country_type = unrecognized
 			}
 		}
-		every_scope_state = {
-			limit = {
-		 		state_region = { is_homeland = cu:libyan }		# Change homeland identity to match colony to be released ****
-				is_incorporated = no							# State is a colony
-		 	}
-			set_state_owner = c:LBY								# Change TAG to colony ****
+		if = {
+			limit = { exists = c:LBY }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:libyan }		# Change homeland identity to match colony to be released ****
+					is_incorporated = no							# State is a colony
+				}
+				set_state_owner = c:LBY								# Change TAG to colony ****
+			}
 		}
 		
 		# Overlord create self governing colony pact with colony
@@ -3958,29 +3958,36 @@ british_decolonisation.26 = {
 				country = c:LBY										# Change TAG ****
 				type = protectorate
 			}
+			create_diplomatic_pact = {
+				country = c:LBY										# Change TAG ****
+				type = customs_union
+			}
 		}
 		
 		# Libya invites countries to join
-		c:LBY = {
-			every_country = {
-				limit = { 
-					this ?= c:CYR
-					OR = { 
-						is_sufficiently_independent = yes
-						is_direct_subject_of = ROOT
+		if = {
+			limit = { exists = c:LBY }
+			c:LBY = {
+				every_country = {
+					limit = { 
+						c:CYR ?= this
+						OR = { 
+							is_sufficiently_independent = yes
+							is_direct_subject_of = ROOT
+						}
 					}
+					trigger_event = { id = historical_union_formation.1 }
 				}
-				trigger_event = { id = historical_union_formation.1 }
-			}
-			every_country = {
-				limit = {
-					is_sufficiently_independent = yes
-					any_scope_state = { 
-						state_region = { is_homeland = cu:libyan } 
-						is_incorporated = no 
-					} 
+				every_country = {
+					limit = {
+						is_sufficiently_independent = yes
+						any_scope_state = { 
+							state_region = { is_homeland = cu:libyan } 
+							is_incorporated = no 
+						} 
+					}
+					trigger_event = { id = historical_territorial_transfers.1 }
 				}
-				trigger_event = { id = historical_territorial_transfers.1 }
 			}
 		}
 		
