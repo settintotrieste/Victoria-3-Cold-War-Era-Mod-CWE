@@ -1,0 +1,150 @@
+﻿je_non_aligned_movement = {
+	icon = "gfx/interface/icons/diplo_icons/non_aligned_movement_member.dds"
+
+	possible = {
+		
+		#Historical date
+		game_date >= 1961.9.1
+		
+		#THIS is a sovereign country
+		is_sufficiently_independent = yes
+		
+		#Cold War ongoing
+		cold_war_ongoing = yes
+		
+		#THIS is diplomatically independent from the superpowers
+		OR = {
+		
+			#THIS is not in the SOI of either superpower
+			NOT = { 
+				any_country = {
+					country_rank = rank_value:super_power
+					OR = { 
+						is_a_communist_government = yes
+						is_a_democracy = yes
+					}
+					OR = { 
+						has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = yes }
+						has_diplomatic_pact = { who = ROOT type = satellite is_initiator = yes }
+						
+						has_diplomatic_pact = { who = ROOT type = personal_union is_initiator = yes }
+						has_diplomatic_pact = { who = ROOT type = dominion is_initiator = yes }
+						
+						has_diplomatic_pact = { who = ROOT type = alliance }
+						has_diplomatic_pact = { who = ROOT type = defensive_pact }
+					}
+				}
+			}
+			
+			#THIS is neutral
+			is_neutral = yes
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Count members
+		set_variable = {
+			name = NAM_member_count
+			value = 0
+		}
+		every_country = {
+			limit = { has_journal_entry = je_non_aligned_movement }
+			ROOT = {
+				change_variable = { 
+					name = NAM_member_count
+					add = 1
+				}
+			}
+		}
+		
+		#Become a member of the NAM
+		remove_modifier = non_aligned_movement_member
+		add_modifier = { name = non_aligned_movement_member }
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			#Count members
+			set_variable = {
+				name = NAM_member_count
+				value = 0
+			}
+			every_country = {
+				limit = { has_journal_entry = je_non_aligned_movement }
+				ROOT = {
+					change_variable = { 
+						name = NAM_member_count
+						add = 1
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	complete = {
+	
+		#Cold War is over
+		NOT = { cold_war_ongoing = yes }
+		
+	}
+	
+	on_complete = {
+		
+		# Reward for staying neutral
+		add_modifier = { 
+			name = national_pride_modifier 
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		remove_modifier = non_aligned_movement_member
+		remove_variable = NAM_member_count
+		
+	}
+
+	fail = {
+		
+		#THIS has join a superpower sphere of influence
+		any_country = {
+			country_rank = rank_value:super_power
+			OR = { 
+				is_a_communist_government = yes
+				is_a_democracy = yes
+			}
+			OR = { 
+				has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = yes }
+				has_diplomatic_pact = { who = ROOT type = satellite is_initiator = yes }
+				
+				has_diplomatic_pact = { who = ROOT type = personal_union is_initiator = yes }
+				has_diplomatic_pact = { who = ROOT type = dominion is_initiator = yes }
+				
+				has_diplomatic_pact = { who = ROOT type = alliance }
+				has_diplomatic_pact = { who = ROOT type = defensive_pact }
+			}
+		}
+		
+	}
+	
+	on_fail = {
+		
+		remove_modifier = non_aligned_movement_member
+		remove_variable = NAM_member_count
+		
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = no
+}
