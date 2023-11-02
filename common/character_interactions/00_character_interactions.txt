@@ -163,10 +163,10 @@ grant_leadership_to_agitator = {
 		}
 		
 		# Cannot give leadership if character is a culturally discriminated exile
-		NOT = {
-			culture = {
-				culture_is_discriminated_in = scope:actor
-			}
+		character_is_discriminated = no	
+		OR = {
+			is_female = no
+			scope:actor ?= { has_law = law_type:law_full_womens_rights }
 		}
 		
 	}
@@ -719,49 +719,6 @@ exile_character = {
 	}
 }
 
-demobilize_general = {
-	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
-
-	potential = {
-		has_role = general
-		is_mobilized = yes
-	}
-
-	show_requirements = yes
-
-	possible = {
-		custom_tooltip = {
-			text = demobilize_general_tt
-			has_variable = num_months_mobilized
-			var:num_months_mobilized >= num_months_before_permit_demobilization
-		}
-		commander_is_available = yes
-	}
-
-	effect = {
-		owner = {
-			add_modifier = {
-				name = early_demobilization
-				multiplier = {	# round down to 100s
-					value = root.mobilization_cost
-					divide = 100
-					round = yes
-					multiply = 100
-				}
-				months = num_months_mobilization_cost_after_early_demobilization
-				is_decaying = yes
-			}
-		}
-		demobilize = yes
-	}
-	
-	show_confirmation_box = yes
-	
-	ai_chance = {
-		value = 0
-	}
-}
-
 invite_exile = {
 	# icon = ""
 	clicksound = "event:/SFX/DLC/1.3_ip1/UI/character_invite"
@@ -935,7 +892,6 @@ retire_commander = {
 			}
 		}
 
-		custom_tooltip = TROOP_ALLOCATION_CHANGES_RETIRE
 	}
 
 	show_confirmation_box = yes
@@ -1001,7 +957,7 @@ retire_commander = {
 			limit = {
 				OR = {	
 					has_trait = expert_convoy_raider
-					has_trait = expert_artillery_commander
+					# has_trait = expert_artillery_commander
 					has_trait = expert_offensive_planner
 					has_trait = expert_defensive_strategist
 					has_trait = expert_naval_commander
@@ -1013,7 +969,7 @@ retire_commander = {
 			limit = {
 				OR = {	
 					has_trait = experienced_convoy_raider
-					has_trait = experienced_artillery_commander
+					# has_trait = experienced_artillery_commander
 					has_trait = experienced_offensive_planner
 					has_trait = experienced_defensive_strategist
 					has_trait = experienced_naval_commander
@@ -1097,5 +1053,118 @@ return_to_home_country = {
 
 	ai_chance = {
 		value = -50
+	}
+}
+
+foster_national_agitation = {
+	potential = {
+		is_in_exile_pool = no
+		has_role = agitator
+		owner = scope:actor
+		owner = {
+			any_primary_culture = {
+				this = root.culture
+			}
+			#has_technology_researched = nationalism
+		}
+	}
+
+	show_requirements = yes
+
+	possible = {
+		root.culture = {
+			save_temporary_scope_as = agitator_culture
+		}
+		this.interest_group = {
+			is_in_government = yes
+		}
+		any_state = {
+			this.state_region = {
+				is_homeland = root.culture
+			}
+			custom_tooltip = {
+				text = is_rival_of_owner_tt
+				OR = {
+					owner = {
+						has_diplomatic_pact = {
+							who = root.owner
+							type = rivalry
+						}
+					}
+					root.owner = {
+						has_diplomatic_pact = {
+							who = prev.owner
+							type = rivalry
+						}
+					}
+				}
+			}
+			custom_tooltip = {
+				text = not_homeland_of_states_tt
+				owner = {
+					NOR = {
+						this = root.owner
+						any_primary_culture = {
+							this = root.culture
+						}
+					}
+				}
+			}
+		}
+	}
+
+	effect = {
+		root.culture = {
+			save_scope_as = agitation_culture
+		}
+		root.owner = {
+			save_scope_as = agitation_sponsor
+		}
+		random_state = {
+			limit = {
+				state_region = {
+					is_homeland = root.culture
+				}
+				OR = {
+					owner = {
+						has_diplomatic_pact = {
+							who = root.owner
+							type = rivalry
+						}
+					}
+					root.owner = {
+						has_diplomatic_pact = {
+							who = prev.owner
+							type = rivalry
+						}
+					}
+				}
+				owner = {
+					NOR = {
+						this = root.owner
+						any_primary_culture = {
+							this = root.culture
+						}
+					}
+				}
+			}
+			save_scope_as = agitation_state
+			add_radicals_in_state = {
+				culture = root.culture
+				value = large_radicals
+			}
+			owner = {
+				post_notification = nationalism_national_agitation_occurred
+				change_relations = {
+					country = root.owner value = -10
+				}
+			}
+		}
+	}
+
+	cooldown = { months = short_modifier_time }
+
+	ai_chance = {
+		value = 100
 	}
 }
