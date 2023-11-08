@@ -133,36 +133,68 @@ devolution_system.1 = {
 						exists = scope:culture_to_release
 						NOT = { exists = scope:third_party_country }
 					}
-					create_country = { 
-						tag = XFC
+					every_scope_state = {
+						limit = { 
+							state_region = { 
+								is_homeland = scope:culture_to_release 
+							}
+							NOT = { is_homeland_of_country_cultures = ROOT }
+						}
+						set_variable = { name = state_to_cede months = 3 }
+					}
+					create_dynamic_country = {
 						origin = ROOT
-						state = scope:state_to_release
-						on_created = {
+						country_type = unrecognized
+						tier = city_state
+						capital = scope:state_to_release
+						cede_state_trigger = {
+							has_variable = state_to_cede
+						}
+						on_created = { 
+						
+							every_scope_state = {
+								remove_variable = state_to_cede
+							}
+						
 							set_release_vassal_effects = yes
-							set_variable = { name = XFC_timer months = 3 }
+							
+							set_variable = dynamic_decolonisation_country
+							
+							#create_character = {
+							#	ruler = yes
+							#	culture = scope:culture_to_release
+							#	religion = scope:religion_to_release
+							#}
+							
 						}
 					}
-					set_variable = { name = XFC_originator months = 12 }
 				}
-				if = {
-					limit = { exists = c:XFC }
-					
-					c:XFC = {
-					
-						random_scope_state = {
-							random_scope_culture = { 
-								limit = { 
-									has_homeland = scope:state_to_release
-									NOT = { is_primary_culture_of = ROOT }
-								}
-								save_scope_as = culture_to_release
-							}
-						}
+				
+				#Set colony's primary culture
+				scope:state_to_release.owner = {
+					if = {
+						limit = { has_variable = dynamic_decolonisation_country }
+						
+						#Forcefully remove all overlord primary cultures from the primary culture of THIS (up to 500)
+						remove_primary_culture = scope:overlords_culture
+						clear_all_overlord_primary_cultures = yes
+						if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+						if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+						if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+						if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+						if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+						if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+						if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+						if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+						if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+						
+						#Set primary culture of colony
 						if = {
 							limit = { exists = scope:culture_to_release }
 							add_primary_culture = scope:culture_to_release
 						}
 						
+						#Set state religion of colony
 						random_scope_pop = {
 							religion = { save_scope_as = religion_to_release }
 						}
@@ -171,27 +203,26 @@ devolution_system.1 = {
 							set_state_religion = scope:religion_to_release
 						}
 						
-						create_character = {
-							ruler = yes
-							culture = scope:culture_to_release
-							religion = scope:religion_to_release
-						}
+						#Generate Ruler
+						every_scope_character = { kill_character = yes }
 						
 					}
-					
-					every_scope_state = {
-						limit = { is_homeland_of_country_cultures = c:XFC capable_of_release_devolution = yes } 
-						set_state_owner = c:XFC
-					}
-					create_diplomatic_pact = {
-						country = c:XFC
-						type = special_administrative_region
-					}
-					create_diplomatic_pact = {
-						country = c:XFC
-						type = currency_union
-					}
-					
+				}
+				create_diplomatic_pact = {
+					country = scope:state_to_release.owner
+					type = special_administrative_region
+				}
+				create_diplomatic_pact = {
+					country = scope:state_to_release.owner
+					type = currency_union
+				}
+				create_diplomatic_pact = {
+					country = scope:state_to_release.owner
+					type = legal_union
+				}
+				create_diplomatic_pact = {
+					country = scope:state_to_release.owner
+					type = military_cooperation_agreement
 				}
 			}
 		}
