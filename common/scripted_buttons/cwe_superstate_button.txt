@@ -1,0 +1,143 @@
+je_join_superstate_free_trade_zone_button = {
+	name = "je_join_superstate_free_trade_zone_button"
+	desc = "je_join_superstate_free_trade_zone_button_desc"
+
+	visible = { 
+		
+		#Not already in Free Trade Zone
+		NOT = { has_variable = superstate_free_trade_zone }
+		
+	}
+
+	possible = {
+	
+		#THIS is not at war
+		is_at_war = no
+	
+		#Not legally barred from joining international blocs
+		NOT = { has_law = law_type:law_isolationism }
+	
+		#Sufficient government support to join free trade zone
+		government_has_legislative_simple_majority = yes
+		any_interest_group = { 
+			OR = { 
+				leader = { is_ruler = yes }
+				AND = { 
+					is_in_government = yes
+					is_strongest_ig_in_government = yes
+				}
+			}
+			law_stance = {
+				law = law_type:law_free_trade
+				value >= neutral
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Enter into Free Trade Zone with others
+		set_variable = superstate_free_trade_zone
+		every_country = {
+			limit = { 
+				OR = { 
+					AND = { has_variable = XEU_ambitions ROOT = { has_variable = XEU_ambitions } }
+					AND = { has_variable = XSA_ambitions ROOT = { has_variable = XSA_ambitions } }
+				}
+				NOR = {
+					has_diplomatic_pact = { who = ROOT type = trade_agreement }
+					is_junior_in_customs_union = yes
+				}
+			}
+			create_diplomatic_pact = {
+				country = ROOT
+				type = trade_agreement
+			}
+			change_relations = { 
+				country = ROOT
+				value = 25
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 10
+	}
+	
+}
+
+je_leave_superstate_free_trade_zone_button = {
+	name = "je_leave_superstate_free_trade_zone_button"
+	desc = "je_leave_superstate_free_trade_zone_button_desc"
+
+	visible = { 
+		
+		#Already in Free Trade Zone
+		has_variable = superstate_free_trade_zone
+		
+	}
+
+	possible = {
+	
+		OR = { 
+		
+			#Legally barred from joining international blocs
+			has_law = law_type:law_isolationism
+	
+			AND = { 
+			
+				#Sufficient government support to leave free trade zone
+				government_has_legislative_simple_majority = yes
+				
+				#Government seeks to leave free trade zone
+				any_interest_group = { 
+					OR = { 
+						leader = { is_ruler = yes }
+						AND = { 
+							is_in_government = yes
+							is_strongest_ig_in_government = yes
+						}
+					}
+					law_stance = {
+						law = law_type:law_isolationism
+						value >= neutral
+					}
+				}
+				
+			}
+			
+		}
+		
+	}
+
+	effect = {
+		
+		#Leave Free Trade Zone with others
+		remove_variable = superstate_free_trade_zone
+		every_country = {
+			limit = { 
+				OR = { 
+					AND = { has_variable = XEU_ambitions ROOT = { has_variable = XEU_ambitions } }
+					AND = { has_variable = XSA_ambitions ROOT = { has_variable = XSA_ambitions } }
+				}
+				has_diplomatic_pact = { who = ROOT type = trade_agreement }
+			}
+			remove_diplomatic_pact = {
+				country = ROOT
+				type = trade_agreement
+			}
+			change_relations = { 
+				country = ROOT
+				value = -25
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 10
+	}
+	
+}
