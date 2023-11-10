@@ -3,9 +3,36 @@
 
 	scripted_button = je_join_superstate_free_trade_zone_button
 	scripted_button = je_leave_superstate_free_trade_zone_button
+	
+	scripted_button = je_join_superstate_customs_union_button
+	scripted_button = je_leave_superstate_customs_union_button
+	
+	scripted_button = je_join_superstate_currency_union_button
+	scripted_button = je_leave_superstate_currency_union_button
+	
+	scripted_button = je_join_superstate_defence_union_button
+	scripted_button = je_leave_superstate_defence_union_button
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = superstate_members.tt
+				trigger = {
+					has_a_superstate_step = yes
+				}
+			}
+			triggered_desc = {
+				desc = superstate_aspirants.tt
+				trigger = {
+					
+				}
+			}
+		}
+	}
 
 	is_shown_when_inactive = {
 	
+		#Possible superstate country
 		OR = { 
 		
 			#European Union
@@ -36,7 +63,8 @@
 		#Tech researched
 		has_technology_researched = tech_geopolitics_2
 		
-		#THIS is a sovereign country
+		#THIS is a sovereign democratic country
+		is_a_democracy = yes
 		is_sufficiently_independent = yes
 		is_at_war = no
 		
@@ -83,12 +111,15 @@
 	fail = {
 	
 		NAND = { 
+		
+			is_a_democracy = yes
 			is_sufficiently_independent = yes
 			
 			OR = { 
 				has_law = law_type:law_regionalist_fp
 				has_law = law_type:law_globalist_fp
 			}
+			
 		}
 	
 	}
@@ -101,23 +132,37 @@
 		
 		remove_variable = superstate_free_trade_zone
 		remove_variable = superstate_customs_union
+		remove_variable = superstate_currency_union
 		remove_variable = superstate_defence_union
 		remove_variable = superstate_political_union
 		
 		remove_variable = superstate_members
 		
 		#Lose relations with Superstate members (also doubles as a display of who is in the bloc)
-		every_country = {
-			limit = { 
-				NOT = { THIS = ROOT }
-				OR = { 
-					AND = { has_variable = XEU_ambitions ROOT = { has_variable = XEU_ambitions } }
-					AND = { has_variable = XSA_ambitions ROOT = { has_variable = XSA_ambitions } }
+		if = {
+			limit = {
+				has_a_superstate_step = yes
+			}
+			every_country = {
+				limit = { 
+					shares_same_superstate = yes
+					has_a_superstate_step = yes
+				}
+				change_relations = { 
+					country = ROOT
+					value = -25
 				}
 			}
-			change_relations = { 
-				country = ROOT
-				value = -25
+		}
+		else = {
+			every_country = {
+				limit = { 
+					shares_same_superstate = yes
+				}
+				change_relations = { 
+					country = ROOT
+					value = -5
+				}
 			}
 		}
 		
@@ -126,26 +171,18 @@
 	on_monthly_pulse = {
 	
 		effect = {
+		
 			#Count Superstate Members
 			count_superstate_members = yes
-		}
-		
-	}
-
-	on_yearly_pulse = {
-		
-		effect = {
 			
+			#Create Free Trade Zone
 			if = {
 				limit = { 
-					has_variable = superstate_free_trade_zone 
+					has_variable = superstate_free_trade_zone
 				}
 				every_country = {
 					limit = { 
-						OR = { 
-							AND = { has_variable = XEU_ambitions ROOT = { has_variable = XEU_ambitions } }
-							AND = { has_variable = XSA_ambitions ROOT = { has_variable = XSA_ambitions } }
-						}
+						shares_same_superstate = yes
 						NOR = {
 							has_diplomatic_pact = { who = ROOT type = trade_agreement }
 							is_junior_in_customs_union = yes
@@ -158,16 +195,30 @@
 				}
 			}
 			
+			#Create Customs Union
+			if = {
+				limit = {
+					has_variable = superstate_customs_union
+				}
+				create_superstate_customs_union = yes
+			}
+			
+			#Create Currency Union
 			if = {
 				limit = { 
-					has_variable = superstate_defence_union 
+					has_variable = superstate_currency_union
+				}
+				create_superstate_currency_union = yes
+			}
+			
+			#Create Defence Union
+			if = {
+				limit = { 
+					has_variable = superstate_defence_union
 				}
 				every_country = {
 					limit = { 
-						OR = { 
-							AND = { has_variable = XEU_ambitions ROOT = { has_variable = XEU_ambitions } }
-							AND = { has_variable = XSA_ambitions ROOT = { has_variable = XSA_ambitions } }
-						}
+						shares_same_superstate = yes
 						NOR = {
 							has_diplomatic_pact = { who = ROOT type = defensive_pact }
 							has_diplomatic_pact = { who = ROOT type = alliance }
@@ -179,6 +230,16 @@
 					}
 				}
 			}
+			
+		}
+		
+	}
+
+	on_yearly_pulse = {
+		
+		effect = {
+			
+			
 			
 		}
 		
