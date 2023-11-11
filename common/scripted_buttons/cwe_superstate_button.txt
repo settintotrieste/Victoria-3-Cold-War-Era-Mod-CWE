@@ -261,6 +261,9 @@ je_join_superstate_currency_union_button = {
 
 	visible = { 
 		
+		#Already in a Customs Union
+		has_variable = superstate_customs_union
+		
 		#Not already in Currency Union
 		NOT = { has_variable = superstate_currency_union }
 		
@@ -301,11 +304,14 @@ je_join_superstate_currency_union_button = {
 		
 		#create_superstate_currency_union = yes
 		
-		#Leave all Currency Unions
+		#Leave all Currency Unions that THIS is not a leader of
 		every_country = { 
 			limit = { 
-				has_diplomatic_pact = { who = ROOT type = currency_union }
-				NOT = { is_subject_of = ROOT }
+				has_diplomatic_pact = { 
+					who = ROOT 
+					type = currency_union 
+					is_initiator = yes 
+				}
 			}
 			remove_diplomatic_pact = {
 				country = ROOT
@@ -395,6 +401,10 @@ je_join_superstate_defence_union_button = {
 	desc = "je_join_superstate_defence_union_button_desc"
 
 	visible = { 
+		
+		#Already in a Currency % Defence Union
+		has_variable = superstate_currency_union
+		has_variable = superstate_customs_union
 		
 		#Not already in Defence Union
 		NOT = { has_variable = superstate_defence_union }
@@ -498,6 +508,359 @@ je_leave_superstate_defence_union_button = {
 				type = defensive_pact
 			}
 		}
+		
+	}
+	
+	ai_chance = {
+		base = 10
+	}
+	
+}
+
+je_join_superstate_political_union_button = {
+	name = "je_join_superstate_political_union_button"
+	desc = "je_join_superstate_political_union_button_desc"
+
+	visible = { 
+		
+		#Already in a Defence Union
+		has_variable = superstate_defence_union
+		
+		#Not already in Political Union
+		NOT = { has_variable = superstate_political_union }
+		
+	}
+
+	possible = {
+	
+		#THIS is not at war
+		is_at_war = no
+	
+		#Not legally barred from joining international blocs
+		NOT = { has_law = law_type:law_no_war }
+	
+		#Sufficient government support to join free trade zone
+		government_has_legislative_simple_majority = yes
+		any_interest_group = { 
+			OR = { 
+				leader = { is_ruler = yes }
+				is_in_government = yes
+			}
+			law_stance = {
+				law = law_type:law_no_war
+				value < neutral
+			}
+		}
+		
+		#Tech researched
+		has_technology_researched = tech_politics_7
+		has_technology_researched = tech_geopolitics_7
+		
+	}
+
+	effect = {
+		
+		#Enter into Political Union with others
+		set_variable = superstate_political_union
+		harmonise_superstate_member_law = yes
+		
+	}
+	
+	ai_chance = {
+		base = 10
+	}
+	
+}
+
+je_leave_superstate_political_union_button = {
+	name = "je_leave_superstate_political_union_button"
+	desc = "je_leave_superstate_political_union_button_desc"
+
+	visible = { 
+		
+		#Already in Political Union
+		has_variable = superstate_political_union
+		
+	}
+
+	possible = {
+	
+		OR = { 
+		
+			#Legally barred from joining international blocs
+			has_law = law_type:law_no_war
+	
+			AND = { 
+			
+				#Sufficient government support to leave free trade zone
+				government_has_legislative_simple_majority = yes
+				
+				#Government seeks to leave political union
+				any_interest_group = { 
+					OR = { 
+						leader = { is_ruler = yes }
+						is_in_government = yes
+					}
+					law_stance = {
+						law = law_type:law_no_war
+						value >= neutral
+					}
+				}
+				
+			}
+			
+		}
+		
+	}
+
+	effect = {
+		
+		#Leave Political Union with others
+		remove_variable = superstate_political_union
+		every_country = {
+			limit = { 
+				has_variable = superstate_political_union
+				shares_same_superstate = yes
+			}
+			change_relations = { 
+				country = ROOT
+				value = -25
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 10
+	}
+	
+}
+
+je_create_superstate_final_union_button = {
+	name = "je_create_superstate_final_union_button"
+	desc = "je_create_superstate_final_union_button_desc"
+
+	visible = { 
+		
+		#Already in a Political & Defence Union
+		has_variable = superstate_defence_union
+		has_variable = superstate_political_union
+		
+		#Superstate has not already been formed
+		NOT = {
+			any_country = {
+				shares_same_superstate = yes
+				is_a_superstate_country_tag = yes
+			}
+		}
+		
+	}
+
+	possible = {
+	
+		#THIS is not at war
+		is_at_war = no
+	
+		#Not legally barred from joining international blocs
+		NOT = { has_law = law_type:law_no_war }
+	
+		#Sufficient government support to join free trade zone
+		government_has_legislative_super_majority = yes
+		any_interest_group = { 
+			OR = { 
+				leader = { is_ruler = yes }
+				is_in_government = yes
+			}
+			law_stance = {
+				law = law_type:law_no_war
+				value < neutral
+			}
+		}
+		
+		#Joined all superstate institutions
+		custom_tooltip = {
+			text = has_superstate_customs_union.tt
+			has_variable = superstate_customs_union
+		}
+		custom_tooltip = {
+			text = has_superstate_currency_union.tt
+			has_variable = superstate_currency_union
+		}
+		custom_tooltip = {
+			text = has_superstate_defence_union.tt
+			has_variable = superstate_defence_union
+		}
+		custom_tooltip = {
+			text = has_superstate_political_union.tt
+			has_variable = superstate_political_union
+		}
+		
+		#Eligible country to unite with
+		any_country = {
+			
+			#Non-superstate country
+			shares_same_superstate = yes
+			hidden_trigger = {
+				NOT = { is_a_superstate_country_tag = yes }
+			}
+			
+			#Joined all superstate institutions
+			custom_tooltip = {
+				text = has_superstate_customs_union.tt
+				has_variable = superstate_customs_union
+			}
+			custom_tooltip = {
+				text = has_superstate_currency_union.tt
+				has_variable = superstate_currency_union
+			}
+			custom_tooltip = {
+				text = has_superstate_defence_union.tt
+				has_variable = superstate_defence_union
+			}
+			custom_tooltip = {
+				text = has_superstate_political_union.tt
+				has_variable = superstate_political_union	
+			}
+			
+			#Not at war
+			is_at_war = no
+			
+			#Cordial+ relations
+			relations:root >= 0
+			
+			#Country is weaker than THIS
+			country_rank < root.country_rank
+			
+		}
+		
+	}
+
+	effect = {
+		
+		#THIS becomes Superstate
+		if = { limit = { has_variable = XEU_ambitions } change_tag = XEU }
+		if = { limit = { has_variable = XSA_ambitions } change_tag = XSA }
+		
+		activate_law = law_type:law_multiculturalism
+		
+		#Confederate all countries with Superstate
+		every_country = {
+			limit = {
+				NOT = { THIS = ROOT }
+				shares_same_superstate = yes
+				has_variable = superstate_defence_union
+				has_variable = superstate_political_union
+			}
+			hidden_effect = {
+				make_independent = yes
+			}
+			ROOT = {
+				create_diplomatic_pact = {
+					country = THIS
+					type = confederal_state
+				}
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+		modifier = { 
+			trigger = { 
+				
+				#AI will always wait for player to form Superstate
+				any_country = {
+					is_player = yes
+					shares_same_superstate = yes
+				}
+				
+			}
+			add = -1000
+		}
+	}
+	
+}
+
+je_join_superstate_final_union_button = {
+	name = "je_join_superstate_final_union_button"
+	desc = "je_join_superstate_final_union_button_desc"
+
+	visible = { 
+		
+		#Already in a Political & Defence Union
+		has_variable = superstate_defence_union
+		has_variable = superstate_political_union
+		
+		#Superstate has already been formed
+		any_country = {
+			shares_same_superstate = yes
+			is_a_superstate_country_tag = yes
+		}
+		
+	}
+
+	possible = {
+	
+		#THIS is not at war
+		is_at_war = no
+	
+		#Not legally barred from joining international blocs
+		NOT = { has_law = law_type:law_no_war }
+	
+		#Sufficient government support to join free trade zone
+		government_has_legislative_super_majority = yes
+		any_interest_group = { 
+			OR = { 
+				leader = { is_ruler = yes }
+				is_in_government = yes
+			}
+			law_stance = {
+				law = law_type:law_no_war
+				value < neutral
+			}
+		}
+		
+		#Joined all superstate institutions
+		custom_tooltip = {
+			text = has_superstate_customs_union.tt
+			has_variable = superstate_customs_union
+		}
+		custom_tooltip = {
+			text = has_superstate_currency_union.tt
+			has_variable = superstate_currency_union
+		}
+		custom_tooltip = {
+			text = has_superstate_defence_union.tt
+			has_variable = superstate_defence_union
+		}
+		custom_tooltip = {
+			text = has_superstate_political_union.tt
+			has_variable = superstate_political_union
+		}
+		
+		#Can join Superstate
+		any_country = {
+			
+			#Superstate
+			shares_same_superstate = yes
+			is_a_superstate_country_tag = yes
+			
+			#Not at war
+			is_at_war = no
+			
+			#Cordial+ relations
+			relations:root >= 0
+			
+		}
+		
+	}
+
+	effect = {
+		
+		#THIS joins Superstate
+		if = { limit = { exists = c:XEU has_variable = XEU_ambitions } c:XEU = { annex = ROOT } }
+		if = { limit = { exists = c:XSA has_variable = XSA_ambitions } c:XSA = { annex = ROOT } }
 		
 	}
 	

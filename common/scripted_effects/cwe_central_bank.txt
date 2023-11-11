@@ -308,6 +308,49 @@ determine_core_interest_rate = {
 		value = root.var:core_interest_rate_raw
 	}
 	
+	#If in a Superstate Currency Union -> Calculate based on all countries in the Single Market
+	if = {
+		limit = {
+			has_journal_entry = je_superstate_system
+			has_variable = superstate_currency_union
+			has_variable = superstate_customs_union
+		}
+		set_global_variable = {
+			name = superstate_customs_union_core_interest_rate
+			value = root.var:core_interest_rate
+		}
+		set_global_variable = {
+			name = superstate_customs_union_core_interest_rate_members
+			value = 1
+		}
+		every_country = {
+			limit = { 
+				NOT = { THIS = ROOT }
+				has_variable = core_interest_rate
+				shares_same_superstate = yes
+				has_variable = superstate_customs_union
+			}
+			change_global_variable = {
+				name = superstate_customs_union_core_interest_rate
+				add = this.var:core_interest_rate
+			}
+			change_global_variable = {
+				name = superstate_customs_union_core_interest_rate_members
+				add = 1
+			}
+		}
+		change_global_variable = {
+			name = superstate_customs_union_core_interest_rate
+			divide = global_var:superstate_customs_union_core_interest_rate_members
+		}
+		set_variable = { 
+			name = core_interest_rate
+			value = global_var:superstate_customs_union_core_interest_rate
+		}
+		remove_variable = superstate_customs_union_core_interest_rate
+		remove_variable = superstate_customs_union_core_interest_rate_members
+	}
+	
 	#Determine level of inflation
 	remove_variable = very_high_core_inflation
 	remove_variable = high_core_inflation
