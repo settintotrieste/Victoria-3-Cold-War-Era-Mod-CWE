@@ -1,0 +1,127 @@
+destroy_satellites = {
+	should_notify_third_parties = yes
+
+	unlocking_technologies = {
+		tech_military_support_5
+	}
+
+	potential = {
+		
+		#Parties are not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#Not a civil war country
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no }
+		
+		#THIS has independent foreign affairs
+		is_sufficiently_independent = yes
+		
+		#TARGET is at war with THIS
+		has_war_with = scope:target_country
+		
+		#TARGET satellites have not already been attacked
+		scope:target_country = { 
+			any_scope_building = {
+				is_building_type = building_communications_network
+				OR = { 
+					has_active_production_method = pm_gps_service
+					NOT = { has_active_production_method = pm_no_internet_services }
+				}
+				NOT = { has_modifier = communication_network_damaged }
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#THIS has an army of decent size
+		army_size > 10
+		
+		OR = { 
+		
+			#Only radical leaders think of destroying satellites
+			AND = {
+				exists = ruler
+				ruler = {
+					OR = {
+						has_ideology = ideology:ideology_autocratic
+						has_ideology = ideology:ideology_power_hungry
+					}
+				}
+			}
+			
+			#Retaliation for a similar attack
+			any_scope_state = {
+				has_modifier = communication_network_damaged
+			}
+			
+		}
+		
+		#Not bankrupt
+		in_default  = no
+		
+	}
+	
+	accept_effect = {
+		
+		scope:target_country = { 
+			save_scope_as = target_country_scope
+		}
+		
+		#THIS destroys the Communication Network of TARGET
+		custom_tooltip = {
+			text = destroy_satellites.tt
+			scope:target_country = { 
+				every_scope_building = {
+					limit = { 
+						is_building_type = building_communications_network 
+						OR = { 
+							has_active_production_method = pm_gps_service
+							NOT = { has_active_production_method = pm_no_internet_services }
+						}
+					}
+					hidden_effect = { remove_modifier = communication_network_damaged }
+					add_modifier = { name = communication_network_damaged years = 5 is_decaying = yes }
+				}
+			}
+		}
+		
+		#International community does not like THIS
+		change_infamy = 25
+		
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			
+			OR = {
+			
+				#THIS is going to capitulate
+				any_scope_war = {
+					has_war_support = {
+						target = scope:actor
+						value < 0
+					}
+				}
+				
+				#TARGET has a stronger military than THIS
+				scope:target_country = {
+					navy_size > scope:actor.navy_size
+					army_size > scope:actor.army_size
+				}
+			
+			}
+			
+		}
+		
+	}
+	
+}
