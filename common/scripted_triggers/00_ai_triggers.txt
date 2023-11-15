@@ -7,3 +7,47 @@ harsh_ai_behavior_trigger = {
 	has_game_rule = harsh_ai_behavior
 	scope:target_country = { is_player = yes }
 }
+
+ai_strongly_desires_target_state = {
+	OR = {
+		has_secret_goal = { # AI wants to conquer the state owner
+			who = scope:target_state.owner
+			secret_goal = conquer
+		}	
+		scope:target_state = { has_claim_by = root } # AI always wants claims	
+	}			
+}
+
+ai_desires_target_state = {
+	OR = {
+		ai_strongly_desires_target_state = yes
+		scope:target_state = { is_homeland_of_country_cultures = root } # AI is interested in homelands
+		AND = { # AI wants to unify split states
+			scope:target_state = { 
+				is_split_state = yes 
+				region = { 
+					any_scope_state = { owner = root }
+				}
+			}				
+		}
+		AND = { # Aggressive AI wants nearby land
+			OR = {
+				has_strategy = ai_strategy_world_revolution
+				has_strategy = ai_strategy_territorial_expansion
+			}					
+			has_strategic_adjacency = scope:target_state
+		}
+		AND = { # Colonialist AI wants colonies
+			OR = {
+				has_strategy = ai_strategy_economic_imperialism
+				has_strategy = ai_strategy_colonial_expansion
+			}
+			scope:target_state.owner = { is_country_type = unrecognized }				
+			can_reach_target_state = yes
+		}
+		AND = { # AI wants nearby states if gifted them by overlord
+			has_strategic_adjacency = scope:target_state
+			any_overlord_or_above = { this = scope:target_country }
+		}	
+	}
+}
