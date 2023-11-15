@@ -52,6 +52,7 @@ NAI = {
 	COUNTRY_GOAL_RECALC_PLAY_ALLY_STATUS_CHANGED = 20 # How many 'change points' are added to country AI goal when play ally status (on same side of diplomatic play) with another country changes
     COUNTRY_GOAL_RECALC_UNIFICATION_SUPPORT_CHANGED = 100 # How many 'change points' are added to country AI goal when then other country begins or stops supporting them as unification candidate
     COUNTRY_GOAL_RECALC_BANKRUPTCY = 50 # How many 'change points' are added to all other relevant countries' country AI goal when we go bankrupt
+	COUNTRY_GOAL_RECALC_OVERLORD_KICKED_SUBJECT_FROM_PLAY = 50 # How many 'change points' are added to a subject when their overlord kicks them from a play because the overlord joins on the other side
 
 	DECLARE_BANKRUPTCY_MIN_DAYS_IN_DEFAULT = 30 # After this many days in default, the AI will declare bankruptcy
 
@@ -100,16 +101,8 @@ NAI = {
 	
 	MIN_AVAILABLE_LABOR_FOR_NEW_BUILDING = 5000		# If state has less than this in available labor, we should be much less likely to build something (multiplied by 1 + number of ongoing constructions)
 	
-	MIN_AVAILABLE_UNITS_TO_RECRUIT_OR_PROMOTE = 10 	# If an HQ has fewer than this number of combat units in reserve, don't promote/recruit any commanders for it
-	
-	GENERAL_COMMAND_LIMIT_MAX_RANK_DISPARITY_IN_HQ = 2 # If a commander in an HQ is more than this many more ranks lower than another in the same HQ, promote them
-	GENERAL_COMMAND_LIMIT_MAX_UNITS_FOR_LONE_COMMANDER_IN_HQ = 20 # If a HQ has more units than this, AI always wants it split between at least two commanders
-	GENERAL_COMMAND_LIMIT_PROMOTION_TARGET_FRACTION = 0.5	# Until the generals in an HQ can handle this much of the locally available forces, do not recruit further generals
-	GENERAL_COMMAND_LIMIT_MIN_PROMOTION_TARGET = 30 # General promotion target can't be lower than this
-	GENERAL_COMMAND_LIMIT_PROMOTION_CURRENT_LIMIT_MULT = 0.33 # Current command limit of a general is multiplied by this when compared to target (to account for conscript command limit)
-	ADMIRAL_COMMAND_LIMIT_PROMOTION_TARGET_FRACTION = 0.5	# Until the admirals in an HQ can handle this much of the locally available forces, do not recruit further generals
-	ADMIRAL_COMMAND_LIMIT_MIN_PROMOTION_TARGET = 30 # Admiral promotion target can't be lower than this
-	ADMIRAL_COMMAND_LIMIT_PROMOTION_CURRENT_LIMIT_MULT = 1.0 # Current command limit of an admiral is multiplied by this when compared to target
+	COMMANDER_DESIRED_RANK_DISPARITY_IN_ARMY = 1 		  # Prefer promoting over recruiting new commanders if there isn't at least this rank disparity between any two generals in an army
+	COMMANDER_DESIRED_RANK_DISPARITY_IN_FLEET = 1 		  # Prefer promoting over recruiting new commanders if there isn't at least this rank disparity between any two admirals in a fleet
 	
 	RECRUITABLE_COMMANDER_BASE_SCORE = 100 				# The base score assigned to each recruitable commander in the pool
 	RECRUITABLE_COMMANDER_RANDOM_FACTOR = 3.0			# The higher this is, the more random AI recruitment selection will be
@@ -118,6 +111,11 @@ NAI = {
 	RECRUITABLE_COMMANDER_CONDITION_TRAIT_SCORE = -25	# A recruitable commander's total value of condition traits is multiplied by this
 	RECRUITABLE_COMMANDER_FAVORED_IG_FACTOR	= 1.5		# If a recruitable commander comes from an IG the AI likes, multiply score by this
 	RECRUITABLE_COMMANDER_DISFAVORED_IG_FACTOR = 0.5	# If a recruitable commander comes from an IG the AI dislikes, multiply score by this
+	
+	MOBILIZATION_OPTION_RANDOM_FACTOR = 0.5					# The higher this is, the more random AI is about which mobilization options to activate		
+	MOBILIZATION_OPTION_MONEY_COST_FACTOR = 20 				# When checking whether the AI should activate a mobilization option, the monetary cost of activation is multiplied by this and compared against AI value to determine if it's worth it
+	MOBILIZATION_OPTION_NUM_ACTIVE_OPTIONS_DIVISOR = 0.25	# Divide the value of each non-activated mobilization option by ( 1 + number of already active options * this )
+	MOBILIZATION_OPTION_GOODS_SHORTAGE_MULT = 0.0			# Multiply value of mobilization option by this if there is a goods shortage of any of its input goods
 
 	MOBILIZATION_BASE_DESIRED_RATIO_TO_ENEMY = 0.5   		# AI wants to have a total amount of mobilized army power that is equal to enemy mobilized army power * this
 	MOBILIZATION_MAIN_ATTACKER_ADDED_RATIO = 1.0  			# Add this to desired ratio for the main attacker in the war 
@@ -386,7 +384,7 @@ NAI = {
 	DIPLO_PLAY_SWAY_LEANING_PLAYER_FACTOR = 100 # Added to acceptance for players leaning towards a side to make AI more likely to sway them
 	DIPLO_PLAY_SWAY_BECOME_SUBJECT_VALUE_FACTOR = 1.0 # Multiplies AI desire for the swaying country to become their subject
 	DIPLO_PLAY_SWAY_TRANSFER_SUBJECT_VALUE_FACTOR = 1.0 # Multiplies AI desire for the swaying country's offered transfer of subject to become their subject
-	DIPLO_PLAY_SWAY_STATE_DESIRE_FACTOR = 4.0 # Multiplies wargoal desire for a state to determine if AI wants a transfer state sway
+	DIPLO_PLAY_SWAY_STATE_DESIRE_FACTOR = 2.0 # Multiplies AI strategy value for a state to determine if AI wants a transfer state sway
 	DIPLO_PLAY_SWAY_DIPLOMATIC_PACT_DESIRE_FACTOR = 1.0 # Multiplies diplomatic acceptance score for the diplomatic action to determine if AI wants a diplomatic action sway
 	
 	# Determines how much the AI values a reverse-sway based on the military power it would add to their side 
@@ -405,9 +403,9 @@ NAI = {
 	DIPLO_PLAY_REVERSE_SWAY_OFFER_OBLIGATION_MIN_VALUE = 5 # AI value for an obligation is never lower than this when it's considering whether to accept a reverse-sway
 	DIPLO_PLAY_REVERSE_SWAY_OFFER_OBLIGATION_FACTOR = -6.0 # Multiply by how much the AI would value the obligation if it was the country offering support and apply to reverse-sway acceptance for an obligation
 	DIPLO_PLAY_REVERSE_SWAY_CALL_IN_OBLIGATION_FACTOR = -3.0 # Multiply by how much the AI values the obligation it holds and apply to reverse-sway acceptance for calling in obligation
-	DIPLO_PLAY_REVERSE_SWAY_STATE_VALUE_FACTOR = -2.0 # Multiplied by how much the AI would score a state they own for a Return State wargoal to determine reluctance to cede it in a reverse-sway
+	DIPLO_PLAY_REVERSE_SWAY_STATE_VALUE_FACTOR = -2.0 # Multiplied by AI strategy value for owned state to determine reluctance to cede it in a reverse-sway
 	DIPLO_PLAY_REVERSE_SWAY_BECOME_SUBJECT_VALUE_FACTOR = 1.0 # Multiplied by how much the AI wants to become a subject of the sway target
-	DIPLO_PLAY_REVERSE_SWAY_TRANSFER_SUBJECT_VALUE_FACTOR = -1.0 # Multiplied by how much the AI values the subject they're offering to transfer to the sway target
+	DIPLO_PLAY_REVERSE_SWAY_TRANSFER_SUBJECT_VALUE_FACTOR = -1.5 # Multiplied by how much the AI values the subject they're offering to transfer to the sway target
 	DIPLO_PLAY_REVERSE_SWAY_CALL_ALLY_DESIRE = 25 # Added to AI scoring for reverse sway call ally even though call ally isn't actually valid for reverse-sways, so they can score it against other sway types
 	
 	DIPLO_PLAY_ADD_WARGOAL_MIN_SCORE = 20 # A wargoal needs at least this value for AI to add it to the play
@@ -471,17 +469,14 @@ NAI = {
 
 	MAX_CONVOY_USAGE_FOR_SUPPLY_ROUTES = 0.5						# AI will not commit more than this fraction of its convoys to supporting overseas operations
 	
-	NUM_DAYS_TO_REMEMBER_FAILED_FRONT_ASSIGNMENT = 10 				# For how many days should the AI remember failing to assign a general to a front (and thus not try with that front again) 
+	NUM_DAYS_TO_REMEMBER_FAILED_FRONT_OR_HQ_ASSIGNMENT = 10 				# For how many days should the AI remember failing to assign a general to a front or HQ (and thus not try with that front again) 
 	
 	# If a front is worth less than this, the AI will not assign any generals to it
-	FRONT_IMPORTANCE_MIN_SCORE = 50		
+	FRONT_OR_HQ_IMPORTANCE_MIN_SCORE = 50		
 		
 	# Below data is for evaluating Commander Orders
 	FRONT_IMPORTANCE_OWN_FRONT_WEIGHT_MULT = 2.0 # Fronts that we 'own' have the importance of their states multiplied by this
-
-	# If the AI has less units than its enemy on a front, this weight is applied to the importance that front has when deciding to attack/defend it.
-	# Use a value >= 1.0. Example: 1.2 means: add 20% importance to a front when in disadvantage.
-	FRONT_IMPORTANCE_WHEN_IN_DISADVANTAGE_WEIGHT_MULT = 1.2
+	HQ_STATIONING_IMPORTANCE_NOT_OWN_HQ_WEIGHT_MULT = 0.25 # HQs of allies have their importance multiplied by this as the AI prefers stationing in its own HQs
 
 	# A percentage [0.0, 1.0] representing how many AI units are on a front out of the total (AI's + Enemy's) units, used to
 	# determine when to start applying FRONT_IMPORTANCE_WEIGHT_WHEN_IN_DISADVANTAGE.
@@ -489,9 +484,15 @@ NAI = {
 	
 	# When considering whether to move a general to a particular location, the disparity between wanted and current units of the new location is divided 1 + any relevant values below 
 	# This is done to prevent the AI from making costly moves that would only result in small efficiency increases
-	FRONT_UNIT_DISPARITY_FOR_MOVE_TRAVEL_TIME_FACTOR = 0.02 # Each day of travel time adds this much to the divisor
-	FRONT_ACTIVE_WAR_MOVE_FACTOR = 1.0 # If a general is in an active war front, add this value to the divisor
-	FRONT_IN_DISADVANTAGE_FACTOR = 10.0 # If a general is in an active war front with disadvantage, add this value to the divisor
+	FRONT_OR_HQ_UNIT_DISPARITY_FOR_MOVE_TRAVEL_TIME_FACTOR = 0.02 # Each day of travel time adds this much to the divisor
+	FRONT_OR_HQ_ACTIVE_WAR_MOVE_FACTOR = 1.0 # If a general is in an active war front, add this value to the divisor
+	
+	# The values below are all applied *after* FRONT_IMPORTANCE_MIN_SCORE is checked, so a front/HQ isn't going to be qualified or disqualified for AI actually caring about it by these multipliers
+	FRONT_NON_WAR_ZONE_IMPORTANCE_MULT = 0.5 	# Fronts that are not being contested by the enemy have their importance multiplied by this
+	FRONT_WAR_ZONE_IMPORTANCE_MULT = 1.0		# Fronts that *are* being contested by the enemy have their importance multiplied by this
+	HQ_LANDLOCKED_IMPORTANCE_MULT = 0.0 	# Friendly HQs without a coast have their importance multiplied by this
+	HQ_COASTAL_NON_WAR_ZONE_IMPORTANCE_MULT = 0.5 	# Friendly HQs with a coast that are not under naval invasion have their importance multiplied by this
+	HQ_COASTAL_WAR_ZONE_IMPORTANCE_MULT = 3.0		# Friendly HQs that *are* under naval invasion have their importance multiplied by this
 	
 	# At what fraction of combat strength compared to the enemy and overall morale will the AI attack
 	FRONT_STRENGTH_FACTOR_TO_INVADE = 0.75
@@ -524,9 +525,10 @@ NAI = {
 	ADMIRAL_ORDERS_INTERCEPTION_OWN_CAPITAL_FACTOR = 1000				# Score for defending our capital region with interception order
 	ADMIRAL_ORDERS_INTERCEPTION_WARGOAL_FACTOR = 100					# Score for defending wargoal targeting ally with interception order
 	ADMIRAL_ORDERS_INTERCEPTION_WARGOAL_OWN_TERRITORY_FACTOR = 500	    # Score for defending wargoal targeting us with interception order
+	ADMIRAL_ORDERS_INTERCEPTION_HOSTILE_NAVAL_INVASION_MULT = 10.0		# Score for defending nodes that are under active hostile naval invasion is multiplied by this
 	
 	# Below data is used to determine which regions are most important to declare an interest in
-	DECLARE_INTEREST_RANDOM_FACTOR = 1.0 # The higher this is, the more random AI declare interest will be
+	DECLARE_INTEREST_RANDOM_FACTOR = 0.5 # The higher this is, the more random AI declare interest will be
 	DECLARE_INTEREST_BASE_SCORE = 100
 	DECLARE_INTEREST_GDP_DIVISOR = 200000
 	DECLARE_INTEREST_GDP_WEIGHT = 5 # Per DECLARE_INTEREST_GDP_DIVISOR GDP
@@ -535,7 +537,7 @@ NAI = {
 	DECLARE_INTEREST_SUPPORTS_TRADE_ROUTE_FACTOR = 1000 # Add if this interest is in a market with which we have a trade route (and there is no other interest that would support it)
 	DECLARE_INTEREST_SUPPORTS_DIPLOMATIC_PACT_FACTOR = 1000 # Add if this interest is in a country with which we have a diplomatic pact (and there is no other interest that would support it)
 	DECLARE_INTEREST_SUPPORTS_GROWING_COLONY_FACTOR = 1000 # Add if this interest is in a region where we have a growing colony
-	DECLARE_INTEREST_ADJACENT_REGION_MULT = 1.5
+	DECLARE_INTEREST_ADJACENT_REGION_MULT = 2.5 # Multiply score by this if the region is adjacent to the AI country
 	
 	# If an AI country has too many colonial/non-colonial interests, subtract the score of those type of interests by this
 	DECLARE_INTEREST_WRONG_INTEREST_TYPE_FACTOR = -100
@@ -590,8 +592,8 @@ NAI = {
 	
 	MONEY_SPENDING_MILITARY_CRITICAL_THRESHOLD = 0.5 # If actual-to-wanted number of barracks/naval bases is below this, AI will not consider downsizing them further
 	MONEY_SPENDING_CONSTRUCTION_CRITICAL_THRESHOLD = 0.5 # If actual-to-wanted number of construction sector buildings is below this, AI considers it very important to get more
-	MONEY_SPENDING_INNOVATION_CRITICAL_THRESHOLD = 0.25 # If innovation production compared to cap is worse than this, AI considers it very important to improve
-	MONEY_SPENDING_INNOVATION_DESIRED_THRESHOLD = 0.90 # If innovation production compared to cap is worse than this, AI considers it important to improve
+	MONEY_SPENDING_INNOVATION_CRITICAL_THRESHOLD = 0.5 # If innovation production compared to cap is worse than this, AI considers it very important to improve
+	MONEY_SPENDING_INNOVATION_DESIRED_THRESHOLD = 1.0 # If innovation production compared to cap is worse than this, AI considers it important to improve
 	MONEY_SPENDING_SUPPLY_NETWORK_CRITICAL_THRESHOLD = 0.75 # If supply network is worse than this, AI considers it critical to improve it
 	MONEY_SPENDING_SUPPLY_NETWORK_DESIRED_THRESHOLD = 1.25 # If supply network is worse than this, AI wants to improve it
 	MONEY_SPENDING_SUPPLY_NETWORK_EXCESSIVE_CONVOYS = 2000 # If AI has more than this amount of free convoys, it's fine to downsize ports to save money
@@ -685,6 +687,7 @@ NAI = {
 	PRODUCTION_BUILDING_LONG_CONSTRUCTION_TIME_MULT = 0.5 # Multiply score by this if construction time would take more than PRODUCTION_BUILDING_LONG_CONSTRUCTION_TIME_THRESHOLD weeks at full construction industry usage (ignores MAX_WEEKLY_CONSTRUCTION_PROGRESS)
 	PRODUCTION_BUILDING_VERY_LONG_CONSTRUCTION_TIME_THRESHOLD = 60
 	PRODUCTION_BUILDING_VERY_LONG_CONSTRUCTION_TIME_MULT = 0.25 # Multiply score by this if construction time would take more than PRODUCTION_BUILDING_VERY_LONG_CONSTRUCTION_TIME_THRESHOLD weeks at full construction industry usage (ignores MAX_WEEKLY_CONSTRUCTION_PROGRESS)
+	PRODUCTION_BUILDING_COMPANY_MULT = 2.0 # Multiply score by this if we have at least one established company for the building type
 	
 	PRODUCTION_BUILDING_AUTONOMOUS_INVESTMENT_WANTED_COST_COVERAGE = 1 # If investment pool has less money than this in it, don't do any autonomous construction
 	PRODUCTION_BUILDING_AUTONOMOUS_INVESTMENT_CONSTRUCTION_COST_DIVISOR_SCALING = 0.001 # Value for autonomous investment pool constructions is divided by ( 1 + construction point cost * this )
@@ -855,12 +858,13 @@ NAI = {
 	UNUSED_CAPPED_RESOURCE_RATIO_TO_STOP_DISCOURAGING_EXPORT = 1.0	# If the untapped potential production of a resource-capped good in the country is at least market buy orders * this, stop applying punitive export tariffs
 
 	COMPANY_TYPE_DEFAULT_BASE_WEIGHT = 1	 			# Base weight for companies, can be overriden by ai_weight in database
-	COMPANY_TYPE_RANDOM_FACTOR = 2.0					# The higher this is, the more random AI selection of companies will be
+	COMPANY_TYPE_RANDOM_FACTOR = 1						# The higher this is, the more random AI selection of companies will be
 	COMPANY_TYPE_PRODUCTIVITY_FACTOR = 0.25				#Multiplier for AI weight of companies is increased by ( this * building productivity )
 	COMPANY_TYPE_PRODUCTIVITY_MAX = 4.0					# Effects of COMPANY_TYPE_PRODUCTIVITY_FACTOR  cannot be higher than this
 	COMPANY_TYPE_BUILDING_LEVELS_FACTOR	= 0.1			# Multiplier for AI weight of companies is increased by ( this * num building levels )
-	COMPANY_TYPE_BUILDING_LEVELS_MAX = 2.0			# Effects of COMPANY_TYPE_NUM_BUILDING_LEVELS_FACTOR cannot be higher than this
+	COMPANY_TYPE_BUILDING_LEVELS_MAX = 2.0				# Effects of COMPANY_TYPE_NUM_BUILDING_LEVELS_FACTOR cannot be higher than this
 	COMPANY_TYPE_COMPETITION_FACTOR = 2					# Divisor for AI weight of companies is increased by 1 + ( number of building types on existing companies that compete * this )
+	COMPANY_TYPE_BUILDING_GROUP_WEIGHT_IMPACT = 1.5		# The AI's average strategy weight mult for the building groups associated with this company is modulated towards 1 by this value and applied to AI preference for the company (ie; if this is 0.5, then the difference between the average AI preference and 1 is halved - 1.5 becomes 1.25, 0.5 becomes 0.75 etc)
 
 	MILITARY_UNITS_PER_FORMATION_BASE = 100				# For each this number of battalions we create another military formation in a HQ
 	MILITARY_UNITS_MIN_FOR_GARRISON_FORMATION = 15 		# If a HQ has at least this number of units we set the minimum number of formations to 2, so that there will be a garrison formation present
@@ -950,8 +954,8 @@ NPolitics = {
 	POWERFUL_IG_CUTOFF = 0.18			# Powerful interest groups with less Clout than this will stop being influential
 	POWERFUL_IG_TRAIT_BONUS = 1			# The effects of all trait modifiers from influential IGs are increased by this, 1 = +100%
 	IG_TRAIT_STICKINESS = 2				# If an IG trait is already active, this is the amount of Approval difference required to deactivate it
-	MARGINAL_IG_THRESHOLD = 0.01		# Interest Groups with Clout above this value are considered relevant while those below are marginal (if not also In Government)
-	MARGINAL_IG_CUTOFF = 0.01			# Interest Groups who are already relevant will only become marginal again if they drop below this value.
+	MARGINAL_IG_THRESHOLD = 0.05		# Interest Groups with Clout above this value are considered relevant while those below are marginal (if not also In Government)
+	MARGINAL_IG_CUTOFF = 0.04			# Interest Groups who are already relevant will only become marginal again if they drop below this value.
 	
 	RECENT_PARTY_DAYS = 14				# Party is considered recently formed if activated within RECENT_PARTY_DAYS days range
 	
@@ -1217,6 +1221,7 @@ NEconomy = {
 
 	SLAVE_TRADE_MIN_VACANCIES_NEEDED_TO_IMPORT = 500 # There needs to be at least this many (non-subsistence) vacancies in buildings that can be filled by slaves in order for slave import to happen
 	SLAVE_TRADE_MIN_POPULATION_TO_EXPORT = 100000	 # There needs to be at least this many people in the state in order for it to be selected, or remain valid, as a slave import target
+	SLAVE_TRADE_FULL_EXPORT_POPULATION_THRESHOLD = 250000	 # Below this amount of state population, the number of slaves exported is reduced by a multiplier scaled against SLAVE_TRADE_MIN_POPULATION_TO_EXPORT (at the halfway point between the two numbers the multiplier is 0.5x, etc) 
 	SLAVE_TRADE_POPULATION_FRACTION_WEIGHT = 100	 # Weight of slave population ratio in slave import marker selection
 	SLAVE_TRADE_POPULATION_TOTAL_WEIGHT = 0.0002	 # Weight of total population in slave import marker selection
 	SLAVE_TRADE_TURMOIL_WEIGHT = 25				# Weight of slave turmoil in slave import marker selection
@@ -1224,7 +1229,11 @@ NEconomy = {
 	SLAVE_TRADE_OTHER_STATES_WEIGHT = 2			# Inverse weight (penalty) for having other slave import markers
 	SLAVE_TRADE_EXISTING_STATE_CULTURE_WEIGHT_MULT = 10 # Total score of state is multiplied by this if importing from states whose homeland cultures are already present in this state
 	SLAVE_TRADE_NUMBER_EVALUATED_STATES = 10	# Slave import marker is selected randomly from this many potential targets with highest weight
-	SLAVE_TRADE_SLAVES_PER_WEEK = 100			# Base number of slaves that will be traded per marker per week
+	SLAVE_TRADE_BASE_SLAVES_PER_WEEK = 100		# Base number of slaves that will be traded per marker per week
+	SLAVE_TRADE_ARABLE_LAND_EFFECT = 1			# Slaves traded per week is increased by this for each arable land in the importing state
+	SLAVE_TRADE_ARABLE_LAND_EFFECT_MAX = 200	# Maximum that arable land can increase slaves traded per week
+	SLAVE_TRADE_RANDOM_MIN = 0.5				# Slaves traded per week is multiplied by a random number, minimum of this
+	SLAVE_TRADE_RANDOM_MAX = 1.5				# Slaves traded per week is multiplied by a random number, maximum of this
 	SLAVE_TRADE_MIN_MARKET_ACCESS = 0.1			# Minimum market access multiplier for slave trade, i.e. even at a marker with 0 market access, this fraction of the base number will be traded
 	
 	BUILDING_FAILED_HIRE_COOLDOWN_WEEKS_WITHOUT_WAGE_RAISE = 4		# If a building fails to hire, it waits this many weeks before trying again *unless* it has since raised wages
@@ -1312,7 +1321,6 @@ NMilitary = {
 	FORMATION_TRAVEL_NETWORK_SPEED = 15				# (Temp) base speed of formations when they travel via the travel network
 
 	BATTLE_PLAN_ADVANCE_PROGRESS_TO_LAUNCH = 100 			# required accumulated advance progress to launch
-	BATTLE_PLAN_SWITCH_ORDER_LOST_PROGRESS_PERCENT = 0.5	# 50% accumulated advance progress lost when switching from an attacking order
 	
 	BATTLE_BASE_MIN_PROVINCES_TAKEN = 4
 	BATTLE_BASE_MAX_PROVINCES_TAKEN = 12
@@ -1331,15 +1339,16 @@ NMilitary = {
 	
 	CONVOY_RAIDING_NUM_POSSIBLE_ATTACK_NODES = 5			# How many sea zones will be shown as possible attack sites for convoy raided player
 	CONVOY_RAIDING_DELAY_BASE_DAYS = 5						# atleast this many days between each admiral raiding attempt
-	CONVOY_RAIDING_DELAY_MAX_RANDOM_DAYS_FACTOR = 10		# up to this many extra days between each admiral raiding attempt
-	CONVOY_RAIDING_CONVOY_ATTACK_CHANCE = 0.2				# Chance each attempt that convoy raiders find convoys to attack from each country along the shipping lane (1 = 100%)
-	CONVOY_RAIDING_STRENGTH_MULT = 0.08						# How strong each Convoy raiding point is ( num flotillas * ce offense )
-	CONVOY_RAIDING_DAMAGE_RANDOM_FACTOR = 0.5				# Actual convoy raiding damage is increased by up to this to provide some random variability
-	CONVOY_RAIDING_DEFENSE_MULT = 0.05						# How much is Convoy raiding strength reduced by patrolling flotillas  ( num flotillas * ce defense )
-	CONVOY_RAIDING_MAX_DEFENSE = 0.75						# Convoy raiding damage cannot be reduced below this by convoy raiding defense
+	CONVOY_RAIDING_DELAY_MAX_RANDOM_DAYS_FACTOR = 5			# up to this many extra days between each admiral raiding attempt
+
+	CONVOY_RAIDING_STRENGTH_MULT = 0.3					# How strong each Convoy raiding point is ( num flotillas * ce offense )
+	CONVOY_RAIDING_DAMAGE_MIN_RANDOM_FACTOR = 0.5			# Actual convoy raiding damage is scaled between CONVOY_RAIDING_DAMAGE_MIN_RANDOM_FACTOR and CONVOY_RAIDING_DAMAGE_MAX_RANDOM_FACTOR to provide some random variability
+	CONVOY_RAIDING_DAMAGE_MAX_RANDOM_FACTOR = 1.0			# Actual convoy raiding damage is scaled between CONVOY_RAIDING_DAMAGE_MIN_RANDOM_FACTOR and CONVOY_RAIDING_DAMAGE_MAX_RANDOM_FACTOR to provide some random variability
+	CONVOY_RAIDING_DEFENSE_MULT = 0.15						# How much is Convoy raiding strength reduced by patrolling flotillas  ( num flotillas * ce defense )
+	CONVOY_RAIDING_MAX_DEFENSE = 0.90						# Example: the defender can never block more than 90% of the convoy damage they're currently taking
 		
 	# Convoy recovery rate after being raided is based on a global and a local rate, using whichever is lower
-	CONVOY_RAIDING_GLOBAL_RECOVERY_RATE = 0.003				# The rate at which damaged convoys are replaced each day, relative to total number of produced convoys in the raided country
+	CONVOY_RAIDING_GLOBAL_RECOVERY_RATE = 0.001				# The rate at which damaged convoys are replaced each day, relative to total number of produced convoys in the raided country
 	CONVOY_RAIDING_LOCAL_RECOVERY_RATE = 0.01				# The rate at which damaged convoys are replaced each day, relative to total number of convoys passing through the sea node
 	
 	MIN_OFFENSE_DEFENSE = 1									# The absolute lowest Offense or Defense a unit can have
@@ -1350,10 +1359,7 @@ NMilitary = {
 
 	ADMIRAL_BATTLE_LOSS_REPAIR_TIME_DAYS = 28				# number of days after loosing a naval battle that an admiral cannot perform any new Orders
 
-	BASE_ATTRITION_RISK = 0.1						# Base Attrition Risk that is always active whenever a formation is not at HQ
-	NORMAL_ATTRITION_RISK = 0.25 					# Attrition Risk is considered high if greater or equal than this
-
-	DEMOBILIZATION_TIME_DAYS = 120				# Number of days it takes to fully demobilize after a formation has returned home
+	DEMOBILIZATION_TIME_DAYS = 90				# Number of days it takes to fully demobilize after a formation has returned home
 
 	MOBILIZATION_INFRASTRUCTURE_FACTOR = 0.01	# amount of mobilization generated per point of infrastructure. one battalion takes one full point of mobilization to mobilize
 	MIN_MOBILIZATION_PER_DAY = 0.05				# minimum mobilization gained per day by each mobilizing battalion (the last unit to gain mobilization in a state might have to do with whatever is left)
@@ -1365,11 +1371,16 @@ NMilitary = {
 	BATTLE_CONDITION_MIN_TICKS_BETWEEN_UPDATE_DEFAULT = 40	# Unless otherwise specified on the battle condition type, battle conditions will not update until at least this many ticks has passed
 	BATTLE_CONDITION_CHANCE_TO_UPDATE_PER_EXTRA_TICK = 0.01 # For each tick that has passed since the minimum number of ticks, this chance to refresh battle conditions (i.e. 13 ticks after min, there's 13% chance of switching)
 	
+	DEFAULT_ORDER_GENERAL = "advance"						# Default order for generals
+	DEFAULT_ORDER_ADMIRAL = "patrol_coast"					# Default order for admirals
+	
 	MAX_NUM_COMMANDERS_PER_FORMATION = 4	# The maximum number of commanders in a given Military Formation
 	
 	MILITARY_FORMATION_ORGANIZATION_MAX = 100				# The maximum amount of Organization a Military Formation requires to be considered at full Organization
 	MILITARY_FORMATION_ORGANIZATION_MIN = 25				# The minimum amount of Organization a Military Formation will always retain despite exceeding their Command Limit 
 	MILITARY_FORMATION_DAILY_ORGANIZATION_GAIN_MIN = 0.1	# The minimum amount of Organization a Military Formation can gain in a day
+	MOBILIZATION_OPTION_DIFFERENCE_ORGANIZATION_IMPACT = 20 # The penalty to Organization gained for each difference by merging units between Formations with different Mobilization Options
+	FLEET_PRESENCE_GAIN_PER_DAY = 0.02						# The amount of Presence a Fleet gains per day while stationary in a Sea Node
 	
 	MILITARY_FORMATION_WEEKLY_MAX_UNIT_UPGRADES_ARMY = 0.1		# Each week a mobilized army can upgrade this (0.0-1.0) fraction of its total number of units.
 	MILITARY_FORMATION_WEEKLY_MAX_UNIT_UPGRADES_FLEET = 0.05	# Each week a mobilized fleet can upgrade this (0.0-1.0) fraction of its total number of units.
@@ -1605,6 +1616,8 @@ NDiplomacy = {
 	RELEASE_COUNTRY_AS_INDEPENDENT_RELATIONS_BOOST = 50
 
 	INTEREST_NUM_DAYS_CHANGE = 30
+	
+	RELATION_PENALTY_OVERLORD_KICK_BACKER_SUBJECT = -30		# When an overlord joins a diplomatic play they will force any subjects of theirs to become neutral if they are supporting the other side, this is a penalty to relations between the subject and overlord when that happens
 }
 
 NPops = {
@@ -1630,9 +1643,12 @@ NPops = {
 	RADICALS_MONTHLY_FROM_DISCRIMINATION = 0.005 # Scales by literacy	
 
 	ASSIMILATION_RATE = 0.002					# Percentage of pops who will Assimilate into a different Culture each month, if eligible
-	MIN_ASSIMILATION = 10						# If there is any assmiliation at least this many people will assimilate
+	ASSIMILATION_UNINCORPORATED_MULT = 0.1 		# ASSIMILATION_RATE is multiplied by this in unincorporated states
+	MIN_ASSIMILATION = 1						# If there is any assmiliation at least this many people will assimilate
+	
 	CONVERSION_RATE = 0.002						# Percentage of pops who will Convert into a different Religion each month, if eligible
-	MIN_CONVERSION = 10							# If there is any conversion at least this many people will convert
+	CONVERSION_UNINCORPORATED_MULT = 0.1 		# CONVERSION_RATE is multiplied by this in unincorporated states
+	MIN_CONVERSION = 1							# If there is any conversion at least this many people will convert
 	
 	OBSESSION_DEMAND_MIN = 1.0					# The minimum relative demand of an obsession (overrides min demand in buy package goods categories)
 	OBSESSION_DEMAND_MULT = 2.0					# Demand of an obsession is multiplied by this
@@ -1681,6 +1697,7 @@ NPops = {
 	MIGRATION_PULL_MULT_FROM_CULTURE_TARGET_ADJACENCY = 5.0	# Migration pull multiplied by this from target state being next to a cultural migration target
 	MIGRATION_PULL_MULT_FROM_NO_DISCRIMINATION = 1.0		# Migration pull multiplier increased by this if pop is moving from discrimination to no discrimination (not applied to mass migration targets)
 	MIGRATION_PULL_MULT_FROM_HOMELANDS = 0.5				# Migration pull multiplier increased by this if pop is moving to cultural homelands (not applied to mass migration targets)
+	MIGRATION_PULL_MULT_FROM_NO_TRADE_ROUTE = 0.5			# Migration pull multiplier penalty for not having trade route to migration target
 	
 	# General factors for how many pops will migrate
 	MIGRATION_PULL_HIGH_THRESHOLD = 1.25						#	State must have a migration pull of at least market average * this to get economic immigration
@@ -1690,7 +1707,6 @@ NPops = {
 	ECONOMIC_MIGRATION_STATE_POPULATION_THRESHOLD = 100000				# States with less pops than this have reduced economic emigration numbers to avoid total depopulation
 	CULTURAL_MIGRATION_BASE = 0.05								# Base amount of a pop that wants to move due to mass migration
 	CULTURAL_MIGRATION_FROM_RADICALS = 0.05						# At 100% radicals, this fraction of the pop wants to mass migrate
-	CULTURAL_COMMUNITY_LINGER_TIME_WEEKS = 3					# When the last pop of a given culture leaves a state, the corresponding cultural community will be removed after this long
 	MIGRATION_UNEMPLOYMENT_MULT = 10.0							# Amount of migration from SoL is increased by this when a pop is unemployed
 	MIGRATION_MIN_STATE_POPS = 20000							# A state with less pops than this will not get emigration
 	MIGRATION_MIN_POP_AMOUNT = 1								# No less than this amount of a pop can migrate each week (if any migration at all should happen)
@@ -1720,17 +1736,6 @@ NPops = {
 	MASS_MIGRATION_NUM_TARGET_STATES_FOR_NO_PENALTY = 5	# Countries with at least this number of possible target states do not receive any penalty to their mass migration target score
 	MASS_MIGRATION_FEW_TARGET_STATES_PENALTY = 0.25		# Mass migration target score is divided by ( 1 + this * number of possible target states less than MASS_MIGRATION_NUM_TARGET_STATES_FOR_NO_PENALTY )
 
-	MASS_MIGRATION_TARGET_MIGRATION_PULL_FACTOR = 1.5	# A state with a mass migration target will have its migration pull multiplied by this value (when considered by the relevant culture pops in the relevant origin country)
-
-	MIGRATION_DESIRE_BASE = 100								# Base desire to migrate
-	MIGRATION_DESIRE_FROM_DISCRIMINATION = 200				# Being discriminated will increase desire to migrate by this much
-	MIGRATION_DESIRE_FROM_JOB_SATISFACTION_FACTOR = -1.0	# A pop's desire to migrate will be affected by its job satisfaction multiplied by this value.
-
-	CULTURAL_MIGRATION_PER_WEEK_FACTOR = 0.5									# This number of individuals will migrate for each point of difference in migration pull
-	CULTURAL_MIGRATION_PER_WEEK_PER_TOTAL_POPULATION = 200000					# Additionally, one more individual will migrate per this number of population for each point of difference in migration pull
-	CULTURAL_MIGRATION_MIN_DIFFERENCE_IN_MIGRATION_ATTRACTION_TO_MOVE = 10		# Pops will not migrate if their best option is to a state with a lower delta in migration pull than this number
-	CULTURAL_MIGRATION_MIN_POP_FRACTION_TO_MOVE = 0.2							# If the people wanting to migrate constitues less than this fraction of a pop, no new pop will be created and they won't migrate.
-
 	COLONIZATION_RIGHTS_GROWTH_MULTIPLIER = 2.0			# Colonial growth AND max colonial growth are multiplied by this if you have colonization rights
 	COLONIAL_GROWTH_BASE_FACTOR = 0.00001				# Colonial growth generated by a state is ( total pops / 1000 ) * this * modifier from institution
 	MIN_BASE_COLONIAL_GROWTH = 0.01						# Country base colonial growth from population cannot be lower than this
@@ -1748,8 +1753,8 @@ NPops = {
 
 	JOB_SATISFACTION_BASE = -130							# Base job satisfaction
 	JOB_SATISFACTION_FOR_NEWLY_HIRED = 1000					# Job satisfaction gained due to having been newly hired, this state lasts until the pop's next wealth calculation
-	JOB_SATISFACTION_PER_SOL_ABOVE_EXPECTED_SOL = 3		# Job satisfaction gained per level of SoL above your expected SoL
-	JOB_SATISFACTION_PER_SOL_ABOVE_STATE_STRATA_SOL = 2	# Job satisfaction gained per level of SoL above the state average for your strata
+	JOB_SATISFACTION_PER_SOL_ABOVE_EXPECTED_SOL = 3			# Job satisfaction gained per level of SoL above your expected SoL
+	JOB_SATISFACTION_PER_SOL_ABOVE_STATE_STRATA_SOL = 2		# Job satisfaction gained per level of SoL above the state average for your strata
 	JOB_SATISFACTION_PER_SOL_ABOVE_COUNTRY_STRATA_SOL = 1	# Job satisfaction gained per level of SoL above the country average for your strata
 	JOB_SATISFACTION_PER_PERCENT_WAGE_RATE_ABOVE_NORMAL = 2	# Job satisfaction gained per pound of workplace wage rate (weekly wage of 10k laborers) above country normal
 	JOB_SATISFACTION_CAN_AFFORD_EXPENSES_THRESHOLD = 1.2	# If a pop's income is greater than this value times their expenses they are considered to be able to afford them
@@ -1789,38 +1794,95 @@ NPops = {
 } 
 
 ### Pop Growth Constants
-@min_birthrate = 0.0010
-@max_birthrate = 0.0080
-@min_mortality = 0.0010
-@max_mortality = 0.0100
-@pop_growth_sol_equilibrium = 5							# Equilibrium is where (with no birthrate/death-rate mods) growth is stagnant
-@pop_growth_sol_delta_cap = 25							# SoL Delta Cap is where net growth stops increasing with rising SoL, i.e. both drop at the same pace
-@pop_growth_sol_cap = 50								# SoL Cap is where they birthrate/death-rate stop dropping
+## Base Values per month
+@min_birthrate = 0.00055			# Minimum base birthrate per month (at POP_GROWTH_STABLE_SOL)
+@max_birthrate = 0.00450			# Maximum base birthrate per month (at SOL = 0 if not modified by malnourishment)
+@min_mortality = 0.00045			# Minimum base mortality per month (at POP_GROWTH_STABLE_SOL)
+@max_mortality = 0.00600			# Maximum base mortality per month (at SOL = 0 if not modified by malnourishment)
 
-@mortality_at_equilibrium = @[max_birthrate-(pop_growth_sol_equilibrium*(max_birthrate-min_birthrate)/pop_growth_sol_cap)]
-@birthrate_at_delta_cap = @[max_birthrate-(pop_growth_sol_delta_cap*(max_birthrate-min_birthrate)/pop_growth_sol_cap)]
-@improving_slope = @[(birthrate_at_delta_cap-min_birthrate-min_mortality-mortality_at_equilibrium)/(pop_growth_sol_delta_cap-pop_growth_sol_equilibrium)]
-@improving_intercept = @[-1*improving_slope*pop_growth_sol_equilibrium+mortality_at_equilibrium]
-@mortality_at_delta_cap = @[improving_slope*pop_growth_sol_delta_cap+improving_intercept]
-@fixed_delta_slope = @[(min_mortality-mortality_at_delta_cap)/(pop_growth_sol_cap-pop_growth_sol_delta_cap)]
-		
+## SoL Thresholds
+@pop_growth_equilibrium_sol = 5		# Equilibrium is pops stop starving and where growth first becomes positive
+@pop_growth_transition_sol = 10     # Transition determines how long birthrate "lags" behind mortality before starting to drop. Setting to same as equilibrium leads to no "lag" (only matters for birthrate)
+@pop_growth_max_sol = 20			# Growth Max is where net growth generally is at it's highest (only matters for mortality)
+@pop_growth_stable_sol = 30			# Stable is where birthrate and mortality stop changing and hit their minimum values
+
+## Others
+@transition_birthrate_mult = 1 		# If you want the birthrate "lag" to go to a higher or lower value than max_birthrate. (you can also just change it directly below)
+@max_growth_mortality_mult = 0.35	# What proportion of birthrate_at_growth_max mortality should be at. Higher means lower growth
+
+### Pop Growth Derived values
+# Generally, for each one of these derived values below we're really just doing one of three operations (or combination of them):
+# - Calculate a Point: sol * slope + start_value   					(x_at_y)
+# - Calculate a Slope: (start_value - end_value) / number_of_steps	(x_slope)
+# - Calculate an Intercept: -slope*sol + end_value					(x_intercept)
+# Intercepts are only needed for line segments that don't start at 0 SoL
+
+@birthrate_at_transition = @[max_birthrate*transition_birthrate_mult]
+@rate_at_equilibrium = @[pop_growth_equilibrium_sol*((birthrate_at_transition-max_birthrate)/pop_growth_transition_sol)+max_birthrate] # determines both mortality and birthrate
+
+## Mortality from 0 to pop_growth_equilibrium_sol
+@mortality_starving_slope = @[(rate_at_equilibrium-max_mortality)/pop_growth_equilibrium_sol]
+
+## Birthrate from 0 to pop_growth_transition_sol
+@birthrate_pretransition_slope = @[(birthrate_at_transition-rate_at_equilibrium)/pop_growth_transition_sol]
+
+## Mortality from pop_growth_equilibrium_sol to pop_growth_max_sol
+@birthrate_at_growth_max = @[(pop_growth_max_sol-pop_growth_transition_sol)*((min_birthrate-birthrate_at_transition)/(pop_growth_stable_sol-pop_growth_transition_sol))+birthrate_at_transition]
+@mortality_at_growth_max = @[birthrate_at_growth_max*max_growth_mortality_mult]
+@mortality_equilibrium_to_growth_max_slope = @[(mortality_at_growth_max-rate_at_equilibrium)/(pop_growth_max_sol-pop_growth_equilibrium_sol)]
+@mortality_equilibrium_to_growth_max_intercept = @[-mortality_equilibrium_to_growth_max_slope*pop_growth_equilibrium_sol+rate_at_equilibrium]
+
+## Birthrate from pop_growth_transition_sol to pop_growth_stable_sol
+@birthrate_transition_slope = @[(min_birthrate-birthrate_at_transition)/(pop_growth_stable_sol-pop_growth_transition_sol)]
+@birthrate_transition_intercept = @[-birthrate_transition_slope*pop_growth_stable_sol+min_birthrate]
+
+## Mortality from pop_growth_max_sol to pop_growth_stable_sol
+@mortality_growth_max_to_stable_slope = @[(min_mortality-mortality_at_growth_max)/(pop_growth_stable_sol-pop_growth_max_sol)]
+@mortality_growth_max_to_stable_intercept = @[-mortality_growth_max_to_stable_slope*pop_growth_stable_sol+min_mortality]
+
+### Pseudo algorithm to determine base Mortality / Birthrate
+## Mortality
+# if (sol < POP_GROWTH_EQUILIBRIUM_SOL)
+# { mortality = sol * POP_GROWTH_MORTALITY_STARVING_SLOPE + POP_GROWTH_MAX_MORTALITY }
+# else if (sol < POP_GROWTH_MAX_SOL)
+# { mortality = sol * POP_GROWTH_MORTALITY_EQUILIBRIUM_TO_GROWTH_MAX_SLOPE + POP_GROWTH_MORTALITY_EQUILIBRIUM_TO_GROWTH_MAX_INTERCEPT }
+# else if (sol < POP_GROWTH_STABLE_SOL)
+# { mortality = sol * POP_GROWTH_MORTALITY_GROWTH_MAX_TO_STABLE_SLOPE + POP_GROWTH_MORTALITY_GROWTH_MAX_TO_STABLE_INTERCEPT }
+# else { mortality = POP_GROWTH_MIN_MORTALITY }
+
+## Birthrate
+# if (sol < POP_GROWTH_EQUILIBRIUM_SOL)
+# { birthrate = (sol * POP_GROWTH_BIRTHRATE_PRETRANSITION_SLOPE + POP_GROWTH_MAX_BIRTHRATE) * (1 - malnourishment * (POP_GROWTH_EQUILIBRIUM_SOL - sol)) }
+# else if (sol < POP_GROWTH_TRANSITION_SOL)
+# { birthrate = sol * POP_GROWTH_BIRTHRATE_PRETRANSITION_SLOPE + POP_GROWTH_MAX_BIRTHRATE }
+# else if (sol < POP_GROWTH_STABLE_SOL)
+# { birthrate = sol * POP_GROWTH_BIRTHRATE_TRANSITION_SLOPE + POP_GROWTH_BIRTHRATE_TRANSITION_INTERCEPT }
+# else { birthrate = POP_GROWTH_MIN_BIRTHRATE } 
+
 NPops = {
-	POP_GROWTH_BIRTHRATE_REDUCTION_PER_SOL = @[(max_birthrate-min_birthrate)/pop_growth_sol_cap]
-	POP_GROWTH_MORTALITY_AT_EQUILIBRIUM = @mortality_at_equilibrium
-	POP_GROWTH_STARVING_SLOPE = @[(mortality_at_equilibrium-max_mortality)/pop_growth_sol_equilibrium]
-	POP_GROWTH_BIRTHRATE_AT_DELTA_CAP = @birthrate_at_delta_cap
-	POP_GROWTH_IMPROVING_SLOPE = @improving_slope
-	POP_GROWTH_IMPROVING_INTERCEPT = @improving_intercept
-	POP_GROWTH_FIXED_DELTA_SLOPE = @fixed_delta_slope
-	POP_GROWTH_FIXED_DELTA_INTERCEPT = @[-1*fixed_delta_slope*pop_growth_sol_cap+min_mortality]
-	
-	POP_GROWTH_MIN_BIRTHRATE = @min_birthrate					# Minimum base birthrate per month (at SOL_POP_GROWTH_CAP)
-	POP_GROWTH_MAX_BIRTHRATE = @max_birthrate					# Maximum base birthrate per month (at SOL = 0)
-	POP_GROWTH_MIN_MORTALITY = @min_mortality					# Maximum base mortality per month (at SOL_POP_GROWTH_CAP)
-	POP_GROWTH_MAX_MORTALITY = @max_mortality					# Maximum base mortality per month (at SOL = 0)
-	POP_GROWTH_SOL_DELTA_CAP = @pop_growth_sol_delta_cap		# Birthrate and Mortality retains its delta beyond this SoL
-	POP_GROWTH_SOL_CAP = @pop_growth_sol_cap					# Birthrate and Mortality reaches its minimum values and does not drop beyond this SoL
-	POP_GROWTH_SOL_EQUILIBRIUM = @pop_growth_sol_equilibrium	# The Standard of Living where Birthrate and Mortality correspond, after which Mortality diminishes slower
+	## Birthrate
+	POP_GROWTH_BIRTHRATE_PRETRANSITION_SLOPE = @birthrate_pretransition_slope
+	POP_GROWTH_BIRTHRATE_TRANSITION_SLOPE = @birthrate_transition_slope
+	POP_GROWTH_BIRTHRATE_TRANSITION_INTERCEPT = @birthrate_transition_intercept
+
+	## Mortality
+	POP_GROWTH_MORTALITY_STARVING_SLOPE = @mortality_starving_slope
+	POP_GROWTH_MORTALITY_EQUILIBRIUM_TO_GROWTH_MAX_SLOPE = @mortality_equilibrium_to_growth_max_slope
+	POP_GROWTH_MORTALITY_EQUILIBRIUM_TO_GROWTH_MAX_INTERCEPT = @mortality_equilibrium_to_growth_max_intercept
+	POP_GROWTH_MORTALITY_GROWTH_MAX_TO_STABLE_SLOPE = @mortality_growth_max_to_stable_slope
+	POP_GROWTH_MORTALITY_GROWTH_MAX_TO_STABLE_INTERCEPT = @mortality_growth_max_to_stable_intercept
+
+	## Base Values
+	POP_GROWTH_MIN_BIRTHRATE = @min_birthrate					# Minimum base birthrate per month (at POP_GROWTH_STABLE_SOL)
+	POP_GROWTH_MAX_BIRTHRATE = @max_birthrate					# Maximum base birthrate per month (at SOL = 0 if not modified by malnourishment)
+	POP_GROWTH_MIN_MORTALITY = @min_mortality					# Minimum base mortality per month (at POP_GROWTH_STABLE_SOL)
+	POP_GROWTH_MAX_MORTALITY = @max_mortality					# Maximum base mortality per month (at SOL = 0 if not modified by malnourishment)
+
+	## SoL Thresholds
+	POP_GROWTH_EQUILIBRIUM_SOL = @pop_growth_equilibrium_sol	# Equilibrium is pops stop starving and where growth first becomes positive
+	POP_GROWTH_TRANSITION_SOL = @pop_growth_transition_sol		# Transition determines how long birthrate "lags" behind mortality before starting to drop. Setting to same as equilibrium leads to no "lag" (only matters for birthrate)
+	POP_GROWTH_MAX_SOL = @pop_growth_max_sol					# Growth Max is where net growth generally is at it's highest (only matters for mortality)
+	POP_GROWTH_STABLE_SOL = @pop_growth_stable_sol				# Stable is where birthrate and mortality stop changing and hit their minimum values
 }
 ### End Pop Growth Constant defines
 
@@ -1837,7 +1899,7 @@ NTechnology = {
 
 NCharacters = {
 	NUM_RANDOM_NAME_TRIES_FOR_UNIQUENESS = 3	# When generating random names for characters, try this many times to find a unique name within the country [>=1]
-	RULER_MIN_AGE_FOR_HEIR = 20 				# Before this age, don't randomly generate heirs for rulers
+	RULER_MIN_AGE_FOR_HEIR = 30 				# Before this age, don't randomly generate heirs for rulers
 	RULER_AGE_FOR_HEIR_CHANCE_BOOST = 30 		# A year after this age start boosting chance of heir generation
 	RULER_HEIR_GENERATION_CHANCE = 0.001 		# Per day
 	RULER_HEIR_CHANCE_BOOST_SCALE = 0.001 		# Added to RULER_HEIR_CHANCE_BOOST for each year after RULER_AGE_FOR_HEIR_CHANCE_BOOST
@@ -1971,6 +2033,7 @@ NWar = {
 	STATE_CONQUEST_HOMELAND_OR_CLAIM_DEMILITARIZATION = 0.5	
 	STATE_CONQUEST_DEFAULT_RADICALIZATION = 0.5
 	STATE_CONQUEST_DEFAULT_DEMILITARIZATION = 0.75
+	STATE_CONQUEST_KEEP_ALL = 0.0
 
 	NUM_STATES_FOR_ADVANCEMENT_SELECTION = 5		# After having computed weights for possible advancement states using front_battle_state_weight, filter out all but the X top weighted provinces. This is done to prevent randomly selecting an element that had a low weight.
 	NUM_PROVINCES_FOR_ADVANCEMENT_SELECTION = 5		# After having computed weights for possible advancement provinces using front_battle_province_weight, filter out all but the X top weighted provinces. This is done to prevent randomly selecting an element that had a low weight.
@@ -1980,28 +2043,40 @@ NWar = {
 }
 
 NTravelNetwork = {
-	ARMY_CONNECTION_UNDEVELOPED_COST_MULT = 4.0		# Travel cost multiplier for undeveloped land connections
-	ARMY_CONNECTION_DIRT_ROAD_COST_MULT = 2.0		# Travel cost multiplier for dirt road land connections
-	ARMY_CONNECTION_HARDENED_ROAD_COST_MULT = 1.5	# Travel cost multiplier for hardened road land connections (currently unused)
+	ARMY_CONNECTION_UNDEVELOPED_COST_MULT = 2.0		# Travel cost multiplier for undeveloped land connections
+	ARMY_CONNECTION_UNDEVELOPED_HARSH_COST_MULT = 4.0		# Travel cost multiplier for undeveloped land connections in harsh environments (deserts, mountains, etc)
+	ARMY_CONNECTION_DIRT_ROAD_COST_MULT = 1.5		# Travel cost multiplier for dirt road land connections
+	ARMY_CONNECTION_HARDENED_ROAD_COST_MULT = 1.25	# Travel cost multiplier for hardened road land connections (currently unused)
 	ARMY_CONNECTION_RAILWAY_COST_MULT = 1.0			# Travel cost multiplier for railway land connections
 	ARMY_CONNECTION_CHARTED_COST_MULT = 1.0			# Travel cost multiplier for ocean/coastal water connections
 	ARMY_CONNECTION_CANAL_COST_MULT = 1.0			# Travel cost multiplier for channel water connections
+	ARMY_CONNECTION_STRAIT_CROSSING_COST_MULT = 4.0			# Travel cost multiplier for strait-crossing connection
 	ARMY_DIRECT_CONNECTION_COST_MULT = 10.0			# Travel cost multiplier for traveling in a direct line from/to a position on the map (without a travel node connection)
-	ARMY_CONNECTION_DOCKING_COST = 200				# Fixed docking/undocking cost for going from a harbor node to a port node (overrides docking connection length)
+	ARMY_CONNECTION_DOCKING_COST = 300				# Fixed docking/undocking cost for going from a harbor node to a port node (overrides docking connection length)
+	ARMY_CONNECTION_STRAIT_CROSSING_COST = 100		# Fixed additional cost for crossing a strait connection
 
 	FLEET_CONNECTION_UNDEVELOPED_COST_MULT = 100.0	# Travel cost multiplier for undeveloped land connections (unused by fleets)
+	FLEET_CONNECTION_UNDEVELOPED_HARSH_COST_MULT = 100.0		# Travel cost multiplier for undeveloped land connections in harsh environments (deserts, mountains, etc) (unused by fleets)
 	FLEET_CONNECTION_DIRT_ROAD_COST_MULT = 100.0	# Travel cost multiplier for dirt road land connections (unused by fleets)
 	FLEET_CONNECTION_HARDENED_ROAD_COST_MULT = 100.0	# Travel cost multiplier for hardened road land connections (currently unused) (unused by fleets)
 	FLEET_CONNECTION_RAILWAY_COST_MULT = 100.0		# Travel cost multiplier for railway land connections (unused by fleets)
 	FLEET_CONNECTION_CHARTED_COST_MULT = 1.0		# Travel cost multiplier for ocean/coastal water connections
 	FLEET_CONNECTION_CANAL_COST_MULT = 1.0			# Travel cost multiplier for channel water connections
+	FLEET_CONNECTION_STRAIT_CROSSING_COST_MULT = 100.0	# Travel cost multiplier for strait-crossing connection (unused by fleets)
 	FLEET_DIRECT_CONNECTION_COST_MULT = 4.0			# Travel cost multiplier for traveling in a direct line from/to a position on the map (without a travel node connection)
 	FLEET_CONNECTION_DOCKING_COST = 10				# Fixed docking/undocking cost for going from a harbor node to a port node (overrides docking connection length)
+	FLEET_CONNECTION_STRAIT_CROSSING_COST = 100		# Fixed additional cost for crossing a strait connection (unused by fleets)
 
 	DIRECT_CONNECTION_COST_MULT = 10.0 				# Travel cost multiplier for traveling in a direct line from/to a position on the map (without a travel node connection)
 	DIRECT_CONNECTION_NODE_MAX_NODES = 10			# Only search the closest X travel nodes for direct line map travel
 	DIRECT_CONNECTION_NODE_SEARCH_DISTANCE = 1200	# Default distance allowed to pathfind in a direct line from a (start/target) map point to a travel node (if no valid are found, it is expanded)
-	DIRECT_CONNECTION_MAP_MAX_DISTANCE = 300 		# Maximum distance allowed to pathfind in a direct line between start and target map points directly
+	DIRECT_CONNECTION_MAP_MAX_DISTANCE = 200 		# Maximum distance allowed to pathfind in a direct line between start and target map points directly
+
+	STRAIT_CROSSING_NODE_CREATION_DISTANCE = 5		# Minimum distance between travel nodes, when considering to insert a new travel node for strait-connection
+
+	FORMATION_REPATH_MAX_DAYS_EXTRA = 60			# Maximum nr of days an automatic formation re-pathing may take (when travel access changes in ongoing travel)
+
+	HARSH_ENVIRONMENT_TERRAIN_LABEL = "label_travel_harsh_environment"	# Terrain label which marks nodes in them as being in harsh environment, triggering 'UNDEVELOPED_HARSH' connection type
 }
 
 NText = {

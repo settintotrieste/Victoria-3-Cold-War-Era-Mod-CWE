@@ -21,6 +21,10 @@
 				is_subject_of = scope:actor
 			} 
 		}
+		
+		#Player only to avoid border gore
+		is_player = yes
+		
 	}
 	
 	possible = {
@@ -40,9 +44,16 @@
 				exists = scope:first_state
 				exists = scope:second_state
 			}
+		
+			custom_tooltip = {
+				text = DIPLO_ACTION_TRADE_STATES_NOT_SAME_REGION
+				NOT = {
+					scope:first_state.state_region = scope:second_state.state_region
+				}
+			}
 			
 			custom_tooltip = {
-				text = DIPLO_ACTION_TRADE_STATES_WOULD_BREAK_CONNECTION		
+				text = DIPLO_ACTION_TRADE_STATES_WOULD_BREAK_CONNECTION
 				scope:actor = { 
 					any_scope_state = {
 						NOT = { this = scope:first_state }	
@@ -85,6 +96,7 @@
 	first_state_trigger = {
 		owner = scope:country
 		is_capital = no
+		is_under_colonization = no
 		OR = {
 			scope:target_country = { is_adjacent_to_state = root }
 			AND = {
@@ -97,6 +109,7 @@
 	second_state_trigger = {
 		owner = scope:country
 		is_capital = no
+		is_under_colonization = no
 		OR = {
 			scope:target_country = { is_adjacent_to_state = root }
 			AND = {
@@ -107,32 +120,149 @@
 	}	
 	
 	ai = {
-		propose_score = {
-			value = 0
-		}
+		check_acceptance_for_will_propose = yes
 	
-		will_propose = {
-			always = no
+		propose_score = {
+			value = 10
 		}
 		
+		# Selection triggers exist only to pre-filter which state combinations the AI looks at
+		# This is done for performance reasons - the more open ended these triggers are, the more it will impact performance
+		can_select_as_first_state = {
+			is_split_state = yes
+			is_under_colonization = no
+			is_incorporated = no
+			NOT = { is_homeland_of_country_cultures = owner }
+			state_is_in_africa = yes
+			NOT = { state_region = s:STATE_INDIAN_OCEAN_TERRITORY } # Special exception to african state trading
+		}
+		
+		can_select_as_second_state = {
+			is_split_state = yes
+			is_under_colonization = no
+			is_incorporated = no
+			NOT = { is_homeland_of_country_cultures = owner }
+			state_is_in_africa = yes
+			NOT = { state_region = s:STATE_INDIAN_OCEAN_TERRITORY } # Special exception to african state trading
+		}		
+		
+		can_propose_with_states = {
+			exists = scope:first_state
+			exists = scope:second_state	
+			NOT = { scope:first_state.state_region = scope:second_state.state_region }
+			scope:first_state = { 
+				is_split_state = yes	
+				state_region = { 
+					any_scope_state = { owner = scope:target_country }
+				}
+			}	
+			scope:second_state = { 
+				is_split_state = yes
+				state_region = { 
+					any_scope_state = { owner = root }
+				}
+			}			
+		}	
+		
 		accept_score = {
-			value = 0
-			
-			add = {
-				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
-				value = -100
-			}				
+			value = 0	
 			
 			if = {
 				limit = {
-					exists = scope:first_state
-					NOT = { exists = scope:second_state }
+					NOR = {
+						exists = scope:first_state
+						exists = scope:second_state
+					}
 				}
+				
 				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_GIVING_AWAY_LAND"
-					value = 1000
+					desc = "DIPLOMATIC_ACCEPTANCE_STATES_NOT_SET"
+					value = -1000
+				}				
+			}
+			else = {
+				if = {
+					limit = {
+						exists = scope:second_state
+					}
+					subtract = {
+						value = scope:second_state.ai_state_value:root	
+						desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_SECOND_STATE"
+						min = 10
+					}
+				}	
+				else_if = {		
+					add = {
+						value = 100	
+						desc = "DIPLOMATIC_ACCEPTANCE_GIVING_AWAY_LAND"						
+					}			
 				}			
+
+				if = {
+					limit = {
+						exists = scope:first_state				
+					}
+					if = {
+						limit = { scope:first_state.ai_state_value:root > 0 }
+						add = {
+							value = scope:first_state.ai_state_value:root	
+							desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_FIRST_STATE"						
+						}				
+					}
+					else = {
+						add = {
+							value = -1000	
+							desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_FIRST_STATE"						
+						}					
+					}
+				}
+
+				if = {
+					limit = {
+						exists = scope:first_state
+						exists = scope:second_state						
+						scope:first_state = { 
+							is_split_state = yes
+							state_region = { 
+								any_scope_state = { owner = root }
+							}
+						}	
+						scope:second_state = { 
+							is_split_state = yes
+							state_region = { 
+								any_scope_state = { owner = scope:actor }
+							}
+						}						
+					}
+
+					add = {
+						value = 25
+						desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_SPLIT_STATE_EXCHANGE"						
+					}						
+				}
 			}	
 		}
+		
+		use_obligation_chance = {
+			value = 10
+			
+			if = {
+				limit = {
+					scope:target_country = { country_rank > root.country_rank }
+				}				
+				add = 20
+			}				
+		}
+		
+		owe_obligation_chance = {
+			value = 0	
+
+			if = {
+				limit = {
+					scope:target_country = { country_rank > root.country_rank }
+				}				
+				add = 10
+			}				
+		}		
 	}
 }
