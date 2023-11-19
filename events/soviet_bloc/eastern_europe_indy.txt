@@ -28,6 +28,7 @@ eastern_europe_indy.1 = {
 		is_at_war = no											# war = no
 		
 		#Colony conditions
+		exists = c:EGR
 		c:EGR = { 												# Change TAG of the colony ****
 			is_direct_subject_of = ROOT
 			is_not_sufficiently_independent = yes
@@ -522,6 +523,166 @@ eastern_europe_indy.4 = {
 			name = stirrings_of_revolution
 			months = 60 
 			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Sino-Soviet Split
+eastern_europe_indy.5 = {
+    type = country_event
+	
+    title = sino_soviet_split.t 				# Title of the event; ADD LOCALISATION
+    desc = sino_soviet_split.d 					# Description of the event; ADD LOCALISATION
+    #flavor = sino_soviet_split.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		# Event has not been fired before
+		NOT = { has_variable = sino_soviet_split }				# CHANGE ****
+		
+		#Overlord conditions
+		exists = c:SOV
+		this = c:SOV											# Change TAG of the overlord ****
+		game_date >= 1961.10.17									# START DATE: Date colony became self governing ****
+		game_date < 1971.10.17									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		country_rank = rank_value:super_power
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Triggered by Khrushchev
+		exists = ruler
+		ruler = { is_interest_group_type = ig_rural_folk is_historical = yes }
+		
+		#Colony conditions
+		OR = {
+			AND = { 
+				exists = c:PRC
+				c:PRC ?= { 												# Change TAG of the colony ****
+					is_direct_subject_of = ROOT
+					is_a_communist_government = yes
+					is_sufficiently_independent = yes
+					is_at_war = no
+					#Triggered by Mao
+					exists = ruler
+					ruler = { is_interest_group_type = ig_trade_unions is_historical = yes }
+				}
+			}
+			AND = { 
+				exists = c:CHI
+				c:CHI ?= { 												# Change TAG of the colony ****
+					is_direct_subject_of = ROOT
+					is_a_communist_government = yes
+					is_sufficiently_independent = yes
+					is_at_war = no
+					#Triggered by Mao
+					exists = ruler
+					ruler = { is_interest_group_type = ig_trade_unions is_historical = yes }
+				}
+			}
+		}
+		
+    }
+	
+	immediate = { 
+		
+		# Fire only once
+		set_variable = sino_soviet_split					# Change variable ****
+		
+		#Mark PRC
+		random_country = {
+			limit = {
+				OR = { c:PRC ?= this c:CHI ?= this }
+				is_direct_subject_of = ROOT
+				is_a_communist_government = yes
+				is_sufficiently_independent = yes
+				is_at_war = no
+			}
+			save_scope_as = communist_china_scope
+		}
+		
+		
+	}
+    
+    option = {
+        name = sino_soviet_split.option.1						# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		scope:communist_china_scope = { 						# Change TAG of the colony ****
+			make_independent = yes
+			set_relations = {
+				country = ROOT
+				value = -50
+			}
+		}
+		
+		#Albania goes to China
+		random_country = {
+			limit = {
+				c:ALB ?= this
+				is_direct_subject_of = ROOT
+				is_a_communist_government = yes
+				is_sufficiently_independent = yes
+				is_at_war = no
+				is_player = no
+			}
+			make_independent = yes
+			set_relations = {
+				country = scope:communist_china_scope
+				value = 100
+			}
+			scope:communist_china_scope = {
+				create_diplomatic_pact = {
+					country = ROOT
+					type = satellite
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = sino_soviet_split.option.2						# REFUSE
+		default_option = yes
+		
+		#Fracture the Eastern Bloc
+		every_country = {
+			limit = { 
+				is_direct_subject_of = ROOT
+				is_a_communist_government = yes
+				is_subject_type = subject_type_satellite
+			}
+			change_subject_type = subject_type_protectorate
+			if = {
+				limit = { NOT = { scope:communist_china_scope ?= this } }
+				set_relations = {
+					country = scope:communist_china_scope
+					value = 50
+				}
+			}
+			set_relations = {
+				country = ROOT
+				value = 50
+			}
 		}
 		
 		ai_chance = { 
