@@ -2467,27 +2467,69 @@ on_election_campaign_end = {
 on_government_reformed = {
 	effect = {
 	
-		# Government Petition
-		set_variable = gov_petition_coin_toss
-		
-		#Reshuffle Opposition IG leaders
-		every_interest_group = {
+		#Retire elderly government interest group leaders
+		if = {
 			limit = { 
-				is_in_government = yes
-				leader = { is_historical = no }
+				is_at_war = no
 			}
-			leader = {
-				random_list = {
-					1 = { 
-						if = {
-							limit = { NOT = { has_modifier = political_survivor } }
-							add_modifier = { name = political_survivor years = 5 }
+			every_interest_group = {
+				limit = { 
+					is_in_government = yes
+					leader = { 
+						is_ruler = no
+						OR = { 
+							AND = { 
+								is_historical = yes
+								age >= 90
+							}
+							age >= 80
 						}
 					}
-					1 = { kill_character = yes }
+				}
+				leader = {
+					save_scope_as = retiring_politician_scope
+					post_notification = ig_leader_has_retired
+					kill_character = {
+						hidden = yes
+						value = no
+					}
 				}
 			}
 		}
+		
+		#Retire elderly ruler (if not a dictatorship)
+		if = {
+			limit = { 
+				is_at_war = no
+				NOT = { is_a_dictatorship = yes }
+			}
+			every_interest_group = {
+				limit = { 
+					is_in_government = yes
+					leader = { 
+						is_ruler = yes
+						OR = { 
+							AND = { 
+								is_historical = yes
+								age >= 90
+							}
+							age >= 80
+						}
+					}
+				}
+				leader = {
+					save_scope_as = retiring_ruler_scope
+					post_notification = ruler_has_retired
+					kill_character = {
+						hidden = yes
+						value = no
+					}
+				}
+			}
+		}
+	
+		# Government Petition
+		set_variable = gov_petition_coin_toss
 		
 		#Update upper house
 		remove_variable = has_bipartisan_plan
