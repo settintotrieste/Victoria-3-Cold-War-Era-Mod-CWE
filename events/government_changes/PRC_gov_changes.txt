@@ -1,0 +1,183 @@
+namespace = PRC_gov_changes
+
+# Mao's Successor
+PRC_gov_changes.1 = {
+    type = country_event
+
+    title = PRC_mao_succession.t 						# Title of the event; ADD LOCALISATION
+    desc = PRC_mao_succession.d 						# Description of the event; ADD LOCALISATION
+    #flavor = PRC_mao_succession.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		OR = { c:PRC ?= this c:CHI ?= this }
+		game_date >= 1976.9.9									# START DATE: Date colony became self governing ****
+		game_date < 1986.9.9									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		#is_sufficiently_independent = yes						# is_vassal = no		
+		#is_at_war = no											# war = no
+		
+		OR = { 
+			ruler = { is_interest_group_type = ig_trade_unions is_historical = yes }
+			ruler = { NOT = { is_interest_group_type = ig_trade_unions } }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = PRC_1976_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		#Kill Mao & replace with Brezhnev
+		ruler = {
+			kill_character = yes
+		}
+		
+		#Create new leader for Trade Unions IG
+		create_character = {
+			first_name = "Li_Shumeng_first_name"
+			last_name = "Li_Shumeng_last_name"
+			ig_leader = yes historical = yes female = yes
+			birth_date = 1914.3.19
+			interest_group = ig_trade_unions
+			ideology = ideology_autocratic
+			culture = cu:han
+			religion = rel:atheist
+			traits = {
+				arrogant
+				ambitious
+				expensive_tastes
+			}
+		}
+		
+		#Jiang Qing is leader by default
+		random_interest_group = {
+			limit = { 
+				is_interest_group_type = ig_trade_unions
+			}
+			leader = { set_character_as_ruler = yes }
+		}
+		every_interest_group = {
+			limit = { is_in_government = yes }
+			remove_ruling_interest_group = yes
+		}
+		ig:ig_trade_unions = {
+			add_ruling_interest_group = yes
+		}
+		if = {
+			limit = { ig:ig_petty_bourgeoisie = { leader = { is_historical = no } } }
+			create_character = {
+				first_name = "deng_xiaoping_first_name"
+				last_name = "deng_xiaoping_last_name"
+				ig_leader = yes historical = yes
+				birth_date = 1904.8.22
+				interest_group = ig_petty_bourgeoisie 
+				ideology = ideology_power_hungry
+				culture = cu:hakka
+				religion = rel:atheist
+				traits = {
+					meticulous
+					ambitious
+					cautious
+				}
+			}
+		}
+	
+		# Fire only once
+		set_variable = PRC_1976_hgc							# Change variable ****
+		
+	}
+    
+    option = {
+        name = PRC_deng.option								# Historical
+        highlighted_option = yes
+		default_option = yes
+		
+		#Install Deng Xiaoping
+		random_interest_group = {
+			limit = { 
+				is_interest_group_type = ig_petty_bourgeoisie
+				leader = { is_historical = yes }
+			}
+			leader = { set_character_as_ruler = yes }
+		}
+		if = {
+			limit = { ig:ig_petty_bourgeoisie = { leader = { is_historical = no } } }
+			create_character = {
+				first_name = "deng_xiaoping_first_name"
+				last_name = "deng_xiaoping_last_name"
+				ig_leader = yes historical = yes
+				birth_date = 1904.8.22
+				interest_group = ig_petty_bourgeoisie 
+				ideology = ideology_power_hungry
+				culture = cu:hakka
+				religion = rel:atheist
+				traits = {
+					meticulous
+					ambitious
+					cautious
+				}
+			}
+		}
+		
+		#Kill all Gang of Four
+		every_scope_character = { 
+			limit = { 
+				is_interest_group_type = ig_trade_unions
+			}
+			kill_character = yes
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = PRC_jing_qing.option
+		
+		#Install Jing Qing
+		random_interest_group = {
+			limit = { 
+				is_interest_group_type = ig_trade_unions
+				leader = { is_historical = yes }
+			}
+			leader = { set_character_as_ruler = yes }
+		}
+		if = {
+			limit = { ruler = { OR = { NOT = { is_interest_group_type = ig_trade_unions } is_historical = no } } }
+			create_character = {
+				first_name = "Li_Shumeng_first_name"
+				last_name = "Li_Shumeng_last_name"
+				ig_leader = yes historical = yes female = yes
+				birth_date = 1914.3.19
+				interest_group = ig_trade_unions
+				ideology = ideology_autocratic
+				culture = cu:han
+				religion = rel:atheist
+				traits = {
+					arrogant
+					ambitious
+					expensive_tastes
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}

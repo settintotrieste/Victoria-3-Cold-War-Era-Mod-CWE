@@ -1,0 +1,305 @@
+namespace = cuban_missile_crisis
+
+#USA
+cuban_missile_crisis.1 = {
+    type = country_event
+	
+    title = cuban_missile_crisis.t 					# Title of the event; ADD LOCALISATION
+    desc = cuban_missile_crisis.d 					# Description of the event; ADD LOCALISATION
+    #flavor = cuban_missile_crisis.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		# Event has not been fired before
+		NOT = { has_variable = cuban_missile_crisis }			# CHANGE ****
+		
+		#Overlord conditions
+		c:USA ?= this
+		game_date >= 1962.10.16									# START DATE: Date colony became self governing ****
+		game_date < 1972.10.16									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes
+		is_sufficiently_independent = yes						# is_vassal = no
+		country_rank = rank_value:super_power
+		is_not_neutral = yes
+		
+		has_modifier = nuclear_capability
+		
+		#Cold War conditions
+		cold_war_ongoing = yes
+		
+		exists = c:SOV
+		c:SOV = {
+			is_a_communist_government = yes							# Correct gov types
+			is_sufficiently_independent = yes						# is_vassal = no		
+			country_rank = rank_value:super_power
+			is_not_neutral = yes
+			
+			has_modifier = nuclear_capability
+		}
+		
+		
+		#Cuban conditions
+		exists = c:CUB
+		c:CUB = {
+			is_a_communist_government = yes							# Correct gov types
+			is_sufficiently_independent = yes						# is_vassal = no		
+			is_at_war = no
+			
+			is_not_neutral = yes
+			
+			NOT = { has_modifier = nuclear_capability }
+		}
+		
+		c:SOV = {
+			has_diplomatic_pact = {
+				who = c:CUB
+				type = station_nuclear_weapons
+			}
+		}
+		
+    }
+	
+	immediate = { 
+		
+		# Fire only once
+		set_variable = cuban_missile_crisis						# Change variable ****
+		
+	}
+    
+    option = {
+        name = cuban_missile_crisis_1.option.1					# Demand removal of nukes from Cuba
+        highlighted_option = yes
+		
+		c:SOV = {
+			trigger_event = { id = cuban_missile_crisis.2 }
+		}
+		
+		create_diplomatic_pact = {
+			country = c:CUB
+			type = embargo
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = cuban_missile_crisis_1.option.2					# REFUSE
+		default_option = yes
+		
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#SOV
+cuban_missile_crisis.2 = {
+    type = country_event
+	
+    title = cuban_missile_crisis.t 					# Title of the event; ADD LOCALISATION
+    desc = cuban_missile_crisis.d 					# Description of the event; ADD LOCALISATION
+    #flavor = cuban_missile_crisis.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		# Triggered by event
+		
+    }
+	
+	immediate = { 
+		
+		
+		
+	}
+    
+    option = {
+        name = cuban_missile_crisis_2.option.1					# Counter propose nuclear de-escalation treaty
+        highlighted_option = yes
+		
+		c:USA = {
+			trigger_event = { id = cuban_missile_crisis.3 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = cuban_missile_crisis_2.option.2					# REFUSE
+		default_option = yes
+		
+		#USA goes to war with Cuba
+		c:USA = {
+			create_diplomatic_play = {
+				name = cuban_american_war
+				type = dp_annex_war_historical
+				target_country = c:CUB
+				
+				war = yes
+				
+				add_war_goal = {
+					holder = c:CUB
+					type = humiliation
+					target_country = c:USA
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#USA
+cuban_missile_crisis.3 = {
+    type = country_event
+	
+    title = cuban_missile_crisis_USA_END.t 					# Title of the event; ADD LOCALISATION
+    desc = cuban_missile_crisis_USA_END.d 					# Description of the event; ADD LOCALISATION
+    #flavor = cuban_missile_crisis_USA_END.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		# Triggered by event
+		
+    }
+	
+	immediate = { 
+		
+		
+		
+	}
+    
+    option = {
+        name = cuban_missile_crisis_3.option.1					# Accept treaty
+        highlighted_option = yes
+		
+		c:SOV = {
+			remove_diplomatic_pact = {
+				country = c:CUB
+				type = station_nuclear_weapons
+			}
+		}
+		
+		create_diplomatic_pact = {
+			country = c:SOV
+			type = nuclear_de_escalation_treaty
+		}
+		
+		c:SOV = {
+			trigger_event = { id = cuban_missile_crisis.4 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = cuban_missile_crisis_3.option.2					# REFUSE
+		default_option = yes
+		
+		#USA goes to war with Cuba
+		create_diplomatic_play = {
+			name = cuban_american_war
+			type = dp_annex_war_historical
+			target_country = c:CUB
+			
+			war = yes
+			
+			add_war_goal = {
+				holder = c:CUB
+				type = humiliation
+				target_country = c:USA
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#SOV
+cuban_missile_crisis.4 = {
+    type = country_event
+	
+    title = cuban_missile_crisis_SOV_END.t 					# Title of the event; ADD LOCALISATION
+    desc = cuban_missile_crisis_SOV_END.d 					# Description of the event; ADD LOCALISATION
+    #flavor = cuban_missile_crisis_SOV_END.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		# Triggered by event
+		
+    }
+	
+	immediate = { 
+		
+		
+		
+	}
+    
+    option = {
+        name = cuban_missile_crisis_4.option					# It is what it is
+        highlighted_option = yes
+		
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
+		}
+		
+		set_variable = fall_of_khrushchev
+		
+    }
+
+}
