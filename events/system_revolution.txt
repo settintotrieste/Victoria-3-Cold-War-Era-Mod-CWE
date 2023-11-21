@@ -530,3 +530,94 @@ revolution_system.6 = {
 	}
 	
 }
+
+#Crash Protection
+revolution_system.7 = {
+	type = country_event
+
+	title = peaceful_revolution_generic.t
+	desc = peaceful_revolution_generic.d
+	flavor = peaceful_revolution_generic.f
+
+	event_image = {
+		video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 1
+
+	trigger = {
+		
+		# There is a brewing revolution
+		any_political_movement = {
+			is_revolutionary_movement = yes
+		}
+		any_civil_war = {
+			is_civil_war_type = revolution
+			civil_war_progress > 0.5
+		}
+		
+		# Every state of THIS will revolt upon revolution
+		NOT = { any_scope_state = { is_in_revolt = no } }
+		
+	}
+
+	immediate = {
+		
+		random_political_movement = {
+			limit = { 
+				is_revolutionary_movement = yes
+			}
+			save_scope_as = revolting_political_movement
+		}
+		
+	}
+
+	option = {
+		name = peaceful_revolution_generic.option 				# OK
+		
+		# Kill cause of revolt
+		if = {
+			limit = { 
+				scope:revolting_political_movement = { 
+					is_political_movement_type = movement_to_enact 
+				} 
+			}
+			activate_law = scope:revolting_political_movement.desired_law
+		}
+		
+		if = {
+			limit = { 
+				scope:revolting_political_movement = { 
+					is_political_movement_type = movement_to_preserve
+				}
+			}
+			add_enactment_setback = 3
+		}
+		
+		# Topple government
+		if = {
+			limit = { exists = ruler }
+			ruler = {
+				kill_character = yes
+			}
+		}
+		every_interest_group = {
+			limit = { is_in_government = yes }
+			remove_ruling_interest_group = yes
+		}
+		if = {
+			limit = { is_subject = yes }
+			make_independent = yes
+		}
+		
+		# Consequences of revolution
+		capital = { state_region = { add_devastation = 20 } }
+		change_infamy = 5
+		
+	}
+	
+}
