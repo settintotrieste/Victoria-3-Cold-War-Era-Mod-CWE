@@ -1,0 +1,278 @@
+﻿unprovoked_nuclear_strike = {
+	requires_approval = no
+	should_notify_third_parties = yes
+
+	potential = {
+		
+		#THIS has nuclear weapons
+		has_modifier = nuclear_capability
+		NOT = { has_modifier = nuclear_attack_cooldown }
+		
+		#THIS is not at war with TARGET
+		scope:target_country = { 
+			NOT = { has_war_with = scope:actor } 
+		}
+		
+		#Civil war countries do not nuke each other
+		is_revolutionary = no
+		scope:target_country = { is_revolutionary = no }
+		
+	}
+
+	possible = {
+		
+		#Only the player use this
+		is_player = yes
+		
+		#Only extremist leaders think of launching nukes
+		exists = ruler
+		ruler = {
+			has_ideology = ideology:ideology_autocratic
+		}
+		
+		#Only an independent country can fire nukes
+		is_sufficiently_independent = yes
+		
+		#Need Government approval
+		government_has_legislative_super_majority = yes
+		ig:ig_armed_forces ?= { ig_approval >= 10 }
+		
+		#War checks
+		diplo_play_war_check_cwe = yes
+		
+	}
+
+	accept_effect = {
+		
+		#THIS gains infamy and international hatred for unprovoked nuclear attack
+		scope:actor = { change_infamy = 100 }
+		custom_tooltip = {
+			text = everyone_is_angry_custom_tooltip
+			every_country = {
+				set_relations = { country = scope:actor value = -100 }
+			}
+		}
+		
+		#Trigger a war between THIS and TARGET
+		create_diplomatic_play = {
+			name = nuclear_war
+			type = dp_annex_war_historical
+			target_country = scope:target_country
+			
+			war = yes
+			
+			add_war_goal = {
+				holder = scope:target_country
+				type = annex_country
+				target_country = scope:actor
+			}
+		}
+		
+		#Notice
+		custom_tooltip = {
+			text = launch_nuclear_weapons.tt
+		}
+		
+		#Enable fallout system
+		set_global_variable = nuclear_weapons_used_somewhere
+		
+		### Calculate strike capability  ###
+		#Attacker's gross attack ability
+		effect_compute_nuclear_capability_points_attacker = yes
+		
+		#Defender's inherent defence
+		scope:target_country = {
+			effect_compute_nuclear_capability_points_states = yes
+			effect_compute_nuclear_capability_points_stationed_nukes_actor = yes
+		}
+		#Aggregate score (Total attack points / Total states of defender)
+		change_global_variable = { 
+			name = nuclear_strike_power_global
+			divide = global_var:nuclear_strike_defence_global
+		}
+		
+		### Apply damage based on ratio calculated above ###
+		scope:target_country = {
+			if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 0
+					global_var:nuclear_strike_power_global <= 1 
+				}
+				custom_tooltip = {
+					text = tiny_nuclear_damage_custom_tooltip
+					effect_tiny_nuclear_damage = yes
+				}
+			}
+			else_if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 1
+					global_var:nuclear_strike_power_global <= 2 
+				}
+				custom_tooltip = {
+					text = very_low_nuclear_damage_custom_tooltip
+					effect_very_low_nuclear_damage = yes
+				}
+			}
+			else_if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 2
+					global_var:nuclear_strike_power_global <= 4 
+				}
+				custom_tooltip = {
+					text = low_nuclear_damage_custom_tooltip
+					effect_low_nuclear_damage = yes
+				}
+			}
+			else_if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 4
+					global_var:nuclear_strike_power_global <= 6 
+				}
+				custom_tooltip = {
+					text = medium_nuclear_damage_custom_tooltip
+					effect_medium_nuclear_damage = yes
+				}
+			}
+			else_if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 6
+					global_var:nuclear_strike_power_global <= 8 
+				}
+				custom_tooltip = {
+					text = high_nuclear_damage_custom_tooltip
+					effect_high_nuclear_damage = yes
+				}
+			}
+			else_if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 8
+					#global_var:nuclear_strike_power_global <= 10 
+				}
+				custom_tooltip = {
+					text = very_high_nuclear_damage_custom_tooltip
+					effect_very_high_nuclear_damage = yes
+				}
+			}
+		}
+		
+		### Attacker Cooldown ###
+		add_modifier = {
+			name = nuclear_attack_cooldown
+			years = 1
+		}
+		
+		### Possible Second Strike ###
+		if = {
+			limit = { 
+				scope:target_country = { has_modifier = nuclear_capability } 
+			}
+			
+			#Notice
+			custom_tooltip = {
+				text = launch_nuclear_weapons.tt
+			}
+			
+			### Calculate strike capability ###
+			#Attacker's gross attack ability
+			scope:target_country = {
+				effect_compute_nuclear_capability_points_attacker = yes
+			}
+			
+			#Defender's inherent defence
+			effect_compute_nuclear_capability_points_states = yes
+			effect_compute_nuclear_capability_points_stationed_nukes_target_country = yes
+			
+			#Aggregate score (Total attack points / Total states of defender)
+			change_global_variable = { 
+				name = nuclear_strike_power_global
+				divide = global_var:nuclear_strike_defence_global
+			}
+			
+			### Apply damage based on ratio calculated above ###
+			if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 0
+					global_var:nuclear_strike_power_global <= 1 
+				}
+				custom_tooltip = {
+					text = tiny_nuclear_damage_custom_tooltip
+					effect_tiny_nuclear_damage = yes
+				}
+			}
+			else_if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 1
+					global_var:nuclear_strike_power_global <= 2 
+				}
+				custom_tooltip = {
+					text = very_low_nuclear_damage_custom_tooltip
+					effect_very_low_nuclear_damage = yes
+				}
+			}
+			else_if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 2
+					global_var:nuclear_strike_power_global <= 4 
+				}
+				custom_tooltip = {
+					text = low_nuclear_damage_custom_tooltip
+					effect_low_nuclear_damage = yes
+				}
+			}
+			else_if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 4
+					global_var:nuclear_strike_power_global <= 6 
+				}
+				custom_tooltip = {
+					text = medium_nuclear_damage_custom_tooltip
+					effect_medium_nuclear_damage = yes
+				}
+			}
+			else_if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 6
+					global_var:nuclear_strike_power_global <= 8 
+				}
+				custom_tooltip = {
+					text = high_nuclear_damage_custom_tooltip
+					effect_high_nuclear_damage = yes
+				}
+			}
+			else_if = {
+				limit = { 
+					global_var:nuclear_strike_power_global > 8
+					#global_var:nuclear_strike_power_global <= 10 
+				}
+				custom_tooltip = {
+					text = very_high_nuclear_damage_custom_tooltip
+					effect_very_high_nuclear_damage = yes
+				}
+			}
+			
+			### Defender Cooldown ###
+			scope:target_country = {
+				add_modifier = {
+					name = nuclear_attack_cooldown
+					years = 1
+				}
+			}
+		}
+		
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 0
+		}
+		
+		will_propose = {
+			
+			always = no
+			
+		}
+		
+	}
+	
+}
