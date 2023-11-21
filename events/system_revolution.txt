@@ -370,44 +370,56 @@ revolution_system.5 = {
 		default_option = yes
 		
 		#Ruler's IG is weakened
-		scope:palace_coup_ruler_ig = {
-			hidden_effect = { remove_modifier = party_in_chaos_modifier }
-			add_modifier = {
-				name = party_in_chaos_modifier
-				years = 5
-				is_decaying = yes
+		if = {
+			limit = { exists = scope:palace_coup_ruler_ig }
+			scope:palace_coup_ruler_ig = {
+				hidden_effect = { remove_modifier = party_in_chaos_modifier }
+				add_modifier = {
+					name = party_in_chaos_modifier
+					years = 5
+					is_decaying = yes
+				}
 			}
 		}
 		
 		#Ruler is removed from office
-		random_list = {
-			1 = { 
-				scope:palace_coup_ruler = { kill_character = yes }
-			}
-			1 = { 
-				scope:palace_coup_ruler = { 
-					convert_IG_ideology_to_agitator_ideology = yes
-					exile_character_with_martyrdom = yes
+		if = {
+			limit = { exists = scope:palace_coup_ruler_ig }
+			random_list = {
+				1 = { 
+					scope:palace_coup_ruler = { kill_character = yes }
+				}
+				1 = { 
+					scope:palace_coup_ruler = { 
+						convert_IG_ideology_to_agitator_ideology = yes
+						exile_character_with_martyrdom = yes
+					}
 				}
 			}
 		}
 		
 		#New Reactionary Ruler is installed
-		create_character = {
-			ruler = yes ig_leader = yes
-			female = no
-			interest_group = scope:palace_coup_ruler_ig
-			ideology = ideology_autocratic
+		if = {
+			limit = { exists = scope:palace_coup_ruler_ig }
+			create_character = {
+				ruler = yes ig_leader = yes
+				female = no
+				interest_group = scope:palace_coup_ruler_ig
+				ideology = ideology_autocratic
+			}
 		}
 
 		#New dictatorship
 		effect_starting_politics_dictatorship = yes
-		every_interest_group = {
-			limit = { NOT = { is_interest_group_type = scope:palace_coup_ruler_ig } }
-			remove_ruling_interest_group = yes
-		}
-		scope:palace_coup_ruler_ig = {
-			add_ruling_interest_group = yes
+		if = {
+			limit = { exists = scope:palace_coup_ruler_ig }
+			every_interest_group = {
+				limit = { NOT = { is_interest_group_type = scope:palace_coup_ruler_ig } }
+				remove_ruling_interest_group = yes
+			}
+			scope:palace_coup_ruler_ig = {
+				add_ruling_interest_group = yes
+			}
 		}
 		
 		#Paramilitary becomes loyal again
@@ -430,20 +442,23 @@ revolution_system.5 = {
 		
 		#Coup leader is killed
 		if = {
-			limit = { 
-				scope:palace_coup_ruler_ig = { 
-					leader = { is_ruler = no }
-				} 
-			}
-			scope:palace_coup_ruler_ig = { 
-				leader = { save_scope_as = coup_leader_character }
-			}
-			random_list = {
-				1 = { 
-					scope:coup_leader_character = { kill_character = yes }
+			limit = { exists = scope:palace_coup_ruler_ig }
+			if = {
+				limit = { 
+					scope:palace_coup_ruler_ig = { 
+						leader = { is_ruler = no }
+					} 
 				}
-				1 = { 
-					scope:coup_leader_character = { exile_character = yes }
+				scope:palace_coup_ruler_ig = { 
+					leader = { save_scope_as = coup_leader_character }
+				}
+				random_list = {
+					1 = { 
+						scope:coup_leader_character = { kill_character = yes }
+					}
+					1 = { 
+						scope:coup_leader_character = { exile_character = yes }
+					}
 				}
 			}
 		}
@@ -561,6 +576,7 @@ revolution_system.7 = {
 		}
 		
 		# Every state of THIS will revolt upon revolution
+		any_scope_state = { is_split_state = yes }
 		NOT = { any_scope_state = { is_in_revolt = no } }
 		
 	}
@@ -594,6 +610,7 @@ revolution_system.7 = {
 				scope:revolting_political_movement = { 
 					is_political_movement_type = movement_to_preserve
 				}
+				enacting_any_law = yes
 			}
 			add_enactment_setback = 3
 		}
@@ -609,10 +626,10 @@ revolution_system.7 = {
 			limit = { is_in_government = yes }
 			remove_ruling_interest_group = yes
 		}
-		if = {
-			limit = { is_subject = yes }
-			make_independent = yes
-		}
+		#if = {
+		#	limit = { is_subject = yes }
+		#	make_independent = yes
+		#}
 		
 		# Consequences of revolution
 		capital = { state_region = { add_devastation = 20 } }
