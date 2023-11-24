@@ -562,8 +562,85 @@ historical_economy.8 = {
 
 }
 
-# NAFTA
+# European Political Union
 historical_economy.9 = {
+    type = country_event
+
+    title = European_Political_Union.t 						# Title of the event; ADD LOCALISATION
+    desc = European_Political_Union.d 						# Description of the event; ADD LOCALISATION
+    #flavor = European_Political_Union.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		has_variable = XEU_ambitions							# Change TAG of the overlord ****
+		game_date >= 2009.12.1									# START DATE: Date colony became self governing ****
+		game_date < 2019.12.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		has_journal_entry = je_superstate_system
+		has_variable = superstate_customs_union
+		
+		# Event has not been fired before
+		NOT = { has_variable = European_Political_Union_hee }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = European_Political_Union_hee				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Join Superstate Political Union
+		set_variable = superstate_political_union
+		harmonise_superstate_member_law = yes
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = medium_radicals
+			strata = rich
+		}
+		add_radicals = {
+			value = small_radicals
+			strata = middle
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
+
+# NAFTA
+historical_economy.10 = {
     type = country_event
 
     title = NAFTA.t 											# Title of the event; ADD LOCALISATION
@@ -639,7 +716,7 @@ historical_economy.9 = {
 }
 
 # ASEAN Economic Community
-historical_economy.10 = {
+historical_economy.11 = {
     type = country_event
 
     title = ASEAN_Economic_Community.t 							# Title of the event; ADD LOCALISATION
@@ -685,6 +762,246 @@ historical_economy.10 = {
 		#Join Superstate EEC
 		set_variable = superstate_free_trade_zone
 		create_superstate_free_trade_zone = yes
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = medium_radicals
+			strata = rich
+		}
+		add_radicals = {
+			value = small_radicals
+			strata = middle
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Trans-Pacific Partnership / CPTPP
+historical_economy.12 = {
+    type = country_event
+
+    title = Trans_Pacific_Partnership.t 						# Title of the event; ADD LOCALISATION
+    desc = Trans_Pacific_Partnership.d 							# Description of the event; ADD LOCALISATION
+    #flavor = Trans_Pacific_Partnership.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" # Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		# Event has not been fired before
+		NOT = { has_variable = Trans_Pacific_Partnership_hee }	# CHANGE ****
+		
+		#Member conditions
+		OR = { 
+			has_variable = XNA_ambitions
+			has_variable = XEA_ambitions
+			has_variable = XSE_ambitions
+			has_variable = XPI_ambitions
+		}
+		NOT = { country_is_in_india = yes }
+		game_date >= 2016.2.4									# START DATE: Date colony became self governing ****
+		game_date < 2026.2.4									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_some_kind_of_democracy = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#USA was the creator
+		exists = c:USA
+		c:USA = {
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			country_rank = rank_value:super_power
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = Trans_Pacific_Partnership_hee			# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Join Superstate EEC
+		if = {
+			limit = { has_journal_entry = je_superstate_system }
+			set_variable = superstate_free_trade_zone
+			create_superstate_free_trade_zone = yes
+		}
+		
+		#Free Trade Pact with USA
+		if = {
+			limit = { 
+				c:USA = {
+					any_interest_group = { 
+						OR = { 
+							leader = { is_ruler = yes }
+							is_in_government = yes
+						}
+						law_stance = {
+							law = law_type:law_free_trade
+							value > neutral
+						}
+					}
+					NOT = { has_diplomatic_pact = { who = ROOT type = trade_agreement } }
+				}
+			}
+			c:USA = {
+				create_diplomatic_pact = {
+					country = ROOT
+					type = trade_agreement
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = medium_radicals
+			strata = rich
+		}
+		add_radicals = {
+			value = small_radicals
+			strata = middle
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Regional Comprehensive Economic Partnership
+historical_economy.13 = {
+    type = country_event
+
+    title = RCEP.t 							# Title of the event; ADD LOCALISATION
+    desc = RCEP.d 							# Description of the event; ADD LOCALISATION
+    #flavor = RCEP.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" # Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		# Event has not been fired before
+		NOT = { has_variable = RCEP_hee }						# CHANGE ****
+		
+		#Member conditions
+		OR = { 
+			has_variable = XNA_ambitions
+			has_variable = XEA_ambitions
+			has_variable = XSE_ambitions
+			has_variable = XPI_ambitions
+		}
+		NOT = { country_is_in_india = yes }
+		game_date >= 2022.1.1									# START DATE: Date colony became self governing ****
+		game_date < 2032.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		OR = { 
+			is_some_kind_of_democracy = yes
+			country_has_primary_culture = cu:chinese
+		}
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#PRC was the creator
+		any_country = {
+			country_has_primary_culture = cu:chinese
+			is_sufficiently_independent = yes
+			is_at_war = no
+			country_rank >= rank_value:great_power
+			NOT = { has_law = law_type:law_isolationism }
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = RCEP_hee								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Join Superstate EEC
+		if = {
+			limit = { has_journal_entry = je_superstate_system }
+			set_variable = superstate_free_trade_zone
+			create_superstate_free_trade_zone = yes
+		}
+		
+		#Free Trade Pact with China
+		if = {
+			limit = { 
+				any_country = {
+					country_has_primary_culture = cu:chinese
+					is_sufficiently_independent = yes
+					is_at_war = no
+					country_rank >= rank_value:great_power
+					NOT = { has_law = law_type:law_isolationism }
+					NOT = { has_diplomatic_pact = { who = ROOT type = trade_agreement } }
+				}
+			}
+			random_country = {
+				limit = {
+					country_has_primary_culture = cu:chinese
+					is_sufficiently_independent = yes
+					is_at_war = no
+					country_rank >= rank_value:great_power
+					NOT = { has_law = law_type:law_isolationism }
+					NOT = { has_diplomatic_pact = { who = ROOT type = trade_agreement } }
+				}
+				create_diplomatic_pact = {
+					country = ROOT
+					type = trade_agreement
+				}
+			}
+		}
 		
 		ai_chance = { 
 			base = 90 

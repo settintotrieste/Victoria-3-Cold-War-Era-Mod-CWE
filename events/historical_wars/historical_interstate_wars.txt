@@ -2528,3 +2528,117 @@ historical_interstate_wars.24 = {
     }
 
 }
+
+### Russia-Ukraine War ###
+
+historical_interstate_wars.25 = {
+    type = country_event
+
+    title = russia_ukraine_war.t 								# Title of the event; ADD LOCALISATION
+    desc = russia_ukraine_war.d 								# Description of the event; ADD LOCALISATION
+    #flavor = russia_ukraine_war.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:RUS
+		this = c:RUS											# Change TAG of the overlord ****
+		game_date >= 2021.11.24									# START DATE: Date colony became self governing ****
+		game_date < 2032.2.24									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_dictatorship = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_not_neutral = yes									# No legal or political restrictions on going to war
+		
+		#Left over from 2014
+		owns_entire_state_region = STATE_CRIMEA
+		
+		#Recipent conditions
+		exists = c:UKR
+		c:UKR = { 												# Change TAG of the transferee ****
+			NOT = { is_subject_of = ROOT }
+			NOT = { is_a_dictatorship = yes }
+			is_sufficiently_independent = yes
+			is_at_war = no
+			owns_entire_state_region = STATE_LUHANSK
+		}
+		
+		# Event has not fired before
+		NOT = { has_variable = russia_ukraine_war_hiw }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = russia_ukraine_war_hiw					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_interstate_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#War
+		create_diplomatic_play = {
+			name = russia_ukraine_war
+			type = dp_make_puppet
+			target_country = c:UKR
+			
+			#war = yes
+			
+			add_war_goal = {
+				holder = c:RUS
+				type = conquer_state
+				target_state = s:STATE_LUHANSK.region_state:UKR
+			}
+			add_war_goal = {
+				holder = c:RUS
+				type = regime_change
+				target_country = c:UKR
+			}
+			add_war_goal = {
+				holder = c:UKR
+				type = humiliation
+				target_country = c:RUS
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_interstate_wars.option.2				# Peace option
+		default_option = yes
+		
+		#Minor discontent
+		add_radicals = {
+			value = small_radicals
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			months = 12
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
