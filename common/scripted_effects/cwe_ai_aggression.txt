@@ -146,3 +146,128 @@ cwe_ai_aggression_factors = {
 	}
 
 }
+
+cwe_ai_neutrality_factors = {
+
+	### MORE NEUTRALITY ###
+
+	# AI is more neutral when not bordering TARGET
+	if = {
+		limit = { 
+			NOT = { is_adjacent_to_country = scope:target_country }
+		}
+		add = 200
+	}
+	
+	# AI is more neutral if have weaker army or navy than TARGET
+	if = {
+		limit = { 
+			OR = {
+				navy_size < scope:target_country.navy_size
+				army_size < scope:target_country.army_size
+			}
+		}
+		add = 50
+	}
+	
+	# AI is more neutral if have weaker economy than TARGET
+	if = {
+		limit = { 
+			root.gdp < scope:target_country.gdp
+		}
+		add = 50
+	}
+	
+	# AI is more neutral if have domestic instability
+	if = {
+		limit = { 
+			OR = {
+				in_default = yes
+				has_revolution = yes
+			}
+		}
+		add = 100
+	}
+	
+	# AI is more neutral if have non aggression pact with TARGET
+	if = {
+		limit = { 
+			OR = { 
+				has_diplomatic_pact = { who = scope:target_country type = nuclear_de_escalation_treaty }
+				has_diplomatic_pact = { who = scope:target_country type = non_aggression_pact }
+			}
+		}
+		add = -100
+	}
+	
+	# AI is more neutral if TARGET has nukes
+	if = {
+		limit = { 
+			has_modifier = nuclear_capability
+			scope:target_country = { has_modifier = nuclear_capability }
+		}
+		multiply = 5
+	}
+	if = {
+		limit = { 
+			NOT = { has_modifier = nuclear_capability }
+			scope:target_country = { has_modifier = nuclear_capability }
+		}
+		multiply = 5
+	}
+	
+	### LESS NEUTRALITY ###
+	
+	# AI is less neutral if is a GP and above
+	if = {
+		limit = { 
+			country_rank = rank_value:great_power
+		}
+		add = -100
+	}
+	if = {
+		limit = { 
+			country_rank = rank_value:super_power
+		}
+		add = -200
+	}
+	
+	# AI is less neutral if have territorial ambitions in TARGET
+	if = {
+		limit = { 
+			scope:target_country = { any_scope_state = { is_homeland_of_country_cultures = ROOT } }
+		}
+		add = -100
+	}
+	
+	# AI is less neutral if have rivalry with TARGET
+	if = {
+		limit = { 
+			has_diplomatic_pact = { who = scope:target_country type = rivalry }
+		}
+		add = -100
+	}
+	
+	# AI is less neutral if TARGET is a pariah
+	if = {
+		limit = { 
+			scope:target_country = { infamy >= infamy_threshold:pariah }
+		}
+		multiply = 0.5
+	}
+	
+	# AI is less neutral if TARGET is a subject of THIS
+	if = {
+		limit = { 
+			OR = { 
+				scope:target_country = { is_subject_of = ROOT }
+				has_diplomatic_pact = { who = scope:target_country type = defensive_pact }
+				has_diplomatic_pact = { who = scope:target_country type = alliance }
+				has_diplomatic_pact = { who = scope:target_country type = station_nuclear_weapons }
+				has_diplomatic_pact = { who = scope:target_country type = military_cooperation_agreement }
+			}
+		}
+		multiply = 0.1
+	}
+
+}
