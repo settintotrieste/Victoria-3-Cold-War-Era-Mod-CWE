@@ -2431,6 +2431,7 @@ united_nations.29 = {
 	
 	option = {
         name = diplomatic_neutrality_violated_option.1					# Assist country
+		highlighted_option = yes
 		
 		if = {
 			limit = { exists = scope:neutrality_violated_country }
@@ -2472,6 +2473,7 @@ united_nations.29 = {
 	
 	option = {
         name = diplomatic_neutrality_violated_option.2					# Stay out of it
+		default_option = yes
 		
 		if = {
 			limit = { exists = scope:neutrality_violated_country }
@@ -2535,6 +2537,166 @@ united_nations.30 = {
 		#International community is very angry
 		change_infamy = 50
 		
+    }
+
+}
+
+### Change UN Headquarters ###
+
+#UN HQ flees
+united_nations.31 = {
+	type = country_event
+	placement = scope:un_headquarters_state
+	title = change_UN_HQ.t 						# Title of the event; ADD LOCALISATION
+    desc = change_UN_HQ.d 						# Description of the event; ADD LOCALISATION
+    flavor = change_UN_HQ.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/united_nations.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		any_scope_state = { 
+			has_modifier = un_headquarters 
+			OR = {
+				is_in_revolt = yes
+				devastation > 0.5
+				NOT = { controller = ROOT }
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		random_scope_state = {
+			limit = { has_modifier = un_headquarters }
+			remove_modifier = un_headquarters
+			save_scope_as = un_headquarters_state
+		}
+		
+	}
+	
+	option = {
+        name = change_UN_HQ.1					# Okay
+		
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5 
+			is_decaying = yes 
+		}
+		
+    }
+
+}
+
+#UN HQ comes to THIS
+united_nations.32 = {
+	type = country_event
+	placement = scope:un_headquarters_state
+	title = new_UN_HQ.t 						# Title of the event; ADD LOCALISATION
+    desc = new_UN_HQ.d 							# Description of the event; ADD LOCALISATION
+    flavor = new_UN_HQ.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/united_nations.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		NOT = { has_global_variable = UN_HQ_candidate }
+		NOT = { has_global_variable = UN_HQ_candidate_timer }
+		
+		NOT = {
+			any_state = {
+				has_modifier = un_headquarters
+			}
+		}
+		
+		#UN is interested in coming to THIS
+		is_country_type = recognized
+		infamy < infamy_threshold:infamous
+		OR = { 
+			country_rank >= rank_value:great_power
+			AND = { 
+				country_rank >= rank_value:major_power
+				is_neutral = yes
+			}
+		}
+		is_at_war = no
+		has_revolution = no
+		in_default = no
+	}
+
+	immediate = {
+		
+		set_global_variable = UN_HQ_candidate
+		
+		if = {
+			limit = { OR = { c:USA ?= this c:XNA ?= this } }
+			ROOT.market_capital = {
+				save_scope_as = un_headquarters_state
+			}
+		}
+		else = {
+			capital = { 
+				save_scope_as = un_headquarters_state
+			}
+		}
+		
+	}
+	
+	option = {
+        name = new_UN_HQ.1						# Accept
+		highlighted_option = yes
+		
+		remove_global_variable = UN_HQ_candidate
+		set_variable = { name = UN_HQ_candidate_timer years = 5 }
+		
+		if = {
+			limit = { OR = { c:USA ?= this c:XNA ?= this } }
+			ROOT.market_capital = {
+				if = { limit = { has_modifier = un_headquarters } hidden_effect = { remove_modifier = un_headquarters } }
+				add_modifier = { name = un_headquarters }
+			}
+		}
+		else = {
+			capital = { 
+				if = { limit = { has_modifier = un_headquarters } hidden_effect = { remove_modifier = un_headquarters } }
+				add_modifier = { name = un_headquarters }
+			}
+		}
+		
+		add_modifier = { 
+			name = national_pride_modifier
+			years = 5 
+			is_decaying = yes 
+		}
+		
+		add_treasury = -150000
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = new_UN_HQ.2						# Decline
+		default_option = yes
+		
+		remove_global_variable = UN_HQ_candidate
+		
+		ai_chance = { 
+			base = 10
+		}
     }
 
 }
