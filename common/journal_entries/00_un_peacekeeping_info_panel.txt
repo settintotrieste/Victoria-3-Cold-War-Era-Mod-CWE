@@ -21,20 +21,95 @@ je_un_peacekeeping_system = {
 			save_scope_as = un_peacekeeping_applicant_scope
 		}
 		
-		#Count all UNSC members
-		set_variable = { name = unsc_members_count value = 0 }
+		#Count
+		set_variable = { 
+			name = unsc_peackeeping_vote_count_var_display 
+			value = global_var:unsc_peackeeping_vote_count_var
+		}
+		set_variable = { 
+			name = unsc_members_count_display 
+			value = 0
+		}
 		every_country = {
-			limit = { OR = { has_modifier = unsc_permanent_member has_modifier = unsc_non_permanent_member } }
-			ROOT = { change_variable = { name = unsc_members_count add = 1 } }
+			limit = { 
+				OR = { 
+					has_modifier = unsc_non_permanent_member
+					has_modifier = unsc_permanent_member
+				}
+			}
+			ROOT = {
+				change_variable = { 
+					name = unsc_members_count_display 
+					add = 1
+				}
+			}
+		}
+		set_variable = { 
+			name = unga_peackeeping_vote_count_var_display 
+			value = global_var:unga_peackeeping_vote_count_var
+		}
+		set_variable = { 
+			name = unga_members_count_display 
+			value = 0
+		}
+		every_country = {
+			limit = { 
+				is_country_type = recognized
+			}
+			ROOT = {
+				change_variable = { 
+					name = unga_members_count_display 
+					add = 1
+				}
+			}
 		}
 		
-		#Count all UNGA members
-		set_variable = { name = unga_members_count value = 0 }
-		every_country = {
-			limit = { has_modifier = unga_member }
-			ROOT = { change_variable = { name = unga_members_count add = 1 } }
+	}
+	
+	on_weekly_pulse = {
+		effect = {
+			set_variable = { 
+				name = unsc_peackeeping_vote_count_var_display 
+				value = global_var:unsc_peackeeping_vote_count_var
+			}
+			set_variable = { 
+				name = unsc_members_count_display 
+				value = 0
+			}
+			every_country = {
+				limit = { 
+					OR = { 
+						has_modifier = unsc_non_permanent_member
+						has_modifier = unsc_permanent_member
+					}
+				}
+				ROOT = {
+					change_variable = { 
+						name = unsc_members_count_display 
+						add = 1
+					}
+				}
+			}
+			set_variable = { 
+				name = unga_peackeeping_vote_count_var_display 
+				value = global_var:unga_peackeeping_vote_count_var
+			}
+			set_variable = { 
+				name = unga_members_count_display
+				value = 0
+			}
+			every_country = {
+				limit = { 
+					is_country_type = recognized
+				}
+				ROOT = {
+					change_variable = { 
+						name = unga_members_count_display 
+						add = 1
+					}
+				}
+			}
 		}
-		
 	}
 
 	complete = {
@@ -49,11 +124,25 @@ je_un_peacekeeping_system = {
 			}
 		}
 		
+		every_country = {
+			limit = { 
+				has_modifier = unsc_permanent_member
+				has_variable = un_peacekeeping_VETO_var 
+			}
+			save_scope_as = UNSC_vetoer_label
+			custom_tooltip = {
+				text = UNSC_vetoer_label.tt
+			}
+		}
+		
 	}
 	
 	on_complete = {
 		
-		
+		remove_variable = unsc_peackeeping_vote_count_var_display
+		remove_variable = unga_peackeeping_vote_count_var_display
+		remove_variable = unsc_members_count_display 
+		remove_variable = unga_members_count_display 
 		
 	}
 	
@@ -61,6 +150,32 @@ je_un_peacekeeping_system = {
 	
 		NOT = { has_modifier = unga_member }
 		
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = UNSC_voting_label
+				trigger = {
+					scope:un_peacekeeping_applicant_scope = { NOT = { has_variable = un_peacekeeping_UNSC_voted } }
+				}
+			}
+			triggered_desc = {
+				desc = UNGA_voting_label
+				trigger = {
+					scope:un_peacekeeping_applicant_scope = { has_variable = un_peacekeeping_UNSC_voted }
+				}
+			}
+			triggered_desc = {
+				desc = UNGA_voting_vetoed
+				trigger = {
+					any_country = { 
+						has_modifier = unsc_permanent_member
+						has_variable = un_peacekeeping_VETO_var 
+					}
+				}
+			}
+		}
 	}
 	
 	weight = 100
