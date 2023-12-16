@@ -385,3 +385,117 @@ SOV_gov_changes.2 = {
     }
 
 }
+
+# Gorbachev
+SOV_gov_changes.3 = {
+    type = country_event
+
+    title = SOV_gorbachev_succession.t 							# Title of the event; ADD LOCALISATION
+    desc = SOV_gorbachev_succession.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SOV_gorbachev_succession.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:SOV
+		this = c:SOV											# Change TAG of the overlord ****
+		game_date >= 1985.3.10									# START DATE: Date colony became self governing ****
+		game_date < 1995.3.10									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		#is_sufficiently_independent = yes						# is_vassal = no		
+		#is_at_war = no											# war = no
+		
+		exists = ruler
+		OR = { 
+			ruler = { is_interest_group_type = ig_trade_unions is_historical = yes }
+			ruler = { NOT = { is_interest_group_type = ig_trade_unions } }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SOV_1985_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Brezhnev or some other elderly leader dies
+		if = {
+			limit = { ruler = { is_interest_group_type = ig_trade_unions is_historical = yes } }
+			ruler = { kill_character = yes }
+		}
+	
+		# Fire only once
+		set_variable = SOV_1985_hgc							# Change variable ****
+		
+	}
+    
+    option = {
+        name = SOV_gorbachev.option							# Historical
+        highlighted_option = yes
+		
+		#Install Gorbachev
+		create_character = {
+			first_name = "Mikhail_Gorbachev_first_name"
+			last_name = "Mikhail_Gorbachev_last_name"
+			birth_date = 1931.3.2
+			ruler = yes ig_leader = yes historical = yes
+			interest_group = ig_petty_bourgeoisie
+			ideology = ideology_democratic
+			culture = cu:russian
+			religion = rel:atheist
+			traits = {
+				experienced_diplomat
+				reckless
+				innovative
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = SOV_other.option
+		default_option = yes
+		
+		#Install an autocrat
+		create_character = {
+			birth_date = 1914.1.1
+			ruler = yes ig_leader = yes
+			interest_group = ig_trade_unions
+			ideology = ideology_autocratic
+			culture = cu:russian
+			religion = rel:atheist
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_bureaucrats
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
