@@ -1,211 +1,9 @@
-join_unga_decision = {
+request_un_peacekeeping_button = {
+	name = "request_un_peacekeeping_button"
+	desc = "request_un_peacekeeping_button_desc"
 
-	is_shown = {
-		NOT = { has_modifier = unga_member }
-	}
-
-	possible = {
+	visible = { 
 		
-		#THIS is not at war
-		is_at_war = no
-	
-		#Diplomatic conditions for joining UN
-		OR = {
-		
-			#THIS will join the UNGA UNLESS vetoed by the UNSC permanent members
-			custom_tooltip = {
-				text = join_unga_decision.tt
-				NOT = {
-					any_country = {
-						has_modifier = unsc_permanent_member
-						relations:root <= relations_threshold:cold
-					}
-				}
-			}
-			
-			#THIS has greater prestige than all UNSC perm members
-			custom_tooltip = {
-				text = join_unga_decision_2.tt
-				NOT = {
-					any_country = {
-						has_modifier = unsc_permanent_member
-						country_rank > root.country_rank
-					}
-				}
-			}
-			
-			#Cold War is over
-			NOT = { cold_war_ongoing = yes }
-			
-		}
-		
-		#THIS has enough autonomy to join the UNGA
-		is_sufficiently_independent = yes
-		
-		#THIS must not be a revolutionary
-		is_revolutionary = no
-		
-		#THIS is not a pariah
-		infamy < infamy_threshold:pariah
-		
-		### Special Conditions ###
-		
-		#One China Policy
-		custom_tooltip = {
-			text = join_unga_decision_4.tt
-			
-			NAND = { 
-				exists = c:ROC
-				c:PRC ?= this
-				c:ROC ?= { is_country_type = recognized }
-			}
-			NAND = { 
-				exists = c:PRC
-				c:ROC ?= this
-				c:PRC ?= { is_country_type = recognized }
-			}
-			
-		}
-		
-		custom_tooltip = {
-			text = join_unga_decision_3.tt
-		
-			#Divided Germany
-			NAND = { 
-				c:WGR ?= this
-				cold_war_ongoing = yes
-				game_date < 1973.9.18
-			}
-			NAND = { 
-				c:EGR ?= this
-				cold_war_ongoing = yes
-				game_date < 1973.9.18
-			}
-			
-			#Divided Korea
-			NAND = { 
-				c:SKO ?= this
-				cold_war_ongoing = yes
-				game_date < 1991.9.17
-			}
-			NAND = { 
-				c:NKO ?= this
-				cold_war_ongoing = yes
-				game_date < 1991.9.17
-			}
-		
-		}
-		
-	}
-	
-	when_taken = {
-	
-		#THIS joins the UNGA
-		add_modifier = { name = unga_member }
-		set_country_type = recognized
-		
-	}
-
-	ai_chance = {
-		base = 100		
-	}
-	
-}
-
-join_unsc_perm_decision = {
-
-	is_shown = {
-		NOT = { has_modifier = unsc_permanent_member }
-		has_modifier = unga_member
-	}
-
-	possible = {
-	
-		has_technology_researched = tech_geopolitics_4
-	
-		#Is in the UN
-		has_modifier = unga_member
-		
-		#Is currently in the UNSC but not a permanent member
-		NOT = { has_modifier = unsc_permanent_member }
-		has_modifier = unsc_non_permanent_member
-		
-		is_at_war = no
-	
-		#THIS must either be a Superpower or a GP
-		OR = { 
-			country_rank = rank_value:super_power
-			country_rank = rank_value:great_power
-		}
-		
-		#No UNSC member is angry with THIS
-		custom_tooltip = {
-			text = join_unsc_perm_decision_tt
-			NOT = {
-				any_country = {
-					OR = { 
-						has_modifier = unsc_permanent_member 
-						has_modifier = unsc_non_permanent_member
-					}
-					relations:root < relations_threshold:friendly
-				}
-			}
-		}
-		
-		#THIS has enough autonomy to join the UNSC
-		NOR = {
-			is_subject_type = subject_type_puppet
-			is_subject_type = subject_type_special_administrative_region
-			is_subject_type = subject_type_semi_autonomous_colony
-			is_subject_type = subject_type_mandate
-		}
-		
-		#THIS must not be a revolutionary
-		is_revolutionary = no
-		
-		#THIS is not a pariah
-		infamy < infamy_threshold:infamous
-		
-	}
-	
-	when_taken = {
-	
-		#THIS joins the UNSC as a permanent member
-		add_modifier = { name = unsc_permanent_member }
-		remove_modifier = unsc_non_permanent_member
-		
-		#Mark as new member
-		set_variable = { 
-			name = new_unsc_member_flag
-			months = 1 
-		}
-		
-		#Indicate which countries are Perm UNSC members
-		custom_tooltip = {
-			text = UNSC_members_list.tt
-		}
-		
-		#Notify fellow UNSC perm members of new member
-		every_country = {
-			limit = { has_modifier = unsc_permanent_member }
-			trigger_event = { id = united_nations.28 }
-		}
-		
-	}
-
-	ai_chance = {
-		base = 50		
-	}
-	
-}
-
-request_un_peacekeeping_decision = {
-
-	is_shown = {
-	
-		#This decision is now a scripted button in the UN info panel JE
-		has_variable = is_disabled_for_now
-	
 		has_modifier = unga_member
 		
 		#THIS is part of a diplomatic play
@@ -229,10 +27,11 @@ request_un_peacekeeping_decision = {
 				has_variable = un_peacekeeping_resolution_passed
 			}
 		}
+		
 	}
 
 	possible = {
-		
+	
 		#UN is not pre-occupied with any other peacekeeping requests
 		NOT = { 
 			any_country = { 
@@ -266,9 +65,9 @@ request_un_peacekeeping_decision = {
 		}
 		
 	}
-	
-	when_taken = {
-	
+
+	effect = {
+		
 		#THIS applies for UN peacekeeping (resolution expires in 1 year)
 		set_variable = {
 			name = un_peacekeeping_applicant_var
@@ -300,20 +99,19 @@ request_un_peacekeeping_decision = {
 		set_variable = { name = un_peackeeping_timer months = 12 }
 		
 	}
-
+	
 	ai_chance = {
-		base = 1
+		base = 100
 	}
 	
 }
 
-request_imf_loan_decision = {
+request_imf_loan_button = {
+	name = "request_imf_loan_button"
+	desc = "request_imf_loan_button_desc"
 
-	is_shown = {
-	
-		#This decision is now a scripted button in the UN info panel JE
-		has_variable = is_disabled_for_now
-	
+	visible = { 
+		
 		#THIS is a member of the UN
 		has_modifier = unga_member
 		
@@ -373,9 +171,9 @@ request_imf_loan_decision = {
 		}
 		
 	}
-	
-	when_taken = {
-	
+
+	effect = {
+		
 		#Mark THIS as the potential debtor
 		set_variable = { name = imf_loan_applicant months = 6 }
 		
@@ -401,9 +199,9 @@ request_imf_loan_decision = {
 		set_variable = { name = imf_loan_timer months = 12 }
 		
 	}
-
+	
 	ai_chance = {
-		base = 100		
+		base = 100
 	}
 	
 }
