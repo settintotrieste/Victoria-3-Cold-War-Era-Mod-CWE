@@ -1,8 +1,10 @@
 calculate_climate_change_progress = {
 
-	#Calculate annual global warming rate
+	#Calculate global warming situation
 	if = {
 		limit = { global_country_ranking = 1 }
+		
+		#Calculate annual global warming rate
 		set_global_variable = { 
 			name = climate_change_severity_raw
 			value = 0 
@@ -12,20 +14,66 @@ calculate_climate_change_progress = {
 			value = 0 
 		}
 		every_state = {
-			limit = { 
-				state_region = { pollution_amount > 10 }
-				owner = { has_law = law_type:law_no_environment_law } 
-			}
-			owner = {
-				change_global_variable = { 
-					name = climate_change_severity_raw
-					add = 4
+			
+			#Add pollution only if state actually has enough pollution
+			if = {
+				limit = { state_region = { pollution_amount > 10 } }
+				owner = {
+					if = {
+						limit = { has_law = law_type:law_no_environment_law }
+						change_global_variable = { 
+							name = climate_change_severity_raw
+							add = 4
+						}
+						change_global_variable = { 
+							name = climate_change_severity_states
+							add = 1
+						}
+					}
+					if = {
+						limit = { has_law = law_type:law_weak_environment_law }
+						change_global_variable = { 
+							name = climate_change_severity_raw
+							add = 3
+						}
+						change_global_variable = { 
+							name = climate_change_severity_states
+							add = 1
+						}
+					}
+					if = {
+						limit = { has_law = law_type:law_moderate_environment_law }
+						change_global_variable = { 
+							name = climate_change_severity_raw
+							add = 2
+						}
+						change_global_variable = { 
+							name = climate_change_severity_states
+							add = 1
+						}
+					}
+					if = {
+						limit = { has_law = law_type:law_strong_environment_law }
+						change_global_variable = { 
+							name = climate_change_severity_raw
+							add = 1
+						}
+						change_global_variable = { 
+							name = climate_change_severity_states
+							add = 1
+						}
+					}
 				}
-				change_global_variable = { 
-					name = climate_change_severity_states
-					add = 1
+			}
+			else = {
+				owner = {
+					change_global_variable = { 
+						name = climate_change_severity_states
+						add = 1
+					}
 				}
 			}
+			
 		}
 		set_global_variable = { 
 			name = climate_change_progress
@@ -35,18 +83,67 @@ calculate_climate_change_progress = {
 			name = climate_change_progress
 			divide = global_var:climate_change_severity_states
 		}
-	}
-	
-	#Progress climate change
-	if = {
-		limit = { global_var:climate_change_progress > 3 }
 		
+		#Calculate global temperature
+		set_global_variable = { 
+			name = climate_change_status
+			value = 0
+		}
+		if = {
+			limit = { 
+				global_var:climate_change_progress > 3 
+				global_var:climate_change_progress <= 100
+			}
+			change_global_variable = { 
+				name = climate_change_status
+				add = 5
+			}
+		}
+		else_if = {
+			limit = { 
+				global_var:climate_change_progress > 2 
+				global_var:climate_change_progress <= 100
+			}
+			change_global_variable = { 
+				name = climate_change_status
+				add = 4
+			}
+		}
+		else_if = {
+			limit = { 
+				global_var:climate_change_progress > 1 
+				global_var:climate_change_progress <= 100
+			}
+			change_global_variable = { 
+				name = climate_change_status
+				add = 2
+			}
+		}
+		else_if = {
+			limit = { 
+				global_var:climate_change_progress > 0
+				global_var:climate_change_progress <= 100
+			}
+			change_global_variable = { 
+				name = climate_change_status
+				add = 1
+			}
+		}
 	}
 	
 	#Display
 	set_variable = {
 		name = climate_change_progress_display
 		value = global_var:climate_change_progress
+	}
+	change_variable = {
+		name = climate_change_progress_display
+		multiply = 0.0025
+	}
+	
+	set_variable = {
+		name = climate_change_status_display
+		value = global_var:climate_change_status
 	}
 
 }
