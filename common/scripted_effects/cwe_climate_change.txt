@@ -85,10 +85,6 @@ calculate_climate_change_progress = {
 		}
 		
 		#Calculate global temperature
-		set_global_variable = { 
-			name = climate_change_status
-			value = 0
-		}
 		if = {
 			limit = { 
 				global_var:climate_change_progress > 3 
@@ -129,6 +125,21 @@ calculate_climate_change_progress = {
 				add = 1
 			}
 		}
+		
+		#Compute progress to 2.5
+		set_global_variable = {
+			name = climate_change_progress_rate
+			value = global_var:climate_change_progress
+		}
+		change_global_variable = {
+			name = climate_change_progress_rate
+			multiply = 0.025
+		}
+		change_global_variable = { 
+			name = climate_change_status_total
+			add = global_var:climate_change_progress_rate
+		}
+		
 	}
 	
 	#Display
@@ -136,14 +147,78 @@ calculate_climate_change_progress = {
 		name = climate_change_progress_display
 		value = global_var:climate_change_progress
 	}
-	change_variable = {
-		name = climate_change_progress_display
-		multiply = 0.0025
+	set_variable = {
+		name = climate_change_progress_rate_display
+		value = global_var:climate_change_progress_rate
 	}
 	
 	set_variable = {
-		name = climate_change_status_display
-		value = global_var:climate_change_status
+		name = climate_change_status_total_display
+		value = global_var:climate_change_status_total
+	}
+
+}
+
+apply_climate_change_effects = {
+
+	if = {
+		limit = { 
+			global_var:climate_change_status_total > 1.0 
+			global_var:climate_change_status_total <= 1.50
+		}
+		every_scope_state = {
+			if = { 
+				limit = { NOT = { has_modifier = climate_change_effects_1 } }
+				add_modifier = { name = climate_change_effects_1 }
+			}
+			remove_modifier = climate_change_effects_2
+			remove_modifier = climate_change_effects_3
+			remove_modifier = climate_change_effects_4
+		}
+	}
+	if = {
+		limit = { 
+			global_var:climate_change_status_total > 1.50
+			global_var:climate_change_status_total <= 2.00
+		}
+		every_scope_state = {
+			remove_modifier = climate_change_effects_1
+			if = { 
+				limit = { NOT = { has_modifier = climate_change_effects_2 } }
+				add_modifier = { name = climate_change_effects_2 }
+			}
+			remove_modifier = climate_change_effects_3
+			remove_modifier = climate_change_effects_4
+		}
+	}
+	if = {
+		limit = { 
+			global_var:climate_change_status_total > 2.00
+			global_var:climate_change_status_total <= 2.25
+		}
+		every_scope_state = {
+			remove_modifier = climate_change_effects_1
+			remove_modifier = climate_change_effects_2
+			if = { 
+				limit = { NOT = { has_modifier = climate_change_effects_3 } }
+				add_modifier = { name = climate_change_effects_3 }
+			}
+			remove_modifier = climate_change_effects_4
+		}
+	}
+	if = {
+		limit = { 
+			global_var:climate_change_status_total > 2.50
+		}
+		every_scope_state = {
+			remove_modifier = climate_change_effects_1
+			remove_modifier = climate_change_effects_2
+			remove_modifier = climate_change_effects_3
+			if = { 
+				limit = { NOT = { has_modifier = climate_change_effects_4 } }
+				add_modifier = { name = climate_change_effects_4 }
+			}
+		}
 	}
 
 }
