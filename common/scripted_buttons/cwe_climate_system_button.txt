@@ -1,0 +1,101 @@
+je_climate_change_summit_button = {
+	name = "je_climate_change_summit_button"
+	desc = "je_climate_change_summit_button_desc"
+
+	visible = { 
+		
+		#Most powerful country in the world
+		OR = {
+			has_global_highest_gdp = yes
+			global_country_ranking = 1
+		}
+		is_sufficiently_independent = yes
+		
+		#There is at least 1 non-green country
+		any_country = {
+			NOT = { has_law = law_type:law_strong_environment_law }
+		}
+		
+	}
+
+	possible = {
+		
+		#At peace
+		is_at_war = no
+		
+		#No restriction by legal union
+		THIS_is_not_restricted_by_confederal_law = yes
+		
+		#Did not hold a climate summit in the last 5 years
+		custom_tooltip = {
+			text = generic_climate_summit_timer.tt
+			NOT = { has_global_variable = generic_climate_summit_timer }
+		}
+		
+		#Has at least 1 green IG
+		any_interest_group = {
+			OR = { 
+				leader = {
+					is_ruler = yes 
+				}
+				is_in_government = yes
+			}
+			law_stance = {
+				law = law_type:law_no_environment_law
+				value < neutral
+			}
+		}
+		
+	}
+
+	effect = {
+	
+		#Cannot hold a climate summit for the next 5 years
+		set_global_variable = { name = generic_climate_summit_timer years = 5 }
+		
+		#Commence summit
+		custom_tooltip = {
+			text = hold_generic_climate_summit.tt
+			hidden_effect = {
+				random_state = {
+					limit = { 
+						is_incorporated = yes
+						is_split_state = no
+						is_in_revolt = no
+						NOT = { has_variable = climate_change_summit_previous_location }
+						owner = { 
+							is_country_type = recognized
+							is_at_war = no
+							infamy < infamy_threshold:pariah
+							THIS_is_not_restricted_by_confederal_law = yes
+						}
+					}
+					save_scope_as = climate_change_summit_location
+					set_variable = { name = climate_change_summit_location years = 1 }
+					set_variable = { name = climate_change_summit_previous_location years = 2 }
+				}
+				every_country = {
+					limit = { 
+						THIS_is_not_restricted_by_confederal_law = yes
+					}
+					trigger_event = { id = climate_change_system.5 }
+				}
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 10
+		
+		modifier = { 
+			trigger = { 
+				has_global_variable = historical_railroading_active
+				game_date < 2016.4.22
+			}
+			add = -100
+		}
+		
+	}
+	
+}

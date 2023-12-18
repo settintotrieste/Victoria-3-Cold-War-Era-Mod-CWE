@@ -161,7 +161,10 @@ historical_economy.4 = {
 	
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
-		has_law = law_type:law_command_economy
+		OR = { 
+			has_law = law_type:law_command_economy
+			has_law = law_type:law_semi_command_economy
+		}
 		
 		is_a_communist_government = yes							# Correct gov types
 		is_sufficiently_independent = yes						# is_vassal = no
@@ -240,11 +243,11 @@ historical_economy.4 = {
 		#Major discontent
 		add_radicals = {
 			value = very_large_radicals
-			strate = rich
+			strata = rich
 		}
 		add_radicals = {
 			value = very_large_radicals
-			strate = middle
+			strata = middle
 		}
 		add_modifier = { 
 			name = stirrings_of_revolution
@@ -1137,20 +1140,157 @@ historical_economy.14 = {
 		#Major discontent
 		add_radicals = {
 			value = very_large_radicals
-			strate = rich
+			strata = rich
 		}
 		add_radicals = {
 			value = large_radicals
-			strate = middle
+			strata = middle
 		}
 		add_radicals = {
 			value = medium_radicals
-			strate = poor
+			strata = poor
 		}
 		add_modifier = { 
 			name = stirrings_of_revolution
 			months = 60 
 			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Neo-Liberal Economics
+historical_economy.15 = {
+    type = country_event
+
+    title = western_economic_liberalisation.t 					# Title of the event; ADD LOCALISATION
+    desc = western_economic_liberalisation.d 					# Description of the event; ADD LOCALISATION
+    flavor = western_economic_liberalisation.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_rich_and_poor.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		OR = { 
+			has_law = law_type:law_command_economy
+			has_law = law_type:law_semi_command_economy
+			has_law = law_type:law_state_capitalism
+			has_law = law_type:law_interventionism
+		}
+		
+		#Western Bloc countries only
+		OR = { 
+			country_is_in_europe = yes
+			country_is_in_north_america = yes
+		}
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no
+		
+		#1980s onwards only OR Cold War is over
+		OR = {
+		
+			AND = { 
+				has_technology_researched = tech_economy_5
+				has_technology_researched = tech_politics_5
+			}
+		
+			NOT = { 
+				any_country = {
+					country_rank = rank_value:super_power
+					is_a_communist_government = yes
+					OR = { 
+						has_law = law_type:law_command_economy
+						has_law = law_type:law_semi_command_economy
+					}
+				}
+			}
+			
+			AND = { 
+				game_date >= 1980.1.1
+				right_wing_ruling_coalition = yes
+			}
+			
+		}
+		game_date < 2010.1.1
+		
+		# Event has not been fired before
+		NOT = { has_variable = western_economic_liberalisation_hee }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = western_economic_liberalisation_hee						# Change variable ****
+		
+	}
+	
+	option = {
+        name = historical_economy_western.option.1				# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		if = { 
+			limit = { 
+				OR = {
+					has_law = law_type:law_command_economy
+					has_law = law_type:law_semi_command_economy
+				}
+			}
+			effect_starting_politics_economic_policy_state_capitalism = yes
+		}
+		else_if = { 
+			limit = { 
+				has_law = law_type:law_state_capitalism
+			}
+			effect_starting_politics_economic_policy_interventionism = yes
+		}
+		else = {
+			effect_starting_politics_economic_policy_laissez_faire = yes
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_economy_western.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		if = {
+			limit = { 
+				OR = {
+					has_healthy_economy = no
+					in_default = yes
+				}
+			}
+			add_radicals = {
+				value = very_large_radicals
+				strata = rich
+			}
+			add_radicals = {
+				value = very_large_radicals
+				strata = middle
+			}
+			add_modifier = { 
+				name = stirrings_of_revolution
+				months = 60 
+				is_decaying = yes 
+			}
 		}
 		
 		ai_chance = { 
