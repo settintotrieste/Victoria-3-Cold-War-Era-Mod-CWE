@@ -1,0 +1,122 @@
+namespace = ethiopian_decolonisation
+
+#Eritrea (INDEPENDENCE)
+ethiopian_decolonisation.1 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = ethiopian_eritrea.indy.t 					# Title of the event; ADD LOCALISATION
+    desc = ethiopian_eritrea.indy.d 					# Description of the event; ADD LOCALISATION
+    #flavor = ethiopian_eritrea.indy.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		OR = { c:SAF ?= this c:RSA ?= this }					# Change TAG of the overlord ****
+		game_date >= 1991.5.24									# START DATE: Date colony became self governing ****
+		game_date < 2001.5.24									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:ERI										# Change TAG of the colony ****
+		}
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:eritrean }		# Change homeland identity to match colony to be released ****
+			#is_incorporated = no								# State is a colony
+			#owner = THIS										# Overlord must own the state to be released
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = ethiopian_eritrea_indy }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH THIS SECTION
+		every_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:eritrean }	# Change homeland identity to match colony to be released ****
+				#is_incorporated = no							# State is a colony
+				#contains_capital_of = c:ERI					# State is the capital of colony ****
+			}
+			save_scope_as = colonial_state
+		}
+		
+		# Fire only once
+		set_variable = ethiopian_eritrea_indy						# Change variable ****
+		
+	}
+    
+    option = {
+        name = ethiopian_decolonisation.option.1				#Grant them self-government
+        default_option = yes highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = ERI										# Change TAG of country being released ****
+			origin = THIS									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_anti_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:eritrean }	# Change homeland identity to match colony to be released ****
+				#is_incorporated = no							# State is a colony
+		 	}
+			set_state_owner = c:ERI								# Change TAG to colony ****
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = ethiopian_decolonisation.option.2				# REFUSE
+		
+		# Natives are angry!
+		add_radicals = {
+			culture = cu:eritrean								# Change culture ****
+			value = large_radicals
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:eritrean }	# Change homeland identity to match colony to be released ****
+		 	}
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
