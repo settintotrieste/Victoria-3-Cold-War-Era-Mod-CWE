@@ -205,3 +205,89 @@ request_imf_loan_button = {
 	}
 	
 }
+
+join_unsc_perm_decision = {
+	name = "join_unsc_perm_decision"
+	desc = "join_unsc_perm_decision_desc"
+
+	visible = { 
+		
+		NOT = { has_modifier = unsc_permanent_member }
+		has_modifier = unga_member
+		
+	}
+
+	possible = {
+	
+		has_technology_researched = tech_geopolitics_4
+	
+		#Is in the UN
+		has_modifier = unga_member
+		
+		#Is currently in the UNSC but not a permanent member
+		NOT = { has_modifier = unsc_permanent_member }
+		has_modifier = unsc_non_permanent_member
+		
+		is_at_war = no
+	
+		#THIS must either be a Superpower or a GP
+		OR = { 
+			country_rank = rank_value:super_power
+			country_rank = rank_value:great_power
+		}
+		
+		#No UNSC member is angry with THIS
+		custom_tooltip = {
+			text = join_unsc_perm_decision_tt
+			NOT = {
+				any_country = {
+					OR = { 
+						has_modifier = unsc_permanent_member 
+						has_modifier = unsc_non_permanent_member
+					}
+					relations:root < relations_threshold:friendly
+				}
+			}
+		}
+		
+		#THIS has enough autonomy to join the UNSC
+		NOR = {
+			is_subject_type = subject_type_puppet
+			is_subject_type = subject_type_special_administrative_region
+			is_subject_type = subject_type_semi_autonomous_colony
+			is_subject_type = subject_type_mandate
+		}
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no is_secessionist = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:infamous
+		
+	}
+
+	effect = {
+		
+		#THIS joins the UNSC as a permanent member
+		add_modifier = { name = unsc_permanent_member }
+		remove_modifier = unsc_non_permanent_member
+		
+		#Mark as new member
+		set_variable = { 
+			name = new_unsc_member_flag
+			months = 1 
+		}
+		
+		#Notify fellow UNSC perm members of new member
+		every_country = {
+			limit = { has_modifier = unsc_permanent_member }
+			trigger_event = { id = united_nations.28 }
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}
