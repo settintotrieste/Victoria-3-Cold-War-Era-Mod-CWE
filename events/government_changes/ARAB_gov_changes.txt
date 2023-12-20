@@ -1,0 +1,120 @@
+namespace = ARAB_gov_changes
+
+# Spanish Revolution
+ARAB_gov_changes.1 = {
+    type = country_event
+
+    title = ARAB_2011_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = ARAB_2011_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = ARAB_2011_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		# Event has not been fired before
+		NOT = { has_variable = ARAB_2011_hgc }					# CHANGE ****
+		
+		#Overlord conditions
+		game_date >= 2011.1.1									# START DATE: Date colony became self governing ****
+		game_date < 2021.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		OR = { 
+			country_is_in_middle_east = yes 
+			country_is_in_africa = yes 
+		}
+		any_primary_culture = { 
+			has_discrimination_trait = middle_eastern_heritage
+		}
+		
+		is_a_dictatorship = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = ARAB_2011_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Becomes independent
+		if = { 
+			limit = { is_subject = yes }
+			make_independent = yes
+		}
+		
+		#Enact new regime
+		if = {
+			limit = { 
+				OR = { 
+					is_a_nationalist_government = yes 
+					is_a_communist_government = yes 
+					is_a_theocratic_government = yes
+				}
+			}
+			effect_starting_politics_presidential_republic = yes
+		}
+		effect_starting_politics_democratic = yes
+		
+		ai_chance = { 
+			base = 90 
+			modifier = { 
+				trigger = { 
+					has_global_variable = historical_railroading_active 
+					NOR = {
+						c:TUN ?= this
+						c:LBY ?= this
+						c:EGY ?= this
+						c:YEM ?= this
+					}
+				} 
+				add = -100 
+			}
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10
+			modifier = { 
+				trigger = { 
+					has_global_variable = historical_railroading_active 
+					OR = {
+						c:TUN ?= this
+						c:LBY ?= this
+						c:EGY ?= this
+						c:YEM ?= this
+					}
+				} 
+				add = -100 
+			}
+		}
+		
+    }
+
+}
