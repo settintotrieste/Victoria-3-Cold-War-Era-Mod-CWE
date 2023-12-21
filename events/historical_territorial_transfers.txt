@@ -2309,3 +2309,153 @@ historical_territorial_transfers.20 = {
     }
 
 }
+
+#Aouzou Strip - Chad
+historical_territorial_transfers.21 = {
+    type = country_event
+
+    title = transfer_territory_aouzou_strip.t 					# Title of the event; ADD LOCALISATION
+    desc = transfer_territory_aouzou_strip.d 					# Description of the event; ADD LOCALISATION
+    #flavor = transfer_territory_aouzou_strip.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_map.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:CHA ?= this											# Change TAG of the overlord ****
+		game_date >= 1972.12.1									# START DATE: Date colony became self governing ****
+		game_date < 1982.10.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		NOT = { is_a_communist_government = yes }				# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Recipent conditions
+		exists = c:LBY
+		c:LBY = { 												# Change TAG of the transferee ****
+			is_a_nationalist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			has_state_in_state_region = STATE_LIBYA
+			has_state_in_state_region = STATE_LIBYAN_DESERT
+		}
+		
+		#Owns Aouzou Strip
+		owns_entire_state_region = STATE_CHAD
+		
+		# Event has not been fired before
+		NOT = { has_variable = chadian_aouzou_strip_htt }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = chadian_aouzou_strip_htt					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_territorial_transfers.option.1		# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Offer Aouzou Strip to Libya
+		c:LBY = { trigger_event = { id = historical_territorial_transfers.22 } }
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_territorial_transfers.option.2		# Refuse land transfer request by FROM
+		default_option = yes
+		
+		change_relations = {
+			country = c:LBY
+			value = -100
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Aouzou Strip - Libya
+historical_territorial_transfers.22 = {
+    type = country_event
+
+    title = transfer_territory_aouzou_strip.t 					# Title of the event; ADD LOCALISATION
+    desc = transfer_territory_aouzou_strip.d 					# Description of the event; ADD LOCALISATION
+    #flavor = transfer_territory_aouzou_strip.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_map.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+    
+    option = {
+        name = historical_territorial_annexation.option.1		# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Transfer provinces
+		s:STATE_CHAD = {
+			set_owner_of_provinces = {
+				country = c:LBY
+				provinces = { x49D8EA x0DD2DC xABB7F4 x84AC70 xD87F94 x954978 xB1C7E4 x8E3D25 xFFF16A xF0D447 x37C0E7 x90F6EC xF523D7 x2E991B x98455D xC9498B xE59A76 }
+			}
+		}
+		
+		#Gain relations
+		change_relations = {
+			country = c:CHA
+			value = 100
+		}
+		
+		#Payment to Chad
+		c:CHA = { add_treasury = 100000 }
+		add_treasury = -100000
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_territorial_annexation.option.2		# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#Lose relations
+		change_relations = {
+			country = c:CHA
+			value = -50
+		}
+		
+		change_infamy = -20
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
