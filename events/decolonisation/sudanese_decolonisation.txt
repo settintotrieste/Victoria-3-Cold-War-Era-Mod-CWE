@@ -1,0 +1,118 @@
+namespace = sudanese_decolonisation
+
+#South Sudan
+sudanese_decolonisation.1 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = sudanese_south_sudan.sgc.t 						# Title of the event; ADD LOCALISATION
+    desc = sudanese_south_sudan.sgc.d 						# Description of the event; ADD LOCALISATION
+    #flavor = sudanese_south_sudan.sgc.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SUD ?= this
+		game_date >= 2005.7.9
+		game_date < 2015.7.9
+		
+		OR = { 
+			is_a_democracy = yes
+			is_a_republican_regime = yes
+			is_a_nationalist_government = yes
+		}
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:SSD										# Change TAG of the colony ****
+		}
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:south_sudanese }	# Change homeland identity to match colony to be released ****
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SUD_SSD_dissolution_sgc }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH ROOT SECTION
+		random_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:south_sudanese }	# Change homeland identity to match colony to be released ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = SUD_SSD_dissolution_sgc					# Change variable ****
+	
+	}
+    
+    option = {
+        name = british_decolonisation.option.1					# Grant them self-government
+        highlighted_option = yes
+		
+		#Subject becomes independent
+		create_country = {
+			tag = SSD											# Change TAG of country being released ****
+			origin = ROOT										# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {										# Set government laws & rulers here
+				
+				soviet_SSR_dissolution_laws = yes
+				
+			}
+		}
+		if = {
+			limit = { exists = c:SSD }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:south_sudanese }	# Change homeland identity to match colony to be released ****
+				}
+				set_state_owner = c:SSD									# Change TAG to colony ****
+			}
+			create_diplomatic_pact = {
+				country = c:SSD									# Change TAG ****
+				type = special_administrative_region
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = british_decolonisation.option.2					# REFUSE
+		default_option = yes
+		
+		# Internal unrest
+		add_radicals = {
+			culture = cu:south_sudanese
+			value = large_radicals
+		}
+		every_scope_state = {
+			limit = { state_region = { is_homeland = cu:south_sudanese } }
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

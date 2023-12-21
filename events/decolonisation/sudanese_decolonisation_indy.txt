@@ -1,0 +1,93 @@
+namespace = sudanese_decolonisation_indy
+
+#South Sudan
+sudanese_decolonisation_indy.1 = {
+    type = country_event
+
+    title = sudanese_south_sudan.indy.t 					# Title of the event; ADD LOCALISATION
+    desc = sudanese_south_sudan.indy.d 						# Description of the event; ADD LOCALISATION
+    #flavor = sudanese_south_sudan.indy.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SUD ?= this											# Change TAG of the overlord ****
+		game_date >= 2011.7.9									# START DATE: Date colony became self governing ****
+		game_date < 2021.7.9									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		#is_a_democratic_monarchy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		exists = c:SSD
+		c:SSD = { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_not_sufficiently_independent = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = sudanese_south_sudan_indy }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+		
+		# Fire only once
+		set_variable = sudanese_south_sudan_indy				# Change variable ****
+		
+	}
+    
+    option = {
+        name = british_decolonisation_indy.option.1				# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		c:SSD = { 												# Change TAG of the colony ****
+			make_independent = yes
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = british_decolonisation_indy.option.2				# REFUSE
+		default_option = yes
+		
+		c:SSD = {
+		
+			# Internal unrest
+			add_radicals = {
+				culture = cu:south_sudanese
+				value = large_radicals
+			}
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:south_sudanese } }
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+			#Colony is angry
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+			
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
