@@ -2271,3 +2271,158 @@ historical_civil_wars.12 = {
     }
 
 }
+
+#Biafran Uprising
+historical_civil_wars.13 = {
+    type = country_event
+	placement = scope:biafran_war_indy_state
+
+    title = biafran_war.NGE.t 								# Title of the event; ADD LOCALISATION
+    desc = biafran_war.NGE.d 								# Description of the event; ADD LOCALISATION
+    #flavor = biafran_war.NGE.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:NGE ?= this
+		game_date >= 1967.7.6
+		game_date < 1977.7.6
+		
+		#is_a_democracy = yes											# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		is_at_war = no													# war = no
+		
+		#Owns country to release
+		NOT = { 														# Colony to be released must not already exist on the map
+			exists = c:BIA												# Change TAG of the colony ****
+		}
+		any_scope_state = { 											# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:biafran }					# Change homeland identity to match colony to be released ****
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = biafran_war_NGE_hccw }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = { is_homeland = cu:biafran } }
+			save_scope_as = biafran_war_indy_state
+		}
+	
+		# Fire only once
+		set_variable = biafran_war_NGE_hccw								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = BIA										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:biafran_war_indy_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:BIA }
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:biafran } }
+				set_state_owner = c:BIA
+			}
+			create_diplomatic_play = {
+				name = biafran_war
+				type = dp_annex_war_historical
+				target_country = c:BIA
+				#war = yes
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Release country
+		create_country = {
+			tag = BIA										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:biafran_war_indy_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pacifism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_conservative_ruling_coalition = yes
+				
+			}
+			
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
+		}
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
