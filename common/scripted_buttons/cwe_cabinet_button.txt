@@ -198,3 +198,108 @@ je_lift_state_of_emergency_button = {
 	}
 	
 }
+
+je_commence_democratic_reform_button = {
+	name = "je_commence_democratic_reform_button"
+	desc = "je_commence_democratic_reform_button_desc"
+
+	visible = { 
+		
+		is_a_dictatorship = yes
+		
+		exists = ruler
+		ruler = {
+			OR = {
+				has_ideology = ideology:ideology_autocratic 
+				has_ideology = ideology:ideology_power_hungry
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		is_player = yes
+		
+		#Political factors
+		OR = {
+		
+			#Country is broke
+			in_default = yes
+			
+			#Brewing revolution
+			has_revolution  = yes
+			any_interest_group = {
+				is_insurrectionary = yes
+			}
+			
+			#Capital has high turmoil
+			capital = { turmoil > 0.5 }
+			
+			#Lost a war
+			has_modifier = lost_a_war_modifier
+			
+			#There is a democratic interest group in the government
+			any_interest_group = {
+				is_in_government = yes
+				leader = {
+					OR = {
+						has_ideology = ideology:ideology_democratic
+						has_ideology = ideology:ideology_liberal
+					}
+				}
+			}
+			
+		}
+		
+	}
+
+	effect = {
+		
+		#Make ruler a democratic one
+		if = {
+			limit = { 
+				any_interest_group = { 
+					is_in_government = yes
+					leader = { 
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					} 
+				}
+			}
+			random_interest_group = {
+				limit = {
+					is_in_government = yes
+					leader = { 
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					} 
+				}
+				leader = { set_character_as_ruler = yes }
+			}
+		}
+		else = {
+			ruler = {
+				interest_group = { save_scope_as = dictatorial_ruler_ig_scope }
+			}
+			create_character = {
+				ruler = yes ig_leader = yes
+				interest_group = scope:dictatorial_ruler_ig_scope
+				ideology = ideology_democratic
+			}
+		}
+		
+		#Anger all autocratic government IGs
+		effect_autocratic_government_angry_with_democratic_ruler = yes
+		
+	}
+	
+	ai_chance = {
+		base = 0
+	}
+	
+}
