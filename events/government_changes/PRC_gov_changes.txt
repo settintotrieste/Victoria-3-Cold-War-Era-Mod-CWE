@@ -1,7 +1,118 @@
 namespace = PRC_gov_changes
 
-# Mao's Successor
+# The Cultural Revolution
 PRC_gov_changes.1 = {
+    type = country_event
+
+    title = PRC_1966_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = PRC_1966_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = PRC_1966_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_protest.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		OR = { c:PRC ?= this c:CHI ?= this }
+		game_date >= 1966.5.16									# START DATE: Date colony became self governing ****
+		game_date < 1976.5.16									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Mao is ruler
+		exists = ruler
+		ruler = { is_interest_group_type = ig_trade_unions is_historical = yes }
+		
+		# Event has not been fired before
+		NOT = { has_variable = PRC_1966_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = PRC_1966_hgc								# Change variable ****
+		
+	}
+    
+	
+	option = {
+        name = PRC_1966_revolution.option.1						# Accept
+		highlighted_option = yes
+		
+		#Gain loyalty of lower class
+		add_loyalists = {
+			value = large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		add_loyalists = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		
+		#Kill dissidents
+		kill_population_percent = {
+			percent = 0.05
+			interest_group = ig:ig_landowners
+		}
+		kill_population_percent = {
+			percent = 0.05
+			interest_group = ig:ig_devout
+		}
+		kill_population_percent = {
+			percent = 0.05
+			interest_group = ig:ig_industrialists
+		}
+		kill_population_percent = {
+			percent = 0.05
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+    option = {
+        name = PRC_1966_revolution.option.2						# Reject
+        default_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_regime = yes
+		
+		#Major discontent
+		add_loyalists = {
+			value = large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Mao's Successor
+PRC_gov_changes.2 = {
     type = country_event
 
     title = PRC_mao_succession.t 						# Title of the event; ADD LOCALISATION
@@ -26,6 +137,8 @@ PRC_gov_changes.1 = {
 		#is_sufficiently_independent = yes						# is_vassal = no		
 		#is_at_war = no											# war = no
 		
+		#Mao is ruler OR was replaced
+		exists = ruler
 		OR = { 
 			ruler = { is_interest_group_type = ig_trade_unions is_historical = yes }
 			ruler = { NOT = { is_interest_group_type = ig_trade_unions } }
@@ -182,6 +295,112 @@ PRC_gov_changes.1 = {
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
+
+# June Fourth Incident of 1989
+PRC_gov_changes.3 = {
+    type = country_event
+
+    title = PRC_1989_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = PRC_1989_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = PRC_1989_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_protest.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		OR = { c:PRC ?= this c:CHI ?= this }
+		game_date >= 1989.6.4									# START DATE: Date colony became self governing ****
+		game_date < 1999.6.4									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Deng is in charge
+		exists = ruler
+		OR = { 
+			ruler = { is_interest_group_type = ig_petty_bourgeoisie is_historical = yes }
+			ruler = { character_is_autocratic = yes }
+		}
+		
+		#Fall of Eastern Bloc
+		c:SOV ?= {
+			is_sufficiently_independent = yes						# is_vassal = no
+			OR = { 
+				has_journal_entry = je_perestroika
+				NOT = { is_a_communist_government = yes }
+			}
+		}
+		c:RUS ?= {
+			is_sufficiently_independent = yes						# is_vassal = no
+			OR = { 
+				has_journal_entry = je_perestroika
+				NOT = { is_a_communist_government = yes }
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = PRC_1989_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = PRC_1989_hgc								# Change variable ****
+		
+	}
+    
+	
+	option = {
+        name = PRC_1989_revolution.option.1						# Reject
+		highlighted_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			pop_type = academics
+			value = very_large_radicals
+		}
+		
+		#Because of a certain incident
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+    option = {
+        name = PRC_1989_revolution.option.2						# Accept
+        default_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_presidential_republic = yes
+		effect_starting_politics_democratic = yes
+		effect_conservative_ruling_coalition = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
 		}
 		
     }
