@@ -3915,3 +3915,103 @@ historical_interstate_wars.34 = {
     }
 
 }
+
+### Uganda–Tanzania War ###
+
+historical_interstate_wars.35 = {
+    type = country_event
+
+    title = uganda_tanzania_war.t 								# Title of the event; ADD LOCALISATION
+    desc = uganda_tanzania_war.d 								# Description of the event; ADD LOCALISATION
+    #flavor = uganda_tanzania_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:UGA ?= this
+		game_date >= 1978.10.9									# START DATE: Date colony became self governing ****
+		game_date < 1988.10.9									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_republican_regime = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_not_neutral = yes									# No legal or political restrictions on going to war
+		
+		#Recipent conditions
+		exists = c:TAN
+		c:TAN = { 												# Change TAG of the transferee ****
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			
+			has_state_in_state_region = STATE_TANGANYIKA
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = uganda_tanzania_war_hiw }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		c:TAN = {
+			random_scope_state = {
+				limit = { state_region = s:STATE_TANGANYIKA }
+				save_scope_as = tanzania_target_state
+			}
+		}
+	
+		# Fire only once
+		set_variable = uganda_tanzania_war_hiw					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_interstate_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#War
+		create_diplomatic_play = {
+			name = uganda_tanzania_war
+			type = dp_conquer_state_historical
+			target_state = scope:tanzania_target_state
+			
+			#war = yes
+
+			add_war_goal = {
+				holder = c:TAN
+				type = regime_change
+				target_country = c:UGA
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_interstate_wars.option.2				# Peace option
+		default_option = yes
+		
+		#Minor discontent
+		add_radicals = {
+			value = small_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
