@@ -4013,3 +4013,103 @@ historical_interstate_wars.35 = {
     }
 
 }
+
+### Annexation of Nagorno-Karabakh ###
+
+historical_interstate_wars.36 = {
+    type = country_event
+
+    title = azerbaijan_artsakh_war.t 							# Title of the event; ADD LOCALISATION
+    desc = azerbaijan_artsakh_war.d 							# Description of the event; ADD LOCALISATION
+    #flavor = azerbaijan_artsakh_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:AZB ?= this
+		game_date >= 2023.9.19									# START DATE: Date colony became self governing ****
+		game_date < 2033.9.19									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		OR = { 
+			is_a_democracy = yes
+			is_a_republican_regime = yes 
+		}
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_not_neutral = yes									# No legal or political restrictions on going to war
+		
+		#Recipent conditions
+		exists = c:ATH
+		c:ATH = { 												# Change TAG of the transferee ****
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = azerbaijan_artsakh_war_hiw }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = azerbaijan_artsakh_war_hiw				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_interstate_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#War
+		create_diplomatic_play = {
+			name = azerbaijan_artsakh_war
+			type = dp_annex_war_historical
+			target_country = c:ATH
+			
+			war = yes
+			
+			add_war_goal = {
+				holder = c:ATH
+				type = humiliation
+				target_country = c:AZB
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_interstate_wars.option.2				# Peace option
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
