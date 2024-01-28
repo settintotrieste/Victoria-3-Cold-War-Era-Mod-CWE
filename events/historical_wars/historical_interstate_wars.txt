@@ -4666,12 +4666,25 @@ historical_interstate_wars.42 = {
 		
 		is_not_neutral = yes									# No legal or political restrictions on going to war
 		
+		#Cold War fight
+		has_global_variable = sino_soviet_split_global_var
+		exists = c:SOV
+		c:SOV = {
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			
+			country_rank = rank_value:super_power
+		}
+		
 		#Recipent conditions
 		exists = c:DAI
 		c:DAI = { 												# Change TAG of the transferee ****
 			is_a_communist_government = yes
 			is_sufficiently_independent = yes
 			is_at_war = no
+			
+			is_direct_subject_of = c:SOV
 		}
 		is_adjacent_to_country = c:DAI
 		
@@ -4699,13 +4712,25 @@ historical_interstate_wars.42 = {
         name = historical_interstate_wars.option.1				# Declare war!
         highlighted_option = yes
 		
+		#Soviets stayed out of the war
+		if = {
+			limit = { c:SOV = { is_player = no} }
+			c:DAI = { make_independent = yes }
+			c:SOV = {
+				create_diplomatic_pact = {
+					country = c:DAI
+					type = customs_union
+				}
+			}
+		}
+		
 		#War
 		create_diplomatic_play = {
 			name = sino_vietnamese_war
 			type = dp_humiliation
 			target_country = c:DAI
 			
-			war = yes
+			#war = yes
 
 			add_war_goal = {
 				holder = c:DAI
@@ -4972,6 +4997,123 @@ historical_interstate_wars.44 = {
 		add_radicals = {
 			value = large_radicals
 			interest_group = ig:ig_trade_unions
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_bureaucrats
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+### Saudi Intervention in Yemen Civil War ###
+
+historical_interstate_wars.45 = {
+    type = country_event
+
+    title = NEJ_yemen_civil_war.t 								# Title of the event; ADD LOCALISATION
+    desc = NEJ_yemen_civil_war.d 								# Description of the event; ADD LOCALISATION
+    #flavor = NEJ_yemen_civil_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_battlefield_trenches.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:NEJ ?= this
+		game_date >= 2015.3.26									# START DATE: Date colony became self governing ****
+		game_date < 2025.3.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		# Event has not fired before
+		NOT = { has_variable = NEJ_yemen_civil_war_hiw }		# CHANGE ****
+		
+		is_a_regime_monarchy = yes								# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		
+		is_not_neutral = yes									# No legal or political restrictions on going to war
+		
+		#Recipent conditions
+		exists = c:NYE
+		c:NYE = { 												# Change TAG of the transferee ****
+			is_a_theocratic_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = yes
+		}
+		exists = c:YEM
+		c:YEM = { 												# Change TAG of the transferee ****
+			OR = {
+				is_a_republican_democracy = yes
+				is_a_republican_regime = yes
+			}
+			is_sufficiently_independent = yes
+			has_war_with = c:NYE
+			NOT = { has_war_with = ROOT }
+			NOT = { is_subject_of = ROOT }
+		}
+		OR = { 
+			is_adjacent_to_country = c:NYE
+			is_adjacent_to_country = c:YEM
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = NEJ_yemen_civil_war_hiw					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_interstate_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Join Yemeni Civi War
+		random_diplomatic_play = {
+			limit = {
+				initiator_is = c:NYE
+				OR = { 
+					target_is = c:YEM
+					any_scope_target_ally = { this = c:YEM }
+				}
+			}
+			add_target_backers = {
+				ROOT
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_interstate_wars.option.2				# Peace option
+		default_option = yes
+		
+		#Minor discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_landowners
 		}
 		add_radicals = {
 			value = large_radicals
