@@ -97,3 +97,135 @@ GND_gov_changes.1 = {
     }
 
 }
+
+# Restoration of democracy
+GND_gov_changes.2 = {
+    type = country_event
+	placement = c:GND
+
+    title = GND_1984_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = GND_1984_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = GND_1984_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this
+		game_date >= 1984.12.3									# START DATE: Date colony became self governing ****
+		game_date < 1994.12.3									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Grenada War
+		has_variable = us_grenada_war_hiw
+		
+		exists = c:GND
+		c:GND = {
+			is_in_our_sphere_of_influence = yes
+			is_at_war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = GND_1984_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = GND_1984_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Democracy
+		c:GND = { effect_starting_politics_very_democratic = yes }
+		
+		#Re-install monarchy if applicable
+		if = {
+			limit = {
+				exists = c:GBR
+				c:GBR = {
+					is_a_monarchy = yes
+					is_sufficiently_independent = yes
+				}
+			}
+			
+			#Re-install British monarchy
+			c:GND = {
+			
+				#Becomes independent
+				make_independent = yes
+				
+				#Enact new regime
+				effect_starting_politics_constitutional_monarchy = yes
+				
+			}
+			
+			#Return to British control
+			c:GBR = {
+				create_diplomatic_pact = {
+					country = c:GND
+					type = personal_union
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Keep Grenada for ourselves
+		
+		change_infamy = 10
+		
+		c:GND = {
+		
+			#Major discontent
+			add_radicals = {
+				value = large_radicals
+			}
+			add_modifier = { 
+				name = stirrings_of_revolution
+				months = 60 
+				is_decaying = yes 
+			}
+			
+		}
+		
+		if = {
+			limit = {
+				exists = c:GBR
+				c:GBR = {
+					is_a_monarchy = yes
+					is_sufficiently_independent = yes
+				}
+			}
+			change_relations = { country = c:GBR value = -50 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
