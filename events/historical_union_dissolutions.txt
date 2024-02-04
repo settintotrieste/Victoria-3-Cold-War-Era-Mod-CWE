@@ -1654,3 +1654,482 @@ historical_union_dissolution.8 = {
     }
 
 }
+
+#1980 Quebec referendum
+historical_union_dissolution.9 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = CAN_QUE_1_dissolution.t 						# Title of the event; ADD LOCALISATION
+    desc = CAN_QUE_1_dissolution.d 						# Description of the event; ADD LOCALISATION
+    #flavor = CAN_QUE_1_dissolution.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:CAN ?= this
+		game_date >= 1980.5.20
+		game_date < 1990.5.20
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:QUE										# Change TAG of the colony ****
+		}
+		has_state_in_state_region = STATE_QUEBEC
+		
+		# Event has not been fired before
+		NOT = { has_variable = CAN_QUE_1_dissolution_hud }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH ROOT SECTION
+		random_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:franco_canadian }	# Change homeland identity to match colony to be released ****
+				state_region = s:STATE_QUEBEC
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = CAN_QUE_1_dissolution_hud				# Change variable ****
+	
+	}
+    
+	option = {
+        name = historical_union_dissolution.option.2			# Refuse secesssion
+		highlighted_option = yes
+		default_option = yes
+		
+		# Internal unrest
+		add_radicals = {
+			culture = cu:franco_canadian
+			value = large_radicals
+		}
+		every_scope_state = {
+			limit = { state_region = { is_homeland = cu:franco_canadian } }
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+    option = {
+        name = historical_union_dissolution.option.1		# Accept secesssion
+		
+		#Subject becomes independent
+		create_country = {
+			tag = QUE										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# Laws
+				if = { 
+					limit = { 
+						exists = c:GBR
+						c:CAN = { 
+							is_a_monarchy = yes 
+							has_diplomatic_pact = { who = c:GBR type = personal_union is_initiator = no }
+						} 
+					}
+					effect_starting_politics_constitutional_monarchy = yes
+					c:GBR = {
+						create_diplomatic_pact = {
+							country = c:QUE
+							type = personal_union
+						}
+					}
+				}
+				else_if = { 
+					limit = { 
+						c:CAN = { 
+							is_a_monarchy = yes 
+						} 
+					}
+					effect_starting_politics_constitutional_monarchy = yes
+					c:CAN = {
+						create_diplomatic_pact = {
+							country = c:QUE
+							type = personal_union
+						}
+					}
+				}
+				else = {
+					effect_starting_politics_parliamentary_republic = yes
+				}
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_federal_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_manufacturing = yes
+				
+				effect_starting_politics_fiat_standard = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:QUE }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:franco_canadian }	# Change homeland identity to match colony to be released ****
+				}
+				set_state_owner = c:QUE									# Change TAG to colony ****
+			}
+			if = {
+				limit = { leads_customs_union = no }
+				random_country = {
+					limit = { has_diplomatic_pact = { who = ROOT type = customs_union is_initiator = yes } }
+					set_relations = { country = c:QUE value = 50 }
+					create_diplomatic_pact = {
+						country = c:QUE
+						type = customs_union
+					}
+				}
+			}
+			else_if = {
+				limit = { leads_customs_union = yes }
+				create_diplomatic_pact = {
+					country = c:QUE
+					type = customs_union
+				}
+			}
+			create_diplomatic_pact = {
+				country = c:QUE
+				type = legal_union
+			}
+			create_diplomatic_pact = {
+				country = c:QUE
+				type = currency_union
+			}
+			set_relations = { country = c:QUE value = 100 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
+
+#1995 Quebec referendum
+historical_union_dissolution.10 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = CAN_QUE_2_dissolution.t 					# Title of the event; ADD LOCALISATION
+    desc = CAN_QUE_2_dissolution.d 						# Description of the event; ADD LOCALISATION
+    #flavor = CAN_QUE_2_dissolution.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:CAN ?= this
+		game_date >= 1995.10.30
+		game_date < 2005.10.30
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:QUE										# Change TAG of the colony ****
+		}
+		has_state_in_state_region = STATE_QUEBEC
+		
+		# Event has not been fired before
+		NOT = { has_variable = CAN_QUE_2_dissolution_hud }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH ROOT SECTION
+		random_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:franco_canadian }	# Change homeland identity to match colony to be released ****
+				state_region = s:STATE_QUEBEC
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = CAN_QUE_2_dissolution_hud				# Change variable ****
+	
+	}
+    
+	option = {
+        name = historical_union_dissolution.option.2			# Refuse secesssion
+		default_option = yes
+		highlighted_option = yes
+		
+		# Internal unrest
+		add_radicals = {
+			culture = cu:franco_canadian
+			value = large_radicals
+		}
+		every_scope_state = {
+			limit = { state_region = { is_homeland = cu:franco_canadian } }
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+    option = {
+        name = historical_union_dissolution.option.1		# Accept secesssion
+		
+		#Subject becomes independent
+		create_country = {
+			tag = QUE										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# Laws
+				if = { 
+					limit = { 
+						exists = c:GBR
+						c:CAN = { 
+							is_a_monarchy = yes 
+							has_diplomatic_pact = { who = c:GBR type = personal_union is_initiator = no }
+						} 
+					}
+					effect_starting_politics_constitutional_monarchy = yes
+					c:GBR = {
+						create_diplomatic_pact = {
+							country = c:QUE
+							type = personal_union
+						}
+					}
+				}
+				else_if = { 
+					limit = { 
+						c:CAN = { 
+							is_a_monarchy = yes 
+						} 
+					}
+					effect_starting_politics_constitutional_monarchy = yes
+					c:CAN = {
+						create_diplomatic_pact = {
+							country = c:QUE
+							type = personal_union
+						}
+					}
+				}
+				else = {
+					effect_starting_politics_parliamentary_republic = yes
+				}
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_federal_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_manufacturing = yes
+				
+				effect_starting_politics_fiat_standard = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:QUE }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:franco_canadian }	# Change homeland identity to match colony to be released ****
+				}
+				set_state_owner = c:QUE									# Change TAG to colony ****
+			}
+			if = {
+				limit = { leads_customs_union = no }
+				random_country = {
+					limit = { has_diplomatic_pact = { who = ROOT type = customs_union is_initiator = yes } }
+					set_relations = { country = c:QUE value = 50 }
+					create_diplomatic_pact = {
+						country = c:QUE
+						type = customs_union
+					}
+				}
+			}
+			else_if = {
+				limit = { leads_customs_union = yes }
+				create_diplomatic_pact = {
+					country = c:QUE
+					type = customs_union
+				}
+			}
+			create_diplomatic_pact = {
+				country = c:QUE
+				type = legal_union
+			}
+			create_diplomatic_pact = {
+				country = c:QUE
+				type = currency_union
+			}
+			set_relations = { country = c:QUE value = 100 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
+
+#Kurdistan Regional Government
+historical_union_dissolution.11 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = IRQ_KUR_dissolution.t 						# Title of the event; ADD LOCALISATION
+    desc = IRQ_KUR_dissolution.d 						# Description of the event; ADD LOCALISATION
+    #flavor = IRQ_KUR_dissolution.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:IRQ ?= this
+		game_date >= 2005.10.15
+		game_date < 2015.10.15
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:KUR										# Change TAG of the colony ****
+		}
+		has_state_in_state_region = STATE_MOSUL
+		
+		# Event has not been fired before
+		NOT = { has_variable = IRQ_KUR_dissolution_hud }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH ROOT SECTION
+		random_scope_state = {
+			limit = {
+				state_region = s:STATE_MOSUL					# Change homeland identity to match colony to be released ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = IRQ_KUR_dissolution_hud					# Change variable ****
+	
+	}
+    
+    option = {
+        name = historical_union_dissolution.option.1			# Accept secesssion
+        highlighted_option = yes
+		
+		change_infamy = -20
+		
+		#Subject becomes independent
+		create_country = {
+			tag = KUR										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_semi_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_anti_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+
+				effect_starting_politics_fiat_standard = yes
+	
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+			
+		}
+		if = {
+			limit = { exists = c:KUR }
+			create_diplomatic_pact = { 
+				country = c:KUR
+				type = special_administrative_region 
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_dissolution.option.2			# Refuse secesssion
+		default_option = yes
+		
+		# Internal unrest
+		add_radicals = {
+			culture = cu:kurdish
+			value = large_radicals
+		}
+		every_scope_state = {
+			limit = { state_region = { is_homeland = cu:kurdish } }
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
