@@ -1,0 +1,97 @@
+namespace = BOL_gov_changes
+
+# Return to democracy
+BOL_gov_changes.1 = {
+    type = country_event
+
+    title = BOL_1985_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = BOL_1985_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = BOL_1985_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:BOL ?= this
+		game_date >= 1985.8.6									# START DATE: Date colony became self governing ****
+		game_date < 1995.8.6									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		OR = { 
+			is_a_presidential_regime = yes
+			is_a_nationalist_government = yes
+		}
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#right_wing_ruling_coalition = yes						# Correct Ruling Coalition
+		
+		# Event has not been fired before
+		NOT = { has_variable = BOL_1985_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = BOL_1985_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_presidential_republic = yes
+		effect_starting_politics_democratic = yes
+		effect_starting_politics_economic_policy_laissez_faire = yes
+		
+		#Víctor Paz Estenssoro
+		create_character = {
+			first_name = "Victor_Paz_Estenssoro_first_name"
+			last_name = "Victor_Paz_Estenssoro_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1907.10.2
+			interest_group = ig_industrialists
+			ideology = ideology_elitist
+			culture = cu:bolivian
+			traits = {
+				persistent
+				innovative
+				brave
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
