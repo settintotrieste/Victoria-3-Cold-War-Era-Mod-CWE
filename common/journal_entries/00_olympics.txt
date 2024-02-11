@@ -1,0 +1,199 @@
+﻿je_olympic_games = {
+	icon = "gfx/interface/icons/invention_icons/organized_sports.dds"
+
+	group = je_group_historical_content
+
+	scripted_button = je_olympic_stadium_button
+	scripted_button = je_olympic_sports_centre_button
+	scripted_button = je_olympic_village_button
+	scripted_button = je_olympic_media_centre_button
+
+	possible = {
+		
+		#Triggered by event
+		
+	}
+
+	immediate = {
+		
+		#Set Olympics Name
+		if = {
+			limit = { has_law = law_type:law_federal_state }
+			random_scope_state = {
+				limit = {
+					is_incorporated = yes
+					is_split_state = no
+					OR = {
+						AND = { 
+							is_in_revolt = no
+							is_isolated_from_market = no
+						}
+						is_capital = yes
+					}
+				}
+				save_scope_as = olympic_games_summit_location 
+				add_modifier = { name = olympics_host_city years = 5 }
+			}
+		}
+		else = {
+			random_scope_state = {
+				limit = {
+					is_capital = yes
+					is_split_state = no
+				}
+				save_scope_as = olympic_games_summit_location 
+				add_modifier = { name = olympics_host_city years = 5 }
+			}
+		}
+		
+		#Set Olympics Year
+		set_variable = {
+			name = olympic_games_year_display
+			value = global_var:olympic_games_year
+		}
+		set_global_variable = {
+			name = last_olympic_games_year_display
+			value = global_var:olympic_games_year
+		}
+		
+		#Set progress bar
+		set_variable = {
+			name = olympics_progress
+			value = 0
+		}
+		
+	}
+
+	complete = {
+		
+		custom_tooltip = {
+			text = olympics_commencement_date.tt
+			year >= var:olympic_games_year_display
+			month >= 6
+			month <= 10
+		}
+		
+	}
+	
+	on_complete = {
+		
+		#Mark as a recent host
+		set_variable = {
+			name = recently_hosted_olympics
+			years = 1
+		}
+		
+		#Send olympics event to all participants
+		custom_tooltip = {
+			text = olympics_commences.tt
+			every_country = {
+				limit = {
+					is_sufficiently_independent = yes
+					is_at_war = no
+					NOT = { has_modifier = olympics_banned }
+				}
+				trigger_event = { id = olympic_games_system.3 }
+			}
+		}
+		
+		#Olympic JE result
+		if = {
+			limit = { 
+				scope:journal_entry = {
+					is_goal_complete = yes
+				}
+			}
+			#Reward host with more prestige
+			add_modifier = { 
+				name = hosted_olympics 
+				years = 5 
+				is_decaying = yes 
+			}
+		}
+		else = {
+			trigger_event = { id = olympic_games_system.5 }
+		}
+		
+		#Set timer
+		set_global_variable = { 
+			name = olympic_games_timer 
+			years = 4 
+		}
+		
+		#Select another olympics country
+		custom_tooltip = {
+			text = next_olympic_host.tt
+			select_olympic_games_host = yes
+		}
+		
+		#No longer a host city
+		remove_variable = olympic_games_host_country
+		
+		#Clean up
+		remove_variable = olympics_progress
+		
+	}
+
+	fail = {
+		
+		OR = {
+		
+			#Country is at war
+			is_at_war = yes
+			
+			#No longer a host city for any reason
+			custom_tooltip = {
+				text = olympics_not_host_country.tt
+				NOT = { has_variable = olympic_games_host_country }
+			}
+		
+		}
+		
+		
+	}
+	
+	on_fail = {
+		
+		#Offer olympics to another country
+		hidden_effect = { select_olympic_games_host = yes }
+		
+		#Clear host city modifier
+		every_scope_state = {
+			limit = { has_modifier = olympics_host_city }
+			remove_modifier = olympics_host_city
+		}
+		
+		#Reduce prestige slightly
+		add_modifier = { 
+			name = small_national_humiliation
+			years = 5 
+			is_decaying = yes 
+		}
+		
+		#Clean up
+		remove_variable = olympics_progress
+		
+	}
+	
+	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
+	modifiers_while_active = {
+		olympics_expenses
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = yes
+	
+	current_value = {
+		value = root.var:olympics_progress
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+	
+}
