@@ -1,0 +1,398 @@
+namespace = olympic_games_system
+
+# Timer
+olympic_games_system.1 = {
+    type = country_event
+	hidden = yes
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Only 1 event can fire at any time
+		global_country_ranking = 1
+		
+		#First olympic games has already fired
+		has_global_variable = olympic_games_year
+		
+		#Only fires as a failsafe
+		NOT = { 
+			any_country = { has_journal_entry = je_olympic_games }
+		}
+		
+		#Only fire in 4 year pulses
+		NOT = { has_global_variable = olympic_games_timer }
+		
+    }
+	
+	immediate = {
+	
+		#Set timer
+		set_global_variable = { 
+			name = olympic_games_timer 
+			years = 4 
+		}
+		
+		#Regenerate olympics if JE chain is broken
+		if = {
+			limit = {
+				#No olympics games planned
+				NOT = { 
+					any_country = {
+						OR = { 
+							has_journal_entry = je_olympic_games
+							has_variable = olympic_games_host_country
+						}
+					}
+				}
+			}
+			#Offer olympics to a country
+			select_olympic_games_host = yes
+		}
+		
+	}
+
+}
+
+# Offer Olympics
+olympic_games_system.2 = {
+    type = country_event
+	#placement = scope:olympic_games_summit_location
+
+    title = offered_olympics.t 											# Title of the event; ADD LOCALISATION
+    desc = offered_olympics.d 											# Description of the event; ADD LOCALISATION
+    flavor = offered_olympics.f 										# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/organized_sports.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event above
+		
+    }
+	
+	immediate = {
+	
+		#Set Olympics Name
+		#random_scope_state = {
+		#	limit = {
+		#		is_capital = yes
+		#		is_split_state = no
+		#	}
+		#	save_scope_as = olympic_games_summit_location 
+		#}
+	
+		#Indicate as candidate
+		set_variable = { 
+			name = olympic_games_host_country
+			years = 6
+		}
+		
+		#Set Olympics Year
+		set_variable = {
+			name = olympic_games_year_display
+			value = global_var:olympic_games_year
+		}
+		change_variable = {
+			name = olympic_games_year_display
+			add = 4
+		}
+		
+	}
+    
+    option = {
+        name = olympic_games_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#Commence olympics preparation
+		change_global_variable = {
+			name = olympic_games_year
+			add = 4
+		}
+		custom_tooltip = {
+			text = olympics_to_host_country.tt
+			add_journal_entry = { type = je_olympic_games }
+		}
+		
+		ai_chance = { 
+			base = 0
+			modifier = { 
+				trigger = { 
+					NOR = {
+						any_political_movement = {
+							is_revolutionary_movement = yes
+						}
+						scaled_debt >= 0.75
+					}
+				} 
+				add = 100 
+			}
+		}
+		
+    }
+	
+	option = {
+        name = olympic_games_system.option.2					# Reject
+		default_option = yes
+		
+		#Send to another country
+		select_olympic_games_host = yes
+		
+		ai_chance = { 
+			base = 0
+			modifier = { 
+				trigger = { 
+					OR = {
+						any_political_movement = {
+							is_revolutionary_movement = yes
+						}
+						scaled_debt >= 0.75
+					}
+				} 
+				add = 100 
+			}
+		}
+		
+    }
+
+}
+
+# Olympics Participation
+olympic_games_system.3 = {
+    type = country_event
+	placement = scope:olympic_games_summit_location
+
+    title = participation_olympics.t 									# Title of the event; ADD LOCALISATION
+    desc = participation_olympics.d 									# Description of the event; ADD LOCALISATION
+    #flavor = participation_olympics.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_world_fair.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/organized_sports.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by JE
+		
+    }
+	
+	immediate = {
+		
+		#Mark host
+		random_country = {
+			limit = { 
+				has_variable = recently_hosted_olympics
+			}
+			save_scope_as = recently_hosted_olympics
+			random_scope_state = {
+				limit = {
+					has_modifier = olympics_host_city
+				}
+				save_scope_as = olympic_games_summit_location
+			}
+		}
+		
+		#Clear host city modifier
+		every_scope_state = {
+			limit = { has_modifier = olympics_host_city }
+			remove_modifier = olympics_host_city
+		}
+		
+		#Set Olympics Year
+		set_variable = {
+			name = olympic_games_year_display_event
+			value = global_var:last_olympic_games_year_display
+		}
+		
+	}
+    
+    option = {
+        name = participation_olympics.option.1					# Participate 
+        highlighted_option = yes
+		default_option = yes
+		
+		#Performance
+		random_list = { 
+			1 = { 
+				add_modifier = { name = good_olympics_performance years = 4 is_decaying = yes } 
+				add_loyalists = {
+					value = small_radicals
+				}
+			}
+			1 = { }
+			1 = { 
+				add_modifier = { name = bad_olympics_performance years = 4 is_decaying = yes } 
+			}
+		}
+		
+		ai_chance = { 
+			base = 80
+		}
+		
+    }
+	
+	option = {
+        name = participation_olympics.option.2					# Dope
+		
+		#Performance
+		random_list = { 
+			1 = { 
+				add_modifier = { name = good_olympics_performance years = 4 is_decaying = yes } 
+				add_loyalists = {
+					value = small_radicals
+				}
+			}
+			1 = { trigger_event = { id = olympic_games_system.4 } }
+		}
+		
+		ai_chance = { 
+			base = 0
+			modifier = { trigger = { is_a_dictatorship = yes } add = 20 }
+		}
+		
+    }
+	
+	option = {
+        name = participation_olympics.option.3					# Boycott
+		trigger = {
+			exists = scope:recently_hosted_olympics 
+			NOT = { scope:recently_hosted_olympics ?= this }
+		}
+		
+		#Lose relations with host country
+		if = {
+			limit = { exists = scope:recently_hosted_olympics }
+			change_relations = { country = scope:recently_hosted_olympics value = -25 }
+		}
+		
+		ai_chance = { 
+			base = 0
+			modifier = { 
+				trigger = { 
+					scope:recently_hosted_olympics = { relations:root <= relations_threshold:hostile } 
+				} 
+				add = 100 
+			}
+		}
+		
+    }
+
+}
+
+# Banned for doping
+olympic_games_system.4 = {
+    type = country_event
+	placement = scope:recently_hosted_olympics
+
+    title = banned_olympics.t 											# Title of the event; ADD LOCALISATION
+    desc = banned_olympics.d 											# Description of the event; ADD LOCALISATION
+    #flavor = banned_olympics.f 										# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/organized_sports.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by JE
+		
+    }
+	
+	immediate = {
+		
+		#Mark host
+		random_country = {
+			limit = { 
+				has_variable = recently_hosted_olympics
+			}
+			save_scope_as = recently_hosted_olympics
+		}
+		
+	}
+    
+    option = {
+        name = banned_olympics.option									# F
+		
+		add_modifier = { name = olympics_banned years = 6 }
+		
+		#Lose relations with host country
+		if = {
+			limit = { 
+				exists = scope:recently_hosted_olympics
+				NOT = { scope:recently_hosted_olympics ?= this }
+			}
+			change_relations = { country = scope:recently_hosted_olympics value = -10 }
+		}
+		
+    }
+
+}
+
+# Embarrasing olympics
+olympic_games_system.5 = {
+    type = country_event
+	placement = scope:olympic_games_summit_location
+
+    title = bad_olympics.t 												# Title of the event; ADD LOCALISATION
+    desc = bad_olympics.d 												# Description of the event; ADD LOCALISATION
+    flavor = bad_olympics.f 											# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/organized_sports.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by JE
+		
+    }
+	
+	immediate = {
+		
+		#Mark host
+		random_country = {
+			limit = { 
+				has_variable = recently_hosted_olympics
+			}
+			save_scope_as = recently_hosted_olympics
+			random_scope_state = {
+				limit = {
+					has_modifier = olympics_host_city
+				}
+				save_scope_as = olympic_games_summit_location
+			}
+		}
+		
+		#Set Olympics Year
+		set_variable = {
+			name = olympic_games_year_display
+			value = global_var:last_olympic_games_year_display
+		}
+		
+	}
+    
+    option = {
+        name = bad_olympics.option										# F
+		
+		#Reduce prestige slightly
+		add_modifier = { 
+			name = small_national_humiliation
+			years = 5 
+			is_decaying = yes 
+		}
+		
+    }
+
+}
