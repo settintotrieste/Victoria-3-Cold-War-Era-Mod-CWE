@@ -1,0 +1,379 @@
+﻿je_secret_police_system = {
+	icon = "gfx/interface/icons/invention_icons/secret_police.dds"
+
+	group = je_group_political_organs
+
+	scripted_button = je_assassinate_opposition_button
+	scripted_button = je_sabotage_opposition_button
+	scripted_button = je_disrupt_elections_button
+	scripted_button = je_bribe_agitator_button
+	scripted_button = je_bribe_parliament_button
+	scripted_button = je_bribe_judiciary_button
+	scripted_button = je_destablise_government_button
+	scripted_button = je_boost_opposition_button
+
+	is_shown_when_inactive = {
+	
+		#Has Secret Police
+		has_law = law_type:law_secret_police
+		
+	}
+
+	possible = {
+		
+		#Has Secret Police
+		has_law = law_type:law_secret_police
+		
+		#Civil Service IG exists
+		exists = ig:ig_bureaucrats
+		
+	}
+
+	immediate = {
+		
+		#Secret Police always start off as loyal
+		set_variable = { 
+			name = secret_police_loyalty
+			value = 100
+		}
+		set_variable = { 
+			name = secret_police_loyalty_monthly
+			value = 0
+		}
+		
+		#Set Secret Police IG
+		ig:ig_bureaucrats = { 
+			save_scope_as = secret_police_IG
+		}
+		
+		#Espionage points
+		set_variable = { 
+			name = secret_police_action_points
+			value = 0
+		}
+		
+	}
+
+	fail = {
+	
+		OR = {
+		
+			NOT = { has_law = law_type:law_secret_police }
+			
+			NOT = { exists = scope:secret_police_IG }
+			
+		}
+		
+	}
+	
+	on_fail = {
+		
+		remove_variable = secret_police_loyalty
+		remove_variable = secret_police_loyalty_monthly
+		remove_variable = secret_police_action_points
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			### Add Espionage Points ###
+			if = {
+				limit = { 
+					has_variable = secret_police_action_points 
+				}
+				if = { 
+					limit = { root.var:secret_police_action_points < 100 }
+					if = {
+						limit = { institution_investment_level = { institution = institution_home_affairs value = 1 } }
+						change_variable = { 
+							name = secret_police_action_points
+							add = 1
+						}
+					}
+					if = {
+						limit = { institution_investment_level = { institution = institution_home_affairs value = 2 } }
+						change_variable = { 
+							name = secret_police_action_points
+							add = 2
+						}
+					}
+					if = {
+						limit = { institution_investment_level = { institution = institution_home_affairs value = 3 } }
+						change_variable = { 
+							name = secret_police_action_points
+							add = 3
+						}
+					}
+					if = {
+						limit = { institution_investment_level = { institution = institution_home_affairs value = 4 } }
+						change_variable = { 
+							name = secret_police_action_points
+							add = 4
+						}
+					}
+					if = {
+						limit = { institution_investment_level = { institution = institution_home_affairs value = 5 } }
+						change_variable = { 
+							name = secret_police_action_points
+							add = 5
+						}
+					}
+				}
+				clamp_variable = {
+					name = secret_police_action_points
+					max = 100
+					min = 0
+				}
+			}
+			
+			### Calculate loyalty ###
+			
+			#Failsafe
+			if = {
+				limit = { NOT = { has_variable = secret_police_loyalty } }
+				set_variable = { 
+					name = secret_police_loyalty
+					value = 100
+				}
+			}
+			set_variable = { 
+				name = secret_police_loyalty_monthly
+				value = 0
+			}
+			
+			#Gain loyalty (Max: +10/month)
+			if = {
+				limit = { 
+					scope:secret_police_IG = { ig_approval > 0 } 
+				}
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = 2
+				}
+			}
+			if = {
+				limit = { 
+					scope:secret_police_IG = { ig_approval > 5 } 
+				}
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = 4
+				}
+			}
+			if = {
+				limit = { 
+					scope:secret_police_IG = { ig_approval > 10 } 
+				}
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = 6
+				}
+			}
+			if = {
+				limit = { 
+					scope:secret_police_IG = { ig_approval > 15 } 
+				}
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = 8
+				}
+			}
+			if = {
+				limit = { 
+					scope:secret_police_IG = { ig_approval >= 20 } 
+				}
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = 10
+				}
+			}
+			
+			#Lose loyalty (Max: -15/month)
+			if = {
+				limit = { 
+					scope:secret_police_IG = { ig_approval < 0 }
+				}
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = -1
+				}
+			}
+			if = {
+				limit = { 
+					scope:secret_police_IG = { ig_approval < -5 } 
+				}
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = -2
+				}
+			}
+			if = {
+				limit = { 
+					scope:secret_police_IG = { ig_approval < -10 } 
+				}
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = -4
+				}
+			}
+			if = {
+				limit = { 
+					scope:secret_police_IG = { ig_approval < -15 } 
+				}
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = -8
+				}
+			}
+			if = {
+				limit = { 
+					scope:secret_police_IG = { ig_approval <= -20 } 
+				}
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = -10
+				}
+			}
+			if = {
+				limit = { scope:secret_police_IG = { is_in_government = no } }
+				change_variable = { 
+					name = secret_police_loyalty_monthly
+					add = -5
+				}
+			}
+			
+			#Corruption slows down reduction & speeds up increase
+			if = {
+				limit = { 
+					NOT = { root.var:secret_police_loyalty_monthly = 0 }
+					root.var:secret_police_loyalty_monthly < 0
+				}
+				if = {
+					limit = { has_law = law_type:law_very_low_anti_corruption }
+					change_variable = {
+						name = secret_police_loyalty_monthly
+						divide = 5
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_low_anti_corruption }
+					change_variable = {
+						name = secret_police_loyalty_monthly
+						divide = 4
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_medium_anti_corruption }
+					change_variable = {
+						name = secret_police_loyalty_monthly
+						divide = 3
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_high_anti_corruption }
+					change_variable = {
+						name = secret_police_loyalty_monthly
+						divide = 2
+					}
+				}
+			}
+			if = {
+				limit = { 
+					NOT = { root.var:secret_police_loyalty_monthly = 0 } 
+					NOT = { root.var:secret_police_loyalty_monthly < 0 }
+				}
+				if = {
+					limit = { has_law = law_type:law_very_low_anti_corruption }
+					change_variable = {
+						name = secret_police_loyalty_monthly
+						add = 10
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_low_anti_corruption }
+					change_variable = {
+						name = secret_police_loyalty_monthly
+						add = 8
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_medium_anti_corruption }
+					change_variable = {
+						name = secret_police_loyalty_monthly
+						add = 4
+					}
+				}
+				if = {
+					limit = { has_law = law_type:law_high_anti_corruption }
+					change_variable = {
+						name = secret_police_loyalty_monthly
+						add = 2
+					}
+				}
+			}
+			
+			#Total
+			change_variable = {
+				name = secret_police_loyalty
+				add = root.var:secret_police_loyalty_monthly
+			}
+			
+			#If more than 100
+			if = {
+				limit = { root.var:secret_police_loyalty > 100 }
+				
+				#Max display is 100 loyalty
+				set_variable = { 
+					name = secret_police_loyalty
+					value = 100
+				}
+				
+				#Display 0 because cannot increase any further
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = 0
+				}
+				
+			}
+			
+			#If less than 0
+			if = {
+				limit = { root.var:secret_police_loyalty < 0 }
+				
+				#Min display is 0 loyalty
+				set_variable = { 
+					name = secret_police_loyalty
+					value = 0
+				}
+				
+				#Display 0 because cannot decrease any further
+				set_variable = { 
+					name = secret_police_loyalty_monthly
+					value = 0
+				}
+				
+			}
+			
+		}
+		
+	}
+
+	weight = 11
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = yes
+	
+	current_value = {
+		value = root.var:secret_police_action_points
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+	
+}
