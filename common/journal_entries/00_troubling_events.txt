@@ -3,108 +3,141 @@
 
 	group = je_group_historical_content
 
+	is_shown_when_inactive = {
+		always = yes
+	}
+
 	possible = {
 		
 		#Correct tag
-		trigger_if = {
-			limit = { c:GBR ?= this }
-			
-			has_technology_researched = tech_politics_3
-			
-			#The Troubles
-			AND = { 
-				c:GBR ?= this
-				exists = c:SIR
-				any_scope_state = { state_region = { is_homeland = cu:irish } }
-				NOR = { 
-					has_law = law_type:law_multicultural 
-					AND = {
-						exists = c:NIR
-						c:NIR ?= { is_subject_of = ROOT }
+		OR = {
+		
+			trigger_if = {
+				limit = { c:GBR ?= this }
+				
+				#The Troubles
+				AND = { 
+					has_technology_researched = tech_politics_3
+					c:GBR ?= this
+					exists = c:SIR
+					any_scope_state = { state_region = { is_homeland = cu:irish } }
+					NOR = { 
+						has_law = law_type:law_multicultural 
+						AND = {
+							exists = c:NIR
+							c:NIR ?= { is_subject_of = ROOT }
+						}
 					}
 				}
-			}
-		
-		}
-		
-		trigger_if = {
-			limit = { c:USA ?= this }
 			
-			#BLM
-			AND = { 
-				c:USA ?= this
-				NOT = { has_law = law_type:law_multicultural }
-				any_scope_state = { state_region = { is_homeland = cu:afro_american } }
 			}
 			
-		}
+			trigger_if = {
+				limit = { c:USA ?= this }
+				
+				#BLM
+				AND = { 
+					c:USA ?= this
+					NOT = { has_law = law_type:law_multicultural }
+					any_scope_state = { state_region = { is_homeland = cu:afro_american } }
+				}
+				
+			}
 
-		trigger_if = {
-			limit = { c:ITA ?= this }
+			trigger_if = {
+				limit = { c:ITA ?= this }
 			
-			has_technology_researched = tech_politics_3
-		
-			#Years of Lead
-			c:ITA ?= this 
-			NOT = { is_a_communist_government = yes }
-			ig:ig_trade_unions ?= { is_marginal = no }
-			cold_war_ongoing = yes
-			
-		}
-		
-		trigger_if = {
-			limit = {  
-				NOT = { c:ITA ?= this }
-				is_a_nationalist_government = yes
+				#Years of Lead
+				AND = { 
+					has_technology_researched = tech_politics_3
+					c:ITA ?= this 
+					NOT = { is_a_communist_government = yes }
+					ig:ig_trade_unions ?= { is_marginal = no }
+					cold_war_ongoing = yes
+				}
+				
 			}
 			
-			has_technology_researched = tech_politics_3
-			
-			#Years of Lead
-			is_a_nationalist_government = yes
-			ig:ig_trade_unions ?= { is_marginal = no }
-			cold_war_ongoing = yes
-			
-		}
-		
-		trigger_if = {
-			limit = { c:HND ?= this }
-			
-			has_technology_researched = tech_politics_3
-			
-			#Naxalite–Maoist Insurgency
-			c:HND ?= this 
-			NOT = { is_a_communist_government = yes }
-			ig:ig_trade_unions ?= { is_marginal = no }
-			
-		}
-		
-		trigger_if = {
-			limit = { c:SRL ?= this }
-			
-			#Tamil Tigers Insurgency
-			c:SRL ?= this 
-			has_state_in_state_region = STATE_CEYLON
-			OR = { 
-				has_law = law_type:law_ethnostate
-				NOT = { exists = c:TAE }
+			trigger_if = {
+				limit = {  
+					NOT = { c:ITA ?= this }
+					is_a_nationalist_government = yes
+				}
+				
+				#Years of Lead
+				AND = { 
+					has_technology_researched = tech_politics_3
+					is_a_nationalist_government = yes
+					ig:ig_trade_unions ?= { is_marginal = no }
+					cold_war_ongoing = yes
+				}
+				
 			}
 			
-		}
+			trigger_if = {
+				limit = { c:HND ?= this }
+				
+				#Naxalite–Maoist Insurgency
+				AND = { 
+					has_technology_researched = tech_politics_3
+					c:HND ?= this 
+					NOT = { is_a_communist_government = yes }
+					ig:ig_trade_unions ?= { is_marginal = no }
+				}
+				
+			}
+			
+			trigger_if = {
+				limit = { c:SRL ?= this }
+				
+				#Tamil Tigers Insurgency
+				AND = {
+					c:SRL ?= this 
+					has_state_in_state_region = STATE_CEYLON
+					OR = { 
+						has_law = law_type:law_ethnostate
+						NOT = { exists = c:TAE }
+					}
+				}
+				
+			}
+			
+			trigger_if = {
+				limit = { 
+					cold_war_ongoing = yes
+				}
+				
+				#Communist Insurgency
+				AND = {
+					has_technology_researched = tech_politics_3
+					right_wing_ruling_coalition = yes
+					ig:ig_trade_unions ?= { 
+						is_marginal = no
+						leader = { has_ideology = ideology:ideology_autocratic }
+						ig_approval <= unhappy
+					}
+				}
+				
+			}
+			
+			trigger_if = {
+				limit = { 
+					NOT = { cold_war_ongoing = yes }
+				}
+				
+				#Theocratic Insurgency
+				AND = {
+					has_technology_researched = tech_politics_3
+					NOT = { is_a_theocratic_government = yes }
+					ig:ig_devout ?= { 
+						is_marginal = no
+						leader = { has_ideology = ideology:ideology_autocratic }
+						ig_approval <= unhappy
+					}
+				}
+				
+			}
 		
-		trigger_if = {
-			limit = { 
-				cold_war_ongoing = yes
-			}
-			
-			#Communist Insurgency
-			right_wing_ruling_coalition = yes
-			ig:ig_trade_unions ?= { 
-				is_marginal = no
-				leader = { has_ideology = ideology:ideology_autocratic }
-				ig_approval <= unhappy
-			}
-			
 		}
 		
 	}
@@ -122,6 +155,18 @@
 				}
 			}
 			set_variable = communist_insurgency_troubling_event
+		}
+		if = {
+			limit = { 
+				NOT = { cold_war_ongoing = yes }
+				NOT = { is_a_theocratic_government = yes }
+				ig:ig_devout ?= { 
+					is_marginal = no
+					leader = { has_ideology = ideology:ideology_autocratic }
+					ig_approval <= unhappy
+				}
+			}
+			set_variable = theocratic_insurgency_troubling_event
 		}
 		
 	}
@@ -233,6 +278,21 @@
 			
 		}
 		
+		trigger_if = {
+			limit = { 
+				has_variable = theocratic_insurgency_troubling_event
+			}
+			
+			#Theocratic Insurgency
+			OR = {
+				is_a_theocratic_government = yes
+				ig:ig_devout ?= { 
+					is_marginal = yes
+				}
+			}
+			
+		}
+		
 	}
 	
 	on_complete = {
@@ -245,6 +305,7 @@
 		
 		#Clean up
 		remove_variable = communist_insurgency_troubling_event
+		remove_variable = theocratic_insurgency_troubling_event
 		
 	}
 	
@@ -308,6 +369,13 @@
 				add_radicals = {
 					value = 0.01
 					interest_group = ig:ig_trade_unions
+				}
+			}
+			else_if = {
+				limit = { has_variable = theocratic_insurgency_troubling_event }
+				add_radicals = {
+					value = 0.01
+					interest_group = ig:ig_devout
 				}
 			}
 			else = {
