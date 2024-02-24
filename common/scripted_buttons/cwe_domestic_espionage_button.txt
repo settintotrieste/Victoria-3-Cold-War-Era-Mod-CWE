@@ -17,6 +17,9 @@ je_assassinate_opposition_button = {
 
 	possible = {
 	
+		#There is a secret police
+		has_law = law_type:law_secret_police
+	
 		#Has enough action points
 		custom_tooltip = {
 			text = secret_police_action_10_points.tt
@@ -101,6 +104,9 @@ je_sabotage_opposition_button = {
 	}
 
 	possible = {
+	
+		#There is a secret police
+		has_law = law_type:law_secret_police
 	
 		#Has enough action points
 		custom_tooltip = {
@@ -189,6 +195,9 @@ je_disrupt_elections_button = {
 
 	possible = {
 	
+		#There is a secret police
+		has_law = law_type:law_secret_police
+	
 		#Only during elections
 		in_election_campaign = yes
 	
@@ -255,6 +264,7 @@ je_bribe_agitator_button = {
 		has_variable = secret_police_loyalty
 		root.var:secret_police_loyalty > 50
 		
+		#Has an agitator
 		any_scope_character = {
 			has_role = agitator
 			is_historical = no
@@ -263,6 +273,9 @@ je_bribe_agitator_button = {
 	}
 
 	possible = {
+	
+		#There is a secret police
+		has_law = law_type:law_secret_police
 	
 		#Has enough action points
 		custom_tooltip = {
@@ -334,6 +347,9 @@ je_bribe_parliament_button = {
 
 	possible = {
 	
+		#There is a secret police
+		has_law = law_type:law_secret_police
+	
 		#Has enough action points
 		custom_tooltip = {
 			text = secret_police_action_5_points.tt
@@ -402,6 +418,9 @@ je_bribe_judiciary_button = {
 
 	possible = {
 	
+		#There is a secret police
+		has_law = law_type:law_secret_police
+	
 		#Has enough action points
 		custom_tooltip = {
 			text = secret_police_action_5_points.tt
@@ -466,7 +485,7 @@ je_destablise_government_button = {
 		
 		#Secret police is loyal
 		has_variable = secret_police_loyalty
-		NOT = { root.var:secret_police_loyalty > 50 }
+		root.var:secret_police_loyalty < 50
 		
 	}
 
@@ -610,6 +629,105 @@ je_boost_opposition_button = {
 				} 
 			}
 		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+	}
+	
+}
+
+je_cleanse_ruler_button = {
+	name = "je_cleanse_ruler_button"
+	desc = "je_cleanse_ruler_button_desc"
+
+	visible = { 
+		
+		has_variable = secret_police_action_points 
+		
+		#Ruler is tainted OR hated
+		exists = ruler
+		ruler = { 
+			OR = {
+			
+				#Corruption scandal
+				has_modifier = ignored_corruption
+				has_modifier = corrupt_connections_exposed
+				has_modifier = corrupt_connections_exposed_minor
+				has_modifier = dealing_with_corruption
+			
+				#Traitor
+				has_modifier = treasonous_traitor
+			
+				#War Criminal
+				has_trait = war_criminal
+				
+				#Unpopular
+				popularity < 25
+				
+			}
+		}
+		
+		has_jingoistic_ruler = yes
+		
+		#Secret police is loyal
+		has_variable = secret_police_loyalty
+		root.var:secret_police_loyalty > 50
+		
+	}
+
+	possible = {
+	
+		#There is a secret police
+		has_law = law_type:law_secret_police
+	
+		#Has enough action points
+		custom_tooltip = {
+			text = secret_police_action_25_points.tt
+			root.var:secret_police_action_points > 25
+		}
+		
+		#Cooldown
+		custom_tooltip = {
+			text = secret_police_action_timer.tt
+			NOT = { has_variable = secret_police_action_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		#Cooldown
+		set_variable = {
+			name = secret_police_action_timer
+			months = 1
+		}
+		
+		#Subtract action points
+		custom_tooltip = {
+			text = secret_police_action_subtract_25_points.tt
+			change_variable = { 
+				name = secret_police_action_points
+				add = -25
+			}
+		}
+		
+		#Remove
+		random_scope_character = {
+			limit = { 
+				is_ruler = yes
+			}
+			if = { limit = { has_modifier = ignored_corruption } remove_modifier = ignored_corruption }
+			if = { limit = { has_modifier = corrupt_connections_exposed } remove_modifier = corrupt_connections_exposed }
+			if = { limit = { has_modifier = corrupt_connections_exposed_minor } remove_modifier = corrupt_connections_exposed_minor }
+			if = { limit = { has_modifier = dealing_with_corruption } remove_modifier = dealing_with_corruption }
+			if = { limit = { has_modifier = treasonous_traitor } remove_modifier = treasonous_traitor }
+			if = { limit = { has_trait = war_criminal } remove_trait = war_criminal }
+			hidden_effect = { remove_modifier = ruler_cult_of_personality }
+			add_modifier = { add_modifier = { name = ruler_cult_of_personality years = 5 is_decaying = yes } }
+		}
+		change_infamy = 2
 		
 	}
 	
