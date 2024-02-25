@@ -736,3 +736,83 @@ je_cleanse_ruler_button = {
 	}
 	
 }
+
+je_anti_terror_operation_button = {
+	name = "je_anti_terror_operation_button"
+	desc = "je_anti_terror_operation_button_desc"
+
+	visible = { 
+		
+		has_variable = secret_police_action_points 
+		
+		#Has the appropriate law
+		OR = { 
+			has_law = law_type:law_strict_policing
+			has_law = law_type:law_draconian_policing
+		}
+		
+		#Secret police is loyal
+		has_variable = secret_police_loyalty
+		root.var:secret_police_loyalty > 25
+		
+		#Has terrorists in any state
+		any_scope_state = {
+			has_modifier = nationalist_agitation
+		}
+		
+	}
+
+	possible = {
+	
+		#There is a secret police
+		has_law = law_type:law_secret_police
+	
+		#Has enough action points
+		custom_tooltip = {
+			text = secret_police_action_25_points.tt
+			root.var:secret_police_action_points > 25
+		}
+		
+		#Cooldown
+		custom_tooltip = {
+			text = secret_police_action_timer.tt
+			NOT = { has_variable = secret_police_action_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		#Cooldown
+		set_variable = {
+			name = secret_police_action_timer
+			months = 1
+		}
+		
+		#Subtract action points
+		custom_tooltip = {
+			text = secret_police_action_subtract_25_points.tt
+			change_variable = { 
+				name = secret_police_action_points
+				add = -25
+			}
+		}
+		
+		#Remove nationalist_agitation from a random state
+		random_scope_state = {
+			limit = { has_modifier = nationalist_agitation }
+			remove_modifier = nationalist_agitation
+		}
+		
+		#Add some loyalists
+		add_loyalists = {
+			value = 0.01
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+	}
+	
+}
