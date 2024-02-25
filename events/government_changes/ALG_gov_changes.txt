@@ -1,0 +1,260 @@
+namespace = ALG_gov_changes
+
+# Algerian Revolution of 1965
+ALG_gov_changes.1 = {
+    type = country_event
+
+    title = ALG_1965_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = ALG_1965_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = ALG_1965_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:ALG
+		this = c:ALG											# Change TAG of the overlord ****
+		game_date >= 1965.6.19									# START DATE: Date colony became self governing ****
+		game_date < 1975.6.19									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = ALG_1965_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = ALG_1965_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Becomes independent
+		make_independent = yes
+		
+		#Enact new regime
+		effect_starting_politics_nationalist_republic = yes
+		effect_starting_politics_dictatorship = yes
+		effect_starting_politics_economic_policy_state_capitalism = yes
+		
+		#Houari Boumédiène
+		create_character = {
+			first_name = "Houari_Boumediene_first_name"
+			last_name = "Houari_Boumediene_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1932.8.23
+			interest_group = ig_trade_unions
+			ideology = ideology_power_hungry
+			traits = {
+				charismatic
+				ambitious
+				sickly
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Algerian Civil War
+ALG_gov_changes.2 = {
+    type = country_event
+
+    title = ALG_1992_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = ALG_1992_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = ALG_1992_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:ALG
+		this = c:ALG											# Change TAG of the overlord ****
+		game_date >= 1992.1.11									# START DATE: Date colony became self governing ****
+		game_date < 2002.1.11									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_nationalist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#right_wing_ruling_coalition = yes						# Correct Ruling Coalition
+		
+		# Event has not been fired before
+		NOT = { has_variable = ALG_1992_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = ALG_1992_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_semi_presidential_republic = yes
+		effect_starting_politics_democratic = yes
+		effect_starting_politics_economic_policy_interventionism = yes
+		
+		#Civil War
+		if = {
+			limit = { 
+				OR = { 
+					has_state_in_state_region = STATE_EAST_SAHARA
+					has_state_in_state_region = STATE_SAHARA
+					has_state_in_state_region = STATE_CONSTANTINE
+				}
+			}
+			every_scope_state = {
+				limit = { 
+					is_capital = no
+					OR = { 
+						state_region = s:STATE_EAST_SAHARA
+						state_region = s:STATE_SAHARA
+						state_region = s:STATE_CONSTANTINE
+					}
+				}
+				set_variable = { name = state_to_cede_ALG months = 1 }
+				save_scope_as = state_to_release
+			}
+			
+			#Release Islamist rebels
+			create_dynamic_country = {
+				origin = ROOT
+				country_type = unrecognized
+				tier = city_state
+				capital = scope:state_to_release
+				cede_state_trigger = {
+					has_variable = state_to_cede_ALG
+				}
+				on_created = { 
+				
+					every_scope_state = {
+						remove_variable = state_to_cede_ALG
+					}
+					
+					set_variable = dynamic_decolonisation_country
+					
+					# Laws
+					effect_starting_politics_theocratic_republic = yes
+					effect_starting_politics_dictatorship = yes
+					effect_starting_politics_constitutional_unitary_state = yes
+					effect_starting_politics_war_policy_jingoism = yes
+					effect_starting_politics_economic_policy_interventionism = yes
+					effect_starting_politics_trade_policy_free_trade = yes
+					effect_starting_politics_anti_nuclear_policy = yes
+					
+					effect_starting_politics_specialisation_natural_resource = yes
+					
+					effect_starting_politics_semi_gold_system = yes
+					
+					set_variable = ALG_IS_tag
+					
+				}
+			}
+			
+			random_country = {
+				limit = { has_variable = ALG_IS_tag }
+				if = {
+					limit = { has_state_in_state_region = STATE_SAHARA }
+					set_capital = STATE_SAHARA
+				}
+				create_diplomatic_play = {
+					name = algerian_civil_war
+					type = dp_annex_war_historical
+					target_country = ROOT
+					
+					#war = yes
+					
+					add_war_goal = {
+						holder = ROOT
+						type = annex_country
+						target_country = THIS
+					}
+				}
+			}
+			
+		}
+		
+		#Create democratic ruler
+		create_character = {
+			ruler = yes ig_leader = yes
+			interest_group = ig_petty_bourgeoisie
+			ideology = ideology_liberal
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

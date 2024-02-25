@@ -3704,3 +3704,309 @@ historical_civil_wars.21 = {
     }
 
 }
+
+### Zapatista Uprising ###
+
+historical_civil_wars.22 = {
+    type = country_event
+	placement = scope:state_to_release
+
+    title = Zapatista_Uprising.t 									# Title of the event; ADD LOCALISATION
+    desc = Zapatista_Uprising.d 									# Description of the event; ADD LOCALISATION
+    #flavor = Zapatista_Uprising.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		c:MEX ?= this
+		game_date >= 1994.1.1											# START DATE: Date colony became self governing ****
+		game_date < 2004.1.1											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_republican_regime = yes
+		is_sufficiently_independent = yes 								# is_vassal = no
+		is_at_war = no													# war = no
+		
+		has_state_in_state_region = STATE_CHIAPAS
+		capital = { 
+			NOT = { state_region = s:STATE_CHIAPAS }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = Zapatista_Uprising_hccw }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		#Mark states to release
+		every_scope_state = {
+			limit = { 
+				state_region = s:STATE_CHIAPAS
+				is_capital = no
+			}
+			set_variable = { name = state_to_cede_ZAP months = 1 }
+			save_scope_as = state_to_release
+		}
+	
+		# Fire only once
+		set_variable = Zapatista_Uprising_hccw							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1							# Declare war!
+        highlighted_option = yes
+		
+		#Release Zapatista
+		create_dynamic_country = {
+			origin = ROOT
+			country_type = unrecognized
+			tier = city_state
+			capital = scope:state_to_release
+			cede_state_trigger = {
+				has_variable = state_to_cede_ZAP
+			}
+			on_created = { 
+			
+				every_scope_state = {
+					remove_variable = state_to_cede_ZAP
+				}
+				
+				set_variable = dynamic_decolonisation_country
+				
+				# Laws
+				effect_starting_politics_communist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_jingoism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+				
+				effect_starting_politics_semi_gold_system = yes
+				
+				set_variable = ZAP_tag
+				
+			}
+		}
+		
+		random_country = {
+			limit = { has_variable = ZAP_tag }
+			create_diplomatic_play = {
+				name = Zapatista_war
+				type = dp_annex_war_historical
+				target_country = ROOT
+				
+				#war = yes
+				
+				add_war_goal = {
+					holder = ROOT
+					type = annex_country
+					target_country = THIS
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2						# Peace option
+		default_option = yes
+		
+		effect_starting_politics_communist_republic = yes
+		effect_starting_politics_dictatorship = yes
+		effect_starting_politics_economic_policy_planned_economy = yes
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 1
+			is_decaying = yes 
+		}
+		
+		#Minor discontent
+		add_radicals = {
+			value = small_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Moro Uprising
+historical_civil_wars.23 = {
+    type = country_event
+	placement = scope:moro_war_indy_state
+
+    title = moro_war.PHI.t 											# Title of the event; ADD LOCALISATION
+    desc = moro_war.PHI.d 											# Description of the event; ADD LOCALISATION
+    #flavor = moro_war.PHI.f 										# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:PHI ?= this
+		game_date >= 1968.3.18
+		game_date < 1978.3.18
+		
+		NOT = { has_law = law_type:law_multicultural }
+		is_sufficiently_independent = yes								# is_vassal = no		
+		is_at_war = no													# war = no
+		
+		#Owns country to release
+		NOT = { 														# Colony to be released must not already exist on the map
+			exists = c:MGD												# Change TAG of the colony ****
+		}
+		any_scope_state = { 											# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:moro }					# Change homeland identity to match colony to be released ****
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = moro_war_PHI_hccw }						# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = { is_homeland = cu:moro } }
+			save_scope_as = moro_war_indy_state
+		}
+	
+		# Fire only once
+		set_variable = moro_war_PHI_hccw								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = MGD										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:moro_war_indy_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_nationalist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_military_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:MGD }
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:moro } }
+				set_state_owner = c:MGD
+			}
+			create_diplomatic_play = {
+				name = moro_war
+				type = dp_annex_war_historical
+				target_country = c:MGD
+				#war = yes
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2				# Peace option
+		default_option = yes
+		
+		#Release country
+		create_country = {
+			tag = MGD										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:moro_war_indy_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_nationalist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_military_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:MGD }
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:moro } }
+				set_state_owner = c:MGD
+			}
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
+		}
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
