@@ -1,0 +1,319 @@
+je_request_nato_intervention_button = {
+	name = "je_request_nato_intervention_button"
+	desc = "je_request_nato_intervention_button_desc"
+
+	visible = { 
+		
+		is_at_war = yes
+		
+	}
+
+	possible = {
+	
+		hidden_trigger = {
+			NOT = {
+				any_country = {
+					has_variable = requested_nato_intervention
+				}
+			}
+		}
+	
+		#THIS is involved in a defensive war with a non-NATO country
+		custom_tooltip = {
+			text = in_a_defensive_war.tt
+			any_diplomatic_play = {
+				is_war = yes
+				any_scope_play_involved = {
+					this = root
+				}
+				initiator = {
+					NOT = { this = root }
+					NOR = { 
+						has_modifier = nato_member
+						has_modifier = nato_leader
+					}
+					is_sufficiently_independent = yes
+				}
+				target = {
+					this = root
+					OR = { 
+						has_modifier = nato_member
+						has_modifier = nato_leader
+					}
+				}
+				OR = {
+					has_play_goal = open_market
+					has_play_goal = regime_change
+					has_play_goal = conquer_state
+					has_play_goal = return_state
+					has_play_goal = liberate_subject
+					has_play_goal = liberate_country
+					has_play_goal = take_treaty_port
+					has_play_goal = make_tributary
+					has_play_goal = make_protectorate
+					has_play_goal = transfer_subject
+					has_play_goal = annex_country
+					has_play_goal = humiliation
+					has_play_goal = unification
+					has_play_goal = unification_leadership
+				}
+			}
+		}
+		
+		#There are uninvolved nato countries
+		hidden_trigger = {
+			any_country = {
+				NOT = { this = root }
+				OR = { 
+					has_modifier = nato_member
+					has_modifier = nato_leader
+				}
+				is_at_war = no
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Request NATO intervention
+		set_variable = { 
+			name = requested_nato_intervention 
+			months = 1 
+		}
+		
+		#Call in all NATO members to join war
+		every_country = {
+			limit = { 
+				NOT = { this = root } 
+				OR = { 
+					has_modifier = nato_member
+					has_modifier = nato_leader
+				}
+				NOR = { 
+					any_cobelligerent_in_war = { this = root } 
+					any_enemy_in_diplo_play = { this = root }
+				}
+			}
+			trigger_event = { id = nato_system.8 } 
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}
+
+je_fund_nato_button = {
+	name = "je_fund_nato_button"
+	desc = "je_fund_nato_button_desc"
+
+	visible = { 
+		
+		NOT = { has_global_variable = fund_nato }
+		
+		has_modifier = nato_leader
+		
+	}
+
+	possible = {
+		
+		is_at_war = no
+		
+		in_default = no
+		
+		any_interest_group ?= {
+			is_in_government = yes
+			ig_government_power_share > 0.5 
+			law_stance = {
+				law = law_type:law_isolationism
+				value <= disapprove
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		set_global_variable = fund_nato
+		
+		#NATO leader will station troops in NATO countries
+		custom_tooltip = {
+			text = fund_nato.tt
+			every_country = {
+				limit = { 
+					NOT = { this = root } 
+					has_modifier = nato_member 
+					NOT = { has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement is_initiator = no } }
+				}
+				save_scope_as = nato_member_scope
+				ROOT = {
+					create_diplomatic_pact = {
+						country = scope:nato_member_scope
+						type = military_cooperation_agreement
+					}
+				}
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}
+
+je_defund_nato_button = {
+	name = "je_defund_nato_button"
+	desc = "je_defund_nato_button_desc"
+
+	visible = { 
+		
+		has_global_variable = fund_nato
+		
+		has_modifier = nato_leader
+		
+	}
+
+	possible = {
+		
+		is_at_war = no
+		
+		OR = { 
+			any_interest_group ?= {
+				is_in_government = yes
+				ig_government_power_share > 0.5 
+				law_stance = {
+					law = law_type:law_isolationism
+					value >= approve
+				}
+			}
+			in_default = yes
+		}
+		
+	}
+
+	effect = {
+		
+		remove_global_variable = fund_nato
+		
+		#NATO leader will un-station troops in NATO countries
+		custom_tooltip = {
+			text = defund_nato.tt
+			every_country = {
+				limit = { 
+					NOT = { this = root } 
+					has_modifier = nato_member 
+					has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement is_initiator = no }
+				}
+				save_scope_as = nato_member_scope
+				ROOT = {
+					remove_diplomatic_pact = {
+						country = scope:nato_member_scope
+						type = military_cooperation_agreement
+					}
+				}
+			}
+		}
+		every_country = {
+			limit = { 
+				NOT = { this = root } 
+				has_modifier = nato_member 
+				has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement is_initiator = no }
+			}
+			change_relations = { country = ROOT value = -20 }
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+	}
+	
+}
+
+je_hold_nato_exercise_button = {
+	name = "je_hold_nato_exercise_button"
+	desc = "je_hold_nato_exercise_button_desc"
+
+	visible = { 
+		
+		has_modifier = nato_leader
+		
+	}
+
+	possible = {
+		
+		NOT = { has_modifier = nato_exercise }
+		
+		is_at_war = no
+		
+		in_default = no
+		
+		any_interest_group ?= {
+			is_in_government = yes
+			ig_government_power_share > 0.5 
+			OR = {
+				law_stance = {
+					law = law_type:law_defensive_war
+					value >= approve
+				}
+				law_stance = {
+					law = law_type:law_offensive_war
+					value >= approve
+				}
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Add military exercises modifier
+		add_modifier = { 
+			name = nato_exercise 
+			years = 5 
+			is_decaying = yes 
+		}
+		hidden_effect = {
+			every_country = {
+				limit = {
+					NOT = { this = root } 
+					has_modifier = nato_member
+				}
+				hidden_effect = { remove_modifier = nato_exercise }
+				add_modifier = { 
+					name = nato_exercise 
+					years = 5 
+					is_decaying = yes 
+				}
+			}
+		}
+		
+		#Antagonise hostile countries
+		every_country = {
+			limit = { 
+				NOT = { this = root } 
+				NOT = { has_modifier = nato_member }
+				OR = { 
+					country_is_in_europe = yes
+					country_is_in_north_america = yes
+					c:SOV ?= this
+					c:RUS ?= this
+				}
+				is_sufficiently_independent = yes
+				relations:root < relations_threshold:neutral
+			}
+			change_relations = { country = ROOT value = -20 }
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 10
+	}
+	
+}

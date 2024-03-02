@@ -1,0 +1,154 @@
+﻿je_nato_system = {
+	icon = "gfx/interface/icons/diplo_icons/nato_member.dds"
+
+	group = je_group_foreign_affairs
+	
+	scripted_button = je_request_nato_intervention_button
+	scripted_button = je_fund_nato_button
+	scripted_button = je_defund_nato_button
+	scripted_button = je_hold_nato_exercise_button
+	
+	is_shown_when_inactive = {
+		
+		#nato eligible
+		OR = { 
+			country_is_in_europe = yes
+			country_is_in_north_america = yes
+		}
+		
+	}
+	
+	possible = {
+		
+		#THIS is a member of nato
+		OR = { 
+			has_modifier = nato_member
+			has_modifier = nato_leader
+		}
+		
+	}
+
+	immediate = {
+		
+		#Count NATO members
+		set_variable = { 
+			name = nato_member_count
+			value = 0 
+		}
+		every_country = {
+			limit = {
+				OR = { 
+					has_modifier = nato_member
+					has_modifier = nato_leader
+				}
+			}
+			ROOT = {
+				change_variable = {
+					name = nato_member_count
+					add = 1
+				}
+			}
+		}
+		
+		#Default is leader funds NATO
+		if = {
+			limit = { has_modifier = nato_leader }
+			set_global_variable = fund_nato
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+		
+		effect = {
+		
+			#Count NATO members
+			set_variable = { 
+				name = nato_member_count
+				value = 0 
+			}
+			every_country = {
+				limit = {
+					OR = { 
+						has_modifier = nato_member
+						has_modifier = nato_leader
+					}
+				}
+				ROOT = {
+					change_variable = {
+						name = nato_member_count
+						add = 1
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	on_yearly_pulse = {
+		
+		effect = {
+		
+			#Impose foreign military bases
+			if = {
+				limit = { 
+					has_global_variable = fund_nato
+					has_modifier = nato_leader
+				}
+				every_country = {
+					limit = { 
+						NOT = { this = root } 
+						has_modifier = nato_member 
+						NOT = { has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement is_initiator = no } }
+					}
+					save_scope_as = nato_member_scope
+					ROOT = {
+						create_diplomatic_pact = {
+							country = scope:nato_member_scope
+							type = military_cooperation_agreement
+						}
+					}
+				}
+			}
+			
+		}
+		
+	}
+
+	fail = {
+		
+		NOR = { 
+			has_modifier = nato_member
+			has_modifier = nato_leader
+		}
+		
+	}
+	
+	on_fail = {
+		
+		#Display members
+		every_country = {
+			limit = { 
+				OR = { 
+					has_modifier = nato_member
+					has_modifier = nato_leader
+				}
+			}
+			save_scope_as = superstate_member_label
+			custom_tooltip = {
+				text = superstate_member_label.tt
+			}
+		}
+		
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = no
+
+	transferable = no
+
+	progressbar = no
+	
+}
