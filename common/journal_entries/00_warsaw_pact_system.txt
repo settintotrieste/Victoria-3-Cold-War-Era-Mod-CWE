@@ -1,0 +1,161 @@
+﻿je_warsaw_pact_system = {
+	icon = "gfx/interface/icons/diplo_icons/warsaw_pact_member.dds"
+
+	group = je_group_foreign_affairs
+	
+	scripted_button = je_request_warsaw_pact_intervention_button
+	scripted_button = je_fund_warsaw_pact_button
+	scripted_button = je_defund_warsaw_pact_button
+	scripted_button = je_hold_warsaw_pact_exercise_button
+	
+	is_shown_when_inactive = {
+		
+		#warsaw_pact eligible
+		OR = { 
+			country_is_in_europe = yes
+			c:SOV ?= this
+			c:RUS ?= this
+		}
+		
+	}
+	
+	possible = {
+		
+		#THIS is a member of warsaw_pact
+		OR = { 
+			has_modifier = warsaw_pact_member
+			has_modifier = warsaw_pact_leader
+		}
+		
+	}
+
+	immediate = {
+		
+		#Count Warsaw Pact members
+		set_variable = { 
+			name = warsaw_pact_member_count
+			value = 0 
+		}
+		every_country = {
+			limit = {
+				OR = { 
+					has_modifier = warsaw_pact_member
+					has_modifier = warsaw_pact_leader
+				}
+			}
+			ROOT = {
+				change_variable = {
+					name = warsaw_pact_member_count
+					add = 1
+				}
+			}
+		}
+		
+		#Default is leader funds Warsaw Pact
+		if = {
+			limit = { has_modifier = warsaw_pact_leader }
+			set_global_variable = fund_warsaw_pact
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+		
+		effect = {
+		
+			#Count Warsaw Pact members
+			set_variable = { 
+				name = warsaw_pact_member_count
+				value = 0 
+			}
+			every_country = {
+				limit = {
+					OR = { 
+						has_modifier = warsaw_pact_member
+						has_modifier = warsaw_pact_leader
+					}
+				}
+				ROOT = {
+					change_variable = {
+						name = warsaw_pact_member_count
+						add = 1
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	on_yearly_pulse = {
+		
+		effect = {
+		
+			#Impose foreign military bases
+			if = {
+				limit = { 
+					has_global_variable = fund_warsaw_pact
+					has_modifier = warsaw_pact_leader
+				}
+				every_country = {
+					limit = { 
+						NOT = { this = root } 
+						has_modifier = warsaw_pact_member 
+						NOT = { has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement is_initiator = no } }
+					}
+					save_scope_as = warsaw_pact_member_scope
+					ROOT = {
+						create_diplomatic_pact = {
+							country = scope:warsaw_pact_member_scope
+							type = military_cooperation_agreement
+						}
+					}
+				}
+			}
+			
+		}
+		
+	}
+
+	fail = {
+		
+		NOR = { 
+			has_modifier = warsaw_pact_member
+			has_modifier = warsaw_pact_leader
+		}
+		
+	}
+	
+	on_fail = {
+		
+		#Display members
+		every_country = {
+			limit = { 
+				OR = { 
+					has_modifier = warsaw_pact_member
+					has_modifier = warsaw_pact_leader
+				}
+			}
+			save_scope_as = superstate_member_label
+			custom_tooltip = {
+				text = superstate_member_label.tt
+			}
+		}
+		
+		#Clear modifier
+		if = {
+			limit = { has_modifier = warsaw_pact_exercise }
+			remove_modifier = warsaw_pact_exercise
+		}
+		
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = no
+
+	transferable = no
+
+	progressbar = no
+	
+}
