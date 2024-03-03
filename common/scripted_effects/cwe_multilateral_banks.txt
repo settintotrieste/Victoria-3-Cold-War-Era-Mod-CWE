@@ -1,0 +1,991 @@
+calculate_total_borrowing_pool = {
+
+	#Can only borrow up to 1/10 of 25% of GDP of all multilateral bank countries combined
+	set_variable = {
+		name = currency_borrowing_pool
+		value = root.gdp
+	}
+	every_country = {
+		limit = { has_diplomatic_pact = { who = ROOT type = multilateral_development_bank } }
+		ROOT = {
+			change_variable = {
+				name = currency_borrowing_pool
+				add = this.gdp
+			}
+		}
+	}
+	change_variable = {
+		name = currency_borrowing_pool
+		divide = 4
+	}
+	change_variable = {
+		name = currency_borrowing_pool
+		divide = 10
+	}
+	
+	#Display borrowing limit in local currency
+	set_variable = {
+		name = currency_borrowing_pool_domestic
+		value = root.var:currency_borrowing_pool
+	}
+	if = {
+		limit = { has_variable = currency_exchange_rate }
+		change_variable = {
+			name = currency_borrowing_pool_domestic
+			multiply = root.var:currency_exchange_rate
+		}
+	}
+	if = {
+		limit = { has_variable = currency_borrowed_money }
+		change_variable = {
+			name = currency_borrowing_pool_domestic
+			subtract = root.var:currency_borrowed_money
+		}
+	}
+	
+	#Display
+	set_variable = {
+		name = currency_borrowing_pool_display
+		value = root.var:currency_borrowing_pool
+	}
+	change_variable = {
+		name = currency_borrowing_pool_display
+		divide = 1000000
+	}
+	set_variable = {
+		name = currency_borrowing_pool_domestic_display
+		value = root.var:currency_borrowing_pool_domestic
+	}
+	change_variable = {
+		name = currency_borrowing_pool_domestic_display
+		divide = 1000000
+	}
+	
+}
+
+calculate_borrowed_money = {
+
+	#Determine amount borrowed
+	if = {
+		limit = { NOT = { has_variable = currency_borrowed_money } }
+		set_variable = {
+			name = currency_borrowed_money
+			value = 0
+		}
+	}
+	if = {
+		limit = { has_variable = currency_borrowed_money }
+		
+		#Display
+		set_variable = {
+			name = currency_borrowed_money_display
+			value = root.var:currency_borrowed_money
+		}
+		change_variable = {
+			name = currency_borrowed_money_display
+			divide = 1000000
+		}
+	
+	}
+	
+	#Determine how much can be borrowed at a time
+	if = {
+		limit = { NOT = { has_variable = currency_borrow_money_monthly_limit } }
+		set_variable = {
+			name = currency_borrow_money_monthly_limit
+			value = root.var:currency_borrowing_pool_domestic
+		}
+	}
+	if = {
+		limit = { has_variable = currency_borrow_money_monthly_limit }
+		set_variable = {
+			name = currency_borrow_money_monthly_limit_display
+			value = root.var:currency_borrow_money_monthly_limit
+		}
+		change_variable = {
+			name = currency_borrow_money_monthly_limit_display
+			divide = 1000000
+		}
+	}
+	if = {
+		limit = { NOT = { has_variable = currency_borrowed_money_yearly_repayment_display } }
+		set_variable = {
+			name = currency_borrowed_money_yearly_repayment_display
+			value = 0
+		}
+	}
+	
+}
+
+calculate_borrowed_money_interest = {
+
+	#Principal increases based on interest rate
+	if = {
+		limit = { 
+			has_variable = currency_borrowed_money
+			has_variable = currency_exchange_rate
+			root.var:currency_borrowed_money > 0
+		}
+		set_variable = {
+			name = currency_borrowed_money_interest_rate
+			value = global_var:currency_rate_international
+		}
+		change_variable = {
+			name = currency_borrowed_money_interest_rate
+			add = 100
+		}
+		change_variable = {
+			name = currency_borrowed_money_interest_rate
+			divide = 100
+		}
+		change_variable = {
+			name = currency_borrowed_money
+			multiply = root.var:currency_borrowed_money_interest_rate
+		}
+	}
+	
+	#Update display
+	if = {
+		limit = { has_variable = currency_borrowed_money }
+		
+		#Display
+		set_variable = {
+			name = currency_borrowed_money_display
+			value = root.var:currency_borrowed_money
+		}
+		change_variable = {
+			name = currency_borrowed_money_display
+			divide = 1000000
+		}
+	
+	}
+	
+}
+
+calculate_borrowed_money_repayment_rate = {
+
+	#Repay money
+	if = {
+		limit = { 
+			has_variable = currency_borrowed_money
+			root.var:currency_borrowed_money > 0
+		}
+		
+		#Repay borrowed money
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money < 10000
+			}
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 1000
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 10000
+				root.var:currency_borrowed_money < 100000
+			}
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 10000
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 100000
+				root.var:currency_borrowed_money < 1000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 100000
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 1000000
+				root.var:currency_borrowed_money < 10000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 1000000
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 10000000
+				root.var:currency_borrowed_money < 100000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 10000000
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 100000000
+				root.var:currency_borrowed_money < 1000000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 100000000
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 1000000000
+				root.var:currency_borrowed_money < 10000000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 1000000000
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 10000000000
+				root.var:currency_borrowed_money < 100000000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 10000000000
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 100000000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 100000000000
+			}
+		}
+		
+		#Clamp
+		if = {
+			limit = { root.var:currency_borrowed_money <= 0 }
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 0
+			}
+		}
+		
+		#Show currency exchange adjusted amounts
+		if = {
+			limit = { 
+				has_variable = currency_borrowed_money_exchange_adjusted_repayment
+				has_variable = currency_exchange_rate
+				has_variable = currency_borrowed_money_yearly_repayment_display
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = root.var:currency_borrowed_money_yearly_repayment_display
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+		}
+		
+	}
+	
+}
+
+calculate_borrowed_money_repayment = {
+
+	#Repay money
+	if = {
+		limit = { 
+			has_variable = currency_borrowed_money
+			root.var:currency_borrowed_money > 0
+		}
+		
+		#Repay borrowed money
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money < 10000
+			}
+			add_treasury = -1000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 1000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 1000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 10000
+				root.var:currency_borrowed_money < 100000
+			}
+			add_treasury = -10000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 10000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 10000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 100000
+				root.var:currency_borrowed_money < 1000000
+			}
+			add_treasury = -100000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 100000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 100000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 1000000
+				root.var:currency_borrowed_money < 10000000
+			}
+			add_treasury = -1000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 1000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 1000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 10000000
+				root.var:currency_borrowed_money < 100000000
+			}
+			add_treasury = -10000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 10000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 10000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 100000000
+				root.var:currency_borrowed_money < 1000000000
+			}
+			add_treasury = -100000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 100000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 100000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 1000000000
+				root.var:currency_borrowed_money < 10000000000
+			}
+			add_treasury = -1000000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 1000000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 1000000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 10000000000
+				root.var:currency_borrowed_money < 100000000000
+			}
+			add_treasury = -10000000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 10000000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 10000000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				root.var:currency_borrowed_money >= 100000000000
+			}
+			add_treasury = -100000000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 100000000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 100000000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		
+		#Clamp
+		if = {
+			limit = { root.var:currency_borrowed_money <= 0 }
+			set_variable = {
+				name = currency_borrowed_money
+				value = 0
+			}
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 0
+			}
+		}
+		
+		#Display
+		set_variable = {
+			name = currency_borrowed_money_display
+			value = root.var:currency_borrowed_money
+		}
+		change_variable = {
+			name = currency_borrowed_money_display
+			divide = 1000000
+		}
+		
+	}
+	
+}
+
+calculate_borrowed_money_repayment_large = {
+
+	#Repay money
+	if = {
+		limit = { 
+			has_variable = currency_borrowed_money
+			root.var:currency_borrowed_money > 0
+		}
+		
+		#Repay borrowed money
+		if = {
+			limit = { 
+				gold_reserves > 10000
+				root.var:currency_borrowed_money < 100000
+			}
+			add_treasury = -10000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 10000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 10000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				gold_reserves > 100000
+				root.var:currency_borrowed_money >= 100000
+				root.var:currency_borrowed_money < 1000000
+			}
+			add_treasury = -100000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 100000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 100000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				gold_reserves > 1000000
+				root.var:currency_borrowed_money >= 1000000
+				root.var:currency_borrowed_money < 10000000
+			}
+			add_treasury = -1000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 1000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 1000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				gold_reserves > 10000000
+				root.var:currency_borrowed_money >= 10000000
+				root.var:currency_borrowed_money < 100000000
+			}
+			add_treasury = -10000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 10000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 10000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				gold_reserves > 100000000
+				root.var:currency_borrowed_money >= 100000000
+				root.var:currency_borrowed_money < 1000000000
+			}
+			add_treasury = -100000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 100000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 100000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				gold_reserves > 1000000000
+				root.var:currency_borrowed_money >= 1000000000
+				root.var:currency_borrowed_money < 10000000000
+			}
+			add_treasury = -1000000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 1000000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 1000000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				gold_reserves > 10000000000
+				root.var:currency_borrowed_money >= 10000000000
+				root.var:currency_borrowed_money < 100000000000
+			}
+			add_treasury = -10000000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 10000000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 10000000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				gold_reserves > 100000000000
+				root.var:currency_borrowed_money >= 100000000000
+				root.var:currency_borrowed_money < 1000000000000
+			}
+			add_treasury = -100000000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 100000000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 100000000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		if = {
+			limit = { 
+				gold_reserves > 1000000000000
+				root.var:currency_borrowed_money >= 1000000000000
+			}
+			add_treasury = -1000000000000
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 1000000000000
+			}
+			set_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				value = 1000000000000
+			}
+			change_variable = {
+				name = currency_borrowed_money_exchange_adjusted_repayment
+				multiply = root.var:currency_exchange_rate
+			}
+			change_variable = {
+				name = currency_borrowing_pool_domestic
+				add = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+			change_variable = {
+				name = currency_borrowed_money
+				subtract = root.var:currency_borrowed_money_exchange_adjusted_repayment
+			}
+		}
+		
+		#Clamp
+		if = {
+			limit = { root.var:currency_borrowed_money <= 0 }
+			set_variable = {
+				name = currency_borrowed_money
+				value = 0
+			}
+			set_variable = {
+				name = currency_borrowed_money_yearly_repayment_display
+				value = 0
+			}
+		}
+		
+		#Display
+		set_variable = {
+			name = currency_borrowed_money_display
+			value = root.var:currency_borrowed_money
+		}
+		change_variable = {
+			name = currency_borrowed_money_display
+			divide = 1000000
+		}
+		
+	}
+	
+}
+
+calculate_domestic_currency_rate = {
+
+	#Domestic currency strength
+	if = {
+		limit = { has_law = law_type:law_very_deflationary_monetary_policy }
+		set_variable = {
+			name = currency_rate_domestic
+			value = 5
+		}
+	}
+	if = {
+		limit = { has_law = law_type:law_deflationary_monetary_policy }
+		set_variable = {
+			name = currency_rate_domestic
+			value = 4
+		}
+	}
+	if = {
+		limit = { has_law = law_type:law_neutral_monetary_policy }
+		set_variable = {
+			name = currency_rate_domestic
+			value = 3
+		}
+	}
+	if = {
+		limit = { has_law = law_type:law_expansionary_monetary_policy }
+		set_variable = {
+			name = currency_rate_domestic
+			value = 2
+		}
+	}
+	if = {
+		limit = { has_law = law_type:law_very_expansionary_monetary_policy }
+		set_variable = {
+			name = currency_rate_domestic
+			value = 1
+		}
+	}
+
+}
+
+calculate_international_currency_rate = {
+
+	#International currency strength
+	if = {
+		limit = { global_country_ranking = 1 }
+		set_global_variable = {
+			name = currency_rate_international
+			value = 0
+		}
+		set_global_variable = {
+			name = currency_rate_international_divisor
+			value = 0
+		}
+		every_country = {
+			limit = {
+				NOT = { this = root }
+			}
+			if = {
+				limit = { has_law = law_type:law_very_deflationary_monetary_policy }
+				change_global_variable = {
+					name = currency_rate_international
+					add = 5
+				}
+			}
+			if = {
+				limit = { has_law = law_type:law_deflationary_monetary_policy }
+				change_global_variable = {
+					name = currency_rate_international
+					add = 4
+				}
+			}
+			if = {
+				limit = { has_law = law_type:law_neutral_monetary_policy }
+				change_global_variable = {
+					name = currency_rate_international
+					add = 3
+				}
+			}
+			if = {
+				limit = { has_law = law_type:law_expansionary_monetary_policy }
+				change_global_variable = {
+					name = currency_rate_international
+					add = 2
+				}
+			}
+			if = {
+				limit = { has_law = law_type:law_very_expansionary_monetary_policy }
+				change_global_variable = {
+					name = currency_rate_international
+					add = 1
+				}
+			}
+			change_global_variable = {
+				name = currency_rate_international_divisor
+				add = 1
+			}
+		}
+		change_global_variable = {
+			name = currency_rate_international
+			divide = global_var:currency_rate_international_divisor
+		}
+	}
+	if = {
+		limit = { has_global_variable = currency_rate_international }
+		set_variable = {
+			name = currency_rate_international_local
+			value = global_var:currency_rate_international
+		}
+	}
+
+}
+
+calculate_currency_exchange_rate = {
+
+	if = {
+		limit = { 
+			has_variable = currency_rate_domestic
+			has_variable = currency_rate_international_local
+		}
+		set_variable = {
+			name = currency_exchange_rate
+			value = root.var:currency_rate_domestic
+		}
+		change_variable = {
+			name = currency_exchange_rate
+			divide = root.var:currency_rate_international_local
+		}
+	}
+
+}
