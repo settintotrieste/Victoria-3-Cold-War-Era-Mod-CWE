@@ -745,7 +745,7 @@ ai_strategy_default = {
 	# root is the AI doing the evaluation, scope:target_country is prospective subject
 	subject_value = {
 		value = 0
-				
+		
 		# PUT ALL REGULAR SUBJECT SCORES INSIDE THE BELOW IF STATEMENT TO PREVENT AI FROM TAKING UNREACHABLE SUBJECTS
 		if = {
 			limit = {		
@@ -781,21 +781,65 @@ ai_strategy_default = {
 				}
 				
 				if = {
-					limit = {
-						has_secret_goal = {
-							who = scope:target_country
-							secret_goal = protect
-						}						
+					limit = { 
+						scope:target_country = { is_subject_of = root }
+					}
+				
+					# AI values subjects it already has higher than subjects it might have, and will basically never give away large subjects with a lot of prestige
+					if = {
+						limit = { 
+							scope:target_country = { 
+								prestige >= 100			
+							} 					
+						}
+						multiply = 5.0
+					}
+					else_if = {
+						limit = { 
+							scope:target_country = { 
+								prestige >= 75			
+							} 					
+						}
+						multiply = 4.0
+					}					
+					else_if = {
+						limit = { 
+							scope:target_country = { 
+								prestige >= 50			
+							} 					
+						}
+						multiply = 3.0
+					}
+					else_if = {
+						limit = { 
+							scope:target_country = { 
+								prestige >= 25			
+							} 					
+						}
+						multiply = 2.0
+					}				
+					else = {
+						multiply = 1.5	
+					}			
+				}
+				else = {				
+					if = {
+						limit = {
+							has_secret_goal = {
+								who = scope:target_country
+								secret_goal = protect
+							}							
+						}
+						
+						multiply = 0.5
 					}
 					
-					multiply = 0.5
-				}
-				
-				if = {
-					limit = {
-						NOT = { has_strategic_adjacency = scope:target_country }
-					}
-					multiply = 0.5
+					if = {
+						limit = {
+							NOT = {	has_strategic_adjacency = scope:target_country }
+						}
+						multiply = 0.5
+					}						
 				}
 			}
 			
@@ -838,23 +882,17 @@ ai_strategy_default = {
 				}
 				multiply = 1.5
 			}
-
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_economy = no			
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-					
-				}
-				multiply = 1.5
-			}	
+			
 		}
 
 		min = 0
-		max = 200
+		if = {
+			limit = { scope:target_country = { is_subject_of = root } }
+			max = 1000			
+		}
+		else = {
+			max = 200		
+		}
 	}
 
 	# How much does the AI desire becoming another country's subject
