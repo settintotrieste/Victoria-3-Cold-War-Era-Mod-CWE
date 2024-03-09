@@ -653,3 +653,118 @@ american_decolonisation_indy.6 = {
     }
 
 }
+
+#Germany
+american_decolonisation_indy.7 = {
+    type = country_event
+
+    title = american_germany.indy.t 							# Title of the event; ADD LOCALISATION
+    desc = american_germany.indy.d 								# Description of the event; ADD LOCALISATION
+    #flavor = american_germany.indy.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this
+		
+		# Event has not been fired before
+		NOT = { has_variable = american_germany_indy }				# CHANGE ****
+		
+		#Year
+		OR = {
+			
+			#Historical date
+			AND = { 
+				game_date >= 1991.3.15
+				game_date < 2001.3.15
+			}
+			
+			#Cold War ended earlier
+			cold_war_not_ongoing = yes
+			
+		}
+		
+		is_a_republican_democracy = yes								# Correct gov types
+		is_sufficiently_independent = yes							# is_vassal = no		
+		is_at_war = no												# war = no
+		
+		#Colony conditions
+		exists = c:GER
+		c:GER = { 													# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_subject_type = subject_type_satellite
+		}
+		
+    }
+	
+	immediate = { 
+		
+		# Fire only once
+		set_variable = american_germany_indy						# Change variable ****
+		
+	}
+    
+    option = {
+        name = american_decolonisation_indy.option.1				# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		c:GER = { 													# Change TAG of the colony ****
+			make_independent = yes
+		}
+		
+		# Overlord create client state pact with colony
+		create_diplomatic_pact = {
+			country = c:GER											# Change TAG ****
+			type = protectorate
+		}
+		create_diplomatic_pact = {
+			country = c:GER											# Change TAG ****
+			type = customs_union
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = american_decolonisation_indy.option.2					# REFUSE
+		default_option = yes
+		
+		#Reaction
+		c:GER = {
+		
+			# Natives are angry!
+			add_radicals = {
+				value = large_radicals
+			}
+			every_scope_state = {
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+			#Colony is angry
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
