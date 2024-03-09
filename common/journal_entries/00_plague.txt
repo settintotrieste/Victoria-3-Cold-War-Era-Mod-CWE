@@ -1,0 +1,133 @@
+﻿# triggered by on_law_enactment_started
+je_spanish_flu = {
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+
+	group = je_group_crises
+
+	immediate = {
+		if = {
+			limit = {
+				has_variable = spanish_flu_over
+			}
+			remove_variable = spanish_flu_over
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			random_list = {
+				1 = {
+					modifier = {
+						if = {
+							limit = {
+								NOT = {
+									has_variable = plague_lockdown
+									has_variable = plague_measures
+								}
+							}
+						}
+					add = -1
+					}
+					#nothing happens
+				}
+				3 = {
+					modifier = {
+						if = {
+							limit = {
+								has_variable = plague_lockdown
+							}
+							add = -2
+						}
+						else_if = {
+							limit = {
+								has_variable = plague_measures
+								}
+							add = -1
+						}
+					}
+					trigger_event = { id = plague.2 }
+				}			
+				3 = {
+					modifier = {
+						if = {
+							limit = {
+								has_variable = plague_lockdown
+							}
+							add = -2
+						}
+						else_if = {
+							limit = {
+								has_variable = plague_measures
+								}
+							add = -1
+						}
+					}
+					trigger_event = { id = plague.200 }
+				}
+			}
+		}
+		
+		random_events = {
+			10 = 0
+			1 = plague.7
+			1 = plague.8
+			1 = plague.9
+		}
+	}
+	
+	on_weekly_pulse = {
+		effect = {
+			every_scope_state = {
+				limit = {
+					has_variable = plague_restrictions_tracker
+					has_modifier = plague_modifier
+				}
+				if = {
+					limit = {
+						owner = {
+							has_variable = plague_lockdown
+						}
+					}
+					change_variable = {
+						name = plague_restrictions_tracker
+						add = 2
+					}
+				}
+				else_if = {
+					limit = {
+						owner = {
+							has_variable = plague_measures
+						}
+					}
+					change_variable = {
+						name = plague_restrictions_tracker
+						add = 1
+					}
+				}
+			}
+		}
+	}
+
+	complete = {
+		NOT = {
+			any_scope_state = {
+				has_modifier = plague_modifier
+			}
+		}
+	}
+
+	on_complete = {
+		# This is just here to generate a list of plague states
+		# For obvious reasons this doesn't do anything in practice
+		every_scope_state = {
+			limit = {
+				has_modifier = plague_modifier
+			}
+			remove_modifier = plague_modifier
+		}
+		set_variable = spanish_flu_over
+	}
+
+	weight = 100
+	should_be_pinned_by_default = yes
+}
