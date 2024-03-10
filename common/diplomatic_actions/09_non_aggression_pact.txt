@@ -42,6 +42,7 @@
 			has_strategic_adjacency = scope:target_country
 			scope:target_country = { country_rank >= rank_value:great_power }
 		}
+		
 	}
 	
 	possible = {
@@ -118,32 +119,38 @@
 			
 		}
 
-		requirement_to_maintain = { trigger = { NOT = {
+		requirement_to_maintain = { 
 		
-			OR = {
+			trigger = { 
 				
-				is_country_type = decentralized
-				scope:target_country = { is_country_type = decentralized }
+				#Standard checks
+				NOT = { is_country_type = decentralized }
+				scope:target_country = { NOT = { is_country_type = decentralized } }
 				
-				is_revolutionary = yes
-				scope:target_country = { is_revolutionary = yes }
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = { is_revolutionary = no is_secessionist = no }
 				
-				scope:actor = { is_not_sufficiently_independent = yes }
-				scope:target_country = { is_not_sufficiently_independent = yes }
+				#Both parties are sufficiently independent
+				is_sufficiently_independent = yes
+				scope:target_country = { is_sufficiently_independent = yes }
 				
-				has_diplomatic_pact = { who = scope:target_country type = alliance }
-				has_diplomatic_pact = { who = scope:target_country type = defensive_pact }
+				#Both countries do not have a better pact with each other
+				NOR = {
+					has_diplomatic_pact = { who = scope:target_country type = alliance }
+					has_diplomatic_pact = { who = scope:target_country type = defensive_pact }
+				}
 				
-				is_subject_of = scope:target_country
-				scope:target_country = { is_subject_of = ROOT }
-				
-				has_war_with = scope:target_country
-				
-				#scope:target_country.relations:root > relations_threshold:neutral
+				#Both countries do not have a subject-overlord relationship
+				scope:target_country = { 
+					has_subject_relation_with = ROOT
+				}
+			
+				#Cannot enter into NAP if both are at war
+				NOT = { has_war_with = scope:target_country }
 				
 			}
 			
-		} } }
+		}
 
 		manual_break_effect = {
 			create_truce = { country = scope:target_country months = 12 }

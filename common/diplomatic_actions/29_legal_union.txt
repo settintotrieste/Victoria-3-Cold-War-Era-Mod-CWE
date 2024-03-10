@@ -219,59 +219,87 @@
 			
 		}
 		
-		requirement_to_maintain = { trigger = { NOT = {
+		requirement_to_maintain = { 
+		
+			trigger = {  
 			
-			NOT = { scope:target_country = { is_direct_subject_of = scope:actor NOT = { is_sufficiently_independent = yes } } }
-			
-			OR = {
-			
-				# THIS has bad relations with TARGET
-				custom_tooltip = {
-					text = DIPLO_ACTION_RELATIONS_COLD_OR_LESS
-					scope:target_country.relations:root <= relations_threshold:cold
-				}
-			
-				#Insufficient government similarity
-				custom_tooltip = {
-					text = has_same_gov_type_tt
-					NOR = {
-						AND = { is_a_democracy = yes scope:target_country = { is_some_kind_of_democracy = yes } }
-						AND = { is_a_communist_government = yes scope:target_country = { is_a_communist_government = yes } }
-						AND = { is_a_nationalist_government = yes scope:target_country = { is_a_nationalist_government = yes } }
-						AND = { is_a_theocratic_government = yes scope:target_country = { is_a_theocratic_government = yes } }
+				has_journal_entry = je_judiciary
+				scope:target_country = { has_journal_entry = je_judiciary }
+				
+				#THIS is not decentralized
+				NOT = { is_country_type = decentralized }
+				scope:target_country = { NOT = { is_country_type = decentralized } }
+				
+				#THIS and Target are not revolutionary
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = { is_revolutionary = no is_secessionist = no } 
+				
+				#THIS and Target are not subjects
+				is_sufficiently_independent = yes
+				scope:target_country = { 
+					OR = { 
+						is_sufficiently_independent = yes 
+						is_direct_subject_of = ROOT
 					}
 				}
 				
-				#THIS and TARGET no longer have independent courts
-				has_law = law_type:law_kangaroo_law
-				scope:target_country = { has_law = law_type:law_kangaroo_law }
+				#TARGET and THIS are not at war
+				NOT = { has_war_with = scope:target_country }
 				
-				#TARGET is in a confederation but not a subject of THIS
-				scope:target_country = { 
-					is_subject_type = subject_type_confederal_state
-					NOT = { is_direct_subject_of = scope:actor }
-				}
-			
-			}
-			
-		} } }
-		
-		requirement_to_maintain = { trigger = { NOT = {
-			
-			NOT = { scope:target_country = { is_direct_subject_of = scope:actor NOT = { is_sufficiently_independent = yes } } }
-			
-			OR = {
-			
-				NOT = { is_sufficiently_independent = yes }
+				#THIS is of a higher rank than the Target
+				scope:target_country = { country_rank < root.country_rank }
 				
-				scope:target_country = { 
-					NOT = { is_direct_subject_of = ROOT }
-					NOT = { is_sufficiently_independent = yes }
+				OR = {
+				
+					# THIS has good relations with TARGET
+					custom_tooltip = {
+						text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+						scope:target_country.relations:root >= relations_threshold:cordial
+					}
+					
+					#Subjects cannot freely leave Legal Union
+					scope:target_country = { is_subject_of = scope:actor }
+					
 				}
 				
+				#Sufficient government similarity
+				OR = {
+				
+					#THIS shares the same government type as TARGET
+					custom_tooltip = {
+						text = has_same_gov_type_tt
+						OR = {
+							AND = { is_a_democracy = yes scope:target_country = { is_a_democracy = yes } }
+							AND = { is_a_communist_government = yes scope:target_country = { is_a_communist_government = yes } }
+							AND = { is_a_nationalist_government = yes scope:target_country = { is_a_nationalist_government = yes } }
+							AND = { is_a_theocratic_government = yes scope:target_country = { is_a_theocratic_government = yes } }
+						}
+					}
+					
+					#TARGET is a subject of THIS
+					scope:target_country = { 
+						is_direct_subject_of = ROOT
+						OR = { 
+							is_a_colonial_subject_gov = yes
+							is_subject_type = subject_type_special_administrative_region
+						}
+					}
+					
+				}
+				
+				#More than 2 legal union leaders
+				NOT = {
+					
+					any_country = { 
+						has_diplomatic_pact = { who = scope:target_country type = currency_union is_initiator = yes } 
+						count > 1
+					}
+					
+				}
+				
 			}
 			
-		} } }
+		}
 		
 		monthly_effect = {
 		

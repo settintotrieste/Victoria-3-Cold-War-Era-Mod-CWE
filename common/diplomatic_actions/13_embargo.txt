@@ -37,6 +37,7 @@
 			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
 			scope:target_country.relations:root <= relations_threshold:poor
 		}
+		
 	}
 
 	accept_effect = {}
@@ -68,38 +69,52 @@
 			}
 			
 		}
-		
-		requirement_to_maintain = { trigger = { NOT = {
-		
-			#UN sanctions
-			NAND = { 
-				scope:target_country = { has_modifier = un_sanctions_3 }
-				scope:actor = { has_modifier = un_embargo_participant }
-			}
-		
-			custom_tooltip = {
-				text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
-				scope:target_country.relations:root > relations_threshold:poor
-			}
-			
-		} } }
 	
-		requirement_to_maintain = { trigger = { NOT = {
+		requirement_to_maintain = { 
 		
-			OR = {			
-				is_country_type = decentralized
-				scope:target_country = { is_country_type = decentralized }
+			trigger = {
+			
+				NOR = {
+					is_country_type = decentralized
+					has_law = law_type:law_isolationism
+				}
 				
-				has_law = law_type:law_isolationism
+				scope:target_country = {
+					NOR = { 
+						is_country_type = decentralized 
+						has_law = law_type:law_isolationism
+					}
+				}
 				
-				is_junior_in_customs_union = yes
+				NOT = { scope:target_country = { is_subject_of = scope:actor } }
+	
+				is_junior_in_customs_union = no
+				scope:target_country = { is_junior_in_customs_union = no }
 				
-				scope:target_country = { has_treaty_port_in_country = root }
+				NOT = { scope:target_country = { has_treaty_port_in_country = root } }
 				
-				scope:target_country = { is_subject_of = scope:actor }
+				# Might have these despite low relations due to a forced pact
+				NOT = { has_diplomatic_pact = { who = scope:target_country type = trade_agreement } }
+				
+				OR = {
+				
+					#Relations
+					custom_tooltip = {
+						text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+						scope:target_country.relations:root <= relations_threshold:poor
+					}
+					
+					#UN sanctions
+					AND = { 
+						scope:target_country = { has_modifier = un_sanctions_3 }
+						scope:actor = { has_modifier = un_embargo_participant }
+					}
+					
+				}
+				
 			}
 			
-		}	
+		}
 		
 		manual_break_effect = { }
 		auto_break_effect = { }

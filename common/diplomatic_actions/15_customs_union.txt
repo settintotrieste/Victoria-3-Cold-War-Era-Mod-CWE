@@ -165,72 +165,69 @@
 		
 			trigger = { 
 			
-				NOT = {
-			
-					#Irish Open Border
+				#THIS and TARGET are not decentralized
+				NOR = {
+					is_country_type = decentralized 
+					has_law = law_type:law_isolationism
+				}
+				scope:target_country = {
+					NOR = { 
+						is_country_type = decentralized 
+						has_law = law_type:law_isolationism
+					}
+				}
+				
+				#THIS & TARGET are not revolutionary countries
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = { is_revolutionary = no is_secessionist = no }
+				
+				#Can only invite TARGET into THIS CU if THIS is higher rank than TARGET
+				scope:target_country = { country_rank < root.country_rank }
+				
+				#THIS is not at war with the TARGET
+				NOT = { has_war_with = scope:target_country }
+				
+				#THIS & TARGET are not already in a customs union
+				is_junior_in_customs_union = no
+				scope:target_country = { is_junior_in_customs_union = no }
+				
+				OR = {
+				
+					#THIS has good relations with the TARGET
 					custom_tooltip = {
-						text = irish_open_border.tt
-						NAND = { 
-							scope:target_country = { has_variable = irish_open_border }
-							scope:actor = { has_variable = irish_open_border }
+						text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+						scope:target_country.relations:root >= relations_threshold:cordial
+					}
+					
+					NOT = { NOT_in_superstate_customs_union = yes }
+					
+				}
+				
+				OR = {
+				
+					#THIS can reach the TARGET's market
+					custom_tooltip = {
+						text = DIPLO_ACTION_MARKET_CONNECTION_REQUIRED
+						OR = {	
+							AND = {
+								market = { has_port = yes }
+								scope:target_country.market = { has_port = yes }
+							}
+							market = {
+								any_scope_country = {
+									is_adjacent_to_country = scope:target_country
+								}
+							}
 						}
 					}
-			
-					custom_tooltip = {
-						text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER_NOT
-
-						# make sure to update is_about_to_auto_break when changing this:
-						scope:target_country.relations:root < relations_threshold:cordial
-					}
-			
-					NOT_in_superstate_customs_union = yes
-			
-				} 
-			} 
-			
-			show_about_to_break_warning = {
-				scope:target_country.relations:root < 23 # this is: cordial + 3
+					
+					NOT = { NOT_in_superstate_customs_union = yes }
+					
+				}
+		
 			}
 			
 		}
-
-		requirement_to_maintain = { trigger = { NOT = {
-		
-			OR = {
-			
-				has_war_with = scope:target_country
-				
-				is_country_type = decentralized
-				scope:target_country = { is_country_type = decentralized }
-				
-				is_junior_in_customs_union = yes
-				
-				scope:target_country = { 
-					is_already_in_a_customs_union = yes
-					NOT = { has_subject_relation_with = scope:actor }
-				}
-				
-				scope:target_country = { has_law = law_type:law_isolationism }
-				has_law = law_type:law_isolationism
-				
-				#THIS can no longer reach TARGET
-				NOR = {
-					AND = {
-						market = { has_port = yes }
-						scope:target_country.market = { has_port = yes }
-					}
-					market = {
-						any_scope_country = {
-							is_adjacent_to_country = scope:target_country
-						}
-					}
-				}
-				
-			}
-			
-			NOT_in_superstate_customs_union = yes
-			
-		} } }
 
 		manual_break_effect = {
 		

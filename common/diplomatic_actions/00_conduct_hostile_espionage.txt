@@ -90,75 +90,66 @@
 		
 			trigger = { 
 			
-				NOT = {
-			
-					OR = { 
-					
-						#THIS is friendly with Target
-						scope:target_country.relations:root >= relations_threshold:cordial
-						
-						#THIS is friendly with Target in anyway
-						OR = { 
-							has_diplomatic_pact = { who = scope:target_country type = increase_relations }
-							has_diplomatic_pact = { who = scope:target_country type = bankroll }
-							has_diplomatic_pact = { who = scope:target_country type = alliance }
-							has_diplomatic_pact = { who = scope:target_country type = defensive_pact } 
-						}
-						
-						#Country no longer wants to meddle in other's affairs
-						NOR = { 
-					
-							#Leader is aggressive
-							AND = { 
-								exists = ruler
-								ruler = {
-									OR = {
-										has_ideology = ideology:ideology_autocratic
-										has_ideology = ideology:ideology_power_hungry
-										has_ideology = ideology:ideology_elitist
-									}
-								}
-							}
-						
-							#Target is a rival of THIS
-							has_diplomatic_pact = { who = scope:target_country type = rivalry is_initiator = no }
-						
-						}
-						
-						#THIS is broke
-						in_default = yes
-					
-					}
-					
-				}
+				#THIS is not decentralized
+				NOT = { is_country_type = decentralized }
+				scope:target_country = { NOT = { is_country_type = decentralized } }
 				
-			}
-			
-			show_about_to_break_warning = {
-				scope:target_country.relations:root >= relations_threshold:neutral
-			}
-			
-		}
-		
-		requirement_to_maintain = { trigger = { NOT = {
-		
-			OR = { 
-			
-				#THIS no longer has intelligence services
-				NOT = { has_law = law_type:law_offensive_espionage }
-			
-				#THIS has lost interest in Target
-				NOT = { has_diplomatic_relevance = scope:target_country }
+				#THIS has intelligence services
+				has_law = law_type:law_offensive_espionage
 				
-				#THIS is not of a higher rank than the Target OR is a Great Power and above
-				NOR = {
+				#THIS and Target are not revolutionary
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = { is_revolutionary = no is_secessionist = no } 
+				
+				#THIS is not broke
+				in_default = no
+				
+				#THIS is of a higher rank than the Target OR is a Great Power and above
+				OR = { 
 					scope:target_country = { country_rank < root.country_rank }
 					country_rank >= rank_value:great_power
 				}
-			
+				
+				#THIS is sufficiently independent
+				is_sufficiently_independent = yes
+				
+				#THIS is not friendly with Target in anyway
+				NOR = { 
+					has_diplomatic_pact = { who = scope:target_country type = increase_relations }
+					has_diplomatic_pact = { who = scope:target_country type = bankroll }
+					has_diplomatic_pact = { who = scope:target_country type = alliance }
+					has_diplomatic_pact = { who = scope:target_country type = defensive_pact } 
+				}
+				
+				#Country wants to meddle in other's affairs
+				OR = { 
+				
+					#Leader is aggressive
+					AND = { 
+						exists = ruler
+						ruler = {
+							OR = {
+								has_ideology = ideology:ideology_autocratic
+								has_ideology = ideology:ideology_power_hungry
+								has_ideology = ideology:ideology_elitist
+							}
+						}
+					}
+					
+					#Target is a rival of THIS
+					has_diplomatic_pact = { who = scope:target_country type = rivalry is_initiator = no }
+					
+				}
+				
+				#THIS is not friendly with Target
+				custom_tooltip = {
+					text = DIPLO_ACTION_RELATIONS_NEUTRAL_OR_LESS
+					scope:target_country.relations:root < relations_threshold:cordial
+				}
+				
 			}
 			
-		} } }
+		}
 		
 		### Effects added by Espionage JE ### 
 		

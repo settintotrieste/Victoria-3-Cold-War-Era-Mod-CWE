@@ -167,17 +167,62 @@
 			
 		}
 
-		requirement_to_maintain = { trigger = { NOT = {
+		requirement_to_maintain = { 
+		
+			trigger = {  
 			
-			#THIS and TARGET somehow no longer have nukes
-			NOT = { has_modifier = nuclear_capability }
-			scope:target_country = { NOT = { has_modifier = nuclear_capability } }
+				#Not a revolutionary state
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = { is_revolutionary = no is_secessionist = no }
+				
+				#THIS is not decentralized
+				NOT = { is_country_type = decentralized }
+				scope:target_country = { NOT = { is_country_type = decentralized } }
+				
+				#Both parties are sovereign states
+				is_sufficiently_independent = yes
+				scope:target_country = { is_sufficiently_independent = yes }
+				
+				#THIS and TARGET have nukes
+				has_modifier = nuclear_capability
+				scope:target_country = { has_modifier = nuclear_capability }
+				
+				# THIS has poor relations with TARGET
+				custom_tooltip = {
+					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+					scope:target_country.relations:root <= relations_threshold:poor
+				}
+				
+				#THIS is of equal rank to TARGET
+				OR = { 
+					AND = { 
+						country_rank = rank_value:super_power
+						scope:target_country = { country_rank = rank_value:super_power }
+					}
+					AND = { 
+						country_rank = rank_value:great_power
+						scope:target_country = { country_rank = rank_value:great_power }
+					}
+					AND = { 
+						OR = { country_rank = rank_value:major_power country_rank = rank_value:unrecognized_major_power }
+						scope:target_country = { OR = { country_rank = rank_value:major_power country_rank = rank_value:unrecognized_major_power } }
+					}
+					AND = { 
+						OR = { country_rank = rank_value:minor_power country_rank = rank_value:unrecognized_regional_power }
+						scope:target_country = { OR = { country_rank = rank_value:minor_power country_rank = rank_value:unrecognized_regional_power } }
+					}
+					AND = { 
+						OR = { country_rank = rank_value:insignificant_power country_rank = rank_value:unrecognized_power }
+						scope:target_country = { OR = { country_rank = rank_value:insignificant_power country_rank = rank_value:unrecognized_power } }
+					}
+				}
+				
+				#THIS is not at war with TARGET
+				NOT = { has_war_with = scope:target_country }
 			
-			#THIS is no longer sufficiently independent
-			NOT = { is_sufficiently_independent = yes }
-			scope:target_country = { NOT = { is_sufficiently_independent = yes } }
+			}
 			
-		} } }
+		}
 		
 		manual_break_effect = {
 		

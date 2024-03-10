@@ -82,46 +82,53 @@
 		recipient_gets_income_transfer = no
 		income_transfer_based_on_recipient = yes
 		
-		requirement_to_maintain = { trigger = { NOT = {
+		requirement_to_maintain = { 
 		
-			OR = { 
+			trigger = {  
 			
-				#THIS has poor relations with TARGET
-				has_war_with = scope:target_country
+				#THIS is not decentralized
+				NOT = { is_country_type = decentralized }
+				scope:target_country = { NOT = { is_country_type = decentralized } }
+				
+				#Not a revolutionary state
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = { is_revolutionary = no is_secessionist = no }
+				
+				#THIS is not a subject
+				is_sufficiently_independent = yes
+				scope:target_country = { is_sufficiently_independent = yes }
+				
+				#THIS is not at war with TARGET
+				NOT = { has_war_with = scope:target_country }
+				
+				#THIS has a higher rank than TARGET
+				scope:target_country = { country_rank <= root.country_rank }
+				
+				#THIS has a stronger economy than TARGET
+				root.gdp > scope:target_country.gdp
+				
+				#THIS has a healthy economy
+				in_default = no
+				
+				#THIS has good relations with the TARGET
 				custom_tooltip = {
-					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
-					scope:target_country.relations:root <= relations_threshold:poor
+					text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+					scope:target_country.relations:root >= relations_threshold:cordial
 				}
 				
-				#THIS or TARGET has the wrong economic system
-				has_law = law_type:law_isolationism
-				scope:target_country = { has_law = law_type:law_isolationism }
+				#Correct economic system
+				NOT = { has_law = law_type:law_isolationism }
+				scope:target_country = { NOT = { has_law = law_type:law_isolationism } }
 				
-				#THIS does not have sufficient money in the investment pool (100 mil)
-				NOR = { 
-					AND = { country_has_an_investment_pool = yes investment_pool > 90000000 }
-					AND = { NOT = { country_has_an_investment_pool = yes } gold_reserves > 90000000 }
+				#THIS has sufficient money in the investment pool (100 mil)
+				OR = { 
+					AND = { country_has_an_investment_pool = yes investment_pool > 100000000 }
+					AND = { NOT = { country_has_an_investment_pool = yes } gold_reserves > 100000000 }
 				}
-				
-			}
 			
-		} } }		
-	
-		requirement_to_maintain = { trigger = { NOT = {
-		
-			#THIS is in default or is no longer sufficiently independent
-			OR = {
+			} 
 			
-				in_default = yes
-				
-				NAND = { 
-					is_sufficiently_independent = yes
-					scope:target_country = { is_sufficiently_independent = yes }
-				}
-				
-			}
-			
-		} } }
+		}
 		
 		manual_break_effect = {
 			scope:target_country = { change_relations = { country = scope:actor value = -25 } }
