@@ -7,6 +7,7 @@
 	}
 	
 	potential = {
+	
 		NOT = { is_country_type = decentralized }
 		scope:target_country = {
 			NOT = { is_country_type = decentralized }
@@ -28,6 +29,7 @@
 			scope:actor = { is_neutral = yes }
 			scope:target_country = { is_neutral = yes }
 		}
+		
 	}
 	
 	possible = {
@@ -142,68 +144,100 @@
 			NOT_in_superstate_defence_union = yes
 			
 		}
-	
-        is_about_to_auto_break = {
-            scope:target_country.relations:root < 23 # this is: cordial + 3
-        }
-
-		should_auto_break = {
+		
+		requirement_to_maintain = { 
+		
+			trigger = { 
 			
-			#NATO
-			NAND = { 
-				scope:actor = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
-				scope:target_country = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+				OR = {
+				
+					custom_tooltip = {
+						text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+						scope:target_country.relations:root >= relations_threshold:cordial
+					}
+					
+					#NATO
+					AND = { 
+						scope:actor = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+						scope:target_country = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+					}
+					
+					#Rio Pact
+					AND = { 
+						scope:actor = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
+						scope:target_country = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
+					}
+					
+					#Warsaw Pact
+					AND = { 
+						scope:actor = { OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader } }
+						scope:target_country = { OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader } }
+					}
+					
+					#CSTO
+					AND = { 
+						scope:actor = { OR = { has_modifier = csto_member has_modifier = csto_leader } }
+						scope:target_country = { OR = { has_modifier = csto_member has_modifier = csto_leader } }
+					}
+					
+					#Superstate
+					NOT = { NOT_in_superstate_defence_union = yes }
+					
+				}
+			
 			}
 			
-			#Rio Pact
-			NAND = { 
-				scope:actor = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
-				scope:target_country = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
+			show_about_to_break_warning = {
+				scope:target_country.relations:root < 23 # this is: cordial + 3
+				NOT_in_superstate_defence_union = yes
 			}
-			
-			#Warsaw Pact
-			NAND = { 
-				scope:actor = { OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader } }
-				scope:target_country = { has_modifier = warsaw_pact_member }
-			}
-			
-			custom_tooltip = {
-				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER_NOT
-
-                # make sure to update is_about_to_auto_break when changing this:
-				scope:target_country.relations:root < relations_threshold:cordial
-			}
-			
-			#Superstate
-			NOT_in_superstate_defence_union = yes
 			
 		}
 
-		should_invalidate = {
+		requirement_to_maintain = { 
 		
-			OR = {
-				has_war_with = scope:target_country
-				
-				is_country_type = decentralized
-				scope:target_country = { is_country_type = decentralized }
-				
-				scope:actor = { is_not_sufficiently_independent = yes }
-				scope:target_country = { is_not_sufficiently_independent = yes }
-				
-				scope:actor = { is_neutral = yes }
-				scope:target_country = { is_neutral = yes }
-				
-				#Does not already have a better pact
+			trigger = { 
+			
+				NOT = { is_country_type = decentralized }
 				scope:target_country = {
-					has_diplomatic_pact = {
-						who = root
-						type = alliance
-					}
+					NOT = { is_country_type = decentralized }
 				}
+				
+				aggressive_diplomatic_plays_permitted = yes
+				scope:target_country = {
+					aggressive_diplomatic_plays_permitted = yes
+				}
+				
+				#Both parties are sufficiently independent
+				AND = {
+					scope:actor = { is_sufficiently_independent = yes }
+					scope:target_country = { is_sufficiently_independent = yes }
+				}
+				
+				#Neither party is neutral
+				NOR = {
+					scope:actor = { is_neutral = yes }
+					scope:target_country = { is_neutral = yes }
+				}
+			
+				NOT = { has_war_with = scope:target_country }
+		
+				scope:target_country = {
+					NOT = {
+						has_diplomatic_pact = {
+							who = root
+							type = alliance
+						}					
+					}					
+				}
+				
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = {
+					is_revolutionary = no is_secessionist = no
+				}
+				
 			}
 			
-			#Superstate
-			NOT_in_superstate_defence_union = yes
 		}
 
 		manual_break_effect = {

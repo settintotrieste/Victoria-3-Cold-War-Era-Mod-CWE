@@ -10,17 +10,17 @@
 			is_revolutionary = no is_secessionist = no
 		}
 	
+	}
+
+	possible = {
+	
+		has_diplomatic_relevance = scope:target_country
+		
+		is_at_war = no
 		scope:target_country = { 
 			is_at_war = no
 			NOT = { is_diplomatic_play_enemy_of = ROOT }
 		}
-	
-	}
-
-	possible = {
-		has_diplomatic_relevance = scope:target_country
-		
-		is_at_war = no
 		
 		custom_tooltip = {
 			text = DIPLO_ACTION_MARKET_CONNECTION_REQUIRED
@@ -36,6 +36,11 @@
 				}
 			}
 		}	
+		
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+			scope:target_country.relations:root >= relations_threshold:cordial
+		}
 		
 	}
 
@@ -84,25 +89,45 @@
 			
 		}
 
-		should_auto_break = {
-			#THIS is has poor relations with TARGET
-			custom_tooltip = {
-				text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
-				scope:target_country.relations:root < relations_threshold:neutral
-			}
+		requirement_to_maintain = { 
+		
+			trigger = { 
+			
+				custom_tooltip = {
+					text = DIPLO_ACTION_RELATIONS_NEUTRAL_OR_GREATER
+					scope:target_country.relations:root >= relations_threshold:neutral
+				}
+				
+				NOT = { is_diplomatic_play_enemy_of = ROOT }
+				
+				NOT = { has_war_with = scope:target_country }
+			
+			} 
+			
 		}
 
-		break_effect = {
-			create_truce = { country = scope:target_country months = 12 }
+		manual_break_effect = {
+			create_truce = { country = scope:target_country months = 60 }
+			change_relations = { country = scope:target_country value = -20 }
+			change_infamy = -5
 		}
+		
+		auto_break_effect = {
+			create_truce = { country = scope:target_country months = 60 }
+		}
+		
 	}
 	
 	accept_effect = {
+		change_relations = { country = scope:target_country value = 25 }
+	}
+	
+	decline_effect = {
 		create_incident = {
 			country = scope:target_country
 			value = 5
 		}
-		create_truce = { country = scope:target_country months = 60 }
+		change_relations = { country = scope:target_country value = -20 }
 	}
 	
 	ai = {
@@ -593,6 +618,14 @@ become_protectorate = {
 
 	potential = {
 		is_subject = no
+		scope:target_country = {
+			NOT = {
+				has_diplomatic_pact = {
+					who = scope:actor
+					type = protectorate
+				}					
+			}
+		}
 	}
 	
 	possible = {

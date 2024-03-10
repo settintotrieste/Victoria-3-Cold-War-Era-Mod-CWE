@@ -114,68 +114,67 @@
 		
 		### Validation requirements ###
 		
-		should_auto_break = {
-			
-			OR = {
-			
-				#THIS no longer wants to conduct strategic bombardment
-				NOR = {
+		requirement_to_maintain = { 
 		
-					#Ruler is no longer jingoistic
+			trigger = { 
+			
+				#THIS is not decentralized
+				NOT = { is_country_type = decentralized }
+				
+				#THIS is at war with the TARGET
+				has_war_with = scope:target_country
+				
+				#THIS has strategic bombardment capability
+				any_scope_building = {
+					is_building_type = building_barracks
+					level >= 1
+					NOT = { has_active_production_method = pm_no_organization }
+				}
+				any_military_formation = {
+					filter = {
+						is_army = yes
+					}
+					any_combat_unit = {
+						OR = {
+							has_unit_type = unit_type:combat_unit_type_airforce_2
+							has_unit_type = unit_type:combat_unit_type_airforce_3
+							has_unit_type = unit_type:combat_unit_type_airforce_4
+							has_unit_type = unit_type:combat_unit_type_airforce_5
+							has_unit_type = unit_type:combat_unit_type_airforce_6
+							has_unit_type = unit_type:combat_unit_type_airforce_7
+							has_unit_type = unit_type:combat_unit_type_airforce_8
+							has_unit_type = unit_type:combat_unit_type_airforce_9
+							has_unit_type = unit_type:combat_unit_type_airforce_10
+						}
+					}
+					percent >= 0.50
+				}
+			
+				#THIS is not broke
+				in_default = no
+				
+				#THIS wants to conduct strategic bombardment
+				OR = {
+				
+					#Ruler is jingoistic
 					ruler = {
 						OR = {
 							has_ideology = ideology:ideology_autocratic
 							has_ideology = ideology:ideology_power_hungry
 						}
 					}
-			
-					#TARGET is no longer bombing THIS
-					scope:target_country = { has_diplomatic_pact = { who = scope:actor type = conduct_strategic_bombardment } }
-			
+					
+					#TARGET is bombing THIS
+					custom_tooltip = {
+						text = conduct_strategic_bombardment_1_tt
+						scope:target_country = { has_diplomatic_pact = { who = scope:actor type = conduct_strategic_bombardment } }
+					}
+					
 				}
 				
-			}
-			
-		}
-		
-		should_invalidate = {
-		
-			OR = {
-			
-				#THIS is no longer at war with the TARGET
-				NOT = { has_war_with = scope:target_country }
-		
-				#THIS no longer has strategic bombardment capability
-				NAND = { 
-					any_scope_building = {
-						is_building_type = building_barracks
-						level >= 1
-						NOT = { has_active_production_method = pm_no_organization }
-					}
-					any_military_formation = {
-						filter = {
-							is_army = yes
-						}
-						any_combat_unit = {
-							OR = {
-								has_unit_type = unit_type:combat_unit_type_airforce_2
-								has_unit_type = unit_type:combat_unit_type_airforce_3
-								has_unit_type = unit_type:combat_unit_type_airforce_4
-								has_unit_type = unit_type:combat_unit_type_airforce_5
-								has_unit_type = unit_type:combat_unit_type_airforce_6
-								has_unit_type = unit_type:combat_unit_type_airforce_7
-								has_unit_type = unit_type:combat_unit_type_airforce_8
-								has_unit_type = unit_type:combat_unit_type_airforce_9
-								has_unit_type = unit_type:combat_unit_type_airforce_10
-							}
-						}
-						percent >= 0.50
-					}
-				}
+				#THIS can reach the TARGET
+				OR = {
 				
-				#THIS can no longer reach the TARGET
-				NOR = {
-			
 					#THIS has direct access to the TARGET through land
 					has_strategic_land_adjacency = scope:target_country
 					
@@ -203,7 +202,7 @@
 						has_war_with = ROOT
 						has_strategic_adjacency = scope:target_country
 					}
-				
+					
 				}
 			
 			}

@@ -80,15 +80,15 @@
 		
 	}
 	
-	pact = {	
+	pact = {
 		cost = 100
 		is_two_sided_pact = no
 		infamy_affects_maintenance = yes
 		
-		should_invalidate = {
+		requirement_to_maintain = { 
 		
-			NAND = {
-			
+			trigger = { 
+				
 				#THIS is not decentralized
 				NOT = { is_country_type = decentralized }
 				scope:target_country = { NOT = { is_country_type = decentralized } }
@@ -105,11 +105,7 @@
 				is_country_type = recognized
 				scope:target_country = { is_country_type = recognized }
 				
-				#THIS & TARGET are not at war
-				is_at_war = no
-				scope:target_country = { is_at_war = no }
-				
-				#TARGET has overlapping homelands with THIS and no enclaves will be created
+				#TARGET has overlapping homelands with THIS AND no enclaves will be created
 				scope:target_country = {
 					any_scope_state = { 
 						is_homeland_of_country_cultures = scope:actor 
@@ -122,28 +118,51 @@
 						}
 					}
 				}
-			
-				#THIS is interested in the TARGET
-				has_diplomatic_relevance = scope:target_country
 				
 				#THIS is not at war with TARGET
 				NOT = { has_war_with = scope:target_country }
 				
-				#NOT has recent ICJ judgement
-				NOT = { has_variable = icj_judgement_rendered_timer }
-			
-			}
-			
-			break_effect = {
-			
-				change_relations = { country = scope:target_country value = 10 }
-				
-				#Cannot seek ICJ help for 2 years
+				#THIS did not seek ICJ help recently
 				custom_tooltip = {
-					text = seek_ICJ_arbitration_3_tt
-					set_variable = { name = icj_judgement_rendered_timer years = 2 }
+					text = seek_ICJ_arbitration_2_tt
+					NOT = { has_variable = icj_judgement_rendered_timer }
 				}
 				
+				#THIS does not have a truce with TARGET
+				NOT = { has_truce_with = scope:target_country }
+				
+				#TARGET and THIS are not at war
+				is_at_war = no
+				scope:target_country = { is_at_war = no }
+				
+				#THIS has poor relations with TARGET
+				custom_tooltip = {
+					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+					scope:target_country.relations:root <= relations_threshold:poor
+				}
+				
+			}
+			
+		}
+		
+		manual_break_effect = {
+			
+			change_relations = { country = scope:target_country value = 10 }
+			
+			#Cannot seek ICJ help for 2 years
+			custom_tooltip = {
+				text = seek_ICJ_arbitration_3_tt
+				set_variable = { name = icj_judgement_rendered_timer years = 2 }
+			}
+			
+		}
+		
+		auto_break_effect = {
+			
+			#Cannot seek ICJ help for 2 years
+			custom_tooltip = {
+				text = seek_ICJ_arbitration_3_tt
+				set_variable = { name = icj_judgement_rendered_timer years = 2 }
 			}
 			
 		}

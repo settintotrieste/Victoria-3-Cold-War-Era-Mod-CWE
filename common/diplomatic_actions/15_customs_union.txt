@@ -118,10 +118,6 @@
 		#relations_improvement_max = 80		
 		
 		#subject_type = subject_type_customs_union # A customs union is technically a type of subject, though it isn't presented this way in-game
-
-		is_about_to_auto_break = {
-		    scope:target_country.relations:root < 23 # this is: cordial + 3
-		}
 		
 		actor_can_break = {
 			
@@ -165,67 +161,72 @@
 			
 		}
 
-		should_auto_break = {
-			
-			#Irish Open Border
-			custom_tooltip = {
-				text = irish_open_border.tt
-				NAND = { 
-					scope:target_country = { has_variable = irish_open_border }
-					scope:actor = { has_variable = irish_open_border }
-				}
-			}
-			
-			custom_tooltip = {
-				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER_NOT
-
-				# make sure to update is_about_to_auto_break when changing this:
-				scope:target_country.relations:root < relations_threshold:cordial
-			}
-			
-			NOT_in_superstate_customs_union = yes
-			
-		}
-
-		should_invalidate = {
+		requirement_to_maintain = { 
 		
-			OR = {
+			trigger = { 
 			
-				has_war_with = scope:target_country
-				
-				is_country_type = decentralized
-				scope:target_country = { is_country_type = decentralized }
-				
-				is_junior_in_customs_union = yes
-				
-				scope:target_country = { 
-					is_already_in_a_customs_union = yes
-					NOT = { has_subject_relation_with = scope:actor }
+				#THIS and TARGET are not decentralized
+				NOR = {
+					is_country_type = decentralized 
+					has_law = law_type:law_isolationism
+				}
+				scope:target_country = {
+					NOR = { 
+						is_country_type = decentralized 
+						has_law = law_type:law_isolationism
+					}
 				}
 				
-				scope:target_country = { has_law = law_type:law_isolationism }
-				has_law = law_type:law_isolationism
+				#THIS & TARGET are not revolutionary countries
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = { is_revolutionary = no is_secessionist = no }
 				
-				#THIS can no longer reach TARGET
-				NOR = {
-					AND = {
-						market = { has_port = yes }
-						scope:target_country.market = { has_port = yes }
+				#Can only invite TARGET into THIS CU if THIS is higher rank than TARGET
+				scope:target_country = { country_rank < root.country_rank }
+				
+				#THIS is not at war with the TARGET
+				NOT = { has_war_with = scope:target_country }
+				
+				OR = {
+				
+					#THIS has good relations with the TARGET
+					custom_tooltip = {
+						text = DIPLO_ACTION_RELATIONS_NEUTRAL_OR_GREATER
+						scope:target_country.relations:root >= relations_threshold:neutral
 					}
-					market = {
-						any_scope_country = {
-							is_adjacent_to_country = scope:target_country
+					
+					NOT = { NOT_in_superstate_customs_union = yes }
+					
+				}
+				
+				OR = {
+				
+					#THIS can reach the TARGET's market
+					custom_tooltip = {
+						text = DIPLO_ACTION_MARKET_CONNECTION_REQUIRED
+						OR = {	
+							AND = {
+								market = { has_port = yes }
+								scope:target_country.market = { has_port = yes }
+							}
+							market = {
+								any_scope_country = {
+									is_adjacent_to_country = scope:target_country
+								}
+							}
 						}
 					}
+					
+					NOT = { NOT_in_superstate_customs_union = yes }
+					
 				}
-				
+		
 			}
-			
-			NOT_in_superstate_customs_union = yes
 			
 		}
 
-		break_effect = {
+		manual_break_effect = {
+		
 			change_relations = { country = scope:target_country value = -30 }
 			
 			# AI may not take leaving their customs union well...
@@ -265,7 +266,51 @@
 					}
 				}					
 			}
+			
 		}
+		
+		auto_break_effect = {
+			
+			# AI may not take leaving their customs union well...
+			hidden_effect = {
+				if = {
+					limit = { 
+						scope:target_country.country_rank > root.country_rank
+						"relations(scope:target_country)" < relations_threshold:cordial
+					}	
+					random_list = {
+						75 = {
+							scope:target_country = {
+								set_secret_goal = {
+									country = root
+									secret_goal = dominate
+								}
+							}						
+						}
+						25 = {}
+					}
+				}
+				else_if = {
+					limit = { 
+						scope:target_country.country_rank > root.country_rank
+						"relations(scope:target_country)" < relations_threshold:friendly
+					}	
+					random_list = {
+						50 = {
+							scope:target_country = {
+								set_secret_goal = {
+									country = root
+									secret_goal = dominate
+								}
+							}						
+						}
+						50 = {}
+					}
+				}					
+			}
+			
+		}
+		
 	}
 
 	ai = {
@@ -276,9 +321,21 @@
 		accept_score = {
 			value = 0
 
-			add = {
-				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
-				value = -100
+			if = {
+				limit = { 
+					scope:actor = { country_rank >= rank_value:great_power }
+					scope:target_country = { country_rank >= rank_value:great_power } 
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -200
+				}
+			}
+			else = {
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -100
+				}
 			}
 			
 			if = {
@@ -854,7 +911,7 @@ join_customs_union = {
 		# we don't want to join someone else's union
 		# if we are the junior partner in an existing customs union,
 		# we cannot join another union anyways
-		is_in_customs_union = no
+		is_junior_in_customs_union = no
 		scope:target_country = { is_junior_in_customs_union = no }
 		
 		has_diplomatic_relevance = scope:target_country
@@ -877,7 +934,8 @@ join_customs_union = {
 					}
 				}
 			}
-		}		
+		}	
+		
 	}
 
 	reverse_pact = customs_union
@@ -942,6 +1000,7 @@ join_customs_union = {
 			value = 10
 		}
 	}
+	
 }
 
 change_customs_union = {

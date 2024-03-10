@@ -115,51 +115,69 @@
 		relations_progress_per_day = 1  # At 100, +1 relations
 		relations_improvement_max = 100
 
-		should_auto_break = {
+		requirement_to_maintain = { 
 		
-			has_war_with = scope:target_country
+			trigger = {  
 			
-		}
-
-		should_invalidate = {
-		
-			OR = {
+				#Only Superpowers and Great Powers can sponsor rebels
+				country_rank >= rank_value:great_power
 				
-				NOT = { has_diplomatic_relevance = scope:target_country }
+				#Not a revolutionary state
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = { is_revolutionary = yes }
 				
-				NOR = { 
+				#Revolutionary country is at war
+				#scope:target_country = { is_at_war = yes }
+				
+				#THIS is sufficiently independent
+				is_sufficiently_independent = yes
+				
+				#THIS is not at war with TARGET
+				NOT = { has_war_with = scope:target_country }
+				
+				#THIS does not have restricted war rights
+				OR = { 
 					has_law = law_type:law_regionalist_fp
 					has_law = law_type:law_globalist_fp
 					is_a_dictatorship = yes
 				}
+			
+				#THIS does not have restricted war rights
+				NOT = { has_law = law_type:law_no_war }
 				
-				has_law = law_type:law_no_war
+				#THIS is not in default
+				in_default = no
 				
-				is_revolutionary = yes
-				scope:target_country = { is_revolutionary = no is_secessionist = no }
+				#THIS & TARGET are not already in a customs union
+				is_junior_in_customs_union = no
+				scope:target_country = { is_junior_in_customs_union = no }
 				
-				in_default = yes
-				
-				is_junior_in_customs_union = yes
-				
-				NOR = {	
-					AND = {
-						market = { has_port = yes }
-						scope:target_country.market = { has_port = yes }
-					}
-					market = {
-						any_scope_country = {
-							is_adjacent_to_country = scope:target_country
+				#THIS can reach the TARGET's market
+				custom_tooltip = {
+					text = DIPLO_ACTION_MARKET_CONNECTION_REQUIRED
+					OR = {	
+						AND = {
+							market = { has_port = yes }
+							scope:target_country.market = { has_port = yes }
+						}
+						market = {
+							any_scope_country = {
+								is_adjacent_to_country = scope:target_country
+							}
 						}
 					}
 				}
-				
-			}
+			
+			} 
 			
 		}
 		
-		break_effect = {
+		manual_break_effect = {
 			change_relations = { country = scope:target_country value = -10 }
+		}
+		
+		auto_break_effect = {
+			
 		}
 		
 		weekly_effect = {
