@@ -118,10 +118,6 @@
 		#relations_improvement_max = 80		
 		
 		#subject_type = subject_type_customs_union # A customs union is technically a type of subject, though it isn't presented this way in-game
-
-		is_about_to_auto_break = {
-		    scope:target_country.relations:root < 23 # this is: cordial + 3
-		}
 		
 		actor_can_break = {
 			
@@ -165,29 +161,40 @@
 			
 		}
 
-		should_auto_break = {
+		requirement_to_maintain = { 
+		
+			trigger = { 
 			
-			#Irish Open Border
-			custom_tooltip = {
-				text = irish_open_border.tt
-				NAND = { 
-					scope:target_country = { has_variable = irish_open_border }
-					scope:actor = { has_variable = irish_open_border }
-				}
-			}
+				NOT = {
 			
-			custom_tooltip = {
-				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER_NOT
+					#Irish Open Border
+					custom_tooltip = {
+						text = irish_open_border.tt
+						NAND = { 
+							scope:target_country = { has_variable = irish_open_border }
+							scope:actor = { has_variable = irish_open_border }
+						}
+					}
+			
+					custom_tooltip = {
+						text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER_NOT
 
-				# make sure to update is_about_to_auto_break when changing this:
-				scope:target_country.relations:root < relations_threshold:cordial
-			}
+						# make sure to update is_about_to_auto_break when changing this:
+						scope:target_country.relations:root < relations_threshold:cordial
+					}
 			
-			NOT_in_superstate_customs_union = yes
+					NOT_in_superstate_customs_union = yes
+			
+				} 
+			} 
+			
+			show_about_to_break_warning = {
+				scope:target_country.relations:root < 23 # this is: cordial + 3
+			}
 			
 		}
 
-		should_invalidate = {
+		requirement_to_maintain = { trigger = { NOT = {
 		
 			OR = {
 			
@@ -223,9 +230,10 @@
 			
 			NOT_in_superstate_customs_union = yes
 			
-		}
+		} } }
 
-		break_effect = {
+		manual_break_effect = {
+		
 			change_relations = { country = scope:target_country value = -30 }
 			
 			# AI may not take leaving their customs union well...
@@ -265,7 +273,51 @@
 					}
 				}					
 			}
+			
 		}
+		
+		auto_break_effect = {
+			
+			# AI may not take leaving their customs union well...
+			hidden_effect = {
+				if = {
+					limit = { 
+						scope:target_country.country_rank > root.country_rank
+						"relations(scope:target_country)" < relations_threshold:cordial
+					}	
+					random_list = {
+						75 = {
+							scope:target_country = {
+								set_secret_goal = {
+									country = root
+									secret_goal = dominate
+								}
+							}						
+						}
+						25 = {}
+					}
+				}
+				else_if = {
+					limit = { 
+						scope:target_country.country_rank > root.country_rank
+						"relations(scope:target_country)" < relations_threshold:friendly
+					}	
+					random_list = {
+						50 = {
+							scope:target_country = {
+								set_secret_goal = {
+									country = root
+									secret_goal = dominate
+								}
+							}						
+						}
+						50 = {}
+					}
+				}					
+			}
+			
+		}
+		
 	}
 
 	ai = {
