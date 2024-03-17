@@ -4,17 +4,55 @@ je_spanish_flu = {
 
 	group = je_group_crises
 
+	scripted_button = je_develop_vaccine_button
+	scripted_button = je_buy_vaccine_button
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = developing_vaccine.tt
+				trigger = {
+					has_variable = flu_vaccine_progress_development
+					has_variable = flu_vaccine_progress
+				}
+			}
+		}
+	}
+
 	immediate = {
+	
 		if = {
 			limit = {
 				has_variable = spanish_flu_over
 			}
 			remove_variable = spanish_flu_over
 		}
+		
+		#Clear vaccine flag
+		if = {
+			limit = {
+				has_variable = flu_vaccine_progress
+			}
+			remove_variable = flu_vaccine_progress
+		}
+		if = {
+			limit = {
+				has_variable = flu_vaccine_progress_development
+			}
+			remove_variable = flu_vaccine_progress_development
+		}
+		
+		#Set vaccine progress
+		set_variable = {
+			name = flu_vaccine_progress
+			value = 0
+		}
+		
 	}
 
 	on_monthly_pulse = {
 		effect = {
+		
 			random_list = {
 				1 = {
 					modifier = {
@@ -25,8 +63,8 @@ je_spanish_flu = {
 									has_variable = plague_measures
 								}
 							}
+							add = -1
 						}
-					add = -1
 					}
 					#nothing happens
 				}
@@ -46,7 +84,7 @@ je_spanish_flu = {
 						}
 					}
 					trigger_event = { id = plague.2 }
-				}			
+				}	
 				3 = {
 					modifier = {
 						if = {
@@ -65,6 +103,31 @@ je_spanish_flu = {
 					trigger_event = { id = plague.200 }
 				}
 			}
+			
+			#Add vaccine progress
+			if = {
+				limit = { 
+					has_variable = flu_vaccine_progress_development
+					has_variable = flu_vaccine_progress
+				}
+				random_list = {
+					1 = {
+						change_variable = {
+							name = flu_vaccine_progress
+							add = 1
+						}
+					}
+					1 = {
+						
+					}
+				}
+				clamp_variable = {
+					name = flu_vaccine_progress
+					max = 12
+					min = 0
+				}
+			}
+			
 		}
 		
 		random_events = {
@@ -109,14 +172,30 @@ je_spanish_flu = {
 	}
 
 	complete = {
-		NOT = {
-			any_scope_state = {
-				has_modifier = plague_modifier
+	
+		OR = {
+		
+			#Pandemic subsides on its own
+			NOT = {
+				any_scope_state = {
+					has_modifier = plague_modifier
+				}
 			}
+			
+			#Pandemic ended by vaccine
+			custom_tooltip = {
+				text = developed_vaccine.tt
+				scope:journal_entry = {
+					is_goal_complete = yes
+				}
+			}
+			
 		}
+		
 	}
 
 	on_complete = {
+	
 		# This is just here to generate a list of plague states
 		# For obvious reasons this doesn't do anything in practice
 		every_scope_state = {
@@ -126,8 +205,20 @@ je_spanish_flu = {
 			remove_modifier = plague_modifier
 		}
 		set_variable = spanish_flu_over
+		
 	}
 
 	weight = 100
 	should_be_pinned_by_default = yes
+	
+	progressbar = yes
+	
+	current_value = {
+		value = root.var:flu_vaccine_progress
+	}
+
+	goal_add_value = {
+		add = 12
+	}
+	
 }
