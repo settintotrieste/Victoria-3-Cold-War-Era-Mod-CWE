@@ -137,42 +137,131 @@
 			}
 			
 		}
-	
-		is_about_to_auto_break = {
-            scope:target_country.relations:root < 23 # this is: cordial + 3
-		}
 
-		should_auto_break = {
-			custom_tooltip = {
-				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER_NOT
-
-                # make sure to update is_about_to_auto_break when changing this:
-				scope:target_country.relations:root < relations_threshold:cordial
-			}		
-		}
-
-		should_invalidate = {
-			OR = {
-				NOT = { has_diplomatic_relevance = scope:target_country }
+		requirement_to_maintain = { 
+		
+			trigger = { 
+			
+				OR = { 
 				
-				has_war_with = scope:target_country	
+					custom_tooltip = {
+						text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+						scope:target_country.relations:root >= relations_threshold:cordial
+					}
+					
+					#NATO
+					AND = { 
+						scope:actor = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+						scope:target_country = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+					}
+					
+					#Rio Pact
+					AND = { 
+						scope:actor = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
+						scope:target_country = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
+					}
+					
+					#Warsaw Pact
+					AND = { 
+						scope:actor = { OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader } }
+						scope:target_country = { OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader } }
+					}
+					
+					#CSTO
+					AND = { 
+						scope:actor = { OR = { has_modifier = csto_member has_modifier = csto_leader } }
+						scope:target_country = { OR = { has_modifier = csto_member has_modifier = csto_leader } }
+					}
+					
+				}
 				
-				is_country_type = decentralized
-				scope:target_country = { is_country_type = decentralized }
-				
-				aggressive_diplomatic_plays_permitted = no
-				scope:target_country = { aggressive_diplomatic_plays_permitted = no }
-				
-				scope:actor = { is_not_sufficiently_independent = yes }
-				scope:target_country = { is_not_sufficiently_independent = yes }
-				
-				scope:actor = { is_neutral = yes }
-				scope:target_country = { is_neutral = yes }
 			}
+			
+			show_about_to_break_warning = {
+				scope:target_country.relations:root < 23 # this is: cordial + 3
+				NOT_in_superstate_defence_union = yes
+			}
+			
 		}
 
-		break_effect = {
+		requirement_to_maintain = { 
+		
+			trigger = {  
+			
+				NOT = { is_country_type = decentralized }
+				scope:target_country = {
+					NOT = { is_country_type = decentralized }
+				}
+				
+				aggressive_diplomatic_plays_permitted = yes
+				scope:target_country = {
+					aggressive_diplomatic_plays_permitted = yes
+				}
+				
+				#Both parties are sufficiently independent
+				AND = {
+					scope:actor = { is_sufficiently_independent = yes NOT = { is_subject_type = subject_type_satellite } }
+					scope:target_country = { is_sufficiently_independent = yes NOT = { is_subject_type = subject_type_satellite } }
+				}
+				
+				#Neither party is neutral
+				NOR = {
+					scope:actor = { is_neutral = yes }
+					scope:target_country = { is_neutral = yes }
+				}
+				
+				NOT = { has_war_with = scope:target_country }
+				
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = {
+					is_revolutionary = no is_secessionist = no
+				}
+			
+			
+			} 
+			
+		}
+
+		manual_break_effect = {
 			change_relations = { country = scope:target_country value = -30 }
+			create_truce = { country = scope:target_country months = 12 }
+			
+			#Revert back to Supranational alliance if applicable
+			if = {
+				limit = { 
+				
+					OR = { 
+						#NATO
+						AND = { 
+							scope:actor = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+							scope:target_country = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+						}
+						
+						#Rio Pact
+						AND = { 
+							scope:actor = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
+							scope:target_country = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
+						}
+						
+						#Warsaw Pact
+						AND = { 
+							scope:actor = { OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader } }
+							scope:target_country = { has_modifier = warsaw_pact_member }
+						}
+					}
+				
+				}
+				
+				create_diplomatic_pact = {
+					country = scope:target_country
+					type = defensive_pact
+				}
+				
+			}
+			
+		}
+		
+		auto_break_effect = {
 			create_truce = { country = scope:target_country months = 12 }
 			
 			#Revert back to Supranational alliance if applicable

@@ -1,0 +1,460 @@
+﻿namespace = resignation
+
+resignation.1 = {
+	type = country_event
+	placement = ROOT
+	
+	title = resignation.1.t
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = resignation.1.d1
+				trigger = {
+					ruler.interest_group = {
+						OR = {
+							ig_approval <= angry
+							is_marginal = yes
+						}
+					}
+				}
+			}
+			triggered_desc = {
+				desc = resignation.1.d2
+				trigger = {
+					OR = {
+						ruler = {
+							popularity <= -50
+						}
+						has_revolution = yes
+					}
+				}
+			}
+			triggered_desc = {
+				desc = resignation.1.d3
+				trigger = {
+					ruler = {
+						OR = {
+							has_trait = psychological_affliction
+							has_trait = cancer
+							has_trait = senile
+							has_trait = wounded
+						}
+					}
+				}
+			}
+			triggered_desc = {
+				desc = resignation.1.d4
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+	flavor = resignation.1.f
+
+	gui_window = event_window_1char_tabloid
+	
+	left_icon = scope:resigning_politician
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+	
+	duration = 3
+	
+	trigger = {
+		# triggered by resign_from_office interaction
+	}
+
+	immediate = {
+		ruler = {
+			save_scope_as = resigning_politician
+			interest_group = {
+				save_scope_as = resignation_ig
+			}
+		}
+	}
+
+	option = { # Support successor
+		name = resignation.1.a
+		default_option = yes
+		trigger = {
+			NOR = {
+				scope:resignation_ig = {
+					OR = {
+						ig_approval <= angry
+						is_marginal = yes
+					}
+				}
+				scope:resigning_politician = {
+					popularity <= -50
+				}
+			}
+		}
+		add_modifier = {
+			name = modifier_best_of_luck
+			months = normal_modifier_time
+		}
+		custom_tooltip = {
+			text = leader_resigns_from_office_tt
+			scope:resigning_politician = {
+				kill_character = {
+					hidden = yes
+				}
+			}
+		}
+	}
+
+	option = { # Disastrous regime
+		name = resignation.1.b
+		default_option = yes
+		trigger = {
+			OR = {
+				scope:resignation_ig = {
+					OR = {
+						ig_approval <= angry
+						is_marginal = yes
+					}
+				}
+				scope:resigning_politician = {
+					popularity <= -50
+				}
+			}
+		}
+		add_modifier = {
+			name = modifier_disastrous_administration
+			months = normal_modifier_time
+		}
+		add_loyalists = {
+			value = small_radicals
+		}
+		custom_tooltip = {
+			text = leader_resigns_from_office_tt
+			scope:resigning_politician = {
+				kill_character = {
+					hidden = yes
+				}
+			}
+		}
+	}
+
+	option = { # Immediate snap election
+		name = resignation.1.c
+		trigger = {
+			is_some_kind_of_democracy = yes
+		}
+		custom_tooltip = {
+			text = leader_resigns_from_office_tt
+			scope:resigning_politician = {
+				kill_character = {
+					hidden = yes
+				}
+			}
+		}
+		call_election = {
+			months = 3
+		}
+	}
+}
+
+# Resignation in the face of revolution
+resignation.2 = {
+	type = country_event
+	placement = ROOT
+	
+	title = resignation.2.t
+	desc = resignation.2.d
+	flavor = resignation.2.f
+
+	gui_window = event_window_1char_tabloid
+	
+	left_icon = scope:resigning_politician
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+	
+	duration = 3
+	
+	trigger = {
+		# triggered by resign_from_office interaction
+	}
+
+	immediate = {
+		ruler = {
+			save_scope_as = resigning_politician
+			interest_group = {
+				save_scope_as = resignation_ig
+			}
+		}
+		save_revolution_scopes = yes
+	}
+
+	option = {
+		name = resignation.2.a
+		default_option = yes
+		custom_tooltip = {
+			text = leader_resigns_from_office_tt
+			scope:resigning_politician = {
+				kill_character = {
+					hidden = yes
+				}
+			}
+		}
+		if = {
+			limit = {
+				scope:resigning_politician = {
+					popularity >= 0
+				}
+			}
+			scope:ongoing_revolution = {
+				add_civil_war_progress = revolution_advance_medium
+			}
+		}
+		else = {
+			scope:ongoing_revolution = {
+				add_civil_war_progress = revolution_retreat_medium
+			}
+		}
+	}
+
+	option = {
+		name = resignation.2.b
+		custom_tooltip = {
+			text = leader_resigns_from_office_tt
+			scope:resigning_politician = {
+				kill_character = {
+					hidden = yes
+				}
+			}
+		}
+		capitulate_to_revolution = yes
+		add_radicals = {
+			value = large_radicals
+			interest_group = scope:resigning_politician.interest_group
+		}
+	}
+
+	option = {
+		name = resignation.2.c
+		trigger = {
+			country_has_voting_franchise = yes
+			NOT = {
+				has_law = law_type:law_single_party_state
+			}
+		}
+		custom_tooltip = {
+			text = leader_resigns_from_office_tt
+			scope:resigning_politician = {
+				kill_character = {
+					hidden = yes
+				}
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					is_a_dictatorship = yes
+				}
+			}
+			effect_starting_politics_dictatorship = yes
+		}
+		scope:ongoing_revolution = {
+			add_civil_war_progress = revolution_retreat_large
+		}
+		add_radicals = {
+			value = medium_radicals
+		}
+	}
+}
+
+# Abdication in the face of revolution
+resignation.3 = {
+	type = country_event
+	placement = ROOT
+	
+	title = resignation.3.t
+	desc = resignation.3.d
+	flavor = resignation.3.f
+
+	gui_window = event_window_1char_tabloid
+	
+	left_icon = scope:abdicating_monarch
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+	
+	duration = 3
+	
+	trigger = {
+		# triggered by resign_from_office interaction
+	}
+
+	immediate = {
+		ruler = {
+			save_scope_as = abdicating_monarch
+		}
+		ROOT = {
+			save_scope_as = country_scope
+		}
+		save_revolution_scopes = yes
+		if = {
+			limit = {
+				exists = heir
+			}
+			heir = {
+				save_scope_as = heir_scope
+			}
+		}
+	}
+
+	option = {
+		name = resignation.3.a
+		trigger = {
+			exists = heir
+		}
+		custom_tooltip = {
+			text = leader_abdicates_the_throne_tt
+			scope:abdicating_monarch = {
+				exile_character_with_martyrdom = yes
+			}
+			heir = {
+				set_character_as_ruler = yes
+			}
+		}
+		if = {
+			limit = {
+				scope:abdicating_monarch = {
+					popularity >= 0
+				}
+			}
+			scope:ongoing_revolution = {
+				add_civil_war_progress = revolution_advance_medium
+			}
+		}
+		else = {
+			scope:ongoing_revolution = {
+				add_civil_war_progress = revolution_retreat_medium
+			}
+		}
+	}
+
+	option = {
+		name = resignation.3.b
+		default_option = yes
+		custom_tooltip = {
+			text = leader_abdicates_the_throne_tt
+			scope:abdicating_monarch = {
+				exile_character_with_martyrdom = yes
+			}
+			if = {
+				limit = {
+					NOT = {
+						exists = heir
+					}
+				}
+				if = {
+					limit = {
+						any_scope_character = {
+							OR = {
+								has_role = general
+								has_role = admiral
+							}
+						}
+					}
+					random_scope_character = {
+						limit = {
+							OR = {
+								has_role = general
+								has_role = admiral
+							}
+						}
+						set_character_as_ruler = yes
+					}
+				}
+				else = {
+					create_character = {
+						ruler = yes
+					}
+				}
+			}
+			else = {
+				heir = {
+					set_character_as_ruler = yes
+				}
+			}
+		}
+		capitulate_to_revolution = yes
+		add_radicals = {
+			value = large_radicals
+			interest_group = scope:abdicating_monarch.interest_group
+		}
+	}
+
+	option = {
+		name = resignation.3.c
+		trigger = {
+			country_has_voting_franchise = yes
+			NOT = {
+				has_law = law_type:law_single_party_state
+			}
+		}
+		custom_tooltip = {
+			text = leader_abdicates_the_throne_tt
+			scope:abdicating_monarch = {
+				exile_character_with_martyrdom = yes
+			}
+			if = {
+				limit = {
+					NOT = {
+						exists = heir
+					}
+				}
+				if = {
+					limit = {
+						any_scope_character = {
+							OR = {
+								has_role = general
+								has_role = admiral
+							}
+						}
+					}
+					random_scope_character = {
+						limit = {
+							OR = {
+								has_role = general
+								has_role = admiral
+							}
+						}
+						set_character_as_ruler = yes
+					}
+				}
+				else = {
+					create_character = {
+						ruler = yes
+					}
+				}
+			}
+			else = {
+				heir = {
+					set_character_as_ruler = yes
+				}
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					is_a_dictatorship = yes
+				}
+			}
+			effect_starting_politics_dictatorship = yes
+		}
+		scope:ongoing_revolution = {
+			add_civil_war_progress = revolution_retreat_large
+		}
+		add_radicals = {
+			value = medium_radicals
+		}
+	}
+}

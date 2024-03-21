@@ -7,10 +7,12 @@ je_un_peacekeeping_system = {
 	
 		has_modifier = unga_member
 		
-		has_global_variable = unsc_peackeeping_vote_count_var
-		has_global_variable = unga_peackeeping_vote_count_var
-		
-		any_country = { has_variable = un_peacekeeping_applicant_var }
+		hidden_trigger = {
+			has_global_variable = unsc_peackeeping_vote_count_var
+			has_global_variable = unga_peackeeping_vote_count_var
+			
+			any_country = { has_variable = un_peacekeeping_applicant_var }
+		}
 		
 	}
 	
@@ -126,23 +128,37 @@ je_un_peacekeeping_system = {
 	
 		custom_tooltip = {
 			text = un_peacekeeping_resolution_voted_on.tt
-			OR = { 
-				NOT = { exists = scope:un_peacekeeping_applicant_scope }
-				AND = {
-					exists = scope:un_peacekeeping_applicant_scope
-					scope:un_peacekeeping_applicant_scope = {
-						OR = { 
-							NOT = { has_variable = un_peacekeeping_applicant_var }
-							has_variable = un_peacekeeping_resolution_passed
-						}
-					}
-				}
+			exists = scope:un_peacekeeping_applicant_scope
+			scope:un_peacekeeping_applicant_scope = {
+				has_variable = un_peacekeeping_resolution_passed
 			}
 		}
 		
 	}
 	
 	on_complete = {
+		
+		#Clear variables
+		remove_variable = unsc_peackeeping_vote_count_var_display
+		remove_variable = unga_peackeeping_vote_count_var_display
+		remove_variable = unsc_members_count_display 
+		remove_variable = unga_members_count_display 
+		
+	}
+	
+	fail = {
+	
+		custom_tooltip = {
+			text = un_peacekeeping_resolution_voted_off.tt
+			exists = scope:un_peacekeeping_applicant_scope
+			scope:un_peacekeeping_applicant_scope = {
+				NOT = { has_variable = un_peacekeeping_applicant_var }
+			}
+		}
+		
+	}
+	
+	on_fail = {
 		
 		#Display vetoers
 		every_country = {
@@ -156,6 +172,8 @@ je_un_peacekeeping_system = {
 			}
 		}
 		
+		post_notification = un_peacekeeping_resolution_failed
+		
 		#Clear variables
 		remove_variable = unsc_peackeeping_vote_count_var_display
 		remove_variable = unga_peackeeping_vote_count_var_display
@@ -166,7 +184,10 @@ je_un_peacekeeping_system = {
 	
 	invalid = {
 	
-		NOT = { has_modifier = unga_member }
+		OR = {
+			NOT = { has_modifier = unga_member }
+			NOT = { exists = scope:un_peacekeeping_applicant_scope }
+		}
 		
 	}
 	

@@ -112,66 +112,86 @@
 		recipient_gets_income_transfer = yes
 		income_transfer_based_on_recipient = yes
 
-		should_auto_break = {
-			
-			OR = {
-			
-				#THIS is has poor relations with TARGET
-				custom_tooltip = {
-					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
-					scope:target_country.relations:root < relations_threshold:neutral
-				}
-				
-				#THIS does not have a non-aggression pact with a country neighbouring TARGET
-				custom_tooltip = {
-					text = has_a_non_aggression_pact_with_neighbouring_country_tt
-					any_country = {
-						has_strategic_adjacency = scope:target_country
-						has_diplomatic_pact = { who = scope:actor type = non_aggression_pact }
-					}
-				}
-				custom_tooltip = {
-					text = has_a_nuclear_de_escalation_treaty_with_neighbouring_country_tt
-					any_country = {
-						has_strategic_adjacency = scope:target_country
-						has_diplomatic_pact = { who = scope:actor type = nuclear_de_escalation_treaty }
-					}
-				}
-			
-			}
-			
-		}
-
-		should_invalidate = {
+		requirement_to_maintain = { 
 		
-			OR = {
+			trigger = {  
+			
+				#THIS has nukes
+				has_modifier = nuclear_capability
 				
-				#THIS no longer has nuclear weapons
-				NOT = { has_modifier = nuclear_capability }
+				#Must be a sovereign state
+				is_sufficiently_independent = yes
 				
-				#THIS is no longer sufficiently independent
-				NOT = { is_sufficiently_independent = yes }
+				#THIS is not in the midst of a revolution
+				has_revolution = no
 				
-				#THIS is neutral
-				is_neutral = yes
+				#TARGET
+				scope:target_country = { 
 				
-				#THIS has poor relations with TARGET
-				scope:target_country.relations:root <= relations_threshold:poor
-				has_war_with = scope:target_country
+					#Must be a sovereign state
+					OR = { 
+						is_sufficiently_independent = yes
+						is_subject_of = root
+					}
+					
+					#THIS is not in the midst of a revolution
+					has_revolution = no
+					
+				}
 				
-				#THIS does not have an alliance with TARGET
-				NOR = {
+				#Not a revolutionary state
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = { is_revolutionary = no is_secessionist = no }
+				
+				#TARGET has an alliance of somekind with THIS OR is overlord of TARGET
+				OR = {
 					has_diplomatic_pact = { who = scope:target_country type = alliance }
 					has_diplomatic_pact = { who = scope:target_country type = defensive_pact } 
 					is_subject_of = root
 				}
 				
+				#THIS is willing to station weapons abroad
+				NOT = { is_neutral = yes }
+				
+				#THIS has very good relations with TARGET
+				scope:target_country.relations:root > relations_threshold:cordial
+				
+				#THIS does not have a non-aggression pact with a country neighbouring TARGET
+				custom_tooltip = {
+					text = has_no_non_aggression_pact_with_neighbouring_country_tt
+					NOT = {
+						any_country = {
+							has_strategic_adjacency = scope:target_country
+							has_diplomatic_pact = { who = scope:actor type = non_aggression_pact }
+						}
+					}
+				}
+				custom_tooltip = {
+					text = has_no_nuclear_de_escalation_treaty_with_neighbouring_country_tt
+					NOT = {
+						any_country = {
+							has_strategic_adjacency = scope:target_country
+							has_diplomatic_pact = { who = scope:actor type = nuclear_de_escalation_treaty }
+						}
+					}
+				}
+				custom_tooltip = {
+					text = has_no_no_nuclear_weapons_agreement_tt
+					scope:target_country = {
+						NOT = { has_variable = no_nuclear_weapons_agreement }
+					}
+				}
+			
 			}
 			
 		}
 		
-		break_effect = {
+		manual_break_effect = {
 			change_relations = { country = scope:target_country value = -10 }
+		}
+		
+		auto_break_effect = {
+			
 		}
 	}
 

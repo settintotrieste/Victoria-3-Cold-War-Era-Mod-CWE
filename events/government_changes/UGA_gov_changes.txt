@@ -1,0 +1,98 @@
+namespace = UGA_gov_changes
+
+# UGA Coup of 1971
+UGA_gov_changes.1 = {
+    type = country_event
+
+    title = UGA_1971_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = UGA_1971_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = UGA_1971_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:UGA
+		this = c:UGA											# Change TAG of the overlord ****
+		game_date >= 1971.1.25									# START DATE: Date colony became self governing ****
+		game_date < 1981.1.25									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_republican_democracy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#right_wing_ruling_coalition = yes						# Correct Ruling Coalition
+		
+		# Event has not been fired before
+		NOT = { has_variable = UGA_1971_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = UGA_1971_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Becomes independent
+		make_independent = yes
+		
+		#Enact new regime
+		effect_starting_politics_presidential_republic = yes
+		effect_starting_politics_dictatorship = yes
+		
+		#Create new leader
+		create_character = {
+			first_name = "Idi_Amin_first_name"
+			last_name = "Idi_Amin_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			is_general = yes
+			commander_rank = commander_rank_5
+			birth_date = 1925.1.1
+			interest_group = ig_landowners
+			ideology = ideology_autocratic
+			traits = {
+				cruel
+				wrathful
+				expensive_tastes
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

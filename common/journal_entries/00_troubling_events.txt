@@ -1,0 +1,414 @@
+﻿je_troubling_events_system = {
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	group = je_group_historical_content
+
+	is_shown_when_inactive = {
+		always = yes
+	}
+
+	possible = {
+		
+		#Correct tag
+		OR = {
+		
+			trigger_if = {
+				limit = { c:GBR ?= this }
+				
+				#The Troubles
+				AND = { 
+					has_technology_researched = tech_politics_3
+					c:GBR ?= this
+					exists = c:SIR
+					any_scope_state = { state_region = { is_homeland = cu:irish } }
+					NOR = { 
+						has_law = law_type:law_multicultural 
+						AND = {
+							exists = c:NIR
+							c:NIR ?= { is_subject_of = ROOT }
+						}
+					}
+				}
+			
+			}
+			
+			trigger_if = {
+				limit = { c:USA ?= this }
+				
+				#BLM
+				AND = { 
+					c:USA ?= this
+					NOT = { has_law = law_type:law_multicultural }
+					any_scope_state = { state_region = { is_homeland = cu:afro_american } }
+				}
+				
+			}
+
+			trigger_if = {
+				limit = { c:ITA ?= this }
+			
+				#Years of Lead
+				AND = { 
+					has_technology_researched = tech_politics_3
+					c:ITA ?= this 
+					NOT = { is_a_communist_government = yes }
+					ig:ig_trade_unions ?= { is_marginal = no }
+					cold_war_ongoing = yes
+				}
+				
+			}
+			
+			trigger_if = {
+				limit = {  
+					NOT = { c:ITA ?= this }
+					is_a_nationalist_government = yes
+				}
+				
+				#Years of Lead
+				AND = { 
+					has_technology_researched = tech_politics_3
+					is_a_nationalist_government = yes
+					ig:ig_trade_unions ?= { is_marginal = no }
+					cold_war_ongoing = yes
+				}
+				
+			}
+			
+			trigger_if = {
+				limit = { c:HND ?= this }
+				
+				#Naxalite–Maoist Insurgency
+				AND = { 
+					has_technology_researched = tech_politics_3
+					c:HND ?= this 
+					NOT = { is_a_communist_government = yes }
+					ig:ig_trade_unions ?= { 
+						is_marginal = no
+						is_in_government = no
+						is_being_suppressed = no
+					}
+				}
+				
+			}
+			
+			trigger_if = {
+				limit = { c:SRL ?= this }
+				
+				#Tamil Tigers Insurgency
+				AND = {
+					c:SRL ?= this 
+					has_state_in_state_region = STATE_CEYLON
+					NOT = { exists = c:TAE }
+					has_law = law_type:law_ethnostate
+				}
+				
+			}
+			
+			trigger_if = {
+				limit = { 
+					cold_war_ongoing = yes
+				}
+				
+				#Communist Insurgency
+				AND = {
+					has_technology_researched = tech_politics_3
+					NOT = { is_a_communist_government = yes }
+					right_wing_ruling_coalition = yes
+					ig:ig_trade_unions ?= { 
+						is_marginal = no
+						leader ?= { has_ideology = ideology:ideology_autocratic }
+						ig_approval <= unhappy
+					}
+				}
+				
+			}
+			
+			trigger_if = {
+				limit = { 
+					NOT = { cold_war_ongoing = yes }
+				}
+				
+				#Theocratic Insurgency
+				AND = {
+					has_technology_researched = tech_politics_3
+					NOT = { is_a_theocratic_government = yes }
+					ig:ig_devout ?= { 
+						is_marginal = no
+						leader ?= { has_ideology = ideology:ideology_autocratic }
+						ig_approval <= unhappy
+					}
+				}
+				
+			}
+		
+		}
+		
+	}
+
+	immediate = {
+		
+		if = {
+			limit = { 
+				cold_war_ongoing = yes
+				right_wing_ruling_coalition = yes
+				ig:ig_trade_unions ?= { 
+					is_marginal = no
+					leader ?= { has_ideology = ideology:ideology_autocratic }
+					ig_approval <= unhappy
+				}
+			}
+			set_variable = communist_insurgency_troubling_event
+		}
+		if = {
+			limit = { 
+				NOT = { cold_war_ongoing = yes }
+				NOT = { is_a_theocratic_government = yes }
+				ig:ig_devout ?= { 
+					is_marginal = no
+					leader ?= { has_ideology = ideology:ideology_autocratic }
+					ig_approval <= unhappy
+				}
+			}
+			set_variable = theocratic_insurgency_troubling_event
+		}
+		
+	}
+
+	complete = {
+		
+		#How to end the troubling event
+		
+		trigger_if = {
+			limit = { c:GBR ?= this }
+			
+			#The Troubles
+			AND = { 
+				c:GBR ?= this 
+				OR = { 
+					NOT = { any_scope_state = { state_region = { is_homeland = cu:irish } } }
+					has_law = law_type:law_multicultural 
+					AND = {
+						exists = c:NIR
+						c:NIR ?= { is_subject_of = ROOT }
+					}
+				}
+			}
+			
+		}
+		
+		trigger_if = {
+			limit = { c:USA ?= this }
+			
+			#BLM
+			AND = { 
+				c:USA ?= this
+				OR = {
+					NOT = { any_scope_state = { state_region = { is_homeland = cu:afro_american } } }
+					has_law = law_type:law_multicultural
+				}
+			}
+			
+		}
+		
+		trigger_if = {
+			limit = { c:ITA ?= this }
+			
+			#Years of Lead
+			OR = { 
+				is_a_communist_government = yes
+				ig:ig_trade_unions ?= { is_marginal = yes }
+				cold_war_not_ongoing = yes
+			}
+		
+		}
+		
+		trigger_if = {
+			limit = {  
+				NOT = { c:ITA ?= this }
+				is_a_nationalist_government = yes
+				ig:ig_trade_unions ?= { is_marginal = no }
+			}
+			
+			#Years of Lead
+			OR = { 
+				NOT = { is_a_nationalist_government = yes }
+				ig:ig_trade_unions ?= { is_marginal = yes }
+				cold_war_not_ongoing = yes
+			}
+		
+		}
+		
+		trigger_if = {
+			limit = { c:HND ?= this }
+			
+			#Naxalite–Maoist Insurgency
+			AND = { 
+				c:HND ?= this 
+				OR = { 
+					is_a_communist_government = yes
+					ig:ig_trade_unions ?= { 
+						OR = {
+							is_marginal = yes 
+							is_in_government = yes
+							is_being_suppressed = yes
+						}
+					}
+				}
+			}
+		
+		}
+		
+		trigger_if = {
+			limit = { c:SRL ?= this }
+			
+			#Tamil Tigers Insurgency
+			c:SRL ?= this 
+			has_state_in_state_region = STATE_CEYLON
+			OR = { 
+				has_law = law_type:law_multicultural 
+				exists = c:TAE
+			}
+			
+		}
+		
+		trigger_if = {
+			limit = { 
+				has_variable = communist_insurgency_troubling_event
+			}
+			
+			#Communist Insurgency
+			OR = {
+				is_a_communist_government = yes
+				radical_left_wing_ruling_coalition = yes
+				ig:ig_trade_unions ?= { 
+					is_marginal = yes
+				}
+				cold_war_not_ongoing = yes
+			}
+			
+		}
+		
+		trigger_if = {
+			limit = { 
+				has_variable = theocratic_insurgency_troubling_event
+			}
+			
+			#Theocratic Insurgency
+			OR = {
+				is_a_theocratic_government = yes
+				ig:ig_devout ?= { 
+					is_marginal = yes
+				}
+			}
+			
+		}
+		
+	}
+	
+	on_complete = {
+		
+		#Domestic Peace
+		add_modifier = { 
+			name = national_reconciliation 
+			years = 5 
+		}
+		
+		#Clean up
+		remove_variable = communist_insurgency_troubling_event
+		remove_variable = theocratic_insurgency_troubling_event
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			if = {
+				limit = { c:GBR ?= this }
+				add_radicals = {
+					value = 0.001
+					culture = cu:irish
+				}
+			}
+			else_if = {
+				limit = { c:USA ?= this }
+				add_radicals = {
+					value = 0.001
+					culture = cu:afro_american
+				}
+			}
+			else_if = {
+				limit = { 
+					OR = { 
+						c:ITA ?= this 
+						is_a_nationalist_government = yes 
+					} 
+				}
+				if = { 
+					limit = { right_wing_ruling_coalition = yes }
+					add_radicals = {
+						value = 0.001
+						interest_group = ig:ig_trade_unions
+					}
+				}
+				if = { 
+					limit = { left_wing_ruling_coalition = yes }
+					add_radicals = {
+						value = 0.001
+						interest_group = ig:ig_rural_folk
+					}
+					add_radicals = {
+						value = 0.001
+						interest_group = ig:ig_devout
+					}
+					add_radicals = {
+						value = 0.001
+						interest_group = ig:ig_landowners
+					}
+				}
+			}
+			else_if = {
+				limit = { c:SRL ?= this }
+				add_radicals = {
+					value = 0.001
+					culture = cu:tamil
+				}
+			}
+			else_if = {
+				limit = { has_variable = communist_insurgency_troubling_event }
+				add_radicals = {
+					value = 0.001
+					interest_group = ig:ig_trade_unions
+				}
+			}
+			else_if = {
+				limit = { has_variable = theocratic_insurgency_troubling_event }
+				add_radicals = {
+					value = 0.001
+					interest_group = ig:ig_devout
+				}
+			}
+			else = {
+				add_radicals = {
+					value = 0.001
+				}
+			}
+			
+		}
+		
+	}
+	
+	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
+	modifiers_while_active = {
+		nationalist_agitation
+	}
+
+	weight = 20
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = no
+	
+}

@@ -18,15 +18,23 @@
 	}
 	
 	possible = {
+	
 		countries_are_valid_rivals = yes
+		
 		custom_tooltip = {
 			text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER_NOT
 			scope:target_country.relations:root < relations_threshold:cordial
-		}		
+		}
+		
 		is_revolutionary = no is_secessionist = no
 		scope:target_country = {
 			is_revolutionary = no is_secessionist = no
 		}
+		
+		# Might have these despite low relations due to a forced pact
+		NOT = { has_diplomatic_pact = { who = scope:target_country type = alliance } }	
+		NOT = { has_diplomatic_pact = { who = scope:target_country type = defensive_pact } }
+		
 	}
 	
 	pact = {
@@ -37,30 +45,53 @@
 		relations_progress_per_day = -1 # At -100, -1 relations
 		relations_improvement_min = -20
 
-		is_about_to_auto_break = {
-            scope:target_country.relations:root >= 17 # this is: cordial - 3
-        }
-
-		should_auto_break = {
-			custom_tooltip = {
-				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
-
-                # make sure to update is_about_to_auto_break when changing this:
-				scope:target_country.relations:root >= relations_threshold:cordial
+		requirement_to_maintain = { 
+			trigger = { 
+				custom_tooltip = {
+					text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER_NOT
+					scope:target_country.relations:root < relations_threshold:cordial
+				}
+			} 
+			show_about_to_break_warning = {
+				scope:target_country.relations:root >= 17 # this is: cordial - 3
 			}
 		}
 	
-		should_invalidate = {
-			OR = {
-				is_country_type = decentralized
-				scope:target_country = { is_country_type = decentralized }
-				aggressive_diplomatic_plays_permitted = no
-				scope:target_country = { aggressive_diplomatic_plays_permitted = no }		
-				countries_are_valid_rivals = no
-			}	
-		}	
+		requirement_to_maintain = { 
 		
-		break_effect = {}
+			trigger = { 
+			
+				NOT = { is_country_type = decentralized }
+				scope:target_country = {
+					NOT = { is_country_type = decentralized }
+				}	
+				
+				aggressive_diplomatic_plays_permitted = yes			
+				scope:target_country = {
+					aggressive_diplomatic_plays_permitted = yes
+				}
+				
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = {
+					is_revolutionary = no is_secessionist = no
+				}
+				
+				# Might have these despite low relations due to a forced pact
+				NOT = { has_diplomatic_pact = { who = scope:target_country type = alliance } }	
+				NOT = { has_diplomatic_pact = { who = scope:target_country type = defensive_pact } }
+			
+			}
+			
+		}
+		
+		manual_break_effect = { 
+			change_relations = { country = scope:target_country value = 10 }
+			create_truce = { country = scope:target_country months = 12 }
+		}
+		auto_break_effect = { 
+			
+		}
+		
 	}
 	
 	ai = {

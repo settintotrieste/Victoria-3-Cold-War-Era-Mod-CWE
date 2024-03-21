@@ -1,0 +1,485 @@
+capitulate_to_revolution = {
+	scope:ongoing_revolution_movement = { #Can't trigger if they want governance reforms anyway.
+		this.desired_law = {
+			save_scope_as = revolutionaries_law
+		}
+	}
+	every_interest_group = {
+		limit = {
+			is_insurrectionary = yes
+		}
+		set_variable = { name = revolutionary_ig days = 7 }
+	}
+	ordered_interest_group = {
+		limit = {
+			is_insurrectionary = yes
+		}
+		order_by = ig_clout
+		save_scope_as = revolution_leader_ig
+	}
+	if = { # Never activate Governance Principles twice.
+		limit = {
+			NOR = {
+				scope:revolutionaries_law = law_type:law_HOS_president
+				scope:revolutionaries_law = law_type:law_HOS_nationalist_leader
+				scope:revolutionaries_law = law_type:law_HOS_monarch
+				scope:revolutionaries_law = law_type:law_HOS_communist_leader
+				scope:revolutionaries_law = law_type:law_HOS_religious_leader
+			}
+		}
+		if = {
+			limit = {
+				scope:revolution_leader_ig = {
+					law_stance = {
+						law = law_type:law_HOS_communist_leader
+						value = strongly_approve
+					}
+				}
+				NOT = {
+					has_law = law_type:law_HOS_communist_leader
+				}
+			}
+			activate_law = law_type:law_HOS_communist_leader
+		}
+		else_if = {
+			limit = {
+				scope:revolution_leader_ig = {
+					law_stance = {
+						law = law_type:law_HOS_monarch
+						value = strongly_approve
+					}
+				}
+				NOT = {
+					has_law = law_type:law_HOS_monarch
+				}
+			}
+			activate_law = law_type:law_HOS_monarch
+		}
+		else_if = {
+			limit = {
+				scope:revolution_leader_ig = {
+					law_stance = {
+						law = law_type:law_HOS_nationalist_leader
+						value = strongly_approve
+					}
+				}
+				NOT = {
+					has_law = law_type:law_HOS_nationalist_leader
+				}
+			}
+			activate_law = law_type:law_HOS_nationalist_leader
+		}
+		else_if = {
+			limit = {
+				scope:revolution_leader_ig = {
+					law_stance = {
+						law = law_type:law_HOS_president
+						value = strongly_approve
+					}
+				}
+				NOT = {
+					has_law = law_type:law_HOS_president
+				}
+			}
+			activate_law = law_type:law_HOS_president
+		}
+		else_if = {
+			limit = {
+				scope:revolution_leader_ig = {
+					law_stance = {
+						law = law_type:law_HOS_religious_leader
+						value = strongly_approve
+					}
+				}
+				NOT = {
+					has_law = law_type:law_HOS_religious_leader
+				}
+			}
+			activate_law = law_type:law_HOS_religious_leader
+		}
+		else_if = {
+			limit = {
+				scope:revolution_leader_ig = {
+					law_stance = {
+						law = law_type:law_HOS_communist_leader
+						value = approve
+					}
+				}
+				NOT = {
+					has_law = law_type:law_HOS_communist_leader
+				}
+			}
+			activate_law = law_type:law_HOS_communist_leader
+		}
+		else_if = {
+			limit = {
+				scope:revolution_leader_ig = {
+					law_stance = {
+						law = law_type:law_HOS_monarch
+						value = approve
+					}
+				}
+				NOT = {
+					has_law = law_type:law_HOS_monarch
+				}
+			}
+			activate_law = law_type:law_HOS_monarch
+		}
+		else_if = {
+			limit = {
+				scope:revolution_leader_ig = {
+					law_stance = {
+						law = law_type:law_HOS_nationalist_leader
+						value = approve
+					}
+				}
+				NOT = {
+					has_law = law_type:law_HOS_nationalist_leader
+				}
+			}
+			activate_law = law_type:law_HOS_nationalist_leader
+		}
+		else_if = {
+			limit = {
+				scope:revolution_leader_ig = {
+					law_stance = {
+						law = law_type:law_HOS_president
+						value = approve
+					}
+				}
+				NOT = {
+					has_law = law_type:law_HOS_president
+				}
+			}
+			activate_law = law_type:law_HOS_president
+		}
+		else_if = {
+			limit = {
+				scope:revolution_leader_ig = {
+					law_stance = {
+						law = law_type:law_HOS_religious_leader
+						value = approve
+					}
+				}
+				NOT = {
+					has_law = law_type:law_HOS_religious_leader
+				}
+			}
+			activate_law = law_type:law_HOS_religious_leader
+		}
+	}
+
+	if = {
+		limit = {
+			scope:ongoing_revolution_movement = {
+				is_political_movement_type = movement_to_preserve
+			}
+		}
+		cancel_enactment = yes
+	}
+	else = {
+		activate_law = scope:revolutionaries_law
+	}
+
+	add_loyalists = {
+		value = 0.25
+	}
+	
+	every_interest_group = {
+		limit = {
+			has_variable = revolutionary_ig
+		}
+		owner = {
+			add_loyalists = {
+				value = 0.8
+				interest_group = PREV
+			}
+		}
+	}
+
+	if = {
+		limit = {
+			country_has_voting_franchise = yes
+		}
+		call_election = {
+			months = 6
+		}
+	}
+	if = {
+		limit = {
+			NOT = {
+				has_law = law_type:law_HOS_monarch
+			}
+		}
+		hidden_effect = {
+			scope:revolution_leader_ig = {
+				leader = {
+					set_character_as_ruler = yes
+				}
+			}
+		}
+	}
+	
+	every_interest_group = {
+		limit = {
+			is_in_government = yes
+		}
+		remove_ruling_interest_group = yes
+		add_modifier = {
+			name = modifier_revolution_defeated_light
+			months = normal_modifier_time
+			is_decaying = yes
+		}
+	}
+
+	every_interest_group = {
+		limit = {
+			has_variable = revolutionary_ig
+		}
+		hidden_effect = {
+			abandon_revolution = yes
+		}
+		add_modifier = {
+			name = modifier_revolution_victorious_light
+			months = normal_modifier_time
+			is_decaying = yes
+		}
+		add_ruling_interest_group = yes
+	}
+}
+
+enact_preferred_governance_principle = {
+	random_interest_group = {
+		limit = {
+			is_in_government = yes
+			is_strongest_ig_in_government = yes
+		}
+		save_scope_as = ruling_ig
+	}
+	if = {
+		limit = {
+			scope:ruling_ig ?= {
+				law_stance = {
+					law = law_type:law_HOS_communist_leader
+					value = strongly_approve
+				}
+			}
+		}
+		activate_law = law_type:law_HOS_communist_leader
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig ?= {
+				law_stance = {
+					law = law_type:law_HOS_monarch
+					value = strongly_approve
+				}
+			}
+		}
+		activate_law = law_type:law_HOS_monarch
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig ?= {
+				law_stance = {
+					law = law_type:law_HOS_nationalist_leader
+					value = strongly_approve
+				}
+			}
+		}
+		activate_law = law_type:law_HOS_nationalist_leader
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig ?= {
+				law_stance = {
+					law = law_type:law_HOS_president
+					value = strongly_approve
+				}
+			}
+		}
+		activate_law = law_type:law_HOS_president
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig ?= {
+				law_stance = {
+					law = law_type:law_HOS_religious_leader
+					value = strongly_approve
+				}
+			}
+		}
+		activate_law = law_type:law_HOS_religious_leader
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig ?= {
+				law_stance = {
+					law = law_type:law_HOS_communist_leader
+					value = approve
+				}
+			}
+		}
+		activate_law = law_type:law_HOS_communist_leader
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig ?= {
+				law_stance = {
+					law = law_type:law_HOS_monarch
+					value = approve
+				}
+			}
+		}
+		activate_law = law_type:law_HOS_monarch
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig ?= {
+				law_stance = {
+					law = law_type:law_HOS_nationalist_leader
+					value = approve
+				}
+			}
+		}
+		activate_law = law_type:law_HOS_nationalist_leader
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig ?= {
+				law_stance = {
+					law = law_type:law_HOS_president
+					value = approve
+				}
+			}
+		}
+		activate_law = law_type:law_HOS_president
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig ?= {
+				law_stance = {
+					law = law_type:law_HOS_religious_leader
+					value = approve
+				}
+			}
+		}
+		activate_law = law_type:law_HOS_religious_leader
+	}
+	else = {
+		activate_law = law_type:law_HOS_president
+		if = {
+			limit = {
+				civil_war_origin_country ?= {
+					has_law = law_type:law_HOS_monarch
+				}
+			}
+			set_variable = prov_gov_monarchy
+		}
+		else_if = {
+			limit = {
+				civil_war_origin_country ?= {
+					has_law = law_type:law_HOS_religious_leader
+				}
+			}
+			set_variable = prov_gov_theocracy
+		}
+		else_if = {
+			limit = {
+				civil_war_origin_country ?= {
+					has_law = law_type:law_HOS_communist_leader
+				}
+			}
+			set_variable = prov_gov_council_republic
+		}
+		set_variable = revolutionary_prov_gov_var
+	}
+}
+
+enact_preferred_governance_principle_new = {
+	random_interest_group = {
+		limit = {
+			is_in_government = yes
+			is_strongest_ig_in_government = yes
+		}
+		save_scope_as = ruling_ig
+	}
+	random_law = {
+		limit = {
+			OR = {
+				type = law_type:law_HOS_monarch
+				type = law_type:law_HOS_president
+				type = law_type:law_HOS_nationalist_leader
+				type = law_type:law_HOS_religious_leader
+				type = law_type:law_HOS_communist_leader
+			}
+			type = {
+				save_temporary_scope_as = enacted_gov_pric
+			}
+			scope:ruling_ig = {
+				law_stance = {
+					law = scope:enacted_gov_pric
+					value = strongly_approve
+				}
+			}
+		}
+		save_scope_as = preferred_gov_principles
+	}
+	if = {
+		limit = {
+			NOT = {
+				exists = scope:preferred_gov_principles
+			}
+		}
+		random_law = {
+			limit = {
+				OR = {
+					type = law_type:law_HOS_monarch
+					type = law_type:law_HOS_president
+					type = law_type:law_HOS_nationalist_leader
+					type = law_type:law_HOS_religious_leader
+					type = law_type:law_HOS_communist_leader
+				}
+				type = {
+					save_temporary_scope_as = enacted_gov_pric
+				}
+				scope:ruling_ig = {
+					law_stance = {
+						law = scope:enacted_gov_pric
+						value = approve
+					}
+				}
+			}
+			save_scope_as = preferred_gov_principles
+		}
+	}
+	if = {
+		limit = {
+			NOT = {
+				exists = scope:preferred_gov_principles
+			}
+		}
+		random_law = {
+			limit = {
+				OR = {
+					type = law_type:law_HOS_monarch
+					type = law_type:law_HOS_president
+					type = law_type:law_HOS_nationalist_leader
+					type = law_type:law_HOS_religious_leader
+					type = law_type:law_HOS_communist_leader
+				}	
+				type = {
+					save_temporary_scope_as = enacted_gov_pric
+				}
+				scope:ruling_ig = {
+					law_stance = {
+						law = scope:enacted_gov_pric
+						value = neutral
+					}
+				}
+			}
+			save_scope_as = preferred_gov_principles
+		}
+	}
+	activate_law = scope:preferred_gov_principles
+}

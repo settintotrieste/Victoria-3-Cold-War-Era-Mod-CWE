@@ -1,0 +1,341 @@
+start_chemical_weapons_program_decision = {
+
+	is_shown = {
+	
+		NOT = { has_modifier = chemical_capability }
+		
+		NOT = { has_variable = chemical_program_started }
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no is_secessionist = no
+		
+	}
+
+	possible = {
+	
+		#THIS has a jingoistic government
+		has_jingoistic_ruler = yes
+		
+		#Must be a sovereign state
+		is_sufficiently_independent = yes
+		
+		#THIS is not legally barred from starting a chemical program
+		has_law = law_type:law_wmd_allowed
+		
+		#THIS is not demilitarised
+		NOT = { has_law = law_type:law_peasant_levies }
+		
+		#THIS is not broke
+		in_default = no
+		
+		#THIS is not in the midst of a revolution
+		has_revolution = no
+		
+		#Has chemical weapons tech
+		has_technology_researched = tech_agriculture_1
+		has_technology_researched = tech_mining_1
+		has_technology_researched = tech_manufacturing_1
+		
+	}
+	
+	when_taken = {
+		
+		#Mark country as having started a chemical program
+		set_variable = chemical_program_started
+		
+		#Add JE
+		add_journal_entry = { type = je_develop_chemical_weapons }
+		
+		#For AI
+		set_variable = {
+			name = chemical_program_started_AI_timer
+			months = 60
+		}
+		
+		#Hostile countries become more hostile
+		every_country = {
+			limit = {
+				OR = {
+				
+					AND = {
+						country_rank > root.country_rank
+						can_go_to_war = yes
+						OR = { has_modifier = chemical_capability has_variable = chemical_program_started }
+			
+						OR = { 
+							has_attitude = {
+								who = ROOT
+								attitude <= antagonistic
+							}
+							relations:root < relations_threshold:poor
+						}
+					}
+					
+					AND = {
+						is_sufficiently_independent = yes
+						has_diplomatic_pact = { who = ROOT type = rivalry }
+						OR = { has_modifier = chemical_capability has_variable = chemical_program_started }
+					}
+					
+				}
+			}
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+		}
+		
+		#International community does not like this
+		change_infamy = 10
+		
+	}
+
+	ai_chance = {
+		base = 0
+		
+		modifier = {
+		
+			trigger = {
+			
+				OR = { 
+				
+					#There is a hostile country with rank greater than THIS that has nukes OR is developing nukes
+					any_country = {
+						country_rank > root.country_rank
+						can_go_to_war = yes
+						OR = { has_modifier = chemical_capability has_variable = chemical_program_started }
+			
+						OR = { 
+							has_attitude = {
+								who = ROOT
+								attitude <= antagonistic
+							}
+							relations:root < relations_threshold:poor
+						}
+					}
+				
+					#There is a neigbouring country that is hostile against THIS that has nukes OR is developing nukes
+					any_neighbouring_state = {
+						owner = {
+							can_go_to_war = yes
+							OR = { has_modifier = chemical_capability has_variable = chemical_program_started }
+			
+							OR = { 
+								has_attitude = {
+									who = ROOT
+									attitude <= antagonistic
+								}
+								relations:root < relations_threshold:poor
+							}
+						}
+					}
+					
+					#Rival has nukes OR is developing nukes
+					any_rival_country = { 
+						OR = { has_modifier = chemical_capability has_variable = chemical_program_started }
+					}
+					
+					#THIS is a superpower or great power
+					country_rank >= rank_value:great_power
+				
+				}
+				
+			}
+			
+			add = 100
+			
+		}
+
+	}
+	
+}
+
+join_chemical_non_proliferation_treaty_decision = {
+
+	is_shown = {
+		
+		#THIS has not already signed the CWC
+		NOT = { has_variable = signed_chemical_non_proliferation_treaty }
+		
+		#Date of establishment
+		game_date >= 1997.4.29
+		
+	}
+
+	possible = {
+		
+		#Not currently developing WMD
+		NOT = { has_journal_entry = je_develop_chemical_weapons }
+		
+		#THIS is sufficiently independent
+		is_sufficiently_independent = yes
+		
+		#THIS is not currently at war
+		is_at_war = no
+		
+		#THIS is a recognised country
+		has_modifier = unga_member
+		
+	}
+	
+	when_taken = {
+	
+		custom_tooltip = {
+			text = signed_CWC_1_tt
+			
+			#Mark THIS as having signed the CWC
+			set_variable = signed_chemical_non_proliferation_treaty
+			
+			#No cheesing
+			set_variable = {
+				name = chemical_non_proliferation_treaty_timer
+				years = 10
+			}
+			
+		}
+		
+		#Disable chemical program & weapons
+		if = {
+			limit = { has_modifier = chemical_capability }
+			remove_modifier = chemical_capability
+			change_infamy = -20
+			every_country = {
+				limit = { OR = { has_strategic_adjacency = ROOT country_rank >= rank_value:great_power } }
+				change_relations = {
+					country = ROOT
+					value = 50
+				}
+			}
+		}
+		else = {
+			change_infamy = -5
+			every_country = {
+				limit = { OR = { has_strategic_adjacency = ROOT country_rank >= rank_value:great_power } }
+				change_relations = {
+					country = ROOT
+					value = 10
+				}
+			}
+		}
+		
+	}
+
+	ai_chance = {
+		base = 0
+		
+		modifier = {
+		
+			trigger = {
+			
+				#Country is not faced with a chemical threat from somewhere
+				NOR = {
+					country_rank >= rank_value:great_power
+					any_rival_country = { 
+						OR = { 
+							has_modifier = chemical_capability
+							has_variable = chemical_program_started
+						}
+					}
+					any_country = {
+						relations:root < relations_threshold:poor
+						OR = { 
+							has_modifier = chemical_capability
+							has_variable = chemical_program_started
+						}
+					}
+				}
+				
+				#Country is democratic
+				is_some_kind_of_democracy = yes
+				
+				#Ruler is not jingoistic
+				NOT = { has_jingoistic_ruler = yes }
+				
+			}
+			
+			add = 100
+			
+		}
+		
+	}
+	
+}
+
+leave_chemical_non_proliferation_treaty_decision = {
+
+	is_shown = {
+		
+		#THIS has already signed the CWC
+		has_variable = signed_chemical_non_proliferation_treaty
+		
+	}
+
+	possible = {
+		
+		#THIS must have upheld the treaty for at least 10 years
+		custom_tooltip = {
+			text = signed_CWC_2_tt
+			NOT = { has_variable = chemical_non_proliferation_treaty_timer }
+		}
+		
+		#THIS is sufficiently independent
+		is_sufficiently_independent = yes
+		
+		#THIS is not currently at war
+		is_at_war = no
+		
+	}
+	
+	when_taken = {
+	
+		#Mark THIS as having signed the CWC
+		remove_variable = signed_chemical_non_proliferation_treaty
+		
+		#Everyone is not happy with THIS
+		change_infamy = 20
+		every_country = {
+			limit = { OR = { has_strategic_adjacency = ROOT country_rank >= rank_value:great_power } }
+			change_relations = {
+				country = ROOT
+				value = -25
+			}
+		}
+		
+	}
+
+	ai_chance = {
+		base = 0
+		
+		modifier = {
+		
+			trigger = {
+			
+				#Country is faced with a chemical threat from somewhere
+				OR = {
+					any_rival_country = { 
+						OR = { 
+							has_modifier = chemical_capability
+							has_variable = chemical_program_started
+						}
+					}
+					any_country = {
+						relations:root < relations_threshold:poor
+						OR = { 
+							has_modifier = chemical_capability
+							has_variable = chemical_program_started
+						}
+					}
+				}
+				
+				#Ruler is jingoistic
+				has_jingoistic_ruler = yes
+				
+			}
+			
+			add = 100
+			
+		}
+		
+	}
+	
+}

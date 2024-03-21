@@ -1,0 +1,125 @@
+namespace = chemical_warfare_system
+
+#THIS gains chemical capability
+chemical_warfare_system.1 = {
+	type = country_event
+
+	title = gained_chemical_capability.t
+	desc = gained_chemical_capability.d
+	flavor = gained_chemical_capability.f
+
+	event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 1
+
+	trigger = {
+	
+		#Triggered by je_develop_chemical_weapons
+		
+	}
+
+	immediate = {
+		add_modifier = { name = chemical_capability }
+		
+		save_scope_as = chemical_country
+	}
+
+	option = {
+		name = gained_chemical_capability.option 	#The world shall tremble at our might!
+		
+	}
+	
+}
+
+#THIS loses chemical capability
+chemical_warfare_system.2 = {
+	type = country_event
+
+	title = lost_chemical_capability.t
+	desc = lost_chemical_capability.d
+	flavor = lost_chemical_capability.f
+
+	event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 1
+
+	trigger = {
+	
+		has_modifier = chemical_capability
+		
+		OR = { 
+		
+			#Does not have chemical weapons law
+			NOT = { has_law = law_type:law_wmd_allowed }
+		
+			#Does not have at least 1 functional chemical weapons building
+			NOT = { 
+				any_scope_state = {
+					any_scope_building = {
+						is_building_type = building_chemical_plants
+						level >= 1
+						building_has_goods_shortage = no
+					}
+				}
+			}
+			
+			#NOT a sovereign state
+			NOT = { is_sufficiently_independent = yes }
+			
+		}
+		
+	}
+
+	immediate = {
+	
+		#Remove Nuclear Capability
+		remove_modifier = chemical_capability
+		remove_variable = chemical_program_started
+		
+		#Force disarmament if a non-autonomous subject
+		if = {
+			limit = { NOT = { is_sufficiently_independent = yes } }
+			activate_law = law_type:law_wmd_banned
+		}
+		
+		save_scope_as = chemical_country
+	}
+
+	option = {
+		name = lost_chemical_capability.option 	#The world shall tremble at our might!
+		
+	}
+	
+}
+
+#Clean up chemical weapons program variable
+chemical_warfare_system.3 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		#Has chemical program
+		has_variable = chemical_program_started
+		
+		#THIS no longer allows WMDs or has become an insufficiently independent subject
+		OR = {
+			NOT = { has_law = law_type:law_wmd_allowed }
+			NOT = { is_sufficiently_independent = yes }
+		}
+		
+	}
+
+	immediate = {
+		remove_variable = chemical_program_started
+	}
+	
+}

@@ -1,0 +1,117 @@
+je_develop_vaccine_button = {
+	name = "je_develop_vaccine_button"
+	desc = "je_develop_vaccine_button_desc"
+
+	visible = { 
+		
+		has_variable = flu_vaccine_progress
+		
+	}
+
+	possible = {
+		
+		hidden_trigger = { NOT = { has_variable = flu_vaccine_progress_development } }
+		
+		gold_reserves > 2000000
+		
+	}
+
+	effect = {
+		
+		set_variable = flu_vaccine_progress_development
+		
+		add_treasury = -100000
+		add_modifier = { 
+			name = vaccine_expenses
+			years = 1
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}
+
+je_buy_vaccine_button = {
+	name = "je_buy_vaccine_button"
+	desc = "je_buy_vaccine_button_desc"
+
+	visible = { 
+		
+		has_variable = flu_vaccine_progress
+		
+		#A country has developed a vaccine
+		any_country = { 
+			has_variable = spanish_flu_over
+			NOT = { has_journal_entry = je_spanish_flu }
+			has_variable = flu_vaccine_progress_development
+			has_variable = flu_vaccine_progress
+			is_sufficiently_independent = yes
+		}
+		
+	}
+
+	possible = {
+		
+		#THIS has good relations with a country that has developed a vaccine
+		any_country = { 
+			has_variable = spanish_flu_over
+			NOT = { has_journal_entry = je_spanish_flu }
+			has_variable = flu_vaccine_progress_development
+			has_variable = flu_vaccine_progress
+			is_sufficiently_independent = yes
+			relations:root >= relations_threshold:cordial
+		}
+		
+		gold_reserves > 10000
+		
+	}
+
+	effect = {
+		
+		#Develop vaccine immediately
+		change_variable = {
+			name = flu_vaccine_progress
+			add = 100
+		}
+		clamp_variable = {
+			name = flu_vaccine_progress
+			max = 12
+			min = 0
+		}
+		if = {
+			limit = {
+				has_variable = flu_vaccine_progress_development
+			}
+			remove_variable = flu_vaccine_progress_development
+		}
+		if = {
+			limit = {
+				has_modifier = vaccine_expenses
+			}
+			remove_modifier = vaccine_expenses
+		}
+		
+		#Buy vaccine
+		add_treasury = -10000
+		random_country = {
+			limit = { 
+				has_variable = spanish_flu_over
+				NOT = { has_journal_entry = je_spanish_flu }
+				has_variable = flu_vaccine_progress_development
+				has_variable = flu_vaccine_progress
+				is_sufficiently_independent = yes
+				relations:root >= relations_threshold:cordial
+			}
+			add_treasury = 10000
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}

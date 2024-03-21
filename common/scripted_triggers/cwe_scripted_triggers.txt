@@ -8,6 +8,8 @@ is_sufficiently_independent = {
 			is_subject_type = subject_type_semi_autonomous_colony
 			is_subject_type = subject_type_mandate
 		}
+		is_revolutionary = no 
+		is_secessionist = no
 	}
 	
 }
@@ -21,6 +23,8 @@ is_not_sufficiently_independent = {
 			is_subject_type = subject_type_special_administrative_region
 			is_subject_type = subject_type_semi_autonomous_colony
 			is_subject_type = subject_type_mandate
+			is_revolutionary = yes
+			is_secessionist = yes
 		}
 	}
 	
@@ -104,6 +108,15 @@ is_a_republican_regime = {
 	OR = {
 		has_government_type = gov_presidential_dictatorship
 		has_government_type = gov_parliamentary_dictatorship
+		has_government_type = gov_presidential_regime
+		has_government_type = gov_parliamentary_regime
+	}
+	
+}
+
+is_a_republican_semi_regime = {
+
+	OR = {
 		has_government_type = gov_presidential_regime
 		has_government_type = gov_parliamentary_regime
 	}
@@ -427,7 +440,7 @@ has_interventionist_fp = {
 
 has_jingoistic_ruler = {
 	exists = ruler
-	ruler = {
+	ruler ?= {
 		OR = {
 			has_ideology = ideology:ideology_autocratic
 			has_ideology = ideology:ideology_power_hungry
@@ -438,7 +451,7 @@ has_jingoistic_ruler = {
 
 has_dictatorial_ruler = {
 	exists = ruler
-	ruler = {
+	ruler ?= {
 		OR = {
 			has_ideology = ideology:ideology_autocratic
 			has_ideology = ideology:ideology_power_hungry
@@ -471,6 +484,24 @@ cold_war_ongoing = {
 		any_country = {
 			country_rank = rank_value:super_power
 			is_a_democracy = yes
+		}
+	}
+	
+}
+
+cold_war_not_ongoing = {
+
+	custom_tooltip = {
+		text = cold_war_not_ongoing_tt
+		NAND = {
+			any_country = {
+				country_rank = rank_value:super_power
+				is_a_communist_government = yes
+			}
+			any_country = {
+				country_rank = rank_value:super_power
+				is_a_democracy = yes
+			}
 		}
 	}
 	
@@ -610,15 +641,21 @@ government_has_legislative_super_majority = {
 	
 	OR = {
 	
-		AND = { 
-			has_law = law_type:law_constitutional_supremacy
-			has_upper_house_support_667 = yes
-			government_legitimacy > 66
+		trigger_if = {
+			limit = { has_law = law_type:law_constitutional_supremacy }
+			AND = { 
+				has_law = law_type:law_constitutional_supremacy
+				has_upper_house_support_667 = yes
+				government_legitimacy > 66
+			}
 		}
 		
-		AND = { 
-			NOT = { has_law = law_type:law_constitutional_supremacy }
-			has_upper_house_support_simple_majority = yes
+		trigger_if = {
+			limit = { NOT = { has_law = law_type:law_constitutional_supremacy } }
+			AND = { 
+				NOT = { has_law = law_type:law_constitutional_supremacy }
+				has_upper_house_support_simple_majority = yes
+			}
 		}
 		
 		has_modifier = state_of_emergency_issued
@@ -635,21 +672,27 @@ government_has_legislative_super_majority = {
 
 has_upper_house_support_simple_majority = {
 
-	custom_tooltip = {
-		text = has_upper_house_support_50.tt
-		NAND = {
-			NOT = { has_variable = upper_house_filibuster_rule }
-			has_journal_entry = je_upper_house
-			NOT = { has_variable = upper_house_has_simple_majority }
+	trigger_if = {
+		limit = { NOT = { has_variable = upper_house_filibuster_rule } }
+		custom_tooltip = {
+			text = has_upper_house_support_50.tt
+			NAND = {
+				NOT = { has_variable = upper_house_filibuster_rule }
+				has_journal_entry = je_upper_house
+				NOT = { has_variable = upper_house_has_simple_majority }
+			}
 		}
 	}
 	
-	custom_tooltip = {
-		text = has_upper_house_support_60.tt
-		NAND = {
-			has_variable = upper_house_filibuster_rule
-			has_journal_entry = je_upper_house
-			NOT = { has_variable = upper_house_has_filibuster_majority }
+	trigger_if = {
+		limit = { has_variable = upper_house_filibuster_rule }
+		custom_tooltip = {
+			text = has_upper_house_support_60.tt
+			NAND = {
+				has_variable = upper_house_filibuster_rule
+				has_journal_entry = je_upper_house
+				NOT = { has_variable = upper_house_has_filibuster_majority }
+			}
 		}
 	}
 
@@ -1029,6 +1072,12 @@ THIS_can_reach_TARGET_market = {
 				}
 			}
 		}
+		NOT = {
+			has_diplomatic_pact = {
+				who = root
+				type = embargo
+			}
+		}
 	}
 
 }
@@ -1185,4 +1234,43 @@ THIS_country_had_gulag_historical = {
 		c:BUR ?= this
 	}
 
+}
+
+is_a_suitable_olympic_host = {
+
+	is_country_type = recognized
+	OR = { 
+		country_rank >= rank_value:major_power
+		num_states > 4
+	}
+	is_sufficiently_independent = yes
+	is_at_war = no
+	OR = { 
+		is_diplomatic_play_committed_participant = no
+		has_global_variable = historical_railroading_active 
+	}
+	OR = {
+		infamy < infamy_threshold:pariah
+		country_rank >= rank_value:super_power
+	}
+	in_default = no
+	capital = { is_split_state = no }
+	NOT = { has_variable = olympic_games_host_country }
+
+}
+
+country_is_occupied_by_enemy = {
+
+	custom_tooltip = {
+		text = country_is_occupied_by_enemy.tt
+		enemy_occupation > 0.0
+	}
+
+}
+
+construction_sector_auto_expand_rule = { 
+	
+	state.market_access >= 0.95
+	occupancy >= 0.95
+	
 }

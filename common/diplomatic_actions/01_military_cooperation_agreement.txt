@@ -29,6 +29,7 @@
 			OR = { 
 				has_diplomatic_pact = { who = scope:actor type = alliance } 
 				has_diplomatic_pact = { who = scope:actor type = defensive_pact }
+				has_diplomatic_pact = { who = scope:actor type = protectorate }
 				is_subject_of = scope:actor 
 			}
 		}
@@ -112,116 +113,250 @@
 		recipient_gets_income_transfer = yes
 		income_transfer_based_on_recipient = yes
 		
+		actor_can_break = {
+		
+			#NATO
+			trigger_if = {
+				limit = { 
+					has_modifier = nato_leader
+				}
+				NAND = {
+					scope:actor = { has_modifier = nato_leader }
+					scope:target_country = { has_modifier = nato_member }
+					hidden_trigger = { has_global_variable = fund_nato }
+				}
+			}
+			
+			#Warsaw Pact
+			trigger_if = {
+				limit = { 
+					has_modifier = warsaw_pact_leader
+				}
+				NAND = {
+					scope:actor = { has_modifier = warsaw_pact_leader }
+					scope:target_country = { has_modifier = warsaw_pact_member }
+					hidden_trigger = { has_global_variable = fund_warsaw_pact }
+				}
+			}
+			
+		}
+		
 		target_can_break = {
 		
-			custom_tooltip = {
-				text = no_sovereign_military_bases_CYP
-				NAND = {
-					scope:actor = {
-						c:GBR ?= this
-						has_variable = sovereign_military_bases_CYP
-					}
-					scope:target_country = { 
-						c:CYP ?= this
-						has_variable = sovereign_military_bases_CYP
-					}
-				}
-			}
-			
-		}
-
-		should_auto_break = {
-			
-			OR = {
-			
-				#THIS is has poor relations with TARGET
-				custom_tooltip = {
-					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
-					scope:target_country.relations:root < relations_threshold:neutral
-				}
-				
-				#THIS does not have a non-aggression pact with a country neighbouring TARGET
-				custom_tooltip = {
-					text = has_a_non_aggression_pact_with_neighbouring_country_tt
-					any_country = {
-						has_strategic_adjacency = scope:target_country
-						has_diplomatic_pact = { who = scope:actor type = non_aggression_pact }
-					}
-				}
-				
-				#TARGET does not have an alliance with THIS
-				scope:target_country = { 
-					NOR = { 
-						has_diplomatic_pact = { who = scope:actor type = alliance } 
-						has_diplomatic_pact = { who = scope:actor type = defensive_pact }
-						is_subject_of = scope:actor 
-					}
-				}
-			
-			}
-			
 			#Sovereign Military Bases
-			NAND = {
-				scope:actor = {
-					c:GBR ?= this
-					has_variable = sovereign_military_bases_CYP
+			trigger_if = {
+				limit = { 
+					scope:actor = { c:GBR ?= this }
+					scope:target_country = { OR = { c:CYP ?= this c:WCY ?= this } }
 				}
-				scope:target_country = { 
-					c:CYP ?= this
-					has_variable = sovereign_military_bases_CYP
+				custom_tooltip = {
+					text = no_sovereign_military_bases_CYP
+					NAND = {
+						scope:actor = {
+							c:GBR ?= this
+							has_variable = sovereign_military_bases_CYP
+						}
+						scope:target_country = { 
+							OR = { c:CYP ?= this c:WCY ?= this }
+							has_variable = sovereign_military_bases_CYP
+						}
+					}
+				}
+			}
+			
+			#NATO
+			trigger_if = {
+				limit = { 
+					OR = { 
+						has_modifier = nato_member
+						has_modifier = nato_leader
+					}
+				}
+				NAND = {
+					scope:actor = { has_modifier = nato_leader }
+					scope:target_country = { has_modifier = nato_member }
+					hidden_trigger = { has_global_variable = fund_nato }
+				}
+			}
+			
+			#Warsaw Pact
+			trigger_if = {
+				limit = { 
+					OR = { 
+						has_modifier = warsaw_pact_member
+						has_modifier = warsaw_pact_leader
+					}
+				}
+				NAND = {
+					scope:actor = { has_modifier = warsaw_pact_leader }
+					scope:target_country = { has_modifier = warsaw_pact_member }
+					hidden_trigger = { has_global_variable = fund_warsaw_pact }
 				}
 			}
 			
 		}
 
-		should_invalidate = {
+		requirement_to_maintain = { 
 		
-			OR = {
+			trigger = { 
 				
-				#THIS or TARGET became decentralized
-				is_country_type = decentralized
-				scope:target_country = { is_country_type = decentralized }
+				#Not a revolutionary state
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = { is_revolutionary = no is_secessionist = no }
 				
-				#THIS is no longer sufficiently independent
-				NOT = { is_sufficiently_independent = yes }
+				#THIS is not decentralized
+				NOT = { is_country_type = decentralized }
+				scope:target_country = { NOT = { is_country_type = decentralized } }
 				
-				#TARGET is no longer sufficiently independent
+				#Must be a sovereign state
+				is_sufficiently_independent = yes
 				scope:target_country = { 
 				
 					#Must be a sovereign state
-					NOR = { 
+					OR = { 
 						is_sufficiently_independent = yes
 						is_subject_of = ROOT
 					}
 					
 				}
 				
-				#THIS is neutral
-				is_neutral = yes
-				
-			}
-			
-			#Sovereign Military Bases
-			NAND = {
-				scope:actor = {
-					c:GBR ?= this
-					is_sufficiently_independent = yes
-					has_variable = sovereign_military_bases_CYP
-				}
+				#TARGET must have an alliance with THIS
 				scope:target_country = { 
-					c:CYP ?= this
 					OR = { 
-						is_sufficiently_independent = yes
-						is_subject_of = scope:actor
+						has_diplomatic_pact = { who = scope:actor type = alliance } 
+						has_diplomatic_pact = { who = scope:actor type = defensive_pact }
+						has_diplomatic_pact = { who = scope:actor type = protectorate }
+						is_subject_of = scope:actor 
 					}
-					has_variable = sovereign_military_bases_CYP
 				}
+				
+				#THIS and TARGET is not in the midst of a revolution
+				has_revolution = no
+				scope:target_country = { has_revolution = no }
+				
+				#THIS has greater military strength than TARGET
+				army_size > scope:target_country.army_size
+				
+				#THIS has greater country rank than TARGET
+				scope:target_country = { country_rank < root.country_rank }
+				
+				#THIS is neutral
+				NOT = { is_neutral = yes }
+				
+				#THIS has very good relations with TARGET
+				OR = {
+				
+					custom_tooltip = {
+						text = DIPLO_ACTION_RELATIONS_AMICABLE_OR_GREATER
+						scope:target_country.relations:root >= relations_threshold:amicable
+					}
+					
+					scope:target_country = { is_subject_of = scope:actor }
+					
+					#Sovereign Military Bases
+					custom_tooltip = {
+						text = no_sovereign_military_bases_CYP
+						AND = {
+							scope:actor = {
+								c:GBR ?= this
+								has_variable = sovereign_military_bases_CYP
+							}
+							scope:target_country = { 
+								OR = { c:CYP ?= this c:WCY ?= this }
+								has_variable = sovereign_military_bases_CYP
+							}
+						}
+					}
+					
+					#NATO
+					AND = {
+						scope:actor = { has_modifier = nato_leader }
+						scope:target_country = { has_modifier = nato_member }
+						hidden_trigger = { has_global_variable = fund_nato }
+					}
+					
+					#Warsaw Pact
+					AND = {
+						scope:actor = { has_modifier = warsaw_pact_leader }
+						scope:target_country = { has_modifier = warsaw_pact_member }
+						hidden_trigger = { has_global_variable = fund_warsaw_pact }
+					}
+					
+				}
+				
+				OR = {
+				
+					#THIS does not have a non-aggression pact with a country neighbouring TARGET
+					custom_tooltip = {
+						text = has_no_non_aggression_pact_with_neighbouring_country_tt
+						NOT = {
+							any_country = {
+								has_strategic_adjacency = scope:target_country
+								has_diplomatic_pact = { who = scope:actor type = non_aggression_pact }
+							}
+						}
+					}
+					
+					#Sovereign Military Bases
+					custom_tooltip = {
+						text = no_sovereign_military_bases_CYP
+						AND = {
+							scope:actor = {
+								c:GBR ?= this
+								has_variable = sovereign_military_bases_CYP
+							}
+							scope:target_country = { 
+								OR = { c:CYP ?= this c:WCY ?= this }
+								has_variable = sovereign_military_bases_CYP
+							}
+						}
+					}
+					
+					#NATO
+					trigger_if = {
+						limit = { 
+							OR = { 
+								has_modifier = nato_member
+								has_modifier = nato_leader
+							}
+						}
+						AND = {
+							scope:actor = { has_modifier = nato_leader }
+							scope:target_country = { has_modifier = nato_member }
+							hidden_trigger = { has_global_variable = fund_nato }
+						}
+					}
+					
+					#Warsaw Pact
+					trigger_if = {
+						limit = { 
+							OR = { 
+								has_modifier = warsaw_pact_member
+								has_modifier = warsaw_pact_leader
+							}
+						}
+						AND = {
+							scope:actor = { has_modifier = warsaw_pact_leader }
+							scope:target_country = { has_modifier = warsaw_pact_member }
+							hidden_trigger = { has_global_variable = fund_warsaw_pact }
+						}
+					}
+					
+				}
+				
+				#THIS is not broke
+				in_default = no
+				
 			}
 			
 		}
 		
-		break_effect = {
+		manual_break_effect = {
 			change_relations = { country = scope:target_country value = -25 }
+		}
+		
+		auto_break_effect = {
+			
 		}
 		
 	}

@@ -109,35 +109,15 @@
 			
 		}
 		
-		should_auto_break = {
+		requirement_to_maintain = { 
 		
-			OR = { 
-			
-				#OPEC Leader (THIS) has good relations with TARGET
-				custom_tooltip = {
-					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
-					
-					has_modifier = OPEC_leader
-					scope:target_country.relations:root > relations_threshold:neutral
-				}
+			trigger = { 
+
+				#THIS is an OPEC leader OR there is an OPEC leader targeting TARGET
+				OR = { 
 				
-				#THIS & TARGET are in a customs union OR can evade an embargo with a treaty port
-				OR = {
-					is_junior_in_customs_union = yes
-					scope:target_country = { is_junior_in_customs_union = yes }
-					scope:target_country = { has_treaty_port_in_country = root }
-				}
-			
-			}
-			
-		}
-	
-		should_invalidate = {
-		
-			OR = {
-			
-				NOR = { 
 					has_modifier = OPEC_leader
+					
 					AND = {
 						has_modifier = OPEC_member
 						any_country = {
@@ -145,25 +125,51 @@
 							any_scope_diplomatic_pact = { is_diplomatic_action_type = OPEC_oil_embargo }
 						}
 					}
+					
 				}
 				
-				NOR = {
-					has_modifier = OPEC_leader
+				#THIS or TARGET are not decentralized
+				NOR = { is_country_type = decentralized }
+				scope:target_country = { NOR = { is_country_type = decentralized } }
+				
+				#THIS must have poor relations with TARGET
+				custom_tooltip = {
+					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+					scope:target_country.relations:root <= relations_threshold:poor
+				}
+				
+				#OPEC leader must have good relations with fellow OPEC members OR THIS is an OPEC member
+				OR = {
 					has_modifier = OPEC_member
+					
+					custom_tooltip = {
+						text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_LESS_OPEC
+						NOT = { 
+							any_country = {
+								has_modifier = OPEC_member
+								relations:root < relations_threshold:amicable
+							}
+						}
+					}
 				}
 				
-				is_country_type = decentralized
-				scope:target_country = { is_country_type = decentralized }
+				#THIS & TARGET are not in a customs union OR cannot evade an embargo with a treaty port
+				is_junior_in_customs_union = no
+				scope:target_country = { is_junior_in_customs_union = no }
+				NOT = { scope:target_country = { has_treaty_port_in_country = root } }
 				
-				NOT = { has_diplomatic_relevance = scope:target_country }
-				
-			}
+			} 
 			
 		}
 		
-		break_effect = { 
+		manual_break_effect = { 
 			scope:target_country = { remove_variable = oil_embargo_target }
 		}
+		
+		auto_break_effect = { 
+			scope:target_country = { remove_variable = oil_embargo_target }
+		}
+		
 	}
 	
 	ai = {

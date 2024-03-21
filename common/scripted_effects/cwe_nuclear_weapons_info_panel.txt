@@ -85,18 +85,18 @@ calculate_nuclear_defence_info = {
 	}
 
 	#Reduce defence due to nuclear weapons stationed next to THIS
-	every_country = {
-		limit = { 
-			NOT = { THIS = ROOT }
-			has_strategic_adjacency = ROOT
-			OR = { 
-				has_modifier = nuclear_capability 
-				any_scope_diplomatic_pact = { is_diplomatic_action_type = station_nuclear_weapons } 
-			}
-			relations:root < relations_threshold:neutral
-		}
-		ROOT = { change_variable = { name = nuclear_strike_defence_display multiply = 0.9 } }
-	}
+	#every_country = {
+	#	limit = { 
+	#		NOT = { THIS = ROOT }
+	#		has_strategic_adjacency = ROOT
+	#		OR = { 
+	#			has_modifier = nuclear_capability 
+	#			any_scope_diplomatic_pact = { is_diplomatic_action_type = station_nuclear_weapons } 
+	#		}
+	#		relations:root < relations_threshold:neutral
+	#	}
+	#	ROOT = { change_variable = { name = nuclear_strike_defence_display multiply = 0.9 } }
+	#}
 
 }
 
@@ -111,6 +111,10 @@ calculate_enemy_nuclear_strength_info = {
 		name = nuclear_strike_defence_enemy_display
 		value = 0
 	}
+	set_variable = { 
+		name = nuclear_enemy_counter_display
+		value = 1
+	}
 
 	#Calculate enemy nuclear strength
 	every_country = {
@@ -121,7 +125,10 @@ calculate_enemy_nuclear_strength_info = {
 			has_variable = nuclear_strike_power_display
 			has_variable = nuclear_strike_defence_display
 			
-			relations:root < relations_threshold:neutral
+			OR = { 
+				relations:root < relations_threshold:poor
+				has_diplomatic_pact = { who = ROOT type = rivalry }
+			}
 		}
 		calculate_nuclear_strength_info = yes
 		calculate_nuclear_defence_info = yes
@@ -144,11 +151,81 @@ calculate_enemy_nuclear_strength_info = {
 				name = nuclear_strike_defence_enemy_display
 				add = global_var:nuclear_strike_defence_display_global
 			}
+			change_variable = {
+				name = nuclear_enemy_counter_display
+				add = 1
+			}
 		}
 		
 		remove_global_variable = nuclear_strike_power_enemy_display_global
 		remove_global_variable = nuclear_strike_defence_display_global
 		
+	}
+	
+}
+
+calculate_allied_nuclear_strength_info = {
+	
+	#Always first reset to 0
+	set_variable = { 
+		name = nuclear_strike_power_allied_display
+		value = 0
+	}
+	set_variable = { 
+		name = nuclear_strike_defence_allied_display
+		value = 0
+	}
+
+	#Calculate allied nuclear strength
+	every_country = {
+		limit = { 
+			NOT = { THIS = ROOT }
+			has_modifier = nuclear_capability 
+			
+			#has_variable = nuclear_strike_power_display
+			#has_variable = nuclear_strike_defence_display
+			
+			OR = { 
+				has_diplomatic_pact = { who = ROOT type = alliance }
+				has_diplomatic_pact = { who = ROOT type = defensive_pact }
+			}
+		}
+		calculate_nuclear_strength_info = yes
+		calculate_nuclear_defence_info = yes
+		
+		set_global_variable = {
+			name = nuclear_strike_power_allied_display_global
+			value = this.var:nuclear_strike_power_display
+		}
+		set_global_variable = {
+			name = nuclear_strike_defence_display_global
+			value = this.var:nuclear_strike_defence_display
+		}
+		
+		ROOT = {
+			change_variable = {
+				name = nuclear_strike_power_allied_display
+				add = global_var:nuclear_strike_power_allied_display_global
+			}
+			change_variable = {
+				name = nuclear_strike_defence_allied_display
+				add = global_var:nuclear_strike_defence_display_global
+			}
+		}
+		
+		remove_global_variable = nuclear_strike_power_allied_display_global
+		remove_global_variable = nuclear_strike_defence_display_global
+		
+	}
+	
+	change_variable = { 
+		name = nuclear_strike_power_display
+		add = root.var:nuclear_strike_power_allied_display
+	}
+	
+	change_variable = { 
+		name = nuclear_strike_defence_display
+		add = root.var:nuclear_strike_defence_allied_display
 	}
 	
 }
@@ -197,6 +274,10 @@ calculate_nuclear_arms_race_ratio = {
 	set_variable = { 
 		name = nuclear_strike_power_ratio
 		value = root.var:nuclear_strike_power_THIS_enemy_ratio
+	}
+	change_variable = { 
+		name = nuclear_strike_power_ratio
+		multiply = root.var:nuclear_enemy_counter_display
 	}
 	change_variable = { 
 		name = nuclear_strike_power_ratio

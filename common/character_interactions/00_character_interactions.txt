@@ -373,18 +373,46 @@ abdicate_monarch = {
 			popularity <= -50
 			has_trait = psychological_affliction
 			age >= 75
+			owner = {
+				any_interest_group = {
+					is_insurrectionary = yes
+				}
+			}
 		}
-		owner.heir = {
-			age >= 18
+		trigger_if = {
+			limit = {
+				NOT = {
+					owner = {
+						any_interest_group = {
+							is_insurrectionary = yes
+						}
+					}
+				}
+			}
+			owner.heir = {
+				age >= 18
+			}
 		}
 	}
 
 	effect = {
-		show_as_tooltip = {
-			kill_character = yes
+		custom_tooltip = leader_abdicates_the_throne_display_tt
+		if = {
+			limit = {
+				owner = {
+					any_interest_group = {
+						is_insurrectionary = yes
+					}
+				}
+			}
+			owner = {
+				trigger_event = { id = resignation.3 popup = yes }
+			}
 		}
-		owner = {
-			trigger_event = { id = wedding.3 popup = yes }
+		else = {
+			owner = {
+				trigger_event = { id = wedding.3 popup = yes }
+			}
 		}
 	}
 
@@ -458,11 +486,14 @@ exile_character = {
 
 	possible = {
 	
-		NOR = {
-			has_modifier = indicted_character
-			has_modifier = convicted_character
-			has_modifier = unjustly_convicted_character
-			has_modifier = acquitted_character
+		custom_tooltip = {
+			text = not_on_trial.tt
+			NOR = {
+				has_modifier = indicted_character
+				has_modifier = convicted_character
+				has_modifier = unjustly_convicted_character
+				has_modifier = acquitted_character
+			}
 		}
 	
 		owner = {
@@ -500,6 +531,96 @@ exile_character = {
 			}
 		}
 		
+		custom_tooltip = {
+			text = ideology_not_too_close_tt
+			NOT = {
+				OR = {
+					AND = {
+						owner = {
+							OR = { 
+								has_modifier = communist_ruling_party_ideology
+								has_modifier = market_socialist_ruling_party_ideology
+								has_modifier = socialist_ruling_party_ideology
+								
+								is_a_communist_government = yes
+							}
+						}
+						has_ideology = ideology:ideology_agitator_communist
+					}
+					AND = {
+						owner = {
+							OR = { 
+								has_modifier = fascist_ruling_party_ideology
+								
+								is_a_nationalist_government = yes
+							}
+						}
+						has_ideology = ideology:ideology_agitator_nationalist
+					}
+					AND = {
+						owner = {
+							OR = { 
+								has_modifier = traditionalist_ruling_party_ideology
+								has_modifier = conservative_ruling_party_ideology
+								
+								is_a_monarchy = yes
+							}
+						}
+						has_ideology = ideology:ideology_agitator_monarchist
+					}
+					AND = {
+						owner = {
+							OR = { 
+								has_modifier = traditionalist_ruling_party_ideology
+								has_modifier = conservative_ruling_party_ideology
+							}
+							is_a_theocratic_government = yes
+						}
+						has_ideology = ideology:ideology_agitator_theocrat
+					}
+					AND = {
+						owner = {
+							has_law = law_type:law_HOS_president
+						}
+						has_ideology = ideology:ideology_agitator_republican
+					}
+					AND = {
+						OR = {
+							owner = {
+								OR = { 
+									has_modifier = social_democratic_ruling_party_ideology
+									has_modifier = liberal_ruling_party_ideology
+									has_modifier = libertarian_ruling_party_ideology
+								}
+							}
+							owner.ruler = {
+								OR = {
+									has_ideology = ideology:ideology_democratic
+									has_ideology = ideology:ideology_liberal
+								}
+							}
+						}
+						has_ideology = ideology:ideology_agitator_pro_human_rights
+					}
+					AND = {
+						owner.ruler = {
+							OR = {
+								has_ideology = ideology:ideology_autocratic
+								has_ideology = ideology:ideology_power_hungry
+							}
+						}
+						has_ideology = ideology:ideology_agitator_anti_human_rights
+					}
+					AND = {
+						owner = {
+							is_at_war = yes
+						}
+						has_ideology = ideology:ideology_agitator_pro_war_rights
+					}
+				}
+			}
+		}
+		
 	}
 
 	effect = {
@@ -511,6 +632,20 @@ exile_character = {
 		}
 		owner = {
 			save_scope_as = exiling_country_scope
+		}
+		if = {
+			limit = {
+				has_role = politician
+			}
+			owner = {
+				scope:relevant_ig = {
+					add_modifier = {
+						name = modifier_exiled_leader
+						months = normal_modifier_time
+						is_decaying = yes
+					}
+				}
+			}
 		}
 		if = {
 			limit = {
@@ -740,7 +875,7 @@ invite_exile = {
 	show_requirements = yes
 
 	possible = {
-		scope:actor = { empty_agitator_slots >= 1 }
+		scope:actor ?= { empty_agitator_slots >= 1 }
 		# Only popular individuals need apply
 		popularity > 15
 		# Devout exiles must have country religion
@@ -773,7 +908,7 @@ invite_exile = {
 			}
 		}
 		# Cannot invite exiles if you have Closed Borders
-		scope:actor = {
+		scope:actor ?= {
 			NOT = { has_law = law_type:law_closed_borders }
 		}
 	}
