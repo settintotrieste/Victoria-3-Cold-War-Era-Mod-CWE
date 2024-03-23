@@ -816,3 +816,95 @@ je_anti_terror_operation_button = {
 	}
 	
 }
+
+je_assassinate_ruler_button = {
+	name = "je_assassinate_ruler_button"
+	desc = "je_assassinate_ruler_button_desc"
+
+	visible = { 
+		
+		has_variable = secret_police_action_points
+		
+		#Secret police is extremely disloyal
+		has_variable = secret_police_loyalty
+		root.var:secret_police_loyalty = 0
+		
+		#Ruler is not from the intelligence services
+		exists = ruler
+		ruler = { interest_group = { NOT = { is_interest_group_type = ig_bureaucrats } } }
+		
+	}
+
+	possible = {
+	
+		#Has enough action points
+		custom_tooltip = {
+			text = secret_police_action_50_points.tt
+			root.var:secret_police_action_points > 50
+		}
+		
+		#Cooldown
+		custom_tooltip = {
+			text = secret_police_action_timer.tt
+			NOT = { has_variable = secret_police_action_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		#Cooldown
+		set_variable = {
+			name = secret_police_action_timer
+			months = 1
+		}
+		
+		#Subtract action points
+		custom_tooltip = {
+			text = secret_police_action_subtract_50_points.tt
+			change_variable = { 
+				name = secret_police_action_points
+				add = -50
+			}
+		}
+		
+		#Stoke unrest
+		hidden_effect = { remove_modifier = ig_government_destablised }
+		add_modifier = { 
+			name = ig_government_destablised
+			years = 5
+			is_decaying = yes
+		}
+		hidden_effect = { remove_modifier = power_vacuum_modifier }
+		add_modifier = { 
+			name = power_vacuum_modifier
+			years = 10
+			is_decaying = yes
+		}
+		ruler = { interest_group = { save_scope_as = ruler_interest_group_scope } }
+		add_radicals = {
+			value = large_radicals
+			interest_group = scope:ruler_interest_group_scope
+		}
+		
+		#Replace ruler with a character not from the ruler's IG
+		ruler = { kill_character = yes }
+		random_scope_character = {
+			limit = { 
+				is_ruler = no
+				has_role = politician
+				interest_group = {
+					OR = { is_marginal = no is_interest_group_type = ig_bureaucrats }
+					NOT = { is_interest_group_type = scope:ruler_interest_group_scope }
+				}
+			}
+			set_character_as_ruler = yes
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+	}
+	
+}
