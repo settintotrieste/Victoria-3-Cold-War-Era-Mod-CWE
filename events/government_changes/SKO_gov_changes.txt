@@ -488,3 +488,117 @@ SKO_gov_changes.5 = {
     }
 
 }
+
+# The Impeachment of Park Geun-hye
+SKO_gov_changes.6 = {
+    type = country_event
+
+    title = SKO_2016_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = SKO_2016_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SKO_2016_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SKO ?= this
+		game_date >= 2016.12.9									# START DATE: Date colony became self governing ****
+		game_date < 2026.12.9									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Park Geun-hye
+		exists = ruler
+		ruler = { has_variable = Park_Geun_hye }
+		
+		# Event has not been fired before
+		NOT = { has_variable = SKO_2016_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SKO_2016_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Remove Park Geun-hye
+		ruler = { 
+			kill_character = {
+				hidden = yes
+				value = yes
+			} 
+		}
+		
+		#Hwang Kyo-ahn
+		create_character = {
+			first_name = "Hwang_Kyo-ahn_first_name"
+			last_name = "Hwang_Kyo-ahn_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1957.4.15
+			interest_group = ig_petty_bourgeoisie
+			ideology = ideology_democratic
+			culture = cu:korean
+			religion = rel:catholic
+			traits = {
+				cautious
+				reserved
+				tactful
+			}
+		}
+		
+		set_variable = Park_Geun_hye_was_impeached
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Survived impeachment
+		ruler = { 
+			hidden_effect = { remove_modifier = survived_impeachment }
+			add_modifier = { name = survived_impeachment years = 4 is_decaying = yes } 
+		}
+		
+		#Add corruption
+		activate_law = law_type:law_very_low_anti_corruption
+		
+		#Minor discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_devout
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
