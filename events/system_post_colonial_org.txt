@@ -1,0 +1,93 @@
+namespace = post_colonial_org_system
+
+# Olympics Participation
+post_colonial_org_system.1 = {
+    type = country_event
+	placement = scope:post_colonial_org_summit_location
+
+    title = participation_post_colonial_org_games.t 								# Title of the event; ADD LOCALISATION
+    desc = participation_post_colonial_org_games.d 									# Description of the event; ADD LOCALISATION
+    #flavor = participation_post_colonial_org_games.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_world_fair.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/organized_sports.dds" 				# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 					# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {																		# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by JE
+		
+    }
+	
+	immediate = {
+		
+		#Mark host
+		random_country = {
+			limit = { 
+				has_variable = recently_hosted_post_colonial_org_games
+			}
+			save_scope_as = recently_hosted_post_colonial_org_games
+			random_scope_state = {
+				limit = {
+					has_modifier = post_colonial_org_games_host_city
+				}
+				save_scope_as = post_colonial_org_summit_location
+			}
+		}
+		
+	}
+    
+    option = {
+        name = participation_post_colonial_org_games.option.1					# Participate 
+        highlighted_option = yes
+		default_option = yes
+		
+		#Performance
+		random_list = { 
+			1 = { 
+				add_modifier = { name = good_post_colonial_org_games_performance years = 4 is_decaying = yes } 
+				add_loyalists = {
+					value = 0.01
+				}
+			}
+			1 = { }
+			1 = { 
+				add_modifier = { name = bad_post_colonial_org_games_performance years = 4 is_decaying = yes } 
+			}
+		}
+		
+		ai_chance = { 
+			base = 80
+		}
+		
+    }
+	
+	option = {
+        name = participation_post_colonial_org_games.option.3					# Boycott
+		trigger = {
+			exists = scope:recently_hosted_post_colonial_org_games 
+			NOT = { scope:recently_hosted_post_colonial_org_games ?= this }
+		}
+		
+		#Lose relations with host country
+		if = {
+			limit = { exists = scope:recently_hosted_post_colonial_org_games }
+			change_relations = { country = scope:recently_hosted_post_colonial_org_games value = -25 }
+		}
+		
+		ai_chance = { 
+			base = 0
+			modifier = { 
+				trigger = { 
+					scope:recently_hosted_post_colonial_org_games = { relations:root <= relations_threshold:hostile } 
+				} 
+				add = 100 
+			}
+		}
+		
+    }
+
+}
