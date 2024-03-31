@@ -4875,10 +4875,11 @@ historical_interstate_wars.43 = {
 
 }
 
-### Intervention in Korean War ###
+### Chinese Intervention in Korean War ###
 
 historical_interstate_wars.44 = {
     type = country_event
+	placement = c:NKO
 
     title = PRC_korean_war.t 									# Title of the event; ADD LOCALISATION
     desc = PRC_korean_war.d 									# Description of the event; ADD LOCALISATION
@@ -4911,7 +4912,8 @@ historical_interstate_wars.44 = {
 		c:NKO = { 												# Change TAG of the transferee ****
 			is_a_communist_government = yes
 			is_sufficiently_independent = yes
-			is_at_war = yes
+			has_war_with = c:SKO
+			NOT = { has_war_with = ROOT }
 		}
 		exists = c:SKO
 		c:SKO = { 												# Change TAG of the transferee ****
@@ -5634,6 +5636,125 @@ historical_interstate_wars.50 = {
 		#Minor discontent
 		add_radicals = {
 			value = small_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+### Intervention in Korean War ###
+
+historical_interstate_wars.51 = {
+    type = country_event
+	placement = c:SKO
+
+    title = USA_korean_war.t 									# Title of the event; ADD LOCALISATION
+    desc = USA_korean_war.d 									# Description of the event; ADD LOCALISATION
+    #flavor = USA_korean_war.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_battlefield_trenches.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this
+		game_date >= 1950.6.27									# START DATE: Date colony became self governing ****
+		game_date < 1960.6.27									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		# Event has not fired before
+		NOT = { has_variable = USA_korean_war_hiw }				# CHANGE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		
+		is_not_neutral = yes									# No legal or political restrictions on going to war
+		
+		#Recipent conditions
+		exists = c:NKO
+		c:NKO = { 												# Change TAG of the transferee ****
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+			has_war_with = c:SKO
+			NOT = { has_war_with = ROOT }
+			NOT = { is_subject_of = ROOT }
+		}
+		exists = c:SKO
+		c:SKO = { 												# Change TAG of the transferee ****
+			NOT = { is_a_communist_government = yes }
+			is_sufficiently_independent = yes
+			has_war_with = c:NKO
+			NOT = { has_war_with = ROOT }
+			OR = { 
+				is_direct_subject_of = ROOT
+				has_diplomatic_pact = {
+					who = ROOT
+					type = protectorate
+				}
+			}
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_korean_war_hiw						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_interstate_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Join Korean War
+		random_diplomatic_play = {
+			limit = {
+				initiator_is = c:NKO
+				OR = { 
+					target_is = c:SKO
+					any_scope_target_ally = { this = c:SKO }
+				}
+			}
+			add_target_backers = {
+				ROOT
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_interstate_wars.option.2				# Peace option
+		default_option = yes
+		
+		#Minor discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_bureaucrats
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
 		}
 		
 		ai_chance = { 

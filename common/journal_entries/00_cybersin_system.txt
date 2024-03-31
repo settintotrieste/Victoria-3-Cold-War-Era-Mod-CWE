@@ -1,0 +1,241 @@
+﻿je_develop_cybersin = {
+	icon = "gfx/interface/icons/invention_icons/server_terminal.dds"
+
+	group = je_group_technology
+	
+	is_shown_when_inactive = {
+		
+		
+		
+	}
+	
+	possible = {
+		
+		has_variable = develop_cybersin
+		
+		is_a_command_economy = yes
+		
+	}
+
+	immediate = {
+		
+		#Cybersin Progress
+		set_variable = { 
+			name = cybersin_progress
+			value = 0 
+		}
+		
+	}
+
+	complete = {
+	
+		has_technology_researched = tech_communication_infrastructure_5
+		
+		#Correct building
+		any_scope_building = {
+			is_building_type = building_communications_network
+			level >= 1
+			building_has_goods_shortage = no
+			OR = { 
+				has_active_production_method = pm_gps_service
+				NOT = { has_active_production_method = pm_no_internet_services }
+			}
+		}
+		
+		#Cybersin developed
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+		
+	}
+	
+	on_complete = {
+		
+		#Add Cybersin JE
+		add_journal_entry = { type = je_cybersin_system }
+		
+		set_variable = cybersin_completed
+		
+		#Clear variables
+		remove_variable = cybersin_progress
+		remove_variable = develop_cybersin
+		
+	}
+	
+	fail = {
+	
+		OR = {
+			NOT = { is_a_command_economy = yes }
+			in_default = yes
+			has_revolution = yes
+			NOT = { has_building = building_university }
+		}
+		
+	}
+	
+	on_fail = {
+	
+		#Clear variables
+		remove_variable = cybersin_progress
+		remove_variable = develop_cybersin
+		
+	}
+	
+	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
+	modifiers_while_active = {
+		cybersin_dev_cost
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = yes
+	
+	current_value = {
+		value = root.var:cybersin_progress
+	}
+
+	goal_add_value = {
+		add = 120
+	}
+	
+	on_monthly_pulse = {
+		
+		#Add progress
+		effect = {
+		
+			if = {
+				limit = { in_default = no }
+				if = {
+					limit = { government_wage_level = very_high }
+					change_variable = {
+						name = cybersin_progress
+						add = 5
+					}
+				}
+				else_if = {
+					limit = { government_wage_level = high }
+					change_variable = {
+						name = cybersin_progress
+						add = 4
+					}
+				}
+				else_if = {
+					limit = { government_wage_level = medium }
+					change_variable = {
+						name = cybersin_progress
+						add = 3
+					}
+				}
+				else_if = {
+					limit = { government_wage_level = low }
+					change_variable = {
+						name = cybersin_progress
+						add = 2
+					}
+				}
+				else = {
+					change_variable = {
+						name = cybersin_progress
+						add = 1
+					}
+				}
+				clamp_variable = {
+					name = cybersin_progress
+					max = 120
+					min = 0
+				}
+			}
+			
+		}
+		
+	}
+	
+}
+
+je_cybersin_system = {
+	icon = "gfx/interface/icons/invention_icons/computer_programming.dds"
+
+	group = je_group_internal_affairs
+	
+	scripted_button = je_cybersin_manufacturing_button
+	scripted_button = je_cybersin_resource_button
+	scripted_button = je_cybersin_service_button
+	scripted_button = je_cybersin_no_button
+	
+	is_shown_when_inactive = {
+		
+		has_variable = cybersin_completed
+		
+	}
+	
+	possible = {
+		
+		is_a_command_economy = yes
+		
+	}
+
+	immediate = {
+		
+		
+		
+	}
+	
+	fail = {
+	
+		NOT = { is_a_command_economy = yes }
+		
+	}
+	
+	on_fail = {
+		
+		
+		
+	}
+	
+	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
+	modifiers_while_active = {
+		cybersin_system
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = cybersin_manufacturing_prioritisation
+				trigger = {
+					has_modifier = cybersin_system_manufacturing
+				}
+			}
+			triggered_desc = {
+				desc = cybersin_resource_prioritisation
+				trigger = {
+					has_modifier = cybersin_system_resource
+				}
+			}
+			triggered_desc = {
+				desc = cybersin_services_prioritisation
+				trigger = {
+					has_modifier = cybersin_system_service
+				}
+			}
+			triggered_desc = {
+				desc = cybersin_no_prioritisation
+				trigger = {
+					
+				}
+			}
+		}
+	}
+
+	weight = 50
+
+	should_be_pinned_by_default = no
+
+	transferable = no
+
+	progressbar = no
+	
+}
