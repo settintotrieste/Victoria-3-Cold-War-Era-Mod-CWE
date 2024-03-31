@@ -1,0 +1,289 @@
+je_request_colonial_empire_intervention_button = {
+	name = "je_request_colonial_empire_intervention_button"
+	desc = "je_request_colonial_empire_intervention_button_desc"
+
+	visible = { 
+		
+		is_at_war = yes
+		
+	}
+
+	possible = {
+	
+		hidden_trigger = {
+			NOT = {
+				any_country = {
+					has_variable = requested_colonial_empire_intervention
+				}
+			}
+		}
+	
+		#THIS is involved in a defensive war with a non-Imperial country
+		custom_tooltip = {
+			text = in_a_defensive_war.tt
+			any_diplomatic_play = {
+				is_war = yes
+				any_scope_play_involved = {
+					this = root
+				}
+				initiator = {
+					NOT = { this = root }
+					NOT = { is_subject_of = ROOT }
+					is_sufficiently_independent = yes
+				}
+				target = {
+					this = root
+				}
+				OR = {
+					has_play_goal = open_market
+					has_play_goal = regime_change
+					has_play_goal = conquer_state
+					has_play_goal = return_state
+					has_play_goal = liberate_subject
+					has_play_goal = liberate_country
+					has_play_goal = take_treaty_port
+					has_play_goal = make_tributary
+					has_play_goal = make_protectorate
+					has_play_goal = transfer_subject
+					has_play_goal = annex_country
+					has_play_goal = humiliation
+					has_play_goal = unification
+					has_play_goal = unification_leadership
+				}
+			}
+		}
+		
+		#There are uninvolved colonial_empire countries
+		hidden_trigger = {
+			any_country = {
+				NOT = { this = root }
+				is_subject_of = ROOT
+				is_a_colonial_subject_gov = yes
+				is_at_war = no
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Request Imperial intervention
+		set_variable = { 
+			name = requested_colonial_empire_intervention 
+			months = 1 
+		}
+		
+		#Call in all Imperial members to join war
+		every_country = {
+			limit = { 
+				NOT = { this = root } 
+				is_subject_of = ROOT
+				is_a_colonial_subject_gov = yes
+				NOR = { 
+					any_cobelligerent_in_war = { this = root } 
+					any_enemy_in_diplo_play = { this = root }
+				}
+			}
+			trigger_event = { id = colonial_empire_system.1 } 
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}
+
+je_start_imperial_preference_button = {
+	name = "je_start_imperial_preference_button"
+	desc = "je_start_imperial_preference_button_desc"
+
+	visible = { 
+		
+		NOT = { has_variable = imperial_preference_enacted }
+		
+	}
+
+	possible = {
+	
+		custom_tooltip = {
+			text = imperial_preference_timer.tt
+			NOT = { has_variable = imperial_preference_timer }
+		}
+	
+		is_at_war = no
+		is_junior_in_customs_union = no
+		
+		any_country = {
+			is_subject_of = ROOT
+			is_subject_type = subject_type_dominion
+			is_junior_in_customs_union = no
+			hidden_trigger = {
+				NOT = {
+					has_variable = superstate_customs_union
+				}
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Enact imperial preference
+		set_variable = imperial_preference_enacted
+		custom_tooltip = {
+			text = enact_imperial_preference.tt
+			every_country = {
+				limit = {
+					has_diplomatic_pact = { 
+						who = ROOT 
+						type = dominion 
+						is_initiator = no 
+					}
+					NOT = {
+						has_diplomatic_pact = { 
+							who = ROOT 
+							type = customs_union
+						}
+					}
+					NOT = {
+						has_variable = superstate_customs_union
+					}
+				}
+				save_scope_as = imperial_preference_subject
+				ROOT = {
+					create_diplomatic_pact = {
+						country = scope:imperial_preference_subject
+						type = customs_union
+					}
+				}
+			}
+		}
+		
+		#Add timer
+		set_variable = {
+			name = imperial_preference_timer
+			years = 5
+		}
+		
+		#External trade
+		if = { 
+			limit = { has_law = law_type:law_free_trade }
+			activate_law = law_type:law_protectionism
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		modifier = { 
+			trigger = { 
+				exists = ruler
+				ruler ?= {
+					interest_group = {
+						OR = {
+							law_stance = {
+								law = law_type:law_protectionism
+								value >= approve
+							}
+							law_stance = {
+								law = law_type:law_isolationism
+								value >= approve
+							}
+						}
+					}
+				}
+			}
+			add = 10 
+		}
+	}
+	
+}
+
+je_end_imperial_preference_button = {
+	name = "je_end_imperial_preference_button"
+	desc = "je_end_imperial_preference_button_desc"
+
+	visible = { 
+		
+		has_variable = imperial_preference_enacted
+		
+	}
+
+	possible = {
+	
+		custom_tooltip = {
+			text = imperial_preference_timer.tt
+			NOT = { has_variable = imperial_preference_timer }
+		}
+	
+		is_at_war = no
+		
+	}
+
+	effect = {
+		
+		#End imperial preference
+		remove_variable = imperial_preference_enacted
+		custom_tooltip = {
+			text = revoke_imperial_preference.tt
+			every_country = {
+				limit = {
+					has_diplomatic_pact = { 
+						who = ROOT 
+						type = dominion 
+						is_initiator = no 
+					}
+					has_diplomatic_pact = { 
+						who = ROOT 
+						type = customs_union
+					}
+					NOT = {
+						shares_same_superstate = yes
+					}
+				}
+				activate_law = law_type:law_free_trade
+				save_scope_as = imperial_preference_subject
+				ROOT = {
+					remove_diplomatic_pact = {
+						country = scope:imperial_preference_subject
+						type = customs_union
+					}
+				}
+			}
+		}
+		
+		#External Trade
+		if = { 
+			limit = { NOT = { has_law = law_type:law_free_trade } }
+			activate_law = law_type:law_free_trade
+		}
+		
+		#Add timer
+		set_variable = {
+			name = imperial_preference_timer
+			years = 5
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		modifier = { 
+			trigger = { 
+				exists = ruler
+				ruler ?= {
+					interest_group = {
+						law_stance = {
+							law = law_type:law_free_trade
+							value >= approve
+						}
+					}
+				}
+			}
+			add = 10 
+		}
+	}
+	
+}
