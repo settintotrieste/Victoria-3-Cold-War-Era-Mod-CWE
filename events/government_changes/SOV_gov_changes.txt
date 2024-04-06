@@ -29,8 +29,8 @@ SOV_gov_changes.1 = {
 		
 		exists = ruler
 		OR = { 
-			ruler = { is_interest_group_type = ig_trade_unions is_historical = yes }
-			ruler = { NOT = { is_interest_group_type = ig_trade_unions } }
+			ruler = { interest_group = { is_interest_group_type = ig_trade_unions } is_historical = yes }
+			ruler = { interest_group = { NOT = { is_interest_group_type = ig_trade_unions } } }
 		}
 		
 		# Event has not been fired before
@@ -281,8 +281,132 @@ SOV_gov_changes.1 = {
 
 }
 
-# The Fall of Nikita Khrushchev
+# The Khrushchev Thaw
 SOV_gov_changes.2 = {
+    type = country_event
+
+    title = SOV_khrushchev_thaw.t 								# Title of the event; ADD LOCALISATION
+    desc = SOV_khrushchev_thaw.d 								# Description of the event; ADD LOCALISATION
+    #flavor = SOV_khrushchev_thaw.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:SOV
+		this = c:SOV											# Change TAG of the overlord ****
+		game_date >= 1956.2.14									# START DATE: Date colony became self governing ****
+		game_date < 1966.2.14									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Khrushchev
+		exists = ruler
+		ruler = { interest_group = { is_interest_group_type = ig_rural_folk } is_historical = yes }
+		
+		#Has applicable laws
+		OR = { 
+			has_law = law_type:law_outlawed_dissent
+			has_law = law_type:law_slavery_political
+			has_law = law_type:law_slavery_cultural
+		}
+		
+		
+		# Event has not been fired before
+		NOT = { has_variable = SOV_1956_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SOV_1956_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+		highlighted_option = yes
+		
+		if = {
+			limit = { has_law = law_type:law_outlawed_dissent }
+			activate_law = law_type:law_censorship
+		}
+		if = {
+			limit = { 
+				OR = {
+					has_law = law_type:law_slavery_political
+					has_law = law_type:law_slavery_cultural
+				}
+			}
+			activate_law = law_type:law_slavery_banned
+		}
+		
+		#Foreign Relations
+		random_country = {
+			limit = { 
+				OR = { 
+					c:CHI ?= this 
+					c:PRC ?= this 
+				}
+				is_a_communist_government = yes
+				is_sufficiently_independent = yes
+				ruler ?= { interest_group = { is_interest_group_type = ig_trade_unions } }
+			}
+			change_relations = { country = ROOT value = -50 }
+		}
+		random_country = {
+			limit = { 
+				c:YUG ?= this
+				is_a_communist_government = yes
+				is_sufficiently_independent = yes
+				ruler ?= { 
+					has_ideology = ideology:ideology_power_hungry 
+					interest_group = { is_interest_group_type = ig_trade_unions } 
+				}
+			}
+			change_relations = { country = ROOT value = 50 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+		name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = middle
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
+
+# The Fall of Nikita Khrushchev
+SOV_gov_changes.3 = {
     type = country_event
 
     title = SOV_khrushchev_succession.t 						# Title of the event; ADD LOCALISATION
@@ -312,7 +436,7 @@ SOV_gov_changes.2 = {
 		#is_at_war = no											# war = no
 		
 		exists = ruler
-		ruler = { is_interest_group_type = ig_rural_folk is_historical = yes }
+		ruler = { interest_group = { is_interest_group_type = ig_rural_folk } is_historical = yes }
 		
 		# Event has not been fired before
 		NOT = { has_variable = SOV_1964_hgc }					# CHANGE ****
@@ -357,6 +481,12 @@ SOV_gov_changes.2 = {
 			}
 		}
 		
+		#Roll back Khrushchev era reforms
+		if = {
+			limit = { NOT = { has_law = law_type:law_outlawed_dissent } }
+			activate_law = law_type:law_outlawed_dissent
+		}
+		
 		ai_chance = { 
 			base = 90 
 		}
@@ -386,8 +516,113 @@ SOV_gov_changes.2 = {
 
 }
 
+# Detente
+SOV_gov_changes.4 = {
+    type = country_event
+
+    title = SOV_detente.t 										# Title of the event; ADD LOCALISATION
+    desc = SOV_detente.d 										# Description of the event; ADD LOCALISATION
+    #flavor = SOV_detente.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:SOV
+		this = c:SOV											# Change TAG of the overlord ****
+		game_date >= 1973.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1983.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Brezhnev
+		exists = ruler
+		ruler = { interest_group = { is_interest_group_type = ig_trade_unions } is_historical = yes }
+		
+		#Has applicable laws
+		has_law = law_type:law_isolationism
+		
+		#Cold War ongoing
+		cold_war_ongoing = yes
+		
+		# Event has not been fired before
+		NOT = { has_variable = SOV_1973_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SOV_1973_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+		highlighted_option = yes
+		
+		#Trade Policy
+		activate_law = law_type:law_protectionism
+		
+		#Foreign Policy
+		activate_law = law_type:law_globalist_fp
+		
+		#Foreign Relations
+		every_country = {
+			limit = { 
+				country_rank >= rank_value:great_power
+				is_a_democracy = yes
+				is_sufficiently_independent = yes
+			}
+			change_relations = { country = ROOT value = 25 }
+		}
+		every_country = {
+			limit = { 
+				is_a_communist_government = yes
+				is_sufficiently_independent = yes
+				has_dictatorial_ruler = yes
+			}
+			change_relations = { country = ROOT value = -50 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+		name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = middle
+		}
+		add_radicals = {
+			value = large_radicals
+			strata = rich
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
+
 # Gorbachev
-SOV_gov_changes.3 = {
+SOV_gov_changes.5 = {
     type = country_event
 
     title = SOV_gorbachev_succession.t 							# Title of the event; ADD LOCALISATION
@@ -501,7 +736,7 @@ SOV_gov_changes.3 = {
 }
 
 # August Coup
-SOV_gov_changes.4 = {
+SOV_gov_changes.6 = {
     type = country_event
 
     title = SOV_august_coup.t 								# Title of the event; ADD LOCALISATION
