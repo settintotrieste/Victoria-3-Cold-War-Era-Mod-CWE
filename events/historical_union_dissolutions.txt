@@ -510,13 +510,14 @@ historical_union_dissolution.4 = {
 				tag = SKN										# Change TAG of country being released ****
 				origin = c:WIF									# TAG where the created country takes tech from
 				province = p:x89337A
+				province = p:x606060
 			
 				on_created = {									# Set government laws & rulers here
 				
 					# SET laws for colony ****
 					effect_starting_politics_constitutional_monarchy = yes
 					effect_starting_politics_democratic = yes
-					effect_starting_politics_constitutional_unitary_state = yes
+					effect_starting_politics_constitutional_federal_state = yes
 					effect_starting_politics_war_policy_anti_military = yes
 					effect_starting_politics_economic_policy_interventionism = yes
 					effect_starting_politics_trade_policy_protectionism = yes
@@ -526,7 +527,7 @@ historical_union_dissolution.4 = {
 					set_country_type = unrecognized
 					
 					# Overlord create Personal Union pact with colony
-					c:GBR = { create_diplomatic_pact = { country = c:SKN type = personal_union } }
+					c:GBR = { create_diplomatic_pact = { country = c:SKN type = semi_autonomous_colony } }
 					
 				}
 			}
@@ -552,7 +553,7 @@ historical_union_dissolution.4 = {
 					set_country_type = unrecognized
 					
 					# Overlord create Personal Union pact with colony
-					c:GBR = { create_diplomatic_pact = { country = c:AAB type = personal_union } }
+					c:GBR = { create_diplomatic_pact = { country = c:AAB type = semi_autonomous_colony } }
 					
 				}
 			}
@@ -578,7 +579,7 @@ historical_union_dissolution.4 = {
 					set_country_type = unrecognized
 					
 					# Overlord create Personal Union pact with colony
-					c:GBR = { create_diplomatic_pact = { country = c:DMC type = personal_union } }
+					c:GBR = { create_diplomatic_pact = { country = c:DMC type = semi_autonomous_colony } }
 					
 				}
 			}
@@ -604,7 +605,7 @@ historical_union_dissolution.4 = {
 					set_country_type = unrecognized
 					
 					# Overlord create Personal Union pact with colony
-					c:GBR = { create_diplomatic_pact = { country = c:STL type = personal_union } }
+					c:GBR = { create_diplomatic_pact = { country = c:STL type = semi_autonomous_colony } }
 					
 				}
 			}
@@ -630,7 +631,7 @@ historical_union_dissolution.4 = {
 					set_country_type = unrecognized
 					
 					# Overlord create Personal Union pact with colony
-					c:GBR = { create_diplomatic_pact = { country = c:SVG type = personal_union } }
+					c:GBR = { create_diplomatic_pact = { country = c:SVG type = semi_autonomous_colony } }
 					
 				}
 			}
@@ -656,7 +657,7 @@ historical_union_dissolution.4 = {
 					set_country_type = unrecognized
 					
 					# Overlord create Personal Union pact with colony
-					c:GBR = { create_diplomatic_pact = { country = c:GND type = personal_union } }
+					c:GBR = { create_diplomatic_pact = { country = c:GND type = semi_autonomous_colony } }
 					
 				}
 			}
@@ -682,7 +683,7 @@ historical_union_dissolution.4 = {
 					set_country_type = unrecognized
 					
 					# Overlord create Personal Union pact with colony
-					c:GBR = { create_diplomatic_pact = { country = c:BAR type = personal_union } }
+					c:GBR = { create_diplomatic_pact = { country = c:BAR type = semi_autonomous_colony } }
 					
 				}
 			}
@@ -709,7 +710,7 @@ historical_union_dissolution.4 = {
 					set_country_type = unrecognized
 					
 					# Overlord create Personal Union pact with colony
-					c:GBR = { create_diplomatic_pact = { country = c:TAT type = personal_union } }
+					c:GBR = { create_diplomatic_pact = { country = c:TAT type = semi_autonomous_colony } }
 					
 				}
 			}
@@ -736,7 +737,7 @@ historical_union_dissolution.4 = {
 					set_country_type = unrecognized
 					
 					# Overlord create Personal Union pact with colony
-					c:GBR = { create_diplomatic_pact = { country = c:JAM type = personal_union } }
+					c:GBR = { create_diplomatic_pact = { country = c:JAM type = semi_autonomous_colony } }
 					
 				}
 			}
@@ -2129,6 +2130,353 @@ historical_union_dissolution.11 = {
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#2014 Scottish independence referendum
+historical_union_dissolution.12 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = GBR_SCO_dissolution.t 								# Title of the event; ADD LOCALISATION
+    desc = GBR_SCO_dissolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = GBR_SCO_dissolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:GBR ?= this
+		game_date >= 2014.9.18
+		game_date < 2024.9.18
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:SCO										# Change TAG of the colony ****
+		}
+		any_scope_state = { 
+			state_region = { is_homeland = cu:scottish } 
+			is_incorporated = yes 
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = GBR_SCO_dissolution_hud }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released					# DO NOT TOUCH ROOT SECTION
+		random_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:scottish }		# Change homeland identity to match colony to be released ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = GBR_SCO_dissolution_hud					# Change variable ****
+	
+	}
+    
+	option = {
+        name = historical_union_dissolution.option.2			# Refuse secesssion
+		default_option = yes
+		highlighted_option = yes
+		
+		# Internal unrest
+		add_radicals = {
+			culture = cu:scottish
+			value = large_radicals
+		}
+		every_scope_state = {
+			limit = { state_region = { is_homeland = cu:scottish } }
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+    option = {
+        name = historical_union_dissolution.option.1		# Accept secesssion
+		
+		#Subject becomes independent
+		create_country = {
+			tag = SCO										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# Laws
+				if = { 
+					limit = { 
+						c:GBR = { 
+							is_a_monarchy = yes 
+						}
+					}
+					effect_starting_politics_constitutional_monarchy = yes
+					c:GBR = {
+						create_diplomatic_pact = {
+							country = c:SCO
+							type = personal_union
+						}
+					}
+				}
+				else = {
+					effect_starting_politics_parliamentary_republic = yes
+				}
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_federal_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_manufacturing = yes
+				
+				effect_starting_politics_fiat_standard = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:SCO }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:scottish }		# Change homeland identity to match colony to be released ****
+				}
+				set_state_owner = c:SCO									# Change TAG to colony ****
+			}
+			#Set capital
+			c:SCO = {
+				if = {
+					limit = { has_state_in_state_region = STATE_LOWLANDS }
+					set_capital = STATE_LOWLANDS
+				}
+			}
+			if = {
+				limit = { leads_customs_union = no }
+				random_country = {
+					limit = { has_diplomatic_pact = { who = ROOT type = customs_union is_initiator = yes } }
+					set_relations = { country = c:SCO value = 50 }
+					create_diplomatic_pact = {
+						country = c:SCO
+						type = customs_union
+					}
+				}
+			}
+			else_if = {
+				limit = { leads_customs_union = yes }
+				create_diplomatic_pact = {
+					country = c:SCO
+					type = customs_union
+				}
+			}
+			create_diplomatic_pact = {
+				country = c:SCO
+				type = legal_union
+			}
+			create_diplomatic_pact = {
+				country = c:SCO
+				type = currency_union
+			}
+			set_relations = { country = c:SCO value = 100 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
+
+#2017 Catalan independence referendum
+historical_union_dissolution.13 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = SPA_CAT_dissolution.t 								# Title of the event; ADD LOCALISATION
+    desc = SPA_CAT_dissolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = SPA_CAT_dissolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SPA ?= this
+		game_date >= 2017.10.1
+		game_date < 2027.10.1
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:CAT										# Change TAG of the colony ****
+		}
+		any_scope_state = { 
+			state_region = { is_homeland = cu:catalan } 
+			is_incorporated = yes 
+			state_region = s:STATE_CATALONIA
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SPA_CAT_dissolution_hud }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released					# DO NOT TOUCH ROOT SECTION
+		random_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:catalan }		# Change homeland identity to match colony to be released ****
+				state_region = s:STATE_CATALONIA
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = SPA_CAT_dissolution_hud					# Change variable ****
+	
+	}
+    
+	option = {
+        name = historical_union_dissolution.option.2			# Refuse secesssion
+		default_option = yes
+		highlighted_option = yes
+		
+		# Internal unrest
+		add_radicals = {
+			culture = cu:catalan
+			value = large_radicals
+		}
+		every_scope_state = {
+			limit = { state_region = { is_homeland = cu:catalan } }
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+    option = {
+        name = historical_union_dissolution.option.1		# Accept secesssion
+		
+		#Subject becomes independent
+		create_country = {
+			tag = CAT										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# Laws
+				if = { 
+					limit = { 
+						c:SPA = { 
+							is_a_monarchy = yes 
+						}
+					}
+					effect_starting_politics_constitutional_monarchy = yes
+					c:SPA = {
+						create_diplomatic_pact = {
+							country = c:CAT
+							type = personal_union
+						}
+					}
+				}
+				else = {
+					effect_starting_politics_parliamentary_republic = yes
+				}
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_federal_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_manufacturing = yes
+				
+				effect_starting_politics_fiat_standard = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:CAT }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:catalan }		# Change homeland identity to match colony to be released ****
+					state_region = s:STATE_CATALONIA
+				}
+				set_state_owner = c:CAT									# Change TAG to colony ****
+			}
+			#Set capital
+			c:CAT = {
+				if = {
+					limit = { has_state_in_state_region = STATE_CATALONIA }
+					set_capital = STATE_CATALONIA
+				}
+			}
+			if = {
+				limit = { leads_customs_union = no }
+				random_country = {
+					limit = { has_diplomatic_pact = { who = ROOT type = customs_union is_initiator = yes } }
+					set_relations = { country = c:CAT value = 50 }
+					create_diplomatic_pact = {
+						country = c:CAT
+						type = customs_union
+					}
+				}
+			}
+			else_if = {
+				limit = { leads_customs_union = yes }
+				create_diplomatic_pact = {
+					country = c:CAT
+					type = customs_union
+				}
+			}
+			create_diplomatic_pact = {
+				country = c:CAT
+				type = legal_union
+			}
+			create_diplomatic_pact = {
+				country = c:CAT
+				type = currency_union
+			}
+			set_relations = { country = c:CAT value = 100 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
 		}
 		
     }
