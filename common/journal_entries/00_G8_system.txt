@@ -1,0 +1,215 @@
+﻿je_G8_system = {
+	icon = "gfx/interface/icons/invention_icons/international_diplomacy.dds"
+
+	group = je_group_foreign_affairs
+
+	scripted_button = je_G8_system_trade_button
+	scripted_button = je_G8_system_democracy_button
+	scripted_button = je_G8_system_environment_button
+	scripted_button = je_G8_system_no_button
+
+	is_shown_when_inactive = {
+		
+		is_country_type = recognized
+		is_a_democracy = yes
+		
+		has_technology_researched = tech_geopolitics_5
+		
+	}
+
+	possible = {
+		
+		has_technology_researched = tech_geopolitics_5
+		
+		#THIS is a member of the G8
+		is_country_type = recognized
+		country_rank >= rank_value:major_power 
+		is_a_democracy = yes
+		
+		#No revolutionary
+		is_revolutionary = no is_secessionist = no
+		
+	}
+
+	immediate = {
+		
+		#Count G8 members
+		set_variable = {
+			name = G8_members_counter
+			value = 0
+		}
+		every_country = {
+			limit = { 
+				is_country_type = recognized
+				country_rank >= rank_value:major_power 
+				is_a_democracy = yes
+			}
+			ROOT = { 
+				change_variable = {
+					name = G8_members_counter
+					add = 1
+				}
+			}
+		}
+		
+		#Set chairmanship
+		if = {
+			limit = { 
+				NOT = {
+					any_country = {
+						has_journal_entry = je_G8_system 
+						has_variable = G8_chairman
+					}
+				}
+			}
+			random_country = {
+				limit = { has_journal_entry = je_G8_system }
+				set_variable = G8_chairman
+			}
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			#Count G8 members
+			set_variable = {
+				name = G8_members_counter
+				value = 0
+			}
+			every_country = {
+				limit = { 
+					is_country_type = recognized
+					country_rank >= rank_value:major_power 
+					is_a_democracy = yes
+				}
+				ROOT = { 
+					change_variable = {
+						name = G8_members_counter
+						add = 1
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	on_yearly_pulse = {
+	
+		effect = {
+			
+			#Set Chairman
+			if = {
+				limit = {
+					has_variable = G8_chairman
+				}
+				remove_variable = G8_chairman
+				random_country = {
+					limit = { has_journal_entry = je_G8_system }
+					set_variable = G8_chairman
+				}
+			}
+			if = {
+				limit = { 
+					NOT = {
+						any_country = {
+							has_variable = G8_chairman
+							has_journal_entry = je_G8_system
+						}
+					}
+				}
+				random_country = {
+					limit = { has_journal_entry = je_G8_system }
+					set_variable = G8_chairman
+				}
+			}
+			
+		}
+		
+	}
+	
+	fail = {
+	
+		NAND = {
+			is_country_type = recognized
+			country_rank >= rank_value:major_power 
+			is_a_democracy = yes
+		}
+		
+	}
+	
+	on_fail = {
+		
+		#Display members
+		every_country = {
+			limit = { 
+				has_journal_entry = je_G8_system 
+				has_variable = G8_chairman
+			}
+			save_scope_as = G8_president_label
+			custom_tooltip = {
+				text = G8_president_label.tt
+			}
+		}
+		every_country = {
+			limit = { 
+				has_journal_entry = je_G8_system 
+				NOT = { has_variable = G8_chairman }
+			}
+			save_scope_as = superstate_member_label
+			custom_tooltip = {
+				text = superstate_member_label.tt
+			}
+		}
+		
+		#Clear variables
+		remove_variable = G8_members_counter
+		remove_variable = G8_chairman
+		
+		#Clear modifiers
+		if = { limit = { has_modifier = G8_trade_focus } remove_modifier = G8_trade_focus }
+		if = { limit = { has_modifier = G8_democracy_focus } remove_modifier = G8_democracy_focus }
+		if = { limit = { has_modifier = G8_environment_focus } remove_modifier = G8_environment_focus }
+		
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = G8_trade_focus
+				trigger = {
+					has_global_variable = G8_trade_focus
+				}
+			}
+			triggered_desc = {
+				desc = G8_democracy_focus
+				trigger = {
+					has_global_variable = G8_democracy_focus
+				}
+			}
+			triggered_desc = {
+				desc = G8_environment_focus
+				trigger = {
+					has_global_variable = G8_environment_focus
+				}
+			}
+			triggered_desc = {
+				desc = G8_no_focus
+				trigger = {
+					
+				}
+			}
+		}
+	}
+
+	weight = 10
+
+	should_be_pinned_by_default = no
+
+	transferable = no
+
+	progressbar = no
+}
