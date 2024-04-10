@@ -434,3 +434,96 @@ espionage_system.10 = {
     }
 
 }
+
+#Cyber Attack - TARGET
+espionage_system.12 = {
+    type = country_event
+
+    title = espionage_cyber_attack_target.t 					# Title of the event; ADD LOCALISATION
+    desc = espionage_cyber_attack_target.d 						# Description of the event; ADD LOCALISATION
+    flavor = espionage_cyber_attack_target.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_factory_closed.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_fire.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by previous event
+		
+    }
+	
+	immediate = {
+	
+		save_scope_as = espionage_victim
+	
+		#Guess the identity of attacker
+		random_country = {
+			limit = {
+			
+				NOT = { THIS = ROOT }
+			
+				#THIS is conducting hostile espionage in TARGET
+				has_variable = espionage_attacker_var
+				
+			}
+			save_scope_as = suspected_espionage_attacker
+			
+			remove_variable = espionage_attacker_var
+		}
+		
+		#Apply cyber attack
+		every_scope_building = {
+			limit = { 
+				is_building_type = building_communications_network 
+				OR = { 
+					has_active_production_method = pm_gps_service
+					NOT = { has_active_production_method = pm_no_internet_services }
+				}
+			}
+			hidden_effect = { remove_modifier = cyber_attack }
+			add_modifier = { name = cyber_attack years = 1 is_decaying = yes }
+		}
+		
+	}
+    
+    option = {
+        name = espionage_system_response.option.1			# Angry reaction!
+        highlighted_option = yes
+		
+		#THIS is angry with FROM!
+		change_relations = {
+			country = scope:suspected_espionage_attacker
+			value = -50
+		}
+		
+		ai_chance = { 
+			base = 90 
+			
+			#AI is more likely to kick up a fuss
+			modifier = { trigger = { is_neutral = yes } add = -50 }
+			modifier = { trigger = { NOT = { has_jingoistic_ruler = yes } } add = -50 }
+		}
+		
+    }
+	
+	option = {
+        name = espionage_system_response.option.2			# Tolerate it
+		default_option = yes
+		
+		#Add embarassment
+		if = {
+			limit = { NOT = { has_modifier = embarassed_by_espionage } }
+			add_modifier = { name = embarassed_by_espionage months = 3 is_decaying = yes }
+		}
+		
+		ai_chance = { 
+			base = 10
+		}
+		
+    }
+
+}

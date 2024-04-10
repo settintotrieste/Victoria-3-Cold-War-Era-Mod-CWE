@@ -980,3 +980,156 @@ conduct_hostile_espionage_5 = {
 	}
 	
 }
+
+#Cyber attack
+conduct_hostile_espionage_6 = {
+	requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	unlocking_technologies = {
+		tech_communication_infrastructure_6
+	}
+
+	potential = {
+	
+		has_journal_entry = je_secret_police_system
+	
+		#THIS has spies in TARGET
+		has_diplomatic_pact = {
+			who = scope:target_country
+			type = conduct_hostile_espionage
+			is_initiator = yes
+		}
+		
+	}
+	
+	possible = {
+		
+		#TARGET is not already suffering from a cyber attack
+		scope:target_country = { 
+			any_scope_building = {
+				is_building_type = building_communications_network
+				OR = { 
+					has_active_production_method = pm_gps_service
+					NOT = { has_active_production_method = pm_no_internet_services }
+				}
+				NOT = { has_modifier = cyber_attack }
+			}
+		}
+		
+		#Has enough action points
+		custom_tooltip = {
+			text = secret_police_action_25_points.tt
+			has_variable = secret_police_action_points
+			root.var:secret_police_action_points > 25
+		}
+		
+		#Cooldown
+		custom_tooltip = {
+			text = secret_police_action_timer.tt
+			NOT = { has_variable = secret_police_action_timer }
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Subtract action points
+		custom_tooltip = {
+			text = secret_police_action_subtract_25_points.tt
+			if = {
+				limit = { has_variable = secret_police_action_points }
+				change_variable = { 
+					name = secret_police_action_points
+					add = -25
+				}
+			}
+		}
+		
+		#Gain Loyalty
+		custom_tooltip = {
+			text = secret_police_gain_loyalty_5_points.tt
+			change_variable = { 
+				name = secret_police_loyalty
+				add = 5
+			}
+			clamp_variable = {
+				name = secret_police_loyalty
+				max = 100
+				min = 0
+			}
+		}
+		
+		#Terror attack
+		set_variable = { name = espionage_attacker_var months = 2 }
+		scope:target_country = {
+			
+			#Defence by the other side
+			if = {
+				limit = { institution_investment_level = { institution = institution_espionage value = 1 } }
+				random_list = { 
+					1 = { }
+					1 = { trigger_event = { id = espionage_system.12 } }
+				}
+			}
+			else_if = {
+				limit = { institution_investment_level = { institution = institution_espionage value = 2 } }
+				random_list = { 
+					1 = { }
+					2 = { trigger_event = { id = espionage_system.12 } }
+				}
+			}
+			else_if = {
+				limit = { institution_investment_level = { institution = institution_espionage value = 3 } }
+				random_list = { 
+					1 = { }
+					3 = { trigger_event = { id = espionage_system.12 } }
+				}
+			}
+			else_if = {
+				limit = { institution_investment_level = { institution = institution_espionage value = 4 } }
+				random_list = { 
+					1 = { }
+					4 = { trigger_event = { id = espionage_system.12 } }
+				}
+			}
+			else_if = {
+				limit = { institution_investment_level = { institution = institution_espionage value = 5 } }
+				random_list = { 
+					1 = { }
+					5 = { trigger_event = { id = espionage_system.12 } }
+				}
+			}
+			else = {
+				trigger_event = { id = espionage_system.12 }
+			}
+			
+		}
+		
+		#Gain infamy
+		change_infamy = 5
+		
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			infamy < infamy_threshold:infamous
+			OR = { 
+				has_attitude = {
+					who = scope:target_country
+					attitude <= antagonistic
+				}
+				has_diplomatic_pact = { who = scope:target_country type = rivalry }
+				scope:target_country.relations:root < relations_threshold:poor
+			}
+		}
+		
+	}
+	
+}
