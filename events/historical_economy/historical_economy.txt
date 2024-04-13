@@ -1622,3 +1622,83 @@ historical_economy.19 = {
     }
 
 }
+
+# Soviet Economic Perestroika
+historical_economy.20 = {
+    type = country_event
+
+    title = SOV_economic_perestroika.t 						# Title of the event; ADD LOCALISATION
+    desc = SOV_economic_perestroika.d 						# Description of the event; ADD LOCALISATION
+    #flavor = SOV_economic_perestroika.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SOV ?= this
+		game_date >= 1988.5.1									# START DATE: Date colony became self governing ****
+		game_date < 1998.5.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_a_command_economy = yes
+		
+		#Perestroika
+		OR = { 
+			has_journal_entry = je_perestroika
+			AND = {
+				exists = ruler
+				ruler ?= { has_variable = Mikhail_Gorbachev }
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SOV_economic_perestroika_hee }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SOV_economic_perestroika_hee				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		activate_law = law_type:law_state_capitalism
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = poor
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

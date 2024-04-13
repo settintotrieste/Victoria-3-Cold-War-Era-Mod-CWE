@@ -320,7 +320,6 @@ SOV_gov_changes.2 = {
 			has_law = law_type:law_slavery_cultural
 		}
 		
-		
 		# Event has not been fired before
 		NOT = { has_variable = SOV_1956_hgc }					# CHANGE ****
 		
@@ -337,6 +336,7 @@ SOV_gov_changes.2 = {
         name = historical_gov_changes.option.1					# Accept
 		highlighted_option = yes
 		
+		#Enact new laws
 		if = {
 			limit = { has_law = law_type:law_outlawed_dissent }
 			activate_law = law_type:law_censorship
@@ -699,6 +699,16 @@ SOV_gov_changes.5 = {
 		name = SOV_other.option
 		default_option = yes
 		
+		#Install an elitist
+		create_character = {
+			#birth_date = 1914.1.1
+			ruler = yes ig_leader = yes
+			interest_group = ig_trade_unions
+			ideology = ideology_elitist
+			culture = cu:russian
+			religion = rel:atheist
+		}
+		
 		#Major discontent
 		add_radicals = {
 			value = large_radicals
@@ -794,6 +804,16 @@ SOV_gov_changes.6 = {
 		name = SOV_other.option
 		default_option = yes
 		
+		#Install an elitist
+		create_character = {
+			#birth_date = 1914.1.1
+			ruler = yes ig_leader = yes
+			interest_group = ig_trade_unions
+			ideology = ideology_elitist
+			culture = cu:russian
+			religion = rel:atheist
+		}
+		
 		#Major discontent
 		add_radicals = {
 			value = large_radicals
@@ -883,6 +903,7 @@ SOV_gov_changes.7 = {
 				reckless
 				innovative
 			}
+			on_created = { set_variable = Mikhail_Gorbachev }
 		}
 		
 		ai_chance = { 
@@ -897,7 +918,7 @@ SOV_gov_changes.7 = {
 		
 		#Install an autocrat
 		create_character = {
-			birth_date = 1914.1.1
+			#birth_date = 1914.1.1
 			ruler = yes ig_leader = yes
 			interest_group = ig_trade_unions
 			ideology = ideology_autocratic
@@ -927,8 +948,291 @@ SOV_gov_changes.7 = {
 
 }
 
-# August Coup
+# Glasnost
 SOV_gov_changes.8 = {
+    type = country_event
+
+    title = SOV_glasnost.t 										# Title of the event; ADD LOCALISATION
+    desc = SOV_glasnost.d 										# Description of the event; ADD LOCALISATION
+    #flavor = SOV_glasnost.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SOV ?= this
+		game_date >= 1986.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1996.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Has applicable laws
+		OR = { 
+			has_law = law_type:law_outlawed_dissent
+			has_law = law_type:law_censorship
+			has_law = law_type:law_slavery_political
+			has_law = law_type:law_slavery_cultural
+		}
+		
+		#Perestroika
+		OR = { 
+			has_journal_entry = je_perestroika
+			AND = {
+				exists = ruler
+				ruler ?= { has_variable = Mikhail_Gorbachev }
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SOV_1986_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SOV_1986_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new laws
+		if = {
+			limit = { 
+				OR = { 
+					has_law = law_type:law_outlawed_dissent 
+					has_law = law_type:law_censorship
+				}
+			}
+			activate_law = law_type:law_limited_free_speech
+		}
+		if = {
+			limit = { 
+				OR = {
+					has_law = law_type:law_slavery_political
+					has_law = law_type:law_slavery_cultural
+				}
+			}
+			activate_law = law_type:law_slavery_banned
+		}
+		
+		#Foreign Relations
+		every_country = {
+			limit = { 
+				is_a_communist_government = yes
+				is_sufficiently_independent = yes
+				ruler ?= { 
+					character_is_autocratic = yes
+					interest_group = { is_interest_group_type = ig_trade_unions } 
+				}
+			}
+			change_relations = { country = ROOT value = -50 }
+		}
+		change_infamy = -10
+		
+		#Party discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_bureaucrats
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			pop_type = academics
+			value = very_large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
+
+# Democratisation
+SOV_gov_changes.9 = {
+    type = country_event
+
+    title = SOV_democratisation.t 								# Title of the event; ADD LOCALISATION
+    desc = SOV_democratisation.d 								# Description of the event; ADD LOCALISATION
+    #flavor = SOV_democratisation.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SOV ?= this
+		game_date >= 1989.3.26									# START DATE: Date colony became self governing ****
+		game_date < 1999.3.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_dictatorship = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Perestroika
+		OR = { 
+			has_journal_entry = je_perestroika
+			AND = {
+				exists = ruler
+				ruler ?= { has_variable = Mikhail_Gorbachev }
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SOV_1989_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SOV_1989_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new laws
+		if = {
+			limit = { 
+				NOR = { 
+					has_law = law_type:law_harassment_voting
+					has_law = law_type:law_fair_voting
+				}
+			}
+			activate_law = law_type:law_gerrymandered_voting
+		}
+		if = {
+			limit = { 
+				has_law = law_type:law_parties_not_allowed
+			}
+			activate_law = law_type:law_single_party_state
+		}
+		if = {
+			limit = { 
+				has_law = law_type:law_appointed_legislature
+			}
+			activate_law = law_type:law_technocratic_legislature
+		}
+		
+		#Foreign Relations
+		every_country = {
+			limit = { 
+				is_a_communist_government = yes
+				is_sufficiently_independent = yes
+				ruler ?= { 
+					character_is_autocratic = yes
+					interest_group = { is_interest_group_type = ig_trade_unions } 
+				}
+			}
+			change_relations = { country = ROOT value = -50 }
+		}
+		change_infamy = -10
+		
+		#Party discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_bureaucrats
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			pop_type = academics
+			value = very_large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
+
+# August Coup
+SOV_gov_changes.10 = {
     type = country_event
 
     title = SOV_august_coup.t 								# Title of the event; ADD LOCALISATION
