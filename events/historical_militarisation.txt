@@ -1,0 +1,133 @@
+namespace = historical_militarisation
+
+# End of Conscription in Europe
+historical_militarisation.1 = {
+    type = country_event
+
+    title = end_conscription.t 								# Title of the event; ADD LOCALISATION
+    desc = end_conscription.d 								# Description of the event; ADD LOCALISATION
+    #flavor = end_conscription.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Conscription ongoing
+		has_law = law_type:law_mass_conscription
+		
+		OR = {
+
+			AND = { 
+				c:GBR ?= this
+				game_date >= 1957.4.4
+				game_date < 1967.4.4
+			}
+			AND = { 
+				c:BEL ?= this
+				game_date >= 1994.1.1
+				game_date < 2004.1.1
+			}
+			AND = { 
+				c:GER ?= this
+				game_date >= 2011.1.1
+				game_date < 2021.1.1
+			}
+			AND = { 
+				c:LUX ?= this
+				game_date >= 1967.1.1
+				game_date < 1977.1.1
+			}
+			AND = { 
+				c:NET ?= this
+				game_date >= 1997.5.1
+				game_date < 2007.5.1
+			}
+			AND = { 
+				c:POR ?= this
+				game_date >= 2004.1.1
+				game_date < 2014.1.1
+			}
+			AND = { 
+				c:SPA ?= this
+				game_date >= 2001.1.1
+				game_date < 2011.1.1
+			}
+			
+			AND = { 
+				c:USA ?= this
+				game_date >= 1973.1.1
+				game_date < 1983.1.1
+			}
+			
+			AND = { 
+				c:AST ?= this
+				game_date >= 1972.1.1
+				game_date < 1982.1.1
+			}
+			AND = { 
+				c:NZL ?= this
+				game_date >= 1972.1.1
+				game_date < 1982.1.1
+			}
+		
+		}
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = end_conscription_hm }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = end_conscription_hm						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#End conscription
+		activate_law = law_type:law_professional_army
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = rich
+		}
+		add_radicals = {
+			value = medium_radicals
+			strata = middle
+		}
+		add_radicals = {
+			value = small_radicals
+			strata = poor
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
