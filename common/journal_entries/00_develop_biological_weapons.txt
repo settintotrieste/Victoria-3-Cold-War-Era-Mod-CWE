@@ -1,0 +1,165 @@
+﻿je_develop_biological_weapons = {
+	icon = "gfx/interface/icons/diplo_icons/biological_capability.dds"
+
+	group = je_group_technology
+	
+	possible = {
+		
+		#Country is actively developing nukes
+		has_variable = biological_program_started
+		
+		#Has biological weapons law
+		has_law = law_type:law_wmd_allowed
+		
+		#Must be a sovereign state
+		is_sufficiently_independent = yes
+		
+		#Has not already acquired biological weapons
+		NOT = { has_modifier = biological_capability }
+		
+	}
+
+	immediate = {
+		
+		set_variable = { 
+			name = biological_weapons_progress
+			value = 0 
+		}
+		
+	}
+
+	complete = {
+	
+		#Has biological weapons tech
+		has_technology_researched = tech_agriculture_4
+		
+		#Has at least 1 functional biological weapons building
+		any_scope_state = {
+			any_scope_building = {
+				is_building_type = building_university
+				building_has_goods_shortage = no
+			}
+		}
+		
+		#Chemical weapons developed
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+		
+	}
+	
+	on_complete = {
+		
+		#Set biological capability
+		trigger_event = { id = biological_warfare_system.1 }
+		
+		#Add biological development cost
+		add_modifier = { 
+			name = biological_dev_cost 
+			years = 5
+			is_decaying = yes
+		}
+		
+		#Clear variables
+		remove_variable = biological_weapons_progress
+		
+	}
+	
+	invalid = {
+	
+		NAND = {
+		
+			#Country is actively developing nukes
+			has_variable = biological_program_started
+			
+			#Has biological weapons law
+			has_law = law_type:law_wmd_allowed
+			
+			#Must be a sovereign state
+			is_sufficiently_independent = yes
+		
+		}
+		
+	}
+	
+	on_invalid = {
+	
+		#Clear variables
+		remove_variable = biological_weapons_progress
+		
+	}
+	
+	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
+	modifiers_while_active = {
+		biological_dev_cost
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = yes
+	
+	current_value = {
+		value = root.var:biological_weapons_progress
+	}
+
+	goal_add_value = {
+		add = 120
+	}
+	
+	on_monthly_pulse = {
+		
+		#Add progress
+		effect = {
+		
+			if = {
+				limit = { in_default = no }
+				if = {
+					limit = { military_wage_level = very_high }
+					change_variable = {
+						name = biological_weapons_progress
+						add = 5
+					}
+				}
+				else_if = {
+					limit = { military_wage_level = high }
+					change_variable = {
+						name = biological_weapons_progress
+						add = 4
+					}
+				}
+				else_if = {
+					limit = { military_wage_level = medium }
+					change_variable = {
+						name = biological_weapons_progress
+						add = 3
+					}
+				}
+				else_if = {
+					limit = { military_wage_level = low }
+					change_variable = {
+						name = biological_weapons_progress
+						add = 2
+					}
+				}
+				else = {
+					change_variable = {
+						name = biological_weapons_progress
+						add = 1
+					}
+				}
+				clamp_variable = {
+					name = biological_weapons_progress
+					max = 120
+					min = 0
+				}
+			}
+			
+		}
+		
+	}
+	
+}

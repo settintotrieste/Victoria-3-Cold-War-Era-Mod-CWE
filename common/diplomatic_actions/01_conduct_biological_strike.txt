@@ -1,0 +1,133 @@
+﻿conduct_biological_strike = {
+	requires_approval = no
+	should_notify_third_parties = yes
+
+	potential = {
+		
+		#THIS has biological weapons
+		has_modifier = biological_capability
+		NOT = { has_modifier = biological_attack_cooldown }
+		
+		#Civil war countries do not nuke each other
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#THIS is at war with TARGET
+		scope:target_country = { 
+			has_war_with = scope:actor
+		}
+		
+	}
+
+	possible = {
+		
+		#Only extremist leaders think of launching biological weapons
+		exists = ruler
+		ruler = {
+			has_ideology = ideology:ideology_autocratic
+		}
+		
+		#Only an independent country can fire biological weapons
+		is_sufficiently_independent = yes
+		
+		#Needs military approval
+		OR = {
+			ig:ig_armed_forces ?= { ig_approval >= 10 }
+			ruler ?= { interest_group = { is_interest_group_type = ig_armed_forces } }
+		}
+		
+	}
+
+	accept_effect = {
+		
+		#THIS gains infamy and international hatred for biological attack
+		scope:actor = { change_infamy = 20 }
+		hidden_effect = {
+			every_country = {
+				limit = { NOT = { has_jingoistic_ruler = yes } }
+				set_relations = { country = scope:actor value = -50 }
+			}
+		}
+		
+		#Notice
+		scope:target_country = { save_scope_as = biological_war_target }
+		custom_tooltip = {
+			text = launch_biological_weapons.1.tt
+		}
+		
+		### Attacker Cooldown ###
+		add_modifier = {
+			name = biological_attack_cooldown
+			years = 1
+		}
+		
+		### Apply biological weapons effect ###
+		scope:target_country = { 
+		
+			#Apply modifier
+			every_scope_state = {
+				hidden_effect = { has_modifier = biological_attack }
+				add_modifier = {
+					name = biological_attack
+					years = 5
+					is_decaying = yes
+				}
+			}
+			
+			#50% chance of triggering a global pandemic
+			if = {
+				limit = { 
+					NOT = { has_global_variable = spanish_flu } 
+				}
+				random_list = { 
+					1 = { 
+						trigger_event = { id = biological_warfare_system.4 }
+					}
+					1 = { 
+						
+					}
+				}
+			}
+		}
+		
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			
+			OR = {
+				#Ruler is jingoistic
+				ruler ?= { has_ideology = ideology:ideology_autocratic }
+				
+			}
+			
+			#THIS is losing the war against TARGET
+			has_war_with = scope:target_country
+			any_scope_war = {
+				OR = { 
+					has_war_exhaustion = { target = scope:actor value > 90 }
+					has_war_support = { target = scope:actor value < 10 }
+				}
+			}
+			
+			#THIS has no chance of ever winning conventionally
+			scope:target_country = {
+				country_rank > scope:actor.country_rank
+				army_size > scope:actor.army_size
+			}
+			
+			#Country unrest is high
+			radical_fraction = {
+				value > 0.5
+			}
+			
+		}
+		
+	}
+	
+}

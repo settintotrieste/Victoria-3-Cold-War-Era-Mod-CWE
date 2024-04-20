@@ -1,0 +1,203 @@
+namespace = biological_warfare_system
+
+#THIS gains biological capability
+biological_warfare_system.1 = {
+	type = country_event
+
+	title = gained_biological_capability.t
+	desc = gained_biological_capability.d
+	flavor = gained_biological_capability.f
+
+	event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 1
+
+	trigger = {
+	
+		#Triggered by je_develop_biological_weapons
+		
+	}
+
+	immediate = {
+		add_modifier = { name = biological_capability }
+		
+		save_scope_as = biological_country
+	}
+
+	option = {
+		name = gained_biological_capability.option 	#The world shall tremble at our might!
+		
+	}
+	
+}
+
+#THIS loses biological capability
+biological_warfare_system.2 = {
+	type = country_event
+
+	title = lost_biological_capability.t
+	desc = lost_biological_capability.d
+	flavor = lost_biological_capability.f
+
+	event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 1
+
+	trigger = {
+	
+		has_modifier = biological_capability
+		
+		OR = { 
+		
+			#Does not have biological weapons law
+			NOT = { has_law = law_type:law_wmd_allowed }
+		
+			#Does not have at least 1 functional biological weapons building
+			NOT = { 
+				any_scope_state = {
+					any_scope_building = {
+						is_building_type = building_university
+						building_has_goods_shortage = no
+					}
+				}
+			}
+			
+			#NOT a sovereign state
+			NOT = { is_sufficiently_independent = yes }
+			
+		}
+		
+	}
+
+	immediate = {
+	
+		#Remove Nuclear Capability
+		remove_modifier = biological_capability
+		remove_variable = biological_program_started
+		
+		#Force disarmament if a non-autonomous subject
+		if = {
+			limit = { NOT = { is_sufficiently_independent = yes } }
+			activate_law = law_type:law_wmd_banned
+		}
+		
+		save_scope_as = biological_country
+	}
+
+	option = {
+		name = lost_biological_capability.option 	#The world shall tremble at our might!
+		
+	}
+	
+}
+
+#Clean up biological weapons program variable
+biological_warfare_system.3 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		#Has biological program
+		has_variable = biological_program_started
+		
+		#THIS no longer allows WMDs or has become an insufficiently independent subject
+		OR = {
+			NOT = { has_law = law_type:law_wmd_allowed }
+			NOT = { is_sufficiently_independent = yes }
+		}
+		
+	}
+
+	immediate = {
+		remove_variable = biological_program_started
+	}
+	
+}
+
+# Global Pandemic caused by biological weapons
+biological_warfare_system.4 = {
+    type = country_event
+	placement = scope:plague_origin_state
+
+    title = biological_weapons_fallout.t 						# Title of the event; ADD LOCALISATION
+    desc = biological_weapons_fallout.d 						# Description of the event; ADD LOCALISATION
+    flavor = biological_weapons_fallout.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_sick_in_hospital.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/antibiotics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		# Triggered by diplo action
+		
+    }
+    
+    immediate = {
+		
+		set_global_variable = {
+			name = spanish_flu
+		}
+		set_variable = {
+			name = plague_originator
+		}
+		save_scope_as = plague_originator_country
+		random_scope_state = {
+			save_scope_as = plague_origin_state
+			set_variable = plague_originator_state
+			randomize_plague_level_effect = yes
+			add_plague_modifier_effect = yes
+		}
+		
+	}
+
+	option = {
+		name = plague.1.a
+		default_option = yes
+		
+		#Less war support for any ongoing wars
+		if = {
+			limit = { any_diplomatic_play = { is_war = yes is_diplomatic_play_participant = ROOT } }
+			custom_tooltip = {
+				text = lose_20_war_support_event.tt
+				every_diplomatic_play = {
+					limit = {
+						is_war = yes
+						is_diplomatic_play_participant = ROOT
+					}
+					add_diplomatic_play_war_support = { target = ROOT value = -20 }
+				}
+			}
+		}
+		
+		#Generate pandemic
+		scope:plague_origin_state = {
+			custom_tooltip = plague_state_mortality.tt
+		}
+		custom_tooltip = plague_decisions_available.tt
+		hidden_effect = {
+			every_country = {
+				limit = {
+					NOT = { this = ROOT }
+					is_player = yes
+				}
+				trigger_event = { id = plague.4 }
+			}
+		}
+		add_journal_entry = { type = je_spanish_flu }
+		set_variable = country_hit_by_plague # so that countries cannot get JE multiple times
+	}
+
+}
