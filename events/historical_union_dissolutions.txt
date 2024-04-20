@@ -2256,10 +2256,6 @@ historical_union_dissolution.12 = {
 			culture = cu:scottish
 			value = large_radicals
 		}
-		every_scope_state = {
-			limit = { state_region = { is_homeland = cu:scottish } }
-			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
-		}
 		
 		ai_chance = { 
 			base = 90
@@ -2269,6 +2265,8 @@ historical_union_dissolution.12 = {
 	
     option = {
         name = historical_union_dissolution.option.1		# Accept secesssion
+		
+		change_infamy = -10
 		
 		#Subject becomes independent
 		create_country = {
@@ -2443,6 +2441,8 @@ historical_union_dissolution.13 = {
 	
     option = {
         name = historical_union_dissolution.option.1		# Accept secesssion
+		
+		change_infamy = -10
 		
 		#Subject becomes independent
 		create_country = {
@@ -2635,6 +2635,137 @@ historical_union_dissolution.14 = {
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#2021 New Caledonian independence referendum
+historical_union_dissolution.15 = {
+    type = country_event
+	placement = c:NCD
+
+    title = FRA_NCD_dissolution.t 								# Title of the event; ADD LOCALISATION
+    desc = FRA_NCD_dissolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = FRA_NCD_dissolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:FRA ?= this
+		game_date >= 2021.12.12
+		game_date < 2031.12.12
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		exists = c:NCD
+		c:NCD = { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_not_sufficiently_independent = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = FRA_NCD_dissolution_hud }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = FRA_NCD_dissolution_hud					# Change variable ****
+	
+	}
+    
+	option = {
+        name = historical_union_dissolution.option.2		# Refuse secesssion
+		default_option = yes
+		highlighted_option = yes
+		
+		# Internal unrest
+		c:NCD = {
+			add_radicals = {
+				culture = cu:new_caledonian
+				value = large_radicals
+			}
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+    option = {
+        name = historical_union_dissolution.option.1		# Accept secesssion
+		
+		change_infamy = -10
+		
+		#Set colony free
+		if = {
+			limit = { exists = c:NCD }
+			
+			# Colony becomes independent
+			c:NCD = {
+				make_independent = yes
+			}
+			
+			if = {
+				limit = { leads_customs_union = no }
+				random_country = {
+					limit = { has_diplomatic_pact = { who = ROOT type = customs_union is_initiator = yes } }
+					set_relations = { country = c:NCD value = 50 }
+					create_diplomatic_pact = {
+						country = c:NCD
+						type = customs_union
+					}
+				}
+			}
+			else_if = {
+				limit = { leads_customs_union = yes }
+				create_diplomatic_pact = {
+					country = c:NCD
+					type = customs_union
+				}
+			}
+			create_diplomatic_pact = {
+				country = c:NCD
+				type = legal_union
+			}
+			create_diplomatic_pact = {
+				country = c:NCD
+				type = currency_union
+			}
+			
+			# Create PU if applicable
+			if = {
+				limit = { 
+					is_a_monarchy = yes
+				}
+				c:NCD = { 
+					effect_starting_politics_constitutional_monarchy = yes 
+				}
+				create_diplomatic_pact = {
+					country = c:NCD
+					type = personal_union
+				}
+			}
+			
+			set_relations = { country = c:NCD value = 100 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
 		}
 		
     }
