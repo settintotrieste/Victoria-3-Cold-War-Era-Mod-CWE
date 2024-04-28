@@ -1,7 +1,86 @@
 namespace = AST_gov_changes
 
-# 1999 Australian republic referendum
+# End of the White Australia Policy
 AST_gov_changes.1 = {
+    type = country_event
+
+    title = AST_1975_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = AST_1975_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = AST_1975_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:AST ?= this
+		game_date >= 1975.6.11									# START DATE: Date colony became self governing ****
+		game_date < 1985.6.11									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Apartheid
+		has_journal_entry = je_apartheid
+		
+		# Event has not been fired before
+		NOT = { has_variable = AST_1975_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = AST_1975_hgc								# Change variable ****
+		
+	}
+    
+	option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new law
+		activate_law = law_type:law_multicultural
+		activate_law = law_type:law_no_migration_controls
+		
+		#Major discontent
+		add_radicals = {
+			value = medium_radicals
+			culture = cu:australian
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			culture = cu:aborigine
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# 1999 Australian republic referendum
+AST_gov_changes.2 = {
     type = country_event
 
     title = AST_1999_revolution.t 							# Title of the event; ADD LOCALISATION
