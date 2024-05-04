@@ -1,0 +1,226 @@
+namespace = eastern_europe_sovietisation
+
+#Option for USSR to make satellites
+eastern_europe_sovietisation.1 = {
+    type = country_event
+	placement = scope:eastern_europe_sovietisation_target
+	
+    title = eastern_europe_sovietisation.t 						# Title of the event; ADD LOCALISATION
+    desc = eastern_europe_sovietisation.d 						# Description of the event; ADD LOCALISATION
+    flavor = eastern_europe_sovietisation.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+	icon = "gfx/interface/icons/invention_icons/socialism.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SOV ?= this
+		game_date >= 1945.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1955.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Cold War
+		cold_war_ongoing = yes
+		
+		#Potential EE states
+		OR = {
+			c:POL ?= { is_a_democracy = yes has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = no } game_date >= 1947.2.19 NOT = { has_variable = eastern_europe_sovietisation_rejected } }
+			c:HUN ?= { is_a_democracy = yes has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = no } game_date >= 1947.5.31 NOT = { has_variable = eastern_europe_sovietisation_rejected } }
+			c:ROM ?= { is_a_democracy = yes has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = no } game_date >= 1947.12.30 NOT = { has_variable = eastern_europe_sovietisation_rejected } }
+			c:CZH ?= { is_a_democracy = yes has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = no } game_date >= 1948.2.25 NOT = { has_variable = eastern_europe_sovietisation_rejected } }
+			c:BUL ?= { is_a_democracy = yes has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = no } game_date >= 1946.9.15 NOT = { has_variable = eastern_europe_sovietisation_rejected } }
+		}
+		
+    }
+	
+	immediate = { 
+		
+		save_scope_as = eastern_europe_sovietisation_initiator
+		
+		#Stagger sovietisation
+		if = {
+			limit = { 
+				c:POL ?= { is_a_democracy = yes has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = no } game_date >= 1947.2.19 NOT = { has_variable = eastern_europe_sovietisation_rejected } }
+			}
+			c:POL = {
+				save_scope_as = eastern_europe_sovietisation_target
+				set_variable = eastern_europe_sovietisation_rejected
+			}
+		}
+		if = {
+			limit = { 
+				c:HUN ?= { is_a_democracy = yes has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = no } game_date >= 1947.5.31 NOT = { has_variable = eastern_europe_sovietisation_rejected } }
+			}
+			c:HUN = {
+				save_scope_as = eastern_europe_sovietisation_target
+				set_variable = eastern_europe_sovietisation_rejected
+			}
+		}
+		if = {
+			limit = { 
+				c:ROM ?= { is_a_democracy = yes has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = no } game_date >= 1947.12.30 NOT = { has_variable = eastern_europe_sovietisation_rejected } }
+			}
+			c:ROM = {
+				save_scope_as = eastern_europe_sovietisation_target
+				set_variable = eastern_europe_sovietisation_rejected
+			}
+		}
+		if = {
+			limit = { 
+				c:CZH ?= { is_a_democracy = yes has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = no } game_date >= 1948.2.25 NOT = { has_variable = eastern_europe_sovietisation_rejected } }
+			}
+			c:CZH = {
+				save_scope_as = eastern_europe_sovietisation_target
+				set_variable = eastern_europe_sovietisation_rejected
+			}
+		}
+		if = {
+			limit = { 
+				c:BUL ?= { is_a_democracy = yes has_diplomatic_pact = { who = ROOT type = protectorate is_initiator = no } game_date >= 1948.2.25 NOT = { has_variable = eastern_europe_sovietisation_rejected } }
+			}
+			c:BUL = {
+				save_scope_as = eastern_europe_sovietisation_target
+				set_variable = eastern_europe_sovietisation_rejected
+			}
+		}
+		
+	}
+    
+    option = {
+        name = eastern_europe_sovietisation.option.1				# Install communism
+        highlighted_option = yes
+		
+		#Ultimatum to sovietisation Target
+		scope:eastern_europe_sovietisation_target ?= {
+			trigger_event = { id = eastern_europe_sovietisation.2 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = eastern_europe_sovietisation.option.2				# Let them be independent
+		default_option = yes
+		
+		#Domestic reaction
+		add_radicals = {
+			value = medium_radicals
+			strata = poor
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Option to refuse satellite
+eastern_europe_sovietisation.2 = {
+    type = country_event
+	
+    title = eastern_europe_sovietisation.t 						# Title of the event; ADD LOCALISATION
+    desc = eastern_europe_sovietisation.d 						# Description of the event; ADD LOCALISATION
+    flavor = eastern_europe_sovietisation.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/socialism.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by an event
+		
+    }
+	
+	immediate = { 
+		
+		save_scope_as = eastern_europe_sovietisation_target
+		
+	}
+    
+    option = {
+        name = eastern_europe_sovietisation_target.option.1			# Accept
+        highlighted_option = yes
+		
+		# Laws
+		effect_starting_politics_communist_republic = yes
+		effect_starting_politics_dictatorship = yes
+		effect_starting_politics_constitutional_unitary_state = yes
+		effect_starting_politics_war_policy_pro_military = yes
+		effect_starting_politics_economic_policy_planned_economy = yes
+		effect_starting_politics_trade_policy_protectionism = yes
+		effect_starting_politics_anti_nuclear_policy = yes
+		
+		effect_starting_politics_specialisation_manufacturing = yes
+		
+		effect_starting_politics_fiat_standard = yes
+		
+		# Become a Satellite state of USSR
+		hidden_effect = { make_independent = yes }
+		c:SOV = {
+			create_diplomatic_pact = {
+				country = ROOT
+				type = satellite
+			}
+			set_relations = { country = ROOT value = 100 }
+		}
+		
+		# Set Ruler
+		random_scope_character = {
+			limit = { interest_group = { is_interest_group_type = ig_trade_unions } }
+			set_character_as_ruler = yes
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = eastern_europe_sovietisation_target.option.2			# REFUSE
+		default_option = yes
+		
+		#USSR will attack this country
+		c:SOV = {
+			create_diplomatic_play = {
+				name = soviet_war
+				type = dp_make_dominion
+				target_country = ROOT
+				
+				add_war_goal = {
+					holder = c:SOV
+					type = regime_change
+					target_country = ROOT
+				}
+				add_war_goal = {
+					holder = ROOT
+					type = independence
+					target_country = c:SOV
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
