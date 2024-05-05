@@ -602,7 +602,7 @@ eastern_europe_indy.5 = {
 		
 		#Triggered by Khrushchev
 		exists = ruler
-		ruler = { is_interest_group_type = ig_rural_folk is_historical = yes }
+		ruler = { interest_group = { is_interest_group_type = ig_rural_folk } is_historical = yes }
 		
 		#Colony conditions
 		OR = {
@@ -615,7 +615,7 @@ eastern_europe_indy.5 = {
 					is_at_war = no
 					#Triggered by Mao
 					exists = ruler
-					ruler = { is_interest_group_type = ig_trade_unions is_historical = yes }
+					ruler = { interest_group = { is_interest_group_type = ig_trade_unions } is_historical = yes }
 				}
 			}
 			AND = { 
@@ -627,7 +627,7 @@ eastern_europe_indy.5 = {
 					is_at_war = no
 					#Triggered by Mao
 					exists = ruler
-					ruler = { is_interest_group_type = ig_trade_unions is_historical = yes }
+					ruler = { interest_group = { is_interest_group_type = ig_trade_unions } is_historical = yes }
 				}
 			}
 		}
@@ -875,6 +875,202 @@ eastern_europe_indy.7 = {
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Yugoslav-Soviet Split
+eastern_europe_indy.8 = {
+    type = country_event
+	placement = scope:communist_yugoslavia_scope
+	
+    title = yugoslav_soviet_split.t 				# Title of the event; ADD LOCALISATION
+    desc = yugoslav_soviet_split.d 					# Description of the event; ADD LOCALISATION
+    flavor = yugoslav_soviet_split_ussr.f 			# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		# Event has not been fired before
+		NOT = { has_variable = yugoslav_soviet_split }				# CHANGE ****
+		
+		#Overlord conditions
+		exists = c:SOV
+		this = c:SOV											# Change TAG of the overlord ****
+		game_date >= 1948.6.28									# START DATE: Date colony became self governing ****
+		game_date < 1958.6.28									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		country_rank = rank_value:super_power
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Triggered by Stalin
+		exists = ruler
+		ruler = { has_ideology = ideology:ideology_autocratic interest_group = { is_interest_group_type = ig_trade_unions } is_historical = yes }
+		
+		#Colony conditions
+		OR = {
+			AND = { 
+				exists = c:SER
+				c:SER ?= { 												# Change TAG of the colony ****
+					is_direct_subject_of = ROOT
+					is_a_communist_government = yes
+					is_sufficiently_independent = yes
+					is_at_war = no
+					#Triggered by Tito
+					exists = ruler
+					ruler = { NOT = { has_ideology = ideology:ideology_autocratic } interest_group = { is_interest_group_type = ig_trade_unions } is_historical = yes }
+				}
+			}
+			AND = { 
+				exists = c:YUG
+				c:YUG ?= { 												# Change TAG of the colony ****
+					is_direct_subject_of = ROOT
+					is_a_communist_government = yes
+					is_sufficiently_independent = yes
+					is_at_war = no
+					#Triggered by Tito
+					exists = ruler
+					ruler = { NOT = { has_ideology = ideology:ideology_autocratic } interest_group = { is_interest_group_type = ig_trade_unions } is_historical = yes }
+				}
+			}
+		}
+		
+    }
+	
+	immediate = { 
+		
+		# Fire only once
+		set_variable = yugoslav_soviet_split					# Change variable ****
+		
+		#Mark SER
+		random_country = {
+			limit = {
+				OR = { c:SER ?= this c:YUG ?= this }
+				is_direct_subject_of = ROOT
+				is_a_communist_government = yes
+				is_sufficiently_independent = yes
+				is_at_war = no
+			}
+			save_scope_as = communist_yugoslavia_scope
+		}
+		
+	}
+    
+    option = {
+        name = yugoslav_soviet_split.option.1						# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		scope:communist_yugoslavia_scope = { 						# Change TAG of the colony ****
+			make_independent = yes
+			set_relations = {
+				country = ROOT
+				value = -200
+			}
+			trigger_event = { id = eastern_europe_indy.9 }
+		}
+		
+		#Mark as Yugoslav-Soviet
+		set_global_variable = yugoslav_soviet_split_global_var
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = yugoslav_soviet_split.option.2						# REFUSE
+		default_option = yes
+		
+		#Fracture the Eastern Bloc
+		every_country = {
+			limit = { 
+				NOT = { scope:communist_yugoslavia_scope ?= this }
+				country_is_in_europe = yes
+				is_direct_subject_of = ROOT
+				is_a_communist_government = yes
+				is_subject_type = subject_type_satellite
+			}
+			change_subject_type = subject_type_protectorate
+			if = {
+				limit = { NOT = { scope:communist_yugoslavia_scope ?= this } }
+				set_relations = {
+					country = scope:communist_yugoslavia_scope
+					value = 50
+				}
+			}
+			set_relations = {
+				country = ROOT
+				value = 50
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Yugoslav-Soviet Split - Notify USSR
+eastern_europe_indy.9 = {
+    type = country_event
+	placement = c:SOV
+	
+    title = yugoslav_soviet_split_prc.t 			# Title of the event; ADD LOCALISATION
+    desc = yugoslav_soviet_split.d 					# Description of the event; ADD LOCALISATION
+    flavor = yugoslav_soviet_split.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = { 
+		
+		c:SOV = { save_scope_as = yugoslav_soviet_split_ussr }
+		
+	}
+    
+    option = {
+        name = yugoslav_soviet_split.option.3						# Oh well...
+		default_option = yes
+		
+		#Prestige from being independent of USSR
+		add_modifier = { 
+			name = national_pride_modifier 
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		#Gain relations with democratic powers
+		every_country = {
+			limit = { 
+				country_rank >= rank_value:great_power
+				is_a_democracy = yes
+				is_sufficiently_independent = yes
+			}
+			change_relations = { country = ROOT value = 100 }
 		}
 		
     }

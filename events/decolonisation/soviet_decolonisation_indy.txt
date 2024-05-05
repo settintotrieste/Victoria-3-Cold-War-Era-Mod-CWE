@@ -1,0 +1,101 @@
+namespace = soviet_decolonisation_indy
+
+#North Korea
+soviet_decolonisation_indy.1 = {
+    type = country_event
+
+    title = soviet_north_korea.indy.t 						# Title of the event; ADD LOCALISATION
+    desc = soviet_north_korea.indy.d 							# Description of the event; ADD LOCALISATION
+    #flavor = soviet_north_korea.indy.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SOV ?= this
+		game_date >= 1948.8.15
+		game_date < 1958.8.15
+		
+		is_a_communist_government = yes								# Correct gov types
+		is_sufficiently_independent = yes							# is_vassal = no		
+		is_at_war = no												# war = no
+		
+		#Colony conditions
+		exists = c:NKO
+		c:NKO = { 													# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			NOT = { is_sufficiently_independent = yes }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = soviet_north_korea_indy }			# CHANGE ****
+		
+    }
+	
+	immediate = { 
+		
+		# Fire only once
+		set_variable = soviet_north_korea_indy					# Change variable ****
+		
+	}
+    
+    option = {
+        name = soviet_decolonisation_indy.option.1				# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		c:NKO = { 													# Change TAG of the colony ****
+			hidden_effect = { make_independent = yes }
+		}
+		
+		# Overlord create client state pact with colony
+		create_diplomatic_pact = {
+			country = c:NKO											# Change TAG ****
+			type = satellite
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = soviet_decolonisation_indy.option.2					# REFUSE
+		default_option = yes
+		
+		#Reaction
+		c:NKO = {
+		
+			# Natives are angry!
+			add_radicals = {
+				value = large_radicals
+			}
+			every_scope_state = {
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+			#Colony is angry
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+			
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
