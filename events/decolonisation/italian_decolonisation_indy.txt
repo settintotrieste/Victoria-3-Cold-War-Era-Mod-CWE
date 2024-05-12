@@ -3,7 +3,8 @@ namespace = italian_decolonisation_indy
 #Somalia
 italian_decolonisation_indy.1 = {
     type = country_event
-	placement = ROOT
+	placement = c:SOM
+	
     title = italian_somalia.indy.t 					# Title of the event; ADD LOCALISATION
     desc = italian_somalia.indy.d 					# Description of the event; ADD LOCALISATION
     #flavor = italian_somalia.indy.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
@@ -37,6 +38,13 @@ italian_decolonisation_indy.1 = {
 		NOT = { has_variable = italian_somalia_indy }			# CHANGE ****
 		
     }
+	
+	immediate = {
+		
+		# Fire only once
+		set_variable = italian_somalia_indy						# Change variable ****
+		
+	}
     
     option = {
         name = italian_decolonisation_indy.option.1				# Grant them independence
@@ -104,6 +112,137 @@ italian_decolonisation_indy.1 = {
 		
 		# Fire only once
 		set_variable = italian_somalia_indy						# Change variable ****
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#South Tyrol
+italian_decolonisation_indy.2 = {
+    type = country_event
+	placement = scope:SUT_state_scope
+	
+    title = italian_SUT.indy.t 									# Title of the event; ADD LOCALISATION
+    desc = italian_SUT.indy.d 									# Description of the event; ADD LOCALISATION
+    #flavor = italian_SUT.indy.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		exists = c:ITA this = c:ITA								# Change TAG of the overlord ****
+		game_date >= 1972.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1982.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Owns South Tyrol
+		NOT = { exists = c:SUT }
+		has_state_in_state_region = STATE_SOUTH_TYROL
+		
+		#Austria
+		exists = c:AUS
+		c:AUS ?= {
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = italian_SUT_indy }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+		
+		#Mark state
+		random_scope_state = {
+			limit = { state_region = s:STATE_SOUTH_TYROL }
+			save_scope_as = SUT_state_scope
+		}
+		
+		# Fire only once
+		set_variable = italian_SUT_indy							# Change variable ****
+		
+	}
+    
+    option = {
+        name = italian_decolonisation_indy.option.1				# Grant them independence
+        highlighted_option = yes
+		
+		#Release South Tyrol as an SAR
+		create_country = {
+			tag = SUT										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:SUT_state_scope
+
+			on_created = {									# Set government laws & rulers here
+	
+				# SET laws for colony ****
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_very_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_anti_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_services = yes
+
+				effect_starting_politics_fiat_standard = yes
+	
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+				
+			}
+	
+		}
+		if = {
+			limit = { exists = c:SUT }
+			create_diplomatic_pact = { 
+				country = c:SUT
+				type = special_administrative_region 
+			}
+			create_diplomatic_pact = { 
+				country = c:SUT
+				type = legal_union
+			}
+			create_diplomatic_pact = { 
+				country = c:SUT
+				type = currency_union
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = italian_decolonisation_indy.option.2					# REFUSE
+		default_option = yes
+		
+		# Add domestic reaction
+		scope:SUT_state_scope = {
+			add_radicals_in_state = {
+				value = large_radicals
+			}
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
