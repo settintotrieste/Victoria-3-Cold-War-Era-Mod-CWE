@@ -1133,3 +1133,435 @@ conduct_hostile_espionage_6 = {
 	}
 	
 }
+
+#Send agitator to TARGET
+conduct_hostile_espionage_7 = {
+	requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	unlocking_technologies = {
+		
+	}
+
+	potential = {
+	
+		has_journal_entry = je_secret_police_system
+	
+		#THIS has spies in TARGET
+		has_diplomatic_pact = {
+			who = scope:target_country
+			type = conduct_hostile_espionage
+			is_initiator = yes
+		}
+		
+	}
+	
+	possible = {
+		
+		#Has enough action points
+		custom_tooltip = {
+			text = secret_police_action_50_points.tt
+			has_variable = secret_police_action_points
+			root.var:secret_police_action_points > 50
+		}
+		
+		#Cooldown
+		custom_tooltip = {
+			text = secret_police_action_timer.tt
+			NOT = { has_variable = secret_police_action_timer }
+		}
+		
+		#TARGET has space for agitator
+		scope:target_country = { 
+			empty_agitator_slots >= 1 
+			NOT = { has_law = law_type:law_closed_borders }
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Subtract action points
+		custom_tooltip = {
+			text = secret_police_action_subtract_50_points.tt
+			if = {
+				limit = { has_variable = secret_police_action_points }
+				change_variable = { 
+					name = secret_police_action_points
+					add = -50
+				}
+			}
+		}
+		
+		#Gain Loyalty
+		custom_tooltip = {
+			text = secret_police_gain_loyalty_5_points.tt
+			change_variable = { 
+				name = secret_police_loyalty
+				add = 5
+			}
+			clamp_variable = {
+				name = secret_police_loyalty
+				max = 100
+				min = 0
+			}
+		}
+		
+		#Send agitator to TARGET
+		if = {
+			limit = { is_a_democracy = yes }
+			if = {
+				limit = { 
+					any_scope_character = { 
+						has_role = agitator 
+						OR = {
+							has_ideology = ideology:ideology_agitator_pro_human_rights
+							has_ideology = ideology:ideology_agitator_anti_war_rights
+						
+							has_ideology = ideology:ideology_liberal
+							has_ideology = ideology:ideology_democratic
+						}
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					} 
+				}
+				random_scope_character = {
+					limit = {
+						has_role = agitator 
+						OR = {
+							has_ideology = ideology:ideology_agitator_pro_human_rights
+							has_ideology = ideology:ideology_agitator_anti_war_rights
+						
+							has_ideology = ideology:ideology_liberal
+							has_ideology = ideology:ideology_democratic
+						}
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					}
+					transfer_character = scope:target_country
+				}
+			}
+			else = {
+				scope:target_country = {
+					create_character = {
+						is_agitator = yes
+						ideology = ideology_agitator_pro_human_rights
+					}
+				}
+			}
+		}
+		
+		if = {
+			limit = { NOT = { is_a_democracy = yes } }
+			if = {
+				limit = { 
+					any_scope_character = { 
+						has_role = agitator 
+						OR = {
+							has_ideology = ideology:ideology_agitator_anti_human_rights
+							has_ideology = ideology:ideology_agitator_pro_war_rights
+						
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					} 
+				}
+				random_scope_character = {
+					limit = {
+						has_role = agitator 
+						OR = {
+							has_ideology = ideology:ideology_agitator_anti_human_rights
+							has_ideology = ideology:ideology_agitator_pro_war_rights
+						
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					}
+					transfer_character = scope:target_country
+				}
+			}
+			else = {
+				scope:target_country = {
+					create_character = {
+						is_agitator = yes
+						ideology = ideology_agitator_anti_human_rights
+					}
+				}
+			}
+		}
+		
+		if = {
+			limit = { 
+				is_a_communist_government = yes 
+				scope:target_country = { 
+					empty_agitator_slots >= 1 
+					NOT = { is_a_communist_government = yes }
+				}
+			}
+			if = {
+				limit = { 
+					any_scope_character = { 
+						has_role = agitator 
+						has_ideology = ideology:ideology_agitator_communist
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					} 
+				}
+				random_scope_character = {
+					limit = {
+						has_role = agitator 
+						has_ideology = ideology:ideology_agitator_communist
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					}
+					transfer_character = scope:target_country
+				}
+			}
+			else = {
+				scope:target_country = {
+					create_character = {
+						is_agitator = yes
+						ideology = ideology_agitator_communist
+					}
+				}
+			}
+		}
+		
+		if = {
+			limit = { 
+				is_a_regime_monarchy = yes 
+				scope:target_country = { 
+					empty_agitator_slots >= 1 
+					NOT = { is_a_regime_monarchy = yes }
+				}
+			}
+			if = {
+				limit = { 
+					any_scope_character = { 
+						has_role = agitator 
+						has_ideology = ideology:ideology_agitator_monarchist
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					} 
+				}
+				random_scope_character = {
+					limit = {
+						has_role = agitator 
+						has_ideology = ideology:ideology_agitator_monarchist
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					}
+					transfer_character = scope:target_country
+				}
+			}
+			else = {
+				scope:target_country = {
+					create_character = {
+						is_agitator = yes
+						ideology = ideology_agitator_monarchist
+					}
+				}
+			}
+		}
+		
+		if = {
+			limit = { 
+				is_a_nationalist_government = yes 
+				scope:target_country = { 
+					empty_agitator_slots >= 1 
+					NOT = { is_a_nationalist_government = yes }
+				}
+			}
+			if = {
+				limit = { 
+					any_scope_character = { 
+						has_role = agitator 
+						has_ideology = ideology:ideology_agitator_nationalist
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					} 
+				}
+				random_scope_character = {
+					limit = {
+						has_role = agitator 
+						has_ideology = ideology:ideology_agitator_nationalist
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					}
+					transfer_character = scope:target_country
+				}
+			}
+			else = {
+				scope:target_country = {
+					create_character = {
+						is_agitator = yes
+						ideology = ideology_agitator_nationalist
+					}
+				}
+			}
+		}
+		
+		if = {
+			limit = { 
+				is_a_theocratic_government = yes 
+				scope:target_country = { 
+					empty_agitator_slots >= 1 
+					NOT = { is_a_theocratic_government = yes }
+				}
+			}
+			if = {
+				limit = { 
+					any_scope_character = { 
+						has_role = agitator 
+						has_ideology = ideology:ideology_agitator_theocrat
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					} 
+				}
+				random_scope_character = {
+					limit = {
+						has_role = agitator 
+						has_ideology = ideology:ideology_agitator_theocrat
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					}
+					transfer_character = scope:target_country
+				}
+			}
+			else = {
+				scope:target_country = {
+					create_character = {
+						is_agitator = yes
+						ideology = ideology_agitator_theocrat
+					}
+				}
+			}
+		}
+		
+		if = {
+			limit = { 
+				is_a_democracy = yes 
+				scope:target_country = { 
+					empty_agitator_slots >= 1 
+					NOT = { is_a_democracy = yes }
+				}
+			}
+			if = {
+				limit = { 
+					any_scope_character = { 
+						has_role = agitator 
+						has_ideology = ideology:ideology_agitator_republican
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					} 
+				}
+				random_scope_character = {
+					limit = {
+						has_role = agitator 
+						has_ideology = ideology:ideology_agitator_republican
+						NOT = {
+							culture = {
+								culture_is_discriminated_in = scope:target_country
+							}
+						}
+						is_historical = no
+					}
+					transfer_character = scope:target_country
+				}
+			}
+			else = {
+				scope:target_country = {
+					create_character = {
+						is_agitator = yes
+						ideology = ideology_agitator_republican
+					}
+				}
+			}
+		}
+		
+		#Gain infamy
+		create_incident = {
+			country = scope:target_country
+			value = 5
+		}
+		
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			infamy < infamy_threshold:infamous
+			OR = { 
+				has_attitude = {
+					who = scope:target_country
+					attitude <= antagonistic
+				}
+				has_diplomatic_pact = { who = scope:target_country type = rivalry }
+				scope:target_country.relations:root < relations_threshold:poor
+			}
+		}
+		
+	}
+	
+}
