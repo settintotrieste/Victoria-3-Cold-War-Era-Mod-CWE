@@ -520,3 +520,110 @@ reserve_powers_system.5 = {
 	}
 	
 }
+
+#Enactment by foreign agents
+reserve_powers_system.6 = {
+	type = country_event
+
+	title = foreign_triggered_enactment.t
+	desc = foreign_triggered_enactment.d
+	flavor = foreign_triggered_enactment.f
+
+	event_image = {
+		video = "gfx/event_pictures/asia_politician_parliament_motion.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		#Triggered by diplo action
+		
+	}
+
+	immediate = {
+		
+		random_country = {
+			limit = { has_a_manchurian_candidate = yes }
+			save_scope_as = manipulator_country
+		}
+		
+		scope:manipulator_country ?= {
+			ruler ?= {
+				interest_group = {
+					save_scope_as = manipulator_country_IG
+				}
+			}
+		}
+		
+		if = {
+			limit = { exists = scope:manipulator_country_IG }
+			random_interest_group = {
+				limit = { is_same_interest_group_type = scope:manipulator_country_IG }
+				save_scope_as = target_interest_group
+			}
+		}
+		
+		scope:target_interest_group ?= {
+			random_preferred_law = {
+				limit = { can_be_enacted = yes }
+				save_scope_as = law_to_be_enacted
+			}
+		}
+		
+	}
+
+	option = {
+		name = foreign_triggered_enactment.option.1 		#Accept
+		default_option = yes
+		
+		start_enactment = scope:law_to_be_enacted.type
+		
+		if = {
+			limit = { exists = scope:target_interest_group }
+			add_loyalists = {
+				value = small_radicals
+				interest_group = ig:scope:target_interest_group
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					has_global_variable = historical_railroading_active
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = foreign_triggered_enactment.option.2 		#Reject the presidential veto
+		
+		if = {
+			limit = { exists = scope:manipulator_country }
+			scope:manipulator_country ?= { change_relations = { country = ROOT value = -10 } }
+		}
+		
+		if = {
+			limit = { exists = scope:target_interest_group }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:target_interest_group
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+		}
+		
+	}
+	
+}

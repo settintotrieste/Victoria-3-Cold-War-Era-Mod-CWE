@@ -1764,3 +1764,215 @@ conduct_hostile_espionage_7 = {
 	}
 	
 }
+
+#Manipulate Politics
+conduct_hostile_espionage_8 = {
+	requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	unlocking_technologies = {
+		
+	}
+
+	potential = {
+	
+		has_journal_entry = je_secret_police_system
+	
+		#THIS has spies in TARGET
+		has_diplomatic_pact = {
+			who = scope:target_country
+			type = conduct_hostile_espionage
+			is_initiator = yes
+		}
+		
+	}
+	
+	possible = {
+		
+		#Has strategic interest
+		has_diplomatic_relevance = scope:target_country
+		
+		#TARGET is an independent country
+		scope:target_country = { 
+			NOT = { is_subject_of = scope:actor }
+			NOT = { has_war_with = scope:actor }
+		}
+		
+		#TARGET politics is suceptible to manipulation
+		scope:target_country = { 
+			OR = { 
+				is_a_democracy = yes
+				has_modifier = power_vacuum_modifier
+				has_modifier = domestic_unrest
+				has_modifier = stirrings_of_revolution
+			}
+			NOT = { has_law = law_type:law_secret_police }
+		}
+		
+		#Has enough action points
+		custom_tooltip = {
+			text = secret_police_action_50_points.tt
+			has_variable = secret_police_action_points
+			root.var:secret_police_action_points > 50
+		}
+		
+		#Cooldown
+		custom_tooltip = {
+			text = secret_police_action_timer.tt
+			NOT = { has_variable = secret_police_action_timer }
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Subtract action points
+		custom_tooltip = {
+			text = secret_police_action_subtract_50_points.tt
+			if = {
+				limit = { has_variable = secret_police_action_points }
+				change_variable = { 
+					name = secret_police_action_points
+					add = -50
+				}
+			}
+		}
+		
+		#Gain Loyalty
+		custom_tooltip = {
+			text = secret_police_gain_loyalty_5_points.tt
+			change_variable = { 
+				name = secret_police_loyalty
+				add = 5
+			}
+			clamp_variable = {
+				name = secret_police_loyalty
+				max = 100
+				min = 0
+			}
+		}
+		
+		#Gain infamy
+		change_infamy = 5
+		
+		#Reduce Relations
+		save_scope_as = manipulator_country
+		scope:target_country = { save_scope_as = manipulated_country }
+		custom_tooltip = manipulating_government.tt
+		change_relations = { country = scope:target_country value = -50 }
+		
+	}
+	
+	pact = {	
+		cost = 200
+		is_two_sided_pact = no
+		infamy_affects_maintenance = yes
+		
+		income_transfer = 0.01
+		recipient_gets_income_transfer = yes
+		income_transfer_based_on_recipient = yes
+		
+		### Validation requirements ###
+		
+		requirement_to_maintain = { 
+		
+			trigger = { 
+			
+				has_journal_entry = je_secret_police_system
+	
+				#THIS has spies in TARGET
+				has_diplomatic_pact = {
+					who = scope:target_country
+					type = conduct_hostile_espionage
+					is_initiator = yes
+				}
+				
+				#TARGET is an independent country
+				scope:target_country = { 
+					NOT = { is_subject_of = scope:actor }
+					NOT = { has_war_with = scope:actor }
+				}
+				
+				#TARGET politics is suceptible to manipulation
+				scope:target_country = { 
+					OR = { 
+						is_a_democracy = yes
+						has_modifier = power_vacuum_modifier
+						has_modifier = domestic_unrest
+						has_modifier = stirrings_of_revolution
+					}
+					NOT = { has_law = law_type:law_secret_police }
+				}
+				
+			}
+			
+		}
+		
+		### Yearly Effect ###
+		
+		yearly_effect = {
+			
+			#Event to start enactment of law
+			ruler ?= {
+				interest_group = {
+					save_scope_as = manipulator_country_IG
+				}
+			}
+			scope:target_country = {
+				if = {
+					limit = { exists = scope:manipulator_country_IG }
+					random_interest_group = {
+						limit = { is_same_interest_group_type = scope:manipulator_country_IG }
+						save_scope_as = target_interest_group
+						random_preferred_law = {
+							limit = { can_be_enacted = yes }
+							save_scope_as = law_to_be_enacted
+						}
+					}
+				}
+				if = {
+					limit = { 
+						exists = scope:law_to_be_enacted
+						enacting_any_law = no 
+					}
+					random_list = {
+						1 = { trigger_event = { id = reserve_powers_system.6 } }
+						1 = { }
+					}
+				}
+			}
+			
+		}
+		
+		# Break effects
+		manual_break_effect = {
+			change_infamy = -5
+		}
+		
+		auto_break_effect = {
+			change_infamy = -5
+		}
+		
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			infamy < infamy_threshold:infamous
+			OR = { 
+				has_attitude = {
+					who = scope:target_country
+					attitude <= antagonistic
+				}
+				scope:target_country.relations:root < relations_threshold:poor
+			}
+		}
+		
+	}
+	
+}
