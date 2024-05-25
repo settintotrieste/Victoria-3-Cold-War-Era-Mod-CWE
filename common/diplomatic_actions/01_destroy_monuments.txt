@@ -1,0 +1,121 @@
+﻿destroy_monuments = {
+	requires_approval = no
+	should_notify_third_parties = yes
+
+	potential = {
+		
+		#Civil war countries do not nuke each other
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#THIS is at war with TARGET
+		scope:target_country = { 
+			has_war_with = scope:actor
+		}
+		
+		#TARGET has monuments
+		scope:target_country = { 
+			has_monuments_in_scope = yes
+		}
+		
+	}
+
+	possible = {
+		
+		#Ruler is jingoistic
+		ruler ?= { has_ideology = ideology:ideology_autocratic }
+		
+		#Only an independent country can do this
+		is_sufficiently_independent = yes
+		
+		#Only extremist leaders think of destroying cultural heritage OR desperate
+		OR = {
+			radical_right_wing_ruling_coalition = yes
+			radical_left_wing_ruling_coalition = yes
+		}
+		
+		#THIS controls a state where TARGET has monuments
+		scope:target_country = {
+			any_scope_state = {
+				has_monuments_in_scope = yes
+				controller = scope:actor
+			}
+		}
+		
+	}
+
+	accept_effect = {
+		
+		#THIS gains infamy and international hatred for destroying cultural heritage
+		scope:actor = { change_infamy = 20 }
+		hidden_effect = {
+			every_country = {
+				set_relations = { country = scope:actor value = -50 }
+			}
+		}
+		
+		#Destroy monuments
+		scope:target_country = { 
+			
+			#Destroy a random monument
+			random_scope_state = {
+				limit = {
+					has_monuments_in_scope = yes
+					controller = scope:actor
+				}
+				destroy_monuments_effect = yes
+			}
+			
+			#TARGET loses war support
+			custom_tooltip = {
+				text = lose_10_war_support_event.tt
+				every_diplomatic_play = {
+					limit = {
+						is_war = yes
+						is_diplomatic_play_participant = scope:actor
+						is_diplomatic_play_participant = scope:target_country
+					}
+					add_diplomatic_play_war_support = { target = scope:target_country value = -10 }
+				}
+			}
+			
+		}
+		
+		#Domestic reaction
+		anger_pacifists_small = yes
+		
+	}
+	
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			
+			#Do not disturb history
+			NOT = { has_global_variable = historical_railroading_active }
+			
+			#THIS is losing the war against TARGET
+			has_war_with = scope:target_country
+			any_scope_war = {
+				has_war_support = { target = scope:actor value < -50 }
+			}
+			
+			#THIS has no chance of ever winning conventionally
+			scope:target_country = {
+				country_rank > scope:actor.country_rank
+				army_size > scope:actor.army_size
+			}
+			
+			#Country unrest is high
+			radical_fraction = {
+				value > 0.5
+			}
+			
+		}
+		
+	}
+	
+}
