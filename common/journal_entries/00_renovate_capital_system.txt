@@ -1,0 +1,145 @@
+je_renovate_capital_system = {
+	icon = "gfx/interface/icons/invention_icons/urban_planning.dds"
+
+	group = je_group_technology
+	
+	is_shown_when_inactive = {
+		
+		
+	}
+	
+	possible = {
+		
+		#Added by decision
+		
+	}
+
+	immediate = {
+		
+		#Construction time
+		set_variable = { 
+			name = renovate_capital_progress
+			value = 0 
+		}
+		
+	}
+
+	complete = {
+		
+		#Capital renovated
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+		
+	}
+	
+	on_complete = {
+		
+		capital ?= { 
+			add_modifier = { name = grand_capital }
+		}
+		
+	}
+	
+	fail = {
+	
+		OR = {
+			in_default = yes
+			has_revolution = yes
+			is_not_sufficiently_independent = yes
+			capital ?= { is_split_state = yes }
+		}
+		
+	}
+	
+	on_fail = {
+	
+		#Clear variables
+		remove_variable = renovate_capital_progress
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			strata = rich
+		}
+		add_radicals = {
+			value = medium_radicals
+			strata = middle
+		}
+		
+	}
+	
+	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
+	modifiers_while_active = {
+		renovate_capital_dev_cost
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = yes
+	
+	current_value = {
+		value = root.var:renovate_capital_progress
+	}
+
+	goal_add_value = {
+		add = 120
+	}
+	
+	on_monthly_pulse = {
+		
+		#Add progress
+		effect = {
+		
+			if = {
+				limit = { in_default = no }
+				if = {
+					limit = { government_wage_level = very_high }
+					change_variable = {
+						name = renovate_capital_progress
+						add = 5
+					}
+				}
+				else_if = {
+					limit = { government_wage_level = high }
+					change_variable = {
+						name = renovate_capital_progress
+						add = 4
+					}
+				}
+				else_if = {
+					limit = { government_wage_level = medium }
+					change_variable = {
+						name = renovate_capital_progress
+						add = 3
+					}
+				}
+				else_if = {
+					limit = { government_wage_level = low }
+					change_variable = {
+						name = renovate_capital_progress
+						add = 2
+					}
+				}
+				else = {
+					change_variable = {
+						name = renovate_capital_progress
+						add = 1
+					}
+				}
+				clamp_variable = {
+					name = renovate_capital_progress
+					max = 120
+					min = 0
+				}
+			}
+			
+		}
+		
+	}
+	
+}
