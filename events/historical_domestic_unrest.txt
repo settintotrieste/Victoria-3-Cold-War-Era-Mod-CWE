@@ -2281,3 +2281,269 @@ historical_domestic_unrest.25 = {
     }
 
 }
+
+# 1959 Tibetan Uprising
+historical_domestic_unrest.26 = {
+    type = country_event
+	placement = scope:tibetan_capital
+
+    title = PRC_tibetan_uprising.t 								# Title of the event; ADD LOCALISATION
+    desc = PRC_tibetan_uprising.d 								# Description of the event; ADD LOCALISATION
+    #flavor = PRC_tibetan_uprising.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		OR = { c:PRC ?= this c:CHI ?= this }					# Change TAG of the overlord ****
+		game_date >= 1959.3.10									# START DATE: Date colony became self governing ****
+		game_date < 1969.3.10									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Cause of unrest
+		NOT = { exists = c:TIB }
+		has_state_in_state_region = STATE_LHASA
+		
+		# Event has not been fired before
+		NOT = { has_variable = PRC_tibetan_uprising_hdu }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = s:STATE_LHASA }
+			save_scope_as = tibetan_capital
+		}
+	
+		# Fire only once
+		set_variable = PRC_tibetan_uprising_hdu					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		
+		#Nationalist agitation
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:tibetan }	# Change homeland identity to match colony to be released ****
+				OR = {
+					state_region = s:STATE_LHASA
+					state_region = s:STATE_NGARI
+				}
+		 	}
+			add_radicals_in_state = {
+				value = large_radicals
+				culture = cu:tibetan						# Change culture ****
+			}
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		change_infamy = 10
+		
+		set_global_variable = 1959_tibetan_uprising
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2			# No
+		default_option = yes
+		
+		#Set Tibet free
+		create_country = {
+			tag = TIB										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:tibetan_capital
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# Laws
+				effect_starting_politics_theocratic_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+				
+				effect_starting_politics_semi_gold_system = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "tenzin_gyatso_first_name"
+					last_name = "tenzin_gyatso_last_name"
+					ruler = yes ig_leader = yes historical = yes
+					birth_date = 1935.7.6
+					interest_group = ig_devout
+					ideology = ideology_democratic
+					religion = rel:gelugpa
+					culture = cu:tibetan
+					traits = {
+						innovative
+						charismatic
+						tactful
+					}
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+				
+			}
+		}
+		if = {
+			limit = { exists = c:TIB }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:tibetan }		# Change homeland identity to match colony to be released ****
+					OR = {
+						state_region = s:STATE_LHASA
+						state_region = s:STATE_NGARI
+					}
+				}
+				set_state_owner = c:TIB								# Change TAG to colony ****
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Tenzin Gyatso in India
+historical_domestic_unrest.27 = {
+    type = country_event
+
+    title = HND_tibetan_movement.t 								# Title of the event; ADD LOCALISATION
+    desc = HND_tibetan_movement.d 								# Description of the event; ADD LOCALISATION
+    #flavor = HND_tibetan_movement.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		has_global_variable = 1959_tibetan_uprising
+		
+		#Overlord conditions
+		c:HND ?= this											# Change TAG of the overlord ****
+		game_date >= 1959.3.30									# START DATE: Date colony became self governing ****
+		game_date < 1969.3.30									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Cause of unrest
+		OR = { 
+			AND = { 
+				exists = c:PRC
+				c:PRC ?= {
+					is_a_communist_government = yes
+					has_state_in_state_region = STATE_LHASA
+					is_adjacent_to_country = ROOT
+				}
+			}
+			AND = { 
+				exists = c:CHI
+				c:CHI ?= {
+					is_a_communist_government = yes
+					has_state_in_state_region = STATE_LHASA
+					is_adjacent_to_country = ROOT
+				}
+			}
+		}
+		
+		#Have space for agitator
+		empty_agitator_slots >= 1
+		
+		# Event has not been fired before
+		NOT = { has_variable = HND_tibetan_movement_hdu }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = HND_tibetan_movement_hdu					# Change variable ****
+		
+	}
+    
+    option = {
+        name = HND_tibetan_movement.option.1					# Yes
+        highlighted_option = yes
+		
+		#Create agitator
+		create_character = {
+			first_name = "tenzin_gyatso_first_name"
+			last_name = "tenzin_gyatso_last_name"
+			is_agitator = yes historical = yes
+			birth_date = 1935.7.6
+			interest_group = ig_devout
+			ideology = ideology_democratic
+			culture = cu:tibetan
+			religion = rel:gelugpa
+			traits = {
+				innovative
+				charismatic
+				tactful
+			}
+			on_created = { change_character_religion = rel:gelugpa }
+		}
+		
+		random_country = {
+			limit = { 
+				OR = { c:CHI ?= this c:PRC ?= this } 
+				has_state_in_state_region = STATE_LHASA
+			}
+			change_relations = { country = ROOT value = -50 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = HND_tibetan_movement.option.2				# No
+		default_option = yes
+		
+		random_country = {
+			limit = { 
+				OR = { c:CHI ?= this c:PRC ?= this } 
+				has_state_in_state_region = STATE_LHASA
+			}
+			change_relations = { country = ROOT value = 25 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
