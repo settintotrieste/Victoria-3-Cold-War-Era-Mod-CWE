@@ -1,0 +1,148 @@
+namespace = JAP_gov_changes
+
+# The 1947 Constitution - USA
+JAP_gov_changes.1 = {
+    type = country_event
+	placement = c:JAP
+
+    title = JAP_1947_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = JAP_1947_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = JAP_1947_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		has_global_variable = 1946_start_date
+		
+		#Overlord conditions
+		c:USA ?= this
+		game_date >= 1947.5.3									# START DATE: Date colony became self governing ****
+		game_date < 1957.5.3									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes
+		is_sufficiently_independent = yes
+		is_at_war = no
+		
+		#US occupation of Japan
+		exists = c:JAP
+		c:JAP = {
+			OR = { 
+				is_a_constitutional_monarchy_regime = yes
+				is_subject_type = subject_type_mandate
+			}
+			NOT = { is_sufficiently_independent = yes }				# is_vassal = no
+			is_direct_subject_of = c:USA			
+			is_at_war = no											# war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = JAP_1947_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = JAP_1947_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Impose law on Japan
+		c:JAP = {
+			effect_starting_politics_democratic = yes
+			activate_law = law_type:law_no_war
+			activate_law = law_type:law_no_espionage
+			trigger_event = { id = JAP_gov_changes.2 }
+		}
+		
+		#International reaction
+		every_country = {
+			limit = { 
+				is_adjacent_to_country = c:JAP
+				is_a_communist_government = yes
+			}
+			change_relations = { country = c:JAP value = 50 }
+		}
+		
+		#Change infamy
+		change_infamy = -10
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#International reaction
+		every_country = {
+			limit = { 
+				is_adjacent_to_country = c:JAP
+				is_a_communist_government = yes
+			}
+			change_relations = { country = ROOT value = -100 }
+			change_relations = { country = c:JAP value = -100 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The 1947 Constitution - Notice to JAP
+JAP_gov_changes.2 = {
+    type = country_event
+
+    title = JAP_1947_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = JAP_1947_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = JAP_1947_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by event
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = notice_of_3P_action.option						# Accept
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_landowners
+		}
+		
+    }
+
+}
