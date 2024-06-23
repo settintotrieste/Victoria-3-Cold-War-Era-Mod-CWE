@@ -1187,10 +1187,15 @@ historical_union_formation.17 = {
 			}
 			c:FRA = { 
 				copy_laws = c:GBR
-				annex_with_incorporation = c:GBR 
+				annex_with_incorporation = c:GBR
 			}
 		}
+		else = {
+			annex_with_incorporation = c:FRA
+		}
 		change_tag = FBU
+		add_primary_culture = cu:british
+		add_primary_culture = cu:french
 		
 		#Correct capital
 		if = {
@@ -1212,6 +1217,308 @@ historical_union_formation.17 = {
 				trigger = { 
 					has_global_variable = historical_railroading_active
 					c:FRA = { is_player = no }
+				} 
+				add = -100 
+			}
+		}
+		
+    }
+
+}
+
+#Yugoslav-Bulgarian Union - YUG
+historical_union_formation.18 = {
+    type = country_event
+	placement = c:BUL
+
+    title = YUG_BUL_union.t 				# Title of the event; ADD LOCALISATION
+    desc = YUG_BUL_union.d 					# Description of the event; ADD LOCALISATION
+    #flavor = YUG_BUL_union.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		has_global_variable = 1946_start_date
+		
+		#Overlord conditions
+		c:YUG ?= this
+		game_date >= 1947.8.1									# START DATE: Date colony became self governing ****
+		game_date < 1957.8.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Union candidate conditions
+		exists = c:BUL
+		c:BUL = { 												# Change TAG of the colony ****
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = YUG_BUL_union_huf }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = YUG_BUL_union_huf						# Change variable ****
+		
+	}
+    
+	option = {
+        name = historical_union_formation.option.1				# Accept annexation by FROM
+        highlighted_option = yes
+		
+		#Option to accept
+		if = {
+			limit = { c:BUL = { is_subject_of = c:SOV } }
+			random_country = {
+				limit = {  
+					c:SOV ?= this
+				}
+				trigger_event = { id = historical_union_formation.20 }
+			}
+		}
+		else = {
+			c:BUL = { 
+				trigger_event = { id = historical_union_formation.19 } 
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Refuse annexation by FROM
+		default_option = yes
+		
+		#Domestic reaction
+		add_loyalists = {
+			value = large_radicals
+			culture = cu:serb
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Yugoslav-Bulgarian Union - BUL
+historical_union_formation.19 = {
+    type = country_event
+	placement = c:YUG
+
+    title = YUG_BUL_union.t 				# Title of the event; ADD LOCALISATION
+    desc = YUG_BUL_union.d 					# Description of the event; ADD LOCALISATION
+    #flavor = YUG_BUL_union.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.1				# Refuse land transfer request by FROM
+		highlighted_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:YUG
+			value = -100
+		}
+		
+		#Soviet Bloc
+		if = {
+			limit = { c:BUL = { is_subject_of = c:SOV } }
+			change_relations = {
+				country = c:SOV
+				value = 50
+			}
+			every_country = {
+				limit = { 
+					NOT = { THIS = ROOT } 
+					is_subject_of = c:SOV 
+				}
+				change_relations = {
+					country = ROOT
+					value = 25
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+			modifier = { 
+				trigger = { 
+					c:YUG = { is_player = yes }
+				} 
+				add = -100 
+			}
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Accept land transfer request by FROM
+		default_option = yes
+		
+		#YUG annexes BUL
+		if = {
+			limit = { 
+				c:BUL = { is_player = no }
+			}
+			c:YUG = { 
+				annex_with_incorporation = c:BUL
+				add_primary_culture = cu:bulgarian
+			}
+		}
+		else_if = {
+			limit = { 
+				c:YUG = { is_player = no }
+			}
+			copy_laws = c:YUG
+			annex_with_incorporation = c:YUG
+			change_tag = YUG
+			add_primary_culture = cu:yugoslavian
+		}
+		else = {
+			c:YUG = { 
+				annex_with_incorporation = c:BUL 
+				add_primary_culture = cu:bulgarian
+			}
+		}
+		
+		#Correct capital
+		if = {
+			limit = { 
+				capital ?= { NOT = { state_region = s:STATE_NORTHERN_SERBIA } }
+			}
+			set_capital = STATE_NORTHERN_SERBIA
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			culture = cu:bulgarian
+		}
+		
+		ai_chance = { 
+			base = 10 
+			modifier = { 
+				trigger = { 
+					has_global_variable = historical_railroading_active
+					c:YUG = { is_player = no }
+				} 
+				add = -100 
+			}
+		}
+		
+    }
+
+}
+
+#Yugoslav-Bulgarian Union - SOV
+historical_union_formation.20 = {
+    type = country_event
+	placement = c:YUG
+
+    title = YUG_BUL_union.t 				# Title of the event; ADD LOCALISATION
+    desc = YUG_BUL_union.d 					# Description of the event; ADD LOCALISATION
+    #flavor = YUG_BUL_union.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.1				# Refuse land transfer request by FROM
+		highlighted_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:YUG
+			value = -50
+		}
+		every_country = {
+			limit = { is_subject_of = ROOT }
+			change_relations = {
+				country = c:YUG
+				value = -25
+			}
+		}
+		
+		#FROM is happy!
+		change_relations = {
+			country = c:BUL
+			value = 50
+		}
+		
+		ai_chance = { 
+			base = 90 
+			modifier = { 
+				trigger = { 
+					c:YUG = { is_player = yes }
+				} 
+				add = -100 
+			}
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Accept land transfer request by FROM
+		default_option = yes
+		
+		#Allow annexation of BUL by YUG
+		c:BUL = { 
+			trigger_event = { id = historical_union_formation.19 } 
+		}
+		
+		#FROM is happy!
+		change_relations = {
+			country = c:YUG
+			value = 200
+		}
+		
+		ai_chance = { 
+			base = 10 
+			modifier = { 
+				trigger = { 
+					has_global_variable = historical_railroading_active
+					c:YUG = { is_player = no }
 				} 
 				add = -100 
 			}
