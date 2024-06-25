@@ -3,6 +3,10 @@
 	
 	type = diplomatic
 	
+	will_form_power_bloc = {
+		global_country_ranking = 1
+	}
+	
 	undesirable_infamy_level = {
 		value = 25
 	}
@@ -93,10 +97,11 @@
 		humiliation = 2.0
 		liberate_subject = 1.5
 		liberate_country = 1.5
+		force_nationalization = 0.25
 	}
 
 	possible = {
-		always = yes
+		is_subject = no
 	}
 	
 	weight = {
@@ -113,6 +118,10 @@ ai_strategy_territorial_expansion = {
 	icon = "gfx/interface/icons/ai_strategy_icons/territorial_expansion.dds"
 	
 	type = diplomatic
+	
+	will_form_power_bloc = {
+		global_country_ranking <= 3
+	}
 	
 	undesirable_infamy_level = {
 		value = 50
@@ -206,12 +215,14 @@ ai_strategy_territorial_expansion = {
 	wargoal_weights = {
 		conquer_state = 1.5
 		return_state = 1.5
+		force_nationalization = 0.25
 	}	
 	
 	secret_goal_scores = {
 		conquer = {
 			if = {
 				limit = {
+					NOT = { scope:target_country = { is_subject_of = root } }
 					can_reach_target_country = yes
 					has_strategic_adjacency = scope:target_country
 					scope:target_country.country_rank <= root.country_rank
@@ -235,12 +246,22 @@ ai_strategy_territorial_expansion = {
 	}
 	
 	possible = {
-		always = yes
+		is_subject = no
 	}
 
 	weight = {
 		value = 10
-			
+		
+		# AI implications for Power Blocs: 'Territorial Expansion' strategy is more likely for Blocs with Aggressive Coordination
+		if = {
+			limit = {
+				power_bloc ?= {
+					has_principle_group = principle_group:principle_group_aggressive_coordination
+				}
+			}
+			add = 5
+		}
+		
 		if = {
 			limit = { ig:ig_armed_forces = { is_powerful = yes } }
 			multiply = 1.5
@@ -249,7 +270,8 @@ ai_strategy_territorial_expansion = {
 		if = {
 			limit = { country_is_in_europe = yes }
 			multiply = 0.25
-		}	
+		}
+		
 	}
 }
 
@@ -257,6 +279,10 @@ ai_strategy_colonial_expansion = {
 	icon = "gfx/interface/icons/ai_strategy_icons/colonial_expansion.dds"
 	
 	type = diplomatic
+	
+	will_form_power_bloc = {
+		global_country_ranking <= 3
+	}
 	
 	undesirable_infamy_level = {
 		value = 25
@@ -380,10 +406,11 @@ ai_strategy_colonial_expansion = {
 				limit = {
 					scope:target_country = { NOT = { is_country_type = unrecognized } }
 				}
-				multiply = 0.25
+				add = -100
 			}		
 			if = {
 				limit = {
+					NOT = { scope:target_country = { is_subject_of = root } }
 					has_strategic_adjacency = scope:target_country
 					scope:target_country = { is_country_type = unrecognized }
 				}
@@ -395,10 +422,11 @@ ai_strategy_colonial_expansion = {
 				limit = {
 					scope:target_country = { NOT = { is_country_type = unrecognized } }
 				}
-				multiply = 0.25
+				add = -100
 			}		
 			if = {
 				limit = {
+					NOT = { scope:target_country = { is_subject_of = root } }
 					has_strategic_adjacency = scope:target_country
 					scope:target_country = { is_country_type = unrecognized }
 				}
@@ -411,10 +439,11 @@ ai_strategy_colonial_expansion = {
 		conquer_state = 1.5
 		reduce_autonomy = 1.5
 		take_treaty_port = 1.5
+		force_nationalization = 0.5
 	}	
 		
 	possible = {
-		navy_size >= 25
+		is_subject = no
 		is_country_type = recognized
 		OR = {
 			has_law = law_type:law_colonial_resettlement
@@ -434,6 +463,16 @@ ai_strategy_colonial_expansion = {
 			limit = { country_rank >= rank_value:great_power }
 			add = 5
 		}			
+		
+		# AI implications for Power Blocs: 'Colonial Expansion' strategy is more likely for Blocs with Colonial Offices
+		if = {
+			limit = {
+				power_bloc ?= {
+					has_principle_group = principle_group:principle_group_colonial_offices
+				}
+			}
+			add = 5
+		}
 		
 		if = {
 			limit = { navy_size < 50 }
@@ -507,6 +546,7 @@ ai_strategy_armed_isolationism = {
 		make_protectorate = 0.0
 		reduce_autonomy = 0.0
 		make_tributary = 0.0
+		force_nationalization = 2.0
 	}	
 	
 	possible = {
@@ -549,6 +589,10 @@ ai_strategy_economic_imperialism = {
 	
 	type = diplomatic
 	
+	will_form_power_bloc = {
+		global_country_ranking <= 3
+	}
+	
 	undesirable_infamy_level = {
 		value = 25
 	}
@@ -571,6 +615,19 @@ ai_strategy_economic_imperialism = {
 			add = 0.25
 		}
 	}			
+	
+	obligation_value = {
+		if = { # Countries with Economic Imperialism is always looking to bring more countries into their market
+			limit = {
+				scope:target_country.country_rank < country_rank
+				NOR = {
+					scope:target_country = { is_subject = yes }
+					is_in_customs_union_with = scope:target_country
+				}
+			}
+			add = 5
+		}
+	}
 	
 	diplomatic_play_neutrality = {
 		value = 10
@@ -720,7 +777,8 @@ ai_strategy_economic_imperialism = {
 
 	wargoal_weights = {
 		make_protectorate = 1.5	
-		make_tributary = 1.5	
+		make_tributary = 1.5
+		force_nationalization = 1.5		
 	}
 
 	treaty_port_value = {
@@ -745,7 +803,32 @@ ai_strategy_economic_imperialism = {
 		}	
 	}
 	
-	wargoal_scores = {	
+	wargoal_scores = {
+		# Need to have identical weights for foreign_investment_rights and open_market here as which one is used depends on whether Foreign Investment is available
+		foreign_investment_rights = {
+			value = 0
+
+			if = {
+				limit = {
+					country_rank >= rank_value:great_power
+					can_reach_target_country = yes
+					scope:target_country = {
+						has_law = law_type:law_isolationism
+						gdp >= 5000000 # Not worth doing against small markets
+					}
+				}
+				add = {
+					value = 100
+
+					# Less interested in foreign investment rights as a sway or defensive wargoal
+					if = {
+						limit = { is_diplomatic_play_involved_with = scope:target_country }
+						multiply = 0.2
+					}
+					
+				}
+			}
+		}
 		open_market = {
 			value = 0
 		
@@ -773,6 +856,7 @@ ai_strategy_economic_imperialism = {
 	}
 		
 	possible = {
+		is_subject = no
 		navy_size >= 25
 		is_country_type = recognized
 		NOT = { has_law = law_type:law_isolationism }
@@ -789,6 +873,16 @@ ai_strategy_economic_imperialism = {
 			limit = { country_rank >= rank_value:great_power }
 			add = 10
 		}	
+		
+		# AI implications for Power Blocs: 'Economic Imperialism' strategy is more likely for Blocs with Market Unification
+		if = {
+			limit = {
+				power_bloc ?= {
+					has_principle_group = principle_group:principle_group_market_unification
+				}
+			}
+			add = 5
+		}
 
 		if = {
 			limit = { navy_size < 50 }
@@ -1638,6 +1732,7 @@ ai_strategy_socialism_in_one_country = {
 		befriend = {		
 			if = {
 				limit = {
+					NOT = { scope:target_country = { is_subject_of = root } }
 					scope:target_country = { has_law = law_type:law_HOS_communist_leader }
 				}
 				add = 200
@@ -1650,6 +1745,7 @@ ai_strategy_socialism_in_one_country = {
 		make_protectorate = 0.0
 		reduce_autonomy = 0.0
 		make_tributary = 0.0
+		force_nationalization = 5.0
 	}	
 	
 	possible = {
@@ -1719,6 +1815,10 @@ ai_strategy_world_revolution = {
 	icon = "gfx/interface/icons/ai_strategy_icons/revolutionary.dds"
 	
 	type = diplomatic
+	
+	will_form_power_bloc = {
+		always = yes
+	}
 	
 	undesirable_infamy_level = {
 		value = 75
@@ -1814,7 +1914,7 @@ ai_strategy_world_revolution = {
 				limit = {
 					scope:target_country = { has_law = law_type:law_HOS_communist_leader }
 				}
-				multiply = 1.5
+				add = 100
 			}		
 			if = {
 				limit = {
@@ -1835,6 +1935,7 @@ ai_strategy_world_revolution = {
 		dominate = {
 			if = {
 				limit = {
+					NOT = { scope:target_country = { is_subject_of = root } }
 					has_strategic_adjacency = scope:target_country
 					scope:target_country = { NOT = { has_law = law_type:law_HOS_communist_leader } }
 				}
@@ -1842,6 +1943,7 @@ ai_strategy_world_revolution = {
 			}
 			if = {
 				limit = {
+					NOT = { scope:target_country = { is_subject_of = root } }
 					has_strategic_adjacency = scope:target_country
 					scope:target_country = { country_rank < root.country_rank }
 				}
@@ -1864,9 +1966,11 @@ ai_strategy_world_revolution = {
 		make_protectorate = 1.0
 		reduce_autonomy = 1.0
 		make_tributary = 1.0
+		force_nationalization = 1.0
 	}	
 		
 	possible = {
+		is_subject = no
 		has_law = law_type:law_HOS_communist_leader
 	}
 
@@ -1930,6 +2034,10 @@ ai_strategy_anti_imperialism = {
 	icon = "gfx/interface/icons/ai_strategy_icons/protect_region.dds"
 	
 	type = diplomatic
+	
+	will_form_power_bloc = {
+		global_country_ranking <= 3
+	}
 	
 	undesirable_infamy_level = {
 		value = 25
@@ -2019,6 +2127,22 @@ ai_strategy_anti_imperialism = {
 			multiply = 2
 		}
 
+		# AI implications for Power Blocs: Generally more aggressive against other Bloc leaders with Exploitation of Members
+		if = {
+			limit = {
+				scope:target_country = {
+					is_power_bloc_leader = yes
+					NOT = {
+						is_in_same_power_bloc = root
+					}
+					power_bloc ?= {
+						has_principle_group = principle_group:principle_group_exploit_members
+					}
+				}
+			}
+			multiply = 5
+		}
+
 		# More aggressive against ideological enemies, a bit less aggressive against ideological allies
 		if = {
 			limit = {
@@ -2070,12 +2194,14 @@ ai_strategy_anti_imperialism = {
 		befriend = {		
 			if = {
 				limit = {
+					NOT = { scope:target_country = { is_subject_of = root } }
 					scope:target_country = { has_law = law_type:law_HOS_communist_leader }
 				}
 				add = 100
 			}	
 			if = {
 				limit = {
+					NOT = { scope:target_country = { is_subject_of = root } }
 					scope:target_country = { is_country_type = unrecognized }
 				}
 				add = 50
@@ -2084,6 +2210,7 @@ ai_strategy_anti_imperialism = {
 		antagonize = {
 			if = {
 				limit = {
+					NOT = { scope:target_country = { is_subject_of = root } }
 					has_strategic_adjacency = scope:target_country
 					scope:target_country = { 
 						OR = { 
@@ -2096,6 +2223,7 @@ ai_strategy_anti_imperialism = {
 			}
 			if = {
 				limit = {
+					NOT = { scope:target_country = { is_subject_of = root } }
 					is_a_colonial_government = yes
 				}
 				add = 25
@@ -2108,9 +2236,11 @@ ai_strategy_anti_imperialism = {
 		humiliation = 1.5
 		liberate_subject = 5.0
 		liberate_country = 3.0
+		force_nationalization = 2.0
 	}
 
 	possible = {
+		is_subject = no
 		has_law = law_type:law_HOS_communist_leader
 	}
 	
@@ -2128,6 +2258,10 @@ ai_strategy_restore_natural_borders = {
 	icon = "gfx/interface/icons/ai_strategy_icons/protect_region.dds"
 	
 	type = diplomatic
+	
+	will_form_power_bloc = {
+		always = yes
+	}
 	
 	undesirable_infamy_level = {
 		value = 50
@@ -2231,12 +2365,14 @@ ai_strategy_restore_natural_borders = {
 	wargoal_weights = {
 		conquer_state = 1.5
 		return_state = 1.5
+		force_nationalization = 0.5
 	}
 
 	secret_goal_scores = {
 		conquer = {
 			if = {
 				limit = {
+					NOT = { scope:target_country = { is_subject_of = root } }
 					can_reach_target_country = yes
 					has_strategic_adjacency = scope:target_country
 					scope:target_country.country_rank <= root.country_rank
@@ -2258,6 +2394,7 @@ ai_strategy_restore_natural_borders = {
 			}
 			if = {
 				limit = { 
+					NOT = { scope:target_country = { is_subject_of = root } }
 					scope:target_country = { 
 						any_scope_state = {
 							OR = {
@@ -2274,7 +2411,7 @@ ai_strategy_restore_natural_borders = {
 	}
 		
 	possible = {
-		always = yes
+		is_subject = no
 	}
 
 	weight = {

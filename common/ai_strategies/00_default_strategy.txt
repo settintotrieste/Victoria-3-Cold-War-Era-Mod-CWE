@@ -4,6 +4,10 @@
 ai_strategy_default = {
 	icon = "gfx/interface/icons/ai_strategy_icons/placate_population.dds" # Never shown
 
+	# If this trigger evaluates to true for any active strategy, the AI will try to form a power bloc
+	# Empty trigger counts as evaluating false in this specific case
+	will_form_power_bloc = {}
+
 	# These are the tax levels the AI will try to stay within, though it can go above max tax level if in a financial emergency
 	# Using a different value in a strategy will override these values
 	desired_tax_level = low
@@ -50,6 +54,19 @@ ai_strategy_default = {
 	# Using a different value in a strategy will override this value
 	max_regressiveness = {
 		value = 25 
+	}
+	
+	# Added to willingness to support a country in diplomatic plays	
+	# Using this value in other strategies will function additively
+	# root = supporting country doing the AI evaluation
+	# scope:country = country we're evaluating support for (either initiator or target)
+	# scope:enemy_country = the opposing side's leader
+	# scope:diplomatic_play_type = the type of diplomatic play
+	# scope:is_initiator = bool, set to true if evaluating support for initiator, false if target
+	# NOTE: You need to include a description when adding values here so there are correct tooltips, this is different from most of ai strategy data!
+	diplomatic_play_support = {
+		value = 0
+		
 	}
 	
 	# Added to base neutrality in diplomatic plays	
@@ -283,7 +300,12 @@ ai_strategy_default = {
 				}						
 			}
 			multiply = 0.25
-		}			
+		}
+
+		if = { # Overlords care a bit more about Obligations from their Subjects, since they can use them to keep them in check
+			limit = { scope:target_country = { is_subject_of = root } }
+			add = 10
+		}
 
 		min = 0
 		max = 30
@@ -492,6 +514,20 @@ ai_strategy_default = {
 					scope:target_state = { NOT = { is_homeland_of_country_cultures = root } }
 				}
 				add = -500
+			}
+			
+			#AI armed isolationism
+			if = {
+				limit = { 
+					has_strategy = ai_strategy_armed_isolationism 
+					scope:target_state = { 
+						NOR = {
+							owner = root
+							has_claim_by = root
+						}
+					}
+				}
+				multiply = 0
 			}
 
 		}
@@ -952,10 +988,7 @@ ai_strategy_default = {
 
 		if = {
 			limit = {
-				has_diplomatic_pact = {
-					who = scope:overlord
-					type = customs_union
-				}					
+				is_in_customs_union_with = scope:overlord					
 			}
 			add = 10
 		}					
@@ -1537,6 +1570,33 @@ ai_strategy_default = {
 		}		
 	}
 	
+	# What's the base AI desire to nationalize/privatize buildings
+	# Compares against NATIONALIZATION_DESIRE_NATIONALIZE_THRESHOLD & NATIONALIZATION_DESIRE_PRIVATIZE_THRESHOLD defines
+	# Using this value in other strategies will function additively
+	# A default value of 0 means the AI will tend to privatize most buildings
+	nationalization_desire = {
+		value = 0.0
+
+		if = {
+			limit = {
+				OR = { 
+					has_law = law_type:law_command_economy
+					has_law = law_type:law_semi_command_economy
+				}
+			}
+
+			add = 100
+		}
+		if = {
+			limit = {
+				has_law = law_type:law_state_capitalism
+			}
+
+			add = 50
+		}
+		
+	}
+	
 	# Add a multiplier to the score AI assigns to particular building groups (default 1)
 	# Using this value in other strategies will result in several multiplications
 	building_group_weights = {
@@ -1732,7 +1792,7 @@ ai_strategy_default = {
 					root = { NOT = { is_subject_of = scope:target_country } }
 				}
 				add = 150	
-			}
+			}				
 			
 			if = {
 				limit = {
@@ -1750,6 +1810,13 @@ ai_strategy_default = {
 				}
 				add = 100
 			}
+		
+			if = {
+				limit = {
+					has_je_befriend_reason = { TARGET = scope:target_country }
+				}
+				add = 500
+			}					
 			
 			multiply = {
 				value = "ai_ideological_opinion(scope:target_country)"
@@ -1758,6 +1825,18 @@ ai_strategy_default = {
 				min = 0.25
 				max = 2.0
 			}	
+			
+			multiply = {
+				value = 1
+				add = {
+					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+					multiply = 2
+				}
+				subtract = {
+					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+					divide = 2
+				}				
+			}			
 
 			if = {
 				limit = {	
@@ -1843,7 +1922,23 @@ ai_strategy_default = {
 				}
 				multiply = 0.5
 			}
+
+			if = {
+				limit = {
+					c:HAI ?= ROOT
+					scope:target_country = { has_variable = haiti_friend }
+				}
+				multiply = 3
+			}
 			
+			# AI implications for Power Blocs: 'befriend' secret goal is more likely towards the Bloc members
+			if = {
+				limit = {
+					is_in_same_power_bloc = scope:target_country
+				}
+				multiply = 1.5
+			}
+
 			if = {
 				limit = {
 					OR = {
@@ -1869,10 +1964,22 @@ ai_strategy_default = {
 						}	
 						scope:target_country = { relations:root <= relations_threshold:poor }		
 					}
-					
 				}
 				
-				add = 100					
+				add = 100	
+
+				if = {
+					limit = {
+						scope:target_country = { 
+							has_secret_goal = {
+								who = root
+								secret_goal = reconcile
+							}						
+						}											
+					}
+					
+					add = 200				
+				}					
 			}
 
 			multiply = {
@@ -1881,7 +1988,19 @@ ai_strategy_default = {
 				add = 1
 				min = 0.25
 				max = 2.0
-			}	
+			}
+
+			multiply = {
+				value = 1
+				add = {
+					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+					multiply = 2
+				}
+				subtract = {
+					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+					divide = 2
+				}				
+			}			
 
 			if = {
 				limit = {	
@@ -1978,6 +2097,22 @@ ai_strategy_default = {
 				}
 				multiply = 0.5
 			}	
+			
+			# AI implications for Power Blocs: 'reconcile' secret goal is more likely towards the Bloc members
+			if = {
+				limit = {
+					is_in_same_power_bloc = scope:target_country
+				}
+				multiply = 5
+			}
+			
+			# Historical enemies shouldn't start as conciliatory unless we explicitly script this in history
+			if = {
+				limit = {
+					game_date < 1836.1.2 
+				}
+				multiply = 0
+			}
 		}		
 		protect = {
 			value = 0
@@ -1992,6 +2127,13 @@ ai_strategy_default = {
 				add = 200
 			}
 			
+			if = {
+				limit = {
+					has_je_protect_reason = { TARGET = scope:target_country }
+				}
+				add = 500
+			}			
+			
 			multiply = {
 				value = "ai_ideological_opinion(scope:target_country)"
 				multiply = 0.05
@@ -1999,6 +2141,18 @@ ai_strategy_default = {
 				min = 0.25
 				max = 2.0
 			}	
+			
+			multiply = {
+				value = 1
+				add = {
+					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+					multiply = 2
+				}
+				subtract = {
+					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+					divide = 2
+				}				
+			}		
 
 			if = {
 				limit = {	
@@ -2078,6 +2232,14 @@ ai_strategy_default = {
 				multiply = 0.5
 			}				
 
+			# AI implications for Power Blocs: 'protect' secret goal is more likely towards the Bloc members
+			if = {
+				limit = {
+					is_in_same_power_bloc = scope:target_country
+				}
+				multiply = 2.5
+			}
+
 			if = {
 				limit = {
 					OR = {
@@ -2139,13 +2301,6 @@ ai_strategy_default = {
 				}
 				add = 50
 			}			
-			
-			if = {
-				limit = {		
-					is_subject_of = scope:target_country	
-				}
-				add = 100			
-			}
 
 			if = {
 				limit = {
@@ -2156,14 +2311,26 @@ ai_strategy_default = {
 				}
 				add = 500
 			}
-			
+
 			multiply = {
 				value = "ai_ideological_opinion(scope:target_country)"
 				multiply = -0.05
 				add = 1
 				min = 0.25
 				max = 2.0
-			}							
+			}	
+
+			multiply = {
+				value = 1
+				add = {
+					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+					multiply = 2
+				}
+				subtract = {
+					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+					divide = 2
+				}				
+			}			
 			
 			if = {
 				limit = {
@@ -2248,96 +2415,66 @@ ai_strategy_default = {
 					
 				}
 				multiply = 1.5
-			}
+			}			
 
-			# Shouldn't usually upset diplomatic pacts unless they're bankrupt or infamous
+			# AI implications for Power Blocs: 'antagonize' secret goal is more likely towards the country from another Bloc
 			if = {
 				limit = {
-					scope:target_country = { 
-						in_default = no 
-						infamy < infamy_threshold:notorious
-					}						
+					country_is_in_different_power_bloc = { TARGET = scope:target_country }
 				}
-
-				if = {
-					limit = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = defensive_pact
-						}	
-					}
-					multiply = 0.5
-				}	
-
-				if = {
-					limit = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = alliance
-						}		
-					}
-					multiply = 0.25
-				}	
-
-				if = {
-					limit = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = trade_agreement
-						}			
-					}
-					multiply = 0.5
-				}				
-
-				if = {
-					limit = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = customs_union
-						}								
-					}
-					multiply = 0.25
-				}				
-			}				
+				multiply = 1.5
+			}
+			# AI implications for Power Blocs: 'antagonize' secret goal is more likely towards the rival of the power struggle
+			else_if = {
+				limit = {
+					country_is_power_struggle_rival = { TARGET = scope:target_country }
+				}
+				multiply = 2
+			}
 			
 			if = {
-				limit = { is_still_learning = yes }
+				limit = { scope:target_country = { is_still_learning = yes } }
 				multiply = 0
 			}	
 
+			# Countries scripted to have a friendly pact or same power bloc shouldn't start with hostile goals
+			if = {
+				limit = { 
+					game_date < 1950.1.2
+					OR = {
+						is_in_same_power_bloc = scope:target_country
+						has_friendly_diplomatic_pact = { TARGET = scope:target_country } 			
+					}				
+				}
+				multiply = 0
+			}
 		}
 		conquer = {
 			value = 0
 
-			# PUT ALL ADDITIVE CONQUER SCORES INSIDE THE BELOW IF STATEMENT TO PREVENT AI FROM ATTACKING UNREACHABLE COUNTRIES
 			if = {
-				limit = { can_reach_target_country = yes }
+				limit = { has_je_conquest_reason = { TARGET = scope:target_country } }
+				add = 500
+			}		
 
-				if = {
-					limit = {
-						NOT = { is_country_type = unrecognized }
-						scope:target_country = { is_country_type = unrecognized }
-					}
-					add = 50
-
-					if = {
-						limit = { has_technology_researched = civilizing_mission }
-						add = 50
-					}
+			if = {
+				limit = {
+					NOT = { is_country_type = unrecognized }
+					scope:target_country = { is_country_type = unrecognized }
 				}
+				add = 50
+			}		
 
-				if = {
-					limit = {
-						scope:target_country = {
-							any_scope_state = {
-								root = { has_claim = prev }
-							}
+			if = {
+				limit = {
+					scope:target_country = {
+						any_scope_state = {
+							root = { has_claim = prev }
 						}
 					}
-					add = 200
 				}
-
-			}
+				add = 200
+			}		
 
 			multiply = {
 				value = "ai_ideological_opinion(scope:target_country)"
@@ -2346,6 +2483,18 @@ ai_strategy_default = {
 				min = 0.25
 				max = 2.0
 			}	
+			
+			multiply = {
+				value = 1
+				add = {
+					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+					multiply = 2
+				}
+				subtract = {
+					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+					divide = 2
+				}				
+			}				
 
 			if = {
 				limit = { scope:target_country = { has_modifier = declared_bankruptcy } }
@@ -2428,56 +2577,21 @@ ai_strategy_default = {
 					has_game_rule = low_ai_aggression
 				}
 				multiply = 0.5
-			}			
-
-			# Shouldn't usually upset diplomatic pacts unless they're bankrupt or infamous
+			}		
+			
+			# AI implications for Power Blocs: 'conquer' secret goal is more likely towards the country from another Bloc
 			if = {
 				limit = {
-					scope:target_country = { 
-						in_default = no 
-						infamy < infamy_threshold:notorious
-					}						
+					country_is_in_different_power_bloc = { TARGET = scope:target_country }
 				}
+				multiply = 1.5
+			}
 
-				if = {
-					limit = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = defensive_pact
-						}	
-					}
-					multiply = 0.5
-				}	
-
-				if = {
-					limit = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = alliance
-						}		
-					}
-					multiply = 0.25
-				}	
-
-				if = {
-					limit = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = trade_agreement
-						}			
-					}
-					multiply = 0.5
-				}				
-
-				if = {
-					limit = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = customs_union
-						}								
-					}
-					multiply = 0.25
-				}				
+			if = {
+				limit = {
+					can_reach_target_country = no
+				}
+				multiply = 0.0
 			}
 
 			if = {
@@ -2488,17 +2602,37 @@ ai_strategy_default = {
 			}			
 			
 			if = {
-				limit = { is_still_learning = yes }
+				limit = { scope:target_country = { is_still_learning = yes } }
+				multiply = 0
+			}
+			
+			# Countries scripted to have a friendly pact or same power bloc shouldn't start with hostile goals
+			if = {
+				limit = { 
+					game_date < 1950.1.2
+					OR = {
+						is_in_same_power_bloc = scope:target_country
+						has_friendly_diplomatic_pact = { TARGET = scope:target_country } 			
+					}				
+				}
 				multiply = 0
 			}
 		}		
 		dominate = {
 			value = 0
+			
+			if = {
+				limit = {
+					has_je_subjugation_reason = { TARGET = scope:target_country }
+					NOT = { is_subject_of = root }
+				}
+				add = 500
+			}					
 
 			if = {
 				limit = {
 					scope:target_country = { 
-						is_subject_of = root
+						is_direct_subject_of = root
 						relations:root < relations_threshold:cordial 
 						scope:target_country.country_rank < rank_value:major_power
 					}
@@ -2514,7 +2648,12 @@ ai_strategy_default = {
 					scope:target_country = { is_country_type = unrecognized }
 					scope:target_country = { NOT = { is_subject_of = root }	}
 				}
-				add = 25				
+				add = 25
+				
+				if = {
+					limit = { has_technology_researched = civilizing_mission }
+					add = 25
+				}					
 			}			
 			
 			if = {
@@ -2527,6 +2666,7 @@ ai_strategy_default = {
 				add = 25
 			}
 			
+
 			multiply = {
 				value = "ai_ideological_opinion(scope:target_country)"
 				multiply = -0.05
@@ -2534,6 +2674,18 @@ ai_strategy_default = {
 				min = 0.25
 				max = 2.0
 			}	
+			
+			multiply = {
+				value = 1
+				add = {
+					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+					multiply = 2
+				}
+				subtract = {
+					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+					divide = 2
+				}				
+			}				
 
 			if = {
 				limit = {	
@@ -2659,14 +2811,19 @@ ai_strategy_default = {
 
 				if = {
 					limit = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = customs_union
-						}								
+						is_in_customs_union_with = scope:target_country
 					}
 					multiply = 0.25
 				}				
 			}			
+
+			# AI implications for Power Blocs: 'dominate' secret goal is more likely towards the country from another Bloc
+			if = {
+				limit = {
+					country_is_in_different_power_bloc = { TARGET = scope:target_country }
+				}
+				multiply = 1.5
+			}
 
 			if = {
 				limit = {		
@@ -2689,10 +2846,34 @@ ai_strategy_default = {
 				multiply = 0.0	
 			}
 			
+			# AI shouldn't be aggressive against subjects of subjects
 			if = {
-				limit = { is_still_learning = yes }
+				limit = {	
+					scope:target_country = { 
+						is_subject_of = root 
+						NOT = { is_direct_subject_of = root }
+					}	
+				}
+				multiply = 0.0	
+			}			
+			
+			if = {
+				limit = { scope:target_country = { is_still_learning = yes } }
 				multiply = 0
 			}
+			
+			# Countries scripted to have a friendly pact, historical overlord status or same power bloc shouldn't start with randomly generated hostile goals
+			if = {
+				limit = { 
+					game_date < 1836.1.2
+					OR = {
+						is_in_same_power_bloc = scope:target_country
+						has_friendly_diplomatic_pact = { TARGET = scope:target_country }
+						scope:target_country = { is_subject_of = root }	
+					}				
+				}
+				multiply = 0
+			}			
 		}			
 	}
 	
@@ -2843,6 +3024,26 @@ ai_strategy_default = {
 		humiliation = {
 			value = 25
 		}	
+		
+		join_power_bloc = {
+			if = {
+				limit = {
+					is_power_bloc_leader = yes
+					has_attitude = {
+						who = scope:target_country
+						attitude = domineering
+					}	
+				}
+
+				add = {
+					value = scope:target_country.ai_subject_value:root
+					divide = 2
+				}	
+			}					
+
+			min = 0
+			max = 50	
+		}
 
 		regime_change = {
 			value = 0
@@ -2887,6 +3088,43 @@ ai_strategy_default = {
 				add = 100
 			}					
 		}		
+		
+		force_nationalization = {
+			value = 0
+
+			# Score by how much it would cost to nationalize all their assets
+			add = {
+				value = "nationalization_cost(scope:target_country)"
+				divide = {
+					value = 1000000
+				}
+				max = 50 # Max score at 50 million nationalization cost
+			}			
+
+			# Score by fraction of GDP that is owned by the target country
+			add = {
+				value = "gdp_ownership_ratio(scope:target_country)"
+				divide = {
+					value = root.gdp 
+					min = 100000 # Set a floor for GDP to avoid dividing by zero or other very small numbers
+				}
+				multiply = 10 # Max score at 10%+ of GDP
+				max = 50
+			}
+
+			if = {
+				limit = {
+					NOT = {
+						has_attitude = {
+							who = scope:target_country
+							attitude = antagonistic
+						}
+					}
+				}
+
+				multiply = 0.5
+			}
+		}
 		
 		open_market = {
 			value = 0
@@ -2948,6 +3186,33 @@ ai_strategy_default = {
 				multiply = 0
 			}
 		}	
+		
+		foreign_investment_rights = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:target_country = {
+						has_diplomatic_pact = {
+							who = root
+							type = embargo
+						}	
+					}
+					can_reach_target_country = yes
+				}
+				add = 50
+			}			
+
+			# Not worth doing against very small countries
+			if = {
+				limit = {
+					scope:target_country = {
+						gdp < 500000
+					}
+				}
+				multiply = 0
+			}				
+		}
 
 		ban_slavery = {
 			value = 0
@@ -3190,23 +3455,18 @@ ai_strategy_default = {
 			max = 100				
 		}
 
-		force_recognition = {
-			value = 0
-			
+		leave_power_bloc = {
+			value = 50
+
 			if = {
-				limit = {
-					country_rank = rank_value:unrecognized_major_power
-					navy_size >= 50
-					army_size >= 200
-					OR = {
-						has_strategy = ai_strategy_nationalist_agenda
-						has_strategy = ai_strategy_progressive_agenda
-						has_strategy = ai_strategy_egalitarian_agenda
-					}
+				limit = { 
+					would_accept_diplomatic_action = {
+						actor = scope:target_country
+						type = invite_to_power_bloc
+					}					
 				}
-				add = 100
+				multiply = 0.0
 			}
-			
 		}	
 
 		independence = {
