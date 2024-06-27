@@ -39,7 +39,7 @@ grant_command_to_ruler = {
 	}
 
 	ai_chance = {
-		value = 5
+		value = 0
 		if = {
 			limit = {
 				NOT = { is_interest_group_type = ig_armed_forces }
@@ -48,45 +48,22 @@ grant_command_to_ruler = {
 		}
 		if = {
 			limit = {
-				NOT = {
-					owner = {	
-						any_scope_general = {
-							exists = yes
-						}
-					}
-				}
-			}
-			add = 25
-		}	
-		if = {
-			limit = {
-				owner = {
+				AND = {
+					age <= 50
 					OR = {
-						is_diplomatic_play_committed_participant = yes
-						is_at_war = yes
+						has_trait = reckless
+						has_trait = direct
+						has_trait = imposing
 					}
-				}	
-			}
-			add = 25
-		}
-		if = {
-			limit = {
-				is_interest_group_type = ig_armed_forces
-			}
-			add = 25
-		}
-		if = {
-			limit = {
-				owner = {
-					any_scope_war = {
-						any_scope_front = {
-							is_vulnerable_front = root
-						}
+					NOR = {
+						has_trait = psychological_affliction
+						has_trait = wounded
+						has_trait = shellshocked
 					}
 				}
 			}
-			add = 50
-		}		
+			add = 100
+		}
 	}
 }
 
@@ -326,12 +303,15 @@ marry_ruler_or_heir = {
 	possible = {
 		any_country = {
 			NOT = { THIS = scope:actor }
+			NOT = { is_subject_type = subject_type_personal_union }
 			is_a_regime_monarchy = yes
 			religion = scope:actor.religion
 			ruler = {
 				age > 36
-				NOT = {
-					has_variable = marriage_target
+				hidden_trigger = {
+					NOT = {
+						has_variable = marriage_target
+					}
 				}
 			}
 		}
@@ -919,6 +899,43 @@ invite_exile = {
 		custom_tooltip = invite_exile_start_join_movement_effect
 		hidden_effect = {
 			remove_modifier = in_exile_modifier
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					NOT = {
+						exists = root.home_country
+						NOT = { root.home_country = scope:actor }
+					}
+				}
+				if = {
+					limit = {
+						root.home_country = {
+							any_interest_group = {
+								is_in_government = yes
+								OR = {
+									this.interest_group_type = root.interest_group_type
+									this.leader.ideology = root.ideology
+								}
+							}
+						}
+					}
+					root.home_country = {
+						create_diplomatic_catalyst = {
+							type = catalyst_invited_exile_positive
+							target = scope:actor
+						}		
+					}
+				}
+				else = {
+					root.home_country = {
+						create_diplomatic_catalyst = {
+							type = catalyst_invited_exile_negative
+							target = scope:actor
+						}		
+					}
+				}
+			}
 		}
 	}
 
