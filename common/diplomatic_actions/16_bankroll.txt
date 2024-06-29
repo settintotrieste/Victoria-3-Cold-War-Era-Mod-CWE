@@ -7,6 +7,11 @@
 		tech_economy_1
 	}
 	
+	selectable = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+	
 	potential = {
 		NOT = { is_country_type = decentralized }
 		scope:target_country = {
@@ -38,8 +43,12 @@
 		relations_improvement_max = 100
 		
 		income_transfer = 0.25
-		recipient_gets_income_transfer = yes
-		income_transfer_based_on_recipient = yes
+		second_country_gets_income_transfer = yes
+		income_transfer_based_on_second_country = yes
+		
+		second_modifier = {
+			country_pact_leverage_generation_add = 200
+		}
 		
 		weekly_effect = {
 			if = {
@@ -138,6 +147,18 @@
 	
 	ai = {
 		max_influence_spending_fraction = 0.20
+		
+		evaluation_chance = {
+			value = 0.0
+
+			if = {
+				limit = { country_rank >= rank_value:major_power }
+				add = {
+					value = country_rank
+					multiply = 0.05
+				}				
+			}			
+		}
 		
 		# This is only used for determining the value of a bankroll in sways, so it follows different logic from normal action acceptance
 		# The format here is as if scope:actor was asking if root wants a bankroll
@@ -346,6 +367,12 @@
 		}
 		
 		will_break = { 
+			NOT = {
+				AND = {
+					has_variable = forced_bankroll_time
+					var:forced_bankroll_time ?= scope:target_country
+				}
+			}
 			OR = {		
 				scaled_debt > 0.25
 				AND = {

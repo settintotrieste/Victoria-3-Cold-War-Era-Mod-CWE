@@ -7,7 +7,17 @@
 		tech_economy_1
 	}
 	
+	selectable = {
+		NOT = { is_country_type = decentralized }	
+		is_revolutionary = no
+	}
+	
 	potential = {
+	
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = {
+			is_revolutionary = no is_secessionist = no
+		}
 	
 		NOR = { 
 			is_country_type = decentralized
@@ -37,10 +47,7 @@
 		NOT = { has_war_with = scope:target_country }
 		
 		NOT = {
-			has_diplomatic_pact = {
-				who = scope:target_country
-				type = customs_union
-			}					
+			is_in_customs_union_with = scope:target_country					
 		}
 		is_junior_in_customs_union = no
 		scope:target_country = { is_junior_in_customs_union = no }
@@ -48,11 +55,6 @@
 		custom_tooltip = {
 			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
 			scope:target_country.relations:root > relations_threshold:poor
-		}			
-		
-		is_revolutionary = no is_secessionist = no
-		scope:target_country = {
-			is_revolutionary = no is_secessionist = no
 		}
 		
 	}
@@ -70,10 +72,26 @@
 			} 
 		}
 		
+		add_lobby_appeasement_from_diplomacy_bidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country 
+			PRO_AMOUNT = 2
+			ANTI_AMOUNT = -2
+			FACTOR = appeasement_trade_agreement_formed
+		}
+		
 	}
 	
 	pact = {
 		cost = 50
+	
+		first_modifier = {
+			country_pact_leverage_generation_add = 100
+		}
+
+		second_modifier = {
+			country_pact_leverage_generation_add = 100
+		}
 	
 		is_trade_agreement = yes
 		can_be_used_in_sway_offers = yes
@@ -164,10 +182,32 @@
 
 		manual_break_effect = {
 			change_relations = { country = scope:target_country value = -10 }
+			add_lobby_appeasement_from_diplomacy_bidirectional = { 
+				FIRST = root
+				SECOND = scope:target_country 
+				PRO_AMOUNT = -2
+				ANTI_AMOUNT = 2
+				FACTOR = appeasement_trade_agreement_broken
+			}	
 		}
 		
 		auto_break_effect = {
 			change_relations = { country = scope:target_country value = -10 }
+			if = {
+				limit = { 
+					NOR = { 
+						is_subject_of = scope:target_country 
+						scope:target_country = { is_subject_of = root }
+					}
+				}
+				add_lobby_appeasement_from_diplomacy_bidirectional = { 
+					FIRST = root
+					SECOND = scope:target_country 
+					PRO_AMOUNT = -2
+					ANTI_AMOUNT = 2
+					FACTOR = appeasement_trade_agreement_broken
+				}		
+			}
 		}
 		
 	}
@@ -175,6 +215,15 @@
 	ai = {
 		check_acceptance_for_will_break = yes
 		check_acceptance_for_will_propose = yes
+	
+		evaluation_chance = {
+			value = 0.1
+
+			add = {
+				value = country_rank
+				multiply = 0.05
+			}			
+		}
 	
 		accept_score = {
 			value = 0
@@ -306,18 +355,19 @@
 				desc = "DIPLOMATIC_ACCEPTANCE_RELATIONS"								
 				if = {
 					limit = {
-						"relations(scope:actor)" < relations_threshold:friendly
+						"relations(scope:actor)" >= relations_threshold:cordial
+						"relations(scope:actor)" < relations_threshold:amicable
 					}
-					value = 0
-				}
-				if = {
+					value = 10
+				}				
+				else_if = {
 					limit = {
 						"relations(scope:actor)" >= relations_threshold:amicable
 						"relations(scope:actor)" < relations_threshold:friendly
 					}
-					value = 35
-				}	
-				if = {
+					value = 25
+				}
+				else_if = {
 					limit = {
 						"relations(scope:actor)" >= relations_threshold:friendly
 					}
@@ -376,7 +426,82 @@
 					}
 					value = -150
 				}
-			}								
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ACTOR_PRO_LOBBY_CLOUT"					
+				value = "scope:actor.lobby_foreign_pro_clout(scope:target_country)"
+				multiply = 50
+				max = 25
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ACTOR_ANTI_LOBBY_CLOUT"					
+				value = "scope:actor.lobby_foreign_anti_clout(scope:target_country)"
+				multiply = -50
+				min = -25
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_TARGET_PRO_LOBBY_CLOUT"					
+				value = "scope:target_country.lobby_foreign_pro_clout(scope:actor)"
+				multiply = 100
+				max = 25
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_TARGET_ANTI_LOBBY_CLOUT"					
+				value = "scope:target_country.lobby_foreign_anti_clout(scope:actor)"
+				multiply = -100
+				min = -25
+			}	
+
+			if = {
+				limit = {
+					scope:actor = {
+						has_variable = pro_lobby_proposal_trade_agreement
+						var:pro_lobby_opportunity_target ?= scope:target_country
+					}
+				}
+				add = {
+					desc = "LOBBY_OPPORTUNITY_BONUS"
+					value = 100
+				}	
+			}	
+
+			if = {
+				limit = {
+					scope:actor = {
+						has_variable = anti_lobby_proposal_trade_agreement
+						var:anti_lobby_opportunity_target ?= scope:target_country
+					}
+				}
+				add = {
+					desc = "LOBBY_OPPORTUNITY_BONUS"
+					value = 50
+				}	
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_PRINCIPLE_SACRED_CIVICS"
+
+				if = {
+					limit = {
+						AND = {
+							scope:actor.power_bloc ?= {
+								OR = {
+									has_principle = principle:principle_sacred_civics_1
+									has_principle = principle:principle_sacred_civics_2
+									has_principle = principle:principle_sacred_civics_3
+								}
+							}
+							scope:actor.religion = root.religion
+						}
+					}
+					add = 20
+				}
+			}
+			
 		}	
 
 		propose_score = {

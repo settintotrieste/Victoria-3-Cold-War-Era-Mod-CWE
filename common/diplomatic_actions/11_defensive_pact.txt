@@ -6,11 +6,21 @@
 		tech_geopolitics_1
 	}
 	
+	selectable = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+	
 	potential = {
 	
 		NOT = { is_country_type = decentralized }
 		scope:target_country = {
 			NOT = { is_country_type = decentralized }
+		}
+		
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = {
+			is_revolutionary = no is_secessionist = no
 		}
 		
 		aggressive_diplomatic_plays_permitted = yes
@@ -56,11 +66,6 @@
 			scope:target_country.relations:root >= relations_threshold:cordial
 		}
 		
-		is_revolutionary = no is_secessionist = no
-		scope:target_country = {
-			is_revolutionary = no is_secessionist = no
-		}
-		
 		#TARGET is not in a superstate
 		custom_tooltip = {
 			text = NOT_superstate_defence_union.tt
@@ -74,7 +79,48 @@
 		
 	}
 	
-	accept_effect = {}
+	accept_effect = {
+	
+		if = {
+			limit = {
+				scope:target_country = {
+					has_diplomatic_pact = {
+						who = root
+						type = guarantee_independence
+					}									
+				}			
+			}
+
+			scope:target_country = {
+				remove_diplomatic_pact = {
+					country = root
+					type = guarantee_independence
+				}			
+			}
+		}	
+		else_if = {
+			limit = {
+				has_diplomatic_pact = {
+					who = scope:target_country
+					type = guarantee_independence
+				}		
+			}
+
+			remove_diplomatic_pact = {
+				country = scope:target_country
+				type = guarantee_independence
+			}
+		}	
+
+		add_lobby_appeasement_from_diplomacy_bidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country 
+			PRO_AMOUNT = 3
+			ANTI_AMOUNT = -3
+			FACTOR = appeasement_defensive_pact_formed
+		}
+		
+	}
 
 	pact = {
 		cost = 25
@@ -83,6 +129,14 @@
 		
 		relations_progress_per_day = 1 # At 100, +1 relations
 		relations_improvement_max = 80
+		
+		first_modifier = {
+			country_pact_leverage_generation_add = 250
+		}
+
+		second_modifier = {
+			country_pact_leverage_generation_add = 250
+		}
 
 		actor_can_break = {
 			
@@ -267,11 +321,34 @@
 
 		manual_break_effect = {
 			change_relations = { country = scope:target_country value = -30 }
-			create_truce = { country = scope:target_country months = 12 }
+			create_bidirectional_truce = { country = scope:target_country months = 12 }
+			add_lobby_appeasement_from_diplomacy_bidirectional = { 
+				FIRST = root
+				SECOND = scope:target_country 
+				PRO_AMOUNT = -3
+				ANTI_AMOUNT = 3
+				FACTOR = appeasement_defensive_pact_broken
+			}
 		}
 
 		auto_break_effect = {
-			create_truce = { country = scope:target_country months = 12 }
+			create_bidirectional_truce = { country = scope:target_country months = 12 }	
+			if = {
+				limit = { 
+					NOR = { 
+						is_subject_of = scope:target_country 
+						scope:target_country = { is_subject_of = root }
+					}
+				}
+
+				add_lobby_appeasement_from_diplomacy_bidirectional = { 
+					FIRST = root
+					SECOND = scope:target_country 
+					PRO_AMOUNT = -3
+					ANTI_AMOUNT = 3
+					FACTOR = appeasement_defensive_pact_broken
+				}				
+			}
 		}
 		
 	}
@@ -279,6 +356,15 @@
 	ai = {
 		check_acceptance_for_will_break = yes
 		check_acceptance_for_will_propose = yes
+	
+		evaluation_chance = {
+			value = 0.1
+
+			add = {
+				value = country_rank
+				multiply = 0.05
+			}			
+		}
 	
 		accept_score = {
 			value = 0
@@ -350,7 +436,7 @@
 					}
 					value = 75
 				}
-				if = {
+				else_if = {
 					limit = {
 						OR = {
 							has_attitude = {
@@ -369,7 +455,7 @@
 					}
 					value = 50
 				}
-				if = {
+				else_if = {
 					limit = {
 						has_attitude = {
 							who = scope:actor
@@ -378,7 +464,7 @@
 					}
 					value = 25
 				}				
-				if = {
+				else_if = {
 					limit = {
 						has_attitude = {
 							who = scope:actor
@@ -387,7 +473,7 @@
 					}
 					value = -50
 				}					
-				if = {
+				else_if = {
 					limit = {
 						OR = {
 							has_attitude = {
@@ -409,7 +495,7 @@
 						}
 					}
 					value = -1000
-				}							
+				}				
 			}			
 
 			add = {
@@ -522,7 +608,104 @@
 					value = "num_defensive_pacts"
 					multiply = -5
 				}					
-			}			
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ACTOR_PRO_LOBBY_CLOUT"					
+				value = "scope:actor.lobby_foreign_pro_clout(scope:target_country)"
+				multiply = 50
+				max = 25
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ACTOR_ANTI_LOBBY_CLOUT"					
+				value = "scope:actor.lobby_foreign_anti_clout(scope:target_country)"
+				multiply = -50
+				min = -25
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_TARGET_PRO_LOBBY_CLOUT"					
+				value = "scope:target_country.lobby_foreign_pro_clout(scope:actor)"
+				multiply = 100
+				max = 25
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_TARGET_ANTI_LOBBY_CLOUT"					
+				value = "scope:target_country.lobby_foreign_anti_clout(scope:actor)"
+				multiply = -100
+				min = -25
+			}	
+
+			if = {
+				limit = {
+					scope:actor = {
+						has_variable = pro_lobby_proposal_defensive_pact
+						var:pro_lobby_opportunity_target ?= scope:target_country
+					}
+				}
+				add = {
+					desc = "LOBBY_OPPORTUNITY_BONUS"
+					value = 100
+				}	
+			}
+
+			if = {
+				limit = {
+					scope:actor = {
+						has_variable = anti_lobby_proposal_defensive_pact
+						var:anti_lobby_opportunity_target ?= scope:target_country
+					}
+				}
+				add = {
+					desc = "LOBBY_OPPORTUNITY_BONUS"
+					value = 50
+				}	
+			}
+
+			if = {
+				limit = {
+					exists = power_bloc
+					exists = scope:actor.power_bloc			
+				}
+				if = {
+					limit = {
+						power_bloc = scope:actor.power_bloc
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_SAME_POWER_BLOC"
+						value = 15
+					}					
+				}
+				else = {
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_DIFFERENT_POWER_BLOC"
+						value = -25
+					}					
+				}
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_PRINCIPLE_SACRED_CIVICS"
+
+				if = {
+					limit = {
+						AND = {
+							scope:actor.power_bloc ?= {
+								OR = {
+									has_principle = principle:principle_sacred_civics_1
+									has_principle = principle:principle_sacred_civics_2
+									has_principle = principle:principle_sacred_civics_3
+								}
+							}
+							scope:actor.religion = root.religion
+						}
+					}
+					add = 20
+				}
+			}
+			
 		}
 
 		propose_score = {

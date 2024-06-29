@@ -1,8 +1,26 @@
 ﻿trade_states = {
-	groups= { general } requires_approval = yes
+	groups= {
+		general
+	}
+	
+	requires_approval = yes
 	should_notify_third_parties = yes
 	show_effect_in_tooltip = yes
+	
+	# Either country should have an available state. Trade State is used as a
+	# catch all possibilities Diplomatic Action because Grant/Take State are currently
+	# limited to Overlords/Subjects.
 	state_selection = any_required
+	
+	first_state_list = first_country
+	second_state_list = second_country
+	can_use_obligations = yes
+
+	selectable = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no is_secessionist = no
+		is_subject = no
+	}
 
 	potential = {
 		#THIS is not decentralized
@@ -107,20 +125,24 @@
 	}
 	
 	second_state_trigger = {
-		owner = scope:country
+		owner = scope:target_country
 		is_capital = no
 		is_under_colonization = no
 		OR = {
-			scope:target_country = { is_adjacent_to_state = root }
+			scope:country = { is_adjacent_to_state = root }
 			AND = {
 				is_coastal = yes		
-				scope:target_country = { has_port = yes }
+				scope:country = { has_port = yes }
 			}
 		}		
 	}	
 	
 	ai = {
 		check_acceptance_for_will_propose = yes
+		
+		evaluation_chance = {
+			value = 0.1
+		}
 	
 		propose_score = {
 			value = 10
@@ -128,7 +150,7 @@
 		
 		# Selection triggers exist only to pre-filter which state combinations the AI looks at
 		# This is done for performance reasons - the more open ended these triggers are, the more it will impact performance
-		can_select_as_first_state = {
+		will_select_as_first_state = {
 			is_split_state = yes
 			is_under_colonization = no
 			is_incorporated = no
@@ -137,7 +159,7 @@
 			NOT = { state_region = s:STATE_INDIAN_OCEAN_TERRITORY } # Special exception to african state trading
 		}
 		
-		can_select_as_second_state = {
+		will_select_as_second_state = {
 			is_split_state = yes
 			is_under_colonization = no
 			is_incorporated = no
@@ -146,7 +168,7 @@
 			NOT = { state_region = s:STATE_INDIAN_OCEAN_TERRITORY } # Special exception to african state trading
 		}		
 		
-		can_propose_with_states = {
+		will_propose_with_states = {
 			exists = scope:first_state
 			exists = scope:second_state	
 			NOT = { scope:first_state.state_region = scope:second_state.state_region }
@@ -240,7 +262,28 @@
 						desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_SPLIT_STATE_EXCHANGE"						
 					}						
 				}
-			}	
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_PRINCIPLE_SACRED_CIVICS"
+
+				if = {
+					limit = {
+						AND = {
+							scope:actor.power_bloc ?= {
+								OR = {
+									has_principle = principle:principle_sacred_civics_1
+									has_principle = principle:principle_sacred_civics_2
+									has_principle = principle:principle_sacred_civics_3
+								}
+							}
+							scope:actor.religion = root.religion
+						}
+					}
+					add = 10
+				}
+			}
+			
 		}
 		
 		use_obligation_chance = {

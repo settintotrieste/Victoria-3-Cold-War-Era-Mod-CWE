@@ -6,15 +6,26 @@
 		tech_geopolitics_1
 	}
 	
+	selectable = {
+		NOT = { is_country_type = decentralized }	
+		is_revolutionary = no
+	}
+	
 	potential = {
 		NOT = { is_country_type = decentralized }
 		scope:target_country = {
 			NOT = { is_country_type = decentralized }
-		}			
+		}	
+
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = {
+			is_revolutionary = no is_secessionist = no
+		}
+		
 		aggressive_diplomatic_plays_permitted = yes			
 		scope:target_country = {
 			aggressive_diplomatic_plays_permitted = yes
-		}				
+		}		
 	}
 	
 	possible = {
@@ -26,24 +37,42 @@
 			scope:target_country.relations:root < relations_threshold:cordial
 		}
 		
-		is_revolutionary = no is_secessionist = no
-		scope:target_country = {
-			is_revolutionary = no is_secessionist = no
-		}
-		
 		# Might have these despite low relations due to a forced pact
 		NOT = { has_diplomatic_pact = { who = scope:target_country type = alliance } }	
 		NOT = { has_diplomatic_pact = { who = scope:target_country type = defensive_pact } }
 		
 	}
 	
+	accept_effect = {
+		add_lobby_appeasement_from_diplomacy_unidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country 
+			PRO_AMOUNT = -4
+			ANTI_AMOUNT = 4
+			FACTOR = appeasement_rivalry_declared
+		}	
+		hidden_effect = {
+			scope:target_country = {
+				create_diplomatic_catalyst = {
+					type = catalyst_rivalry_declared
+					target = root
+				}		
+			}
+		}
+	}
+	
 	pact = {
+		is_hostile = yes
 		is_rivalry = yes		
 		is_two_sided_pact = no
-		forced_duration = 60
+		forced_duration = 12
 		
 		relations_progress_per_day = -1 # At -100, -1 relations
 		relations_improvement_min = -20
+
+		second_modifier = {
+			country_pact_leverage_generation_mult = -0.9
+		}
 
 		requirement_to_maintain = { 
 			trigger = { 
@@ -85,17 +114,68 @@
 		}
 		
 		manual_break_effect = { 
-			change_relations = { country = scope:target_country value = 10 }
-			create_truce = { country = scope:target_country months = 12 }
+			add_lobby_appeasement_from_diplomacy_unidirectional = { 
+				FIRST = root
+				SECOND = scope:target_country 
+				PRO_AMOUNT = 4
+				ANTI_AMOUNT = -4
+				FACTOR = appeasement_rivalry_ended
+			}
 		}
-		auto_break_effect = { 
-			
+		
+		auto_break_effect = {
+			every_political_lobby = {
+				limit = {
+					is_political_lobby_type = lobby_pro_country
+					target = scope:target_country
+				}
+				change_appeasement = {
+					amount = 4
+					factor = appeasement_rivalry_ended
+				}
+			}
+			if = {
+				limit = { country_rank > scope:target_country.country_rank }				
+				every_political_lobby = {
+					limit = {
+						is_political_lobby_type = lobby_anti_country
+						target = scope:target_country
+					}
+
+					change_appeasement = {
+						amount = 2
+						factor = appeasement_rival_surpassed
+					}
+				}			
+			}
+			else = {
+				every_political_lobby = {
+					limit = {
+						is_political_lobby_type = lobby_anti_country
+						target = scope:target_country
+					}
+
+					change_appeasement = {
+						amount = -4
+						factor = appeasement_rivalry_ended
+					}
+				}				
+			}
 		}
 		
 	}
 	
 	ai = {
 		check_acceptance_for_will_break = no
+	
+		evaluation_chance = {
+			value = 0.1
+
+			add = {
+				value = country_rank
+				multiply = 0.05
+			}			
+		}
 	
 		propose_score = {
 			value = 10
