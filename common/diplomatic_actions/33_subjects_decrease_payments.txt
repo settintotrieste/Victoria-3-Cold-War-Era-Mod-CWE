@@ -1,0 +1,113 @@
+﻿decrease_payments = {
+	requires_approval = no
+	groups= { overlord }
+	
+	texture = "gfx/interface/icons/diplomatic_action_icons/decrease_payments.dds"
+	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_02_decrease_payments_benign"
+	selectable = {
+		
+	}
+	
+	potential = {
+		any_scope_diplomatic_pact = {
+			"diplomatic_pact_other_country(root)" = scope:target_country
+			income_transfer > 0
+		}
+		scope:target_country = {
+			NOT = { is_diplomatic_play_enemy_of = root }
+		}
+	}
+	
+	possible = {
+		NOT = {
+			has_diplomatic_pact = {
+				who = scope:target_country
+				type = raise_payments
+			}
+		}
+	}
+	
+	pact = {	
+		cost = 0
+		forced_duration = 12
+		
+		second_modifier = {
+			country_overlord_income_transfer_mult = -0.5
+			country_liberty_desire_increase_mult = -0.33
+		}
+
+		manual_break_effect = {
+			scope:target_country = {
+				add_liberty_desire = 10
+			}
+		}
+	    
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_AT_PEACE"
+					NOT = { has_war_with = scope:target_country }
+				}			
+			}
+		}
+		
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_SUBJECT_WITH_INCOME_TRANSFER"
+					any_scope_diplomatic_pact = {
+						"diplomatic_pact_other_country(root)" = scope:target_country
+						income_transfer > 0
+					}
+				}			
+			}
+		}
+	}
+	
+	ai = {
+		evaluation_chance = {
+			value = 0.25		
+		}			
+	
+		propose_score = {
+			value = 10
+		}		
+	
+		will_propose = {
+			"relations(scope:target_country)" >= relations_threshold:friendly
+			has_attitude = {
+				who = scope:target_country
+				attitude = protective
+			}	
+			scope:target_country = { liberty_desire >= 25 }
+			OR = {
+				has_strategy = ai_strategy_maintain_power_balance
+				has_strategy = ai_strategy_armed_isolationism
+				has_strategy = ai_strategy_socialism_in_one_country
+				has_strategy = ai_strategy_anti_imperialism
+			}		
+		}
+		
+		will_break = {
+			OR = {
+				has_attitude = {
+					who = scope:target_country
+					attitude = domineering
+				}		
+				AND = {
+					scope:target_country = { liberty_desire < 50 }
+					OR = {
+						"relations(scope:target_country)" < relations_threshold:amicable	
+						NOR = {
+							has_strategy = ai_strategy_maintain_power_balance
+							has_strategy = ai_strategy_armed_isolationism
+							has_strategy = ai_strategy_socialism_in_one_country
+							has_strategy = ai_strategy_anti_imperialism
+						}					
+					}					
+				}
+			}	
+		}		
+	}
+}
+

@@ -1,0 +1,120 @@
+﻿raise_payments = {
+	requires_approval = no
+	groups= { overlord subject } # this is a subject action only for the sake of breaking it if LD is high enough
+	
+	texture = "gfx/interface/icons/diplomatic_action_icons/raise_payments.dds"
+	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_01_raise_payments_benign"
+	
+	selectable = {
+		
+	}
+
+	potential = {
+		any_scope_diplomatic_pact = {
+			"diplomatic_pact_other_country(root)" = scope:target_country
+			income_transfer > 0
+		}
+		OR = {
+			scope:target_country = { 
+				is_subject_of = root 
+				NOT = { is_diplomatic_play_enemy_of = root }
+			}
+			AND = {	# only valid for subject countries if a pact is already established
+				is_subject_of = scope:target_country
+				has_diplomatic_pact = { who = scope:target_country type = raise_payments }
+			}
+		}
+	}
+	
+	possible = {
+		scope:target_country = {
+			liberty_desire < 75
+		}
+		scope:target_country = {
+			in_default = no
+		}
+		NOT = {
+			has_diplomatic_pact = {
+				who = scope:target_country
+				type = decrease_payments
+			}
+		}
+	}
+
+	pact = {	
+		recipient_pays_maintenance = no
+		relations_progress_per_day = -1
+		
+		second_modifier = {
+			country_overlord_income_transfer_mult = 1
+			country_liberty_desire_decrease_mult = -0.25
+			country_liberty_desire_increase_mult = 0.25
+		}
+	    
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_AT_PEACE"
+					NOT = { has_war_with = scope:target_country }
+				}			
+			}
+		}
+		
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_SUBJECT_WITH_INCOME_TRANSFER"
+					any_scope_diplomatic_pact = {
+						"diplomatic_pact_other_country(root)" = scope:target_country
+						income_transfer > 0
+					}
+				}			
+			}
+		}
+	}
+	
+	ai = {
+		max_influence_spending_fraction = 0.1
+		
+		evaluation_chance = {
+			value = 0.25		
+		}		
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = {
+			"relations(scope:target_country)" < relations_threshold:cordial
+			has_attitude = {
+				who = scope:target_country
+				attitude = domineering
+			}		
+			OR = {
+				has_strategy = ai_strategy_economic_imperialism
+				has_strategy = ai_strategy_territorial_expansion
+				has_strategy = ai_strategy_world_revolution
+			}
+			scope:target_country = { "potential_diplomatic_play_power_ratio(root)" <= 0.5 }
+		}
+		
+		will_break = {
+			OR = {
+				has_attitude = {
+					who = scope:target_country
+					attitude = protective
+				}	
+				AND = {
+					scope:target_country = { liberty_desire >= 50 }
+					"relations(scope:target_country)" >= relations_threshold:friendly	
+					NOR = {
+						has_strategy = ai_strategy_economic_imperialism
+						has_strategy = ai_strategy_territorial_expansion
+						has_strategy = ai_strategy_world_revolution
+					}					
+				}				
+			}	
+		}		
+	}
+}
+

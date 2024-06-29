@@ -1,0 +1,75 @@
+﻿da_appoint_colonial_governor = {
+	groups= { overlord }
+	
+	requires_approval = no
+	should_notify_third_parties = yes
+	show_effect_in_tooltip = yes
+
+	texture = "gfx/interface/icons/diplomatic_action_icons/da_appoint_colonial_governor.dds"
+	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_04_appoint_governor_benign"
+	selectable = {
+		is_revolutionary = no is_secessionist = no
+	}
+	
+	potential = {
+		scope:target_country = {
+			NOT = { has_variable = gubernatorial_candidate }
+			NOT = { is_diplomatic_play_enemy_of = root }
+		}
+	}
+	
+	possible = {
+		custom_tooltip = {
+			text = "APPOINT_COLONIAL_GOVERNOR_ON_COOLDOWN"
+			scope:target_country = {
+				NOR = { 
+					has_variable = gubernatorial_candidate 
+					has_variable = gubernatorial_candidate_timed
+				}
+			}
+		}
+		scope:target_country = {
+			OR = {
+				is_a_colonial_subject_gov = yes
+				is_subject_type = subject_type_special_administrative_region
+			}
+		}
+	}
+
+	accept_effect = {
+		scope:target_country = {
+			set_variable = gubernatorial_candidate
+			set_variable = {
+				name = gubernatorial_candidate_timed
+				months = 61
+			}
+		}
+		trigger_event = { id = subject_interactions.1 popup = yes }
+	}
+	
+	ai = {
+		evaluation_chance = {
+			value = 0.25		
+		}		
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = {
+			"ai_ideological_opinion(scope:target_country)" <= -25
+			OR = {
+				scope:target_country = { liberty_desire < 25 }
+				has_attitude = {
+					who = scope:target_country
+					attitude = domineering
+				}						
+			}
+			OR = {
+				has_strategy = ai_strategy_maintain_power_balance
+				has_strategy = ai_strategy_anti_imperialism
+				has_strategy = ai_strategy_world_revolution
+			}		
+		}				
+	}
+}

@@ -1,0 +1,159 @@
+﻿da_decrease_autonomy = {
+	groups= {
+		overlord
+	}
+	requires_approval = no
+	show_effect_in_tooltip = yes
+	is_hostile = yes
+
+	texture = "gfx/interface/icons/diplomatic_action_icons/da_decrease_autonomy.dds"
+	confirmation_sound = "event:/SFX/UI/SubjectInteractions/subject_button_small_autonomy_decreased"
+
+	potential = {
+		scope:target_country = {
+			is_subject_of = root
+			can_decrease_autonomy = yes
+		}
+	}
+	
+	possible = {
+		scope:target_country = {
+			can_decrease_autonomy = yes
+			liberty_desire < 25
+			NOT = { is_diplomatic_play_enemy_of = root }
+		}
+		custom_tooltip = {
+			text = "CHANGE_AUTONOMY_ON_COOLDOWN_OVERLORD"
+			NOT = {
+				scope:target_country = {
+					any_diplomatic_catalyst = {
+						is_diplomatic_catalyst_type = catalyst_autonomy_change_imposed
+						target = root
+					}					
+				}
+			}
+		}
+	}
+
+	accept_effect = {
+		scope:target_country = {
+			add_liberty_desire = 50
+			
+			if = {
+				limit = { is_subject_type = subject_type_personal_union }
+				create_diplomatic_pact = {
+					country = scope:target_country
+					type = dominion
+				}						
+			}
+			else_if = {
+				limit = { is_subject_type = subject_type_dominion }
+				create_diplomatic_pact = {
+					country = scope:target_country
+					type = semi_autonomous_colony
+				}						
+			}
+			else_if = {
+				limit = { is_subject_type = subject_type_protectorate }
+				create_diplomatic_pact = {
+					country = scope:target_country
+					type = satellite
+				}						
+			}
+			else_if = {
+				limit = { is_subject_type = subject_type_satellite }
+				create_diplomatic_pact = {
+					country = scope:target_country
+					type = puppet
+				}						
+			}
+			else_if = {
+				limit = { 
+					OR = { 
+						is_subject_type = subject_type_semi_autonomous_colony
+						is_subject_type = subject_type_puppet
+					}
+				}
+				create_diplomatic_pact = {
+					country = scope:target_country
+					type = special_administrative_region
+				}						
+			}
+			else = {
+				decrease_autonomy = yes
+			}
+			
+		}
+		create_unidirectional_truce = { country = scope:target_country months = 60 }
+		custom_tooltip = {
+			text = "ADD_LIBERTY_DESIRE_TO_ALL_SUBJECTS"
+			every_subject_or_below = {
+				limit = {
+					is_direct_subject_of = root
+					NOT = { this = scope:target_country }
+				}
+				add_liberty_desire = 10 #If you change this value, also update the loc string ADD_LIBERTY_DESIRE_TO_ALL_SUBJECTS accordingly
+			}
+		}
+		hidden_effect = {
+			scope:target_country = {
+				create_diplomatic_catalyst = {
+					type = catalyst_autonomy_change_imposed
+					target = root
+				}		
+			}
+		}		
+	}
+
+	
+	ai = {	
+		evaluation_chance = {
+			value = 0.25		
+		}		
+	
+		propose_score = {
+			value = 100
+		}
+	
+		will_propose = {
+			OR = {
+				has_attitude = {
+					who = scope:target_country
+					attitude = domineering
+				}	
+				AND = {
+					NOT = { has_strategy = ai_strategy_anti_imperialism	}			
+					scope:target_country = { liberty_desire < 10 }
+				}
+			}	
+			# Don't decrease autonomy of strong subjects that might end up getting very high LD
+			NOR = {
+				AND = {
+					scope:target_country = {
+						OR = {
+							is_subject_type = subject_type_dominion
+							is_subject_type = subject_type_personal_union
+						}	
+					}
+					prestige < {
+						add = scope:target_country.prestige
+						multiply = 4
+					}						
+				}			
+				AND = {
+					scope:target_country = {
+						OR = {
+							is_subject_type = subject_type_protectorate
+							is_subject_type = subject_type_tributary
+						}	
+					}
+					prestige < {
+						add = scope:target_country.prestige
+						multiply = 3
+					}						
+				}
+			}			
+			scope:target_country = { "potential_diplomatic_play_power_ratio(root)" <= 0.5 }
+		}	
+	}
+}

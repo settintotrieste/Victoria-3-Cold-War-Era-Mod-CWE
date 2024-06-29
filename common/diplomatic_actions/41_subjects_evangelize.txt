@@ -1,0 +1,158 @@
+﻿da_evangelize = {
+	groups = {
+		overlord
+	}
+	requires_approval = no
+	should_notify_third_parties = yes
+	show_effect_in_tooltip = yes
+	
+	texture = "gfx/interface/icons/diplomatic_action_icons/evangelize.dds"
+	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_11_evangelize_benign"
+	selectable = {
+		
+	}
+	
+	potential = {	
+		NOT = { country_has_state_religion = rel:atheist }
+		scope:target_country = {
+			country_has_state_religion = root.religion # Only show if the subject is a coreligionist
+			NOT = { is_diplomatic_play_enemy_of = root }
+		}
+	}
+	
+	possible = {
+		has_law = law_type:law_state_religion
+	}
+
+	accept_effect = {
+		scope:target_country = {
+			if = {
+				limit = {
+					OR = {
+						has_law = law_type:law_state_religion
+						ig:ig_devout ?= {
+							is_in_government = yes
+						}
+						any_interest_group = {
+							is_in_government = yes
+							leader = {
+								OR = {
+									has_ideology = ideology:ideology_traditionalist
+									has_ideology = ideology:ideology_theocrat
+								}			
+							}
+						}
+					}
+				}
+				custom_tooltip = {
+					text = "da_evangelize_liberty_desire_decrease_custom_tooltip"
+					add_liberty_desire = -10
+				}
+			}
+			else = {
+				custom_tooltip = {
+					text = "da_evangelize_liberty_desire_increase_custom_tooltip"
+					add_liberty_desire = 10
+				}
+			}
+		}
+	}
+	
+	pact = {	
+		cost = 25
+		recipient_pays_maintenance = no
+		forced_duration = 12
+				
+		second_modifier = {
+			state_conversion_mult = 0.5
+		}
+		
+		actor_can_break = {
+			always = yes
+		}
+		
+		manual_break_effect = {
+			scope:target_country = {		
+				if = {
+					limit = {
+						OR = {
+							has_law = law_type:law_state_religion
+							ig:ig_devout = {
+								is_in_government = yes
+							}
+							any_interest_group = {
+								is_in_government = yes
+								leader = {
+									OR = {
+										has_ideology = ideology:ideology_traditionalist
+										has_ideology = ideology:ideology_theocrat
+									}			
+								}
+							}
+						}			
+					}
+					add_liberty_desire = 10 # The Devout don't like evangelization being called off
+				}
+				else = {
+					add_liberty_desire = -10
+				}
+			}
+		}		
+	}		
+	
+	ai = {
+		max_influence_spending_fraction = 0.05
+		
+		evaluation_chance = {
+			value = 0.25		
+		}		
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = {
+			has_attitude = {
+				who = scope:target_country
+				attitude = protective
+			}	
+			OR = {
+				ig:ig_devout = {
+					is_in_government = yes
+				}
+				any_interest_group = {
+					is_in_government = yes
+					leader = {
+						OR = {
+							has_ideology = ideology:ideology_traditionalist
+							has_ideology = ideology:ideology_theocrat
+						}			
+					}
+				}
+			}
+		}
+		
+		will_break = {
+			OR = {
+				has_attitude = {
+					who = scope:target_country
+					attitude = domineering
+				}	
+				NOR = {
+					ig:ig_devout = {
+						is_in_government = yes
+					}
+					any_interest_group = {
+						is_in_government = yes
+						leader = {
+							OR = {
+								has_ideology = ideology:ideology_traditionalist
+								has_ideology = ideology:ideology_theocrat
+							}			
+						}
+					}
+				}
+			}	
+		}	
+	}
+}

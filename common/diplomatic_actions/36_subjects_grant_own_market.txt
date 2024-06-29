@@ -1,0 +1,113 @@
+﻿grant_own_market = {
+	requires_approval = no
+	groups= { 
+		overlord 
+		power_bloc_leader
+	}
+	
+	texture = "gfx/interface/icons/diplomatic_action_icons/grant_market_independence.dds"
+	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_05_grant_own_market_benign"
+	potential = {
+		scope:target_country = {
+			market = prev.market
+			NOT = { is_diplomatic_play_enemy_of = root }
+		}
+	}
+	
+	possible = {
+		NOT = { market.owner = scope:target_country }
+	}
+	
+	pact = {	
+		cost = 0
+		forced_duration = 12
+		
+		market_owner = second_country
+		
+		requirement_to_maintain = {
+			trigger = {
+				scope:target_country = {
+					OR = {
+						is_subject_of = root
+						power_bloc.power_bloc_leader ?= root
+					}
+				}
+			}
+		}
+		
+		actor_can_break = {
+			always = yes
+		}
+		
+		manual_break_effect = {
+			scope:target_country = {
+				if = {
+					limit = {
+						is_subject_of = root 
+					}
+
+					add_liberty_desire = 25				
+				}
+			}
+		}
+	}
+	
+	accept_effect = {
+		if = {
+			limit = {
+				"scope:target_country.economic_dependence(root)" > 1
+				scope:target_country.capital = { is_isolated_from_market = no }			
+			}
+			
+			custom_tooltip = { text = grant_own_market_increase_liberty_desire_effect }	
+			scope:target_country = {
+				add_liberty_desire = {
+					add = "scope:target_country.economic_dependence(root)"
+					subtract = 1
+					multiply = 40
+					add = 10
+				}
+			}				
+		}
+		else_if = {
+			limit = {
+				"scope:target_country.economic_dependence(root)" < 1
+			}
+			
+			custom_tooltip = { text = grant_own_market_decrease_liberty_desire_effect }			
+			scope:target_country = {
+				add_liberty_desire = {
+					add = 1
+					subtract = "scope:target_country.economic_dependence(root)"
+					multiply = -15
+					add = -5
+				}
+			}				
+		}		
+	}
+	
+	ai = {
+		propose_score = { 
+			value = 100
+		}
+	
+		will_propose = {
+			OR = {
+				supply_network_strength < 0.5
+				scope:target_country.capital = { is_isolated_from_market = yes }
+			}						
+		}
+		
+		will_break = {
+			OR = {
+				is_adjacent_to_country = scope:target_country
+				AND = {
+					supply_network_strength >= 0.75
+					has_port = yes
+					scope:target_country = { has_port = yes }
+				}
+			}			
+		}		
+	}
+}
+

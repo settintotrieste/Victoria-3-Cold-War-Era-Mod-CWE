@@ -1,0 +1,131 @@
+﻿force_become_subject = {
+	groups= {
+		power_bloc_leader
+	}
+	show_in_lens = no
+
+	texture = "gfx/interface/icons/diplomatic_action_icons/force_become_subject.dds"
+	
+	selectable = {
+		is_power_bloc_leader = yes
+		power_bloc ?= {
+			modifier:power_bloc_leader_can_make_subjects_bool = yes
+		}		
+	}
+	
+	potential = {
+		power_bloc ?= {
+			scope:target_country.power_bloc ?= this
+		}
+	}
+	
+	possible = {
+		scope:target_country = { 
+			is_subject = no
+			country_rank < rank_value:unrecognized_major_power 
+			is_diplomatic_play_committed_participant = no
+		}
+	
+		power_bloc = {
+			current_cohesion_percentage >= 0.5
+		}
+		scope:target_country = {
+			tenure_in_current_power_bloc_years >= 5
+		}
+		prestige >= {
+			value = scope:target_country.prestige
+			multiply = 5
+		}
+	}
+	
+	accept_effect = {
+		if = {
+			limit = { is_subject_type = subject_type_personal_union }
+			create_diplomatic_pact = {
+				country = scope:target_country
+				type = dominion
+			}						
+		}
+		else_if = {
+			limit = { is_subject_type = subject_type_dominion }
+			create_diplomatic_pact = {
+				country = scope:target_country
+				type = semi_autonomous_colony
+			}						
+		}
+		else_if = {
+			limit = { is_subject_type = subject_type_protectorate }
+			create_diplomatic_pact = {
+				country = scope:target_country
+				type = satellite
+			}						
+		}
+		else_if = {
+			limit = { is_subject_type = subject_type_satellite }
+			create_diplomatic_pact = {
+				country = scope:target_country
+				type = puppet
+			}						
+		}
+		else_if = {
+			limit = { 
+				OR = { 
+					is_subject_type = subject_type_semi_autonomous_colony
+					is_subject_type = subject_type_puppet
+				}
+			}
+			create_diplomatic_pact = {
+				country = scope:target_country
+				type = special_administrative_region
+			}						
+		}
+		else = {
+			create_diplomatic_pact = {
+				country = scope:target_country
+				type = subject_type_protectorate
+			}
+		}
+		
+		create_unidirectional_truce = { country = scope:target_country months = 60 }
+		hidden_effect = { scope:target_country = { add_liberty_desire = 30 } } # Starts at a higher LD level
+		
+		power_bloc = {
+			add_cohesion_percent = {
+				value = scaled_cohesion_cost_subjugation
+			}
+		}
+	}
+	
+	ai = {
+		evaluation_chance = {
+			value = 0.025 # AI shouldn't use this very often
+		}
+		
+		will_propose = {
+			power_bloc ?= { current_cohesion_percentage >= 0.6 }		
+			OR = {
+				has_attitude = {
+					who = scope:target_country
+					attitude = domineering
+				}
+				power_bloc ?= { current_cohesion_percentage >= 0.8 }						
+			}
+			OR = {
+				AND = {
+					has_attitude = {
+						who = scope:target_country
+						attitude = domineering
+					}		
+					power_bloc ?= { current_cohesion_percentage >= 0.8 }
+				}
+				scope:target_country = {
+					is_country_type = unrecognized
+				}
+			}		
+		}
+
+		propose_score = {								
+			value = 10			
+		}
+	}
+}

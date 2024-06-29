@@ -1,0 +1,380 @@
+﻿fund_lobbies = {
+	groups= {
+		general
+	}
+	requires_approval = no
+	should_notify_third_parties = no
+
+	unlocking_technologies = {
+		
+	}
+	
+	selectable = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no is_secessionist = no
+	}
+	
+	potential = {
+		scope:target_country = {
+			NOT = { is_country_type = decentralized }
+			is_revolutionary = no is_secessionist = no
+		}
+	}
+	
+	accept_effect = {
+		custom_tooltip = {
+			text = fund_lobbies_increase_friendly_join_weight_effect
+		}
+		custom_tooltip = {
+			text = fund_lobbies_decrease_hostile_join_weight_effect
+		}
+		custom_tooltip = {
+			text = fund_lobbies_increase_rival_hostile_join_weight_effect
+		}
+		custom_tooltip = {
+			text = fund_lobbies_decrease_rival_friendly_join_weight_effect
+		}		
+	}	
+	
+	pact = {	
+		cost = 100
+	
+		is_two_sided_pact = no
+		
+		second_modifier = {
+			country_lobby_leverage_generation_mult = 0.25
+		}
+		
+		second_foreign_pro_country_lobby_member_modifier = {
+			interest_group_pop_attraction_mult = 0.25
+		}
+		
+		second_foreign_anti_country_lobby_member_modifier = {
+			interest_group_pop_attraction_mult = -0.25
+		}		
+		
+		income_transfer = 0.20
+		second_country_gets_income_transfer = yes
+		income_transfer_based_on_second_country = yes
+		income_transfer_to_pops = {
+			allow_discriminated = no
+			upper_strata_pops = {
+				value = 0.5
+				
+				if = {
+					limit = {
+						is_a_dictatorship = yes
+						NOT = { is_a_communist_government = yes }		
+					}
+					add = 0.5
+				}
+				
+				max = 1
+				min = 0
+			}
+			middle_strata_pops = {
+				value = 0.25
+				
+				if = {
+					limit = {
+						is_a_democracy = yes					
+					}
+					add = 0.25
+				}	
+
+				max = 1
+				min = 0				
+			}
+			lower_strata_pops = {
+				value = 0.0
+				
+				if = {
+					limit = {
+						is_a_communist_government = yes
+					}
+					add = 0.25
+				}	
+
+				max = 1
+				min = 0				
+			}
+		}
+		
+		weekly_effect = {		
+			scope:target_country = {
+				if = {
+					limit = {  
+						NOT = {
+							any_political_lobby = { 
+								target = root
+								OR = {
+									is_political_lobby_type = lobby_pro_country
+									is_political_lobby_type = lobby_pro_overlord
+								}							
+							}						
+						}
+					}		
+					custom_tooltip = {
+						text = fund_lobbies_weekly_create_lobby_effect
+						create_diplomatic_catalyst = {
+							type = catalyst_lobbies_funded
+							target = root
+						}						
+					}				
+				}
+			}			
+		} 
+		
+		requirement_to_maintain = {
+			trigger = {
+				has_diplomatic_relevance = scope:target_country
+			}
+		}
+
+	 	requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
+					scope:target_country.relations:root > relations_threshold:poor
+				}		
+			}
+			
+			show_about_to_break_warning = {
+				scope:target_country.relations:root <= -17 # this is: poor + 3
+				scope:target_country.relations_change_rate:root < 0
+			}					
+		}	
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_NOT_DECENTRALIZED"
+					NOT = { is_country_type = decentralized }
+					scope:target_country = {
+						NOT = { is_country_type = decentralized }
+					}				
+				}
+			}
+		}				
+	
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_AT_PEACE"
+					NOT = { has_war_with = scope:target_country }
+				}			
+			}
+		}		
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "EQUAL_OR_BETTER_RANK_THAN_TARGET"
+					country_rank >= scope:target_country.country_rank
+				}	
+
+				
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				in_default = no
+			}
+		}			
+	}
+	
+	ai = {
+		max_influence_spending_fraction = 0.20
+		
+		evaluation_chance = {
+			value = 0.1
+			
+			add = {
+				value = country_rank
+				multiply = 0.05
+			}			
+		}		
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = { 
+			scaled_debt <= 0
+			is_at_war = no
+			weekly_net_fixed_income > 0	
+			has_attitude = {
+				who = scope:target_country
+				attitude = protective
+			}
+			OR = {
+				num_income_transfer_pacts < 1
+				AND = {
+					num_income_transfer_pacts < 2
+					income >= 200000
+				}
+				AND = {
+					num_income_transfer_pacts < 3
+					income >= 400000
+				}				
+			}
+			
+			OR = {
+				root = {
+					owes_obligation_to = scope:target_country			
+				}	
+				NOT = { 
+					scope:target_country = {
+						owes_obligation_to = root			
+					}						
+				}
+				AND = {
+					is_at_war = no
+					scope:target_country = { is_at_war = yes }
+				}			
+			}		
+			# We want to have at least five times their income, and at least 50k income in general
+			OR = {
+				AND = {
+					income >= 50000
+					weekly_net_fixed_income >= 4000
+					scope:target_country.income <= 10000
+				}
+				AND = {
+					income >= 75000
+					weekly_net_fixed_income >= 6000
+					scope:target_country.income <= 15000
+				}				
+				AND = {
+					income >= 100000
+					weekly_net_fixed_income >= 8000
+					scope:target_country.income <= 20000
+				}
+				AND = {
+					income >= 125000
+					weekly_net_fixed_income >= 10000
+					scope:target_country.income <= 25000
+				}
+				AND = {
+					income >= 150000
+					weekly_net_fixed_income >= 12000
+					scope:target_country.income <= 30000
+				}	
+				AND = {
+					income >= 175000
+					weekly_net_fixed_income >= 14000
+					scope:target_country.income <= 35000
+				}
+				AND = {
+					income >= 200000
+					weekly_net_fixed_income >= 16000
+					scope:target_country.income <= 40000
+				}
+				AND = {
+					income >= 225000
+					weekly_net_fixed_income >= 18000
+					scope:target_country.income <= 45000
+				}	
+				AND = {
+					income >= 250000
+					weekly_net_fixed_income >= 20000
+					scope:target_country.income <= 50000
+				}					
+			}			
+		}
+		
+		will_break = { 
+			OR = {		
+				scaled_debt > 0.25
+				AND = {
+					scaled_debt > 0
+					OR = {
+						weekly_net_fixed_income < 0	
+						is_at_war = yes
+					}				
+				}				
+				NOT = {
+					has_attitude = {
+						who = scope:target_country
+						attitude = protective
+					}				
+				}
+				num_income_transfer_pacts > 3
+				AND = {
+					num_income_transfer_pacts > 1
+					OR = {
+						weekly_net_fixed_income < -10000	
+						income < 300000
+					}			
+				}
+				AND = {
+					num_income_transfer_pacts > 2
+					OR = {
+						weekly_net_fixed_income < -5000					
+						income < 500000
+					}
+				}				
+				NOR = {
+					root = {
+						owes_obligation_to = scope:target_country			
+					}	
+					NOT = { 
+						scope:target_country = {
+							owes_obligation_to = root			
+						}						
+					}
+					AND = {
+						is_at_war = no
+						scope:target_country = { is_at_war = yes }
+					}			
+				}							
+				# Threshold for breaking off a bankroll is higher than for starting it
+				# We also don't look at weekly_net_fixed_income here since starting a bankroll changes it
+				NOR = {
+					AND = {
+						income >= 40000
+						scope:target_country.income <= 12500
+					}				
+					AND = {
+						income >= 50000
+						scope:target_country.income <= 15000
+					}
+					AND = {
+						income >= 75000
+						scope:target_country.income <= 20000
+					}				
+					AND = {
+						income >= 100000
+						scope:target_country.income <= 25000
+					}
+					AND = {
+						income >= 125000
+						scope:target_country.income <= 30000
+					}
+					AND = {
+						income >= 150000
+						scope:target_country.income <= 35000
+					}	
+					AND = {
+						income >= 175000
+						scope:target_country.income <= 40000
+					}
+					AND = {
+						income >= 200000
+						scope:target_country.income <= 45000
+					}
+					AND = {
+						income >= 225000
+						scope:target_country.income <= 50000
+					}
+					AND = {
+						income >= 250000
+						scope:target_country.income <= 55000
+					}					
+				}						
+			}
+		}			
+	}
+}
+

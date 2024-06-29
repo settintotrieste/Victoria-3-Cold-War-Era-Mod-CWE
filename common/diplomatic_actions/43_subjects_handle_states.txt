@@ -1,0 +1,470 @@
+﻿grant_state = {
+	groups= {
+		overlord
+	}
+	
+	texture = "gfx/interface/icons/diplomatic_action_icons/grant_state.dds"
+	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_13_handle_states"
+	
+	requires_approval = no
+	should_notify_third_parties = yes
+	show_effect_in_tooltip = yes
+	state_selection = first_required
+    first_state_list = first_country_and_subjects
+	can_use_obligations = no
+
+	possible = {
+		is_player = yes
+	
+		is_diplomatic_play_committed_participant = no
+		scope:target_country = { is_diplomatic_play_committed_participant = no }
+		
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		is_sufficiently_independent = yes
+		is_at_war = no
+		
+	}
+	
+	first_state_trigger = {
+		OR = {
+			AND = {
+				owner = scope:country
+				NOR = { # cannot give away primary homelands unless they're unincorporated
+					is_incorporated = yes
+					is_homeland_of_country_cultures = scope:country
+				}
+			}
+			scope:country = { 
+				any_subject_or_below = { # can give away states owned by other subjects
+					root.owner = this
+					NOT = { root.owner = scope:target_country }
+					is_not_sufficiently_independent = yes
+				}
+			}
+		}
+		is_capital = no
+		is_under_colonization = no
+		OR = {
+			scope:target_country = { is_adjacent_to_state = root } # can always give away states that are adjacent to the subject
+			AND = {
+				is_homeland_of_country_cultures = scope:target_country
+				has_port = yes
+				scope:target_country = { has_port = yes }
+			}
+		}
+	}
+	
+	accept_effect = {
+		if = {
+			limit = { exists = scope:first_state }
+			
+			# Giving a state from one subject to another
+			if = {
+				limit = { scope:first_state = { NOT = { owner = root } } }	
+				scope:first_state.owner = { save_temporary_scope_as = subject_taken_from }
+				scope:subject_taken_from = {
+					add_liberty_desire = {
+						value = "scope:first_state.ai_state_value(scope:subject_taken_from)"
+						divide = 5
+						max = 100
+						min = 20
+					}				
+				}
+			}		
+			
+			scope:target_country = {
+				add_liberty_desire = {
+					value = 0
+					subtract = "scope:first_state.ai_state_value(scope:target_country)"
+					divide = 5
+					max = -5
+					min = -50
+				}				
+			}		
+			scope:first_state = { set_state_owner = scope:target_country }		
+		}
+	}
+	
+	ai = {
+		evaluation_chance = {
+			value = 0.0
+		}	
+	
+		will_select_as_first_state = {
+			is_incorporated = no
+			NOT = { is_homeland_of_country_cultures = owner }
+		}
+		
+		will_propose_with_states = {
+			exists = scope:first_state
+
+			has_attitude = {
+				who = scope:target_country
+				attitude = protective
+			}
+			
+			# AI doesn't give away states adjacent to their incorporated states
+			scope:first_state = {
+				NOT = {
+					any_neighbouring_state = {
+						owner = root
+						is_incorporated = yes
+					}
+				}			
+			}			
+	
+			# AI doesn't give away states to subjects that are unrecognized when they are recognized
+			# They also don't want to give states to very autonomous subjects since they don't get much from it
+			# The exception to these rules is when the state is totally disconnected from the rest of their empire
+			OR = {
+				AND = {
+					scope:target_country = {				
+						NOR = {
+							is_subject_type = subject_type_protectorate
+							is_subject_type = subject_type_mandate
+						}
+					}
+					NAND = {
+						NOT = { is_country_type = unrecognized }
+						scope:target_country = { is_country_type = unrecognized } 						
+					}		
+				}
+				scope:first_state = { 
+					has_port = no 
+					NOT = {
+						any_neighbouring_state = {
+							owner = root
+							has_port = yes
+						}					
+					}					
+				}			
+			}
+			
+		}	
+	
+		propose_score = {
+			value = 10
+			
+			# Prefer ceding land to same culture subjects
+			if = {
+				limit = { 
+					scope:target_country = { 
+						any_primary_culture = { is_primary_culture_of = root }
+					} 
+				}
+				multiply = 5.0
+			}			
+			
+			# Avoid ceding land to unrecognized if there's alternatives
+			if = {
+				limit = { 
+					NOT = { is_country_type = unrecognized }
+					scope:target_country = { is_country_type = unrecognized } 					
+				}
+				multiply = 0.1
+			}
+		}
+	}
+}
+
+take_state = {
+	groups= {
+		overlord
+	}
+	
+	texture = "gfx/interface/icons/diplomatic_action_icons/take_state.dds"
+	
+	requires_approval = no
+	should_notify_third_parties = yes
+	show_effect_in_tooltip = yes
+	state_selection = second_required
+	second_state_list = second_country
+	can_use_obligations = no
+
+	possible = {
+		is_player = yes
+		scope:target_country = { 
+			OR = { 
+				is_not_sufficiently_independent = yes
+				is_a_colonial_subject_gov = yes
+			}
+			is_diplomatic_play_committed_participant = no 
+			is_revolutionary = no
+			liberty_desire < 25
+		}
+	}
+	
+	second_state_trigger = {
+		owner = scope:target_country
+		is_capital = no
+		is_under_colonization = no
+		
+		# Not allowed to take incorporated states from dominions
+		trigger_if = {
+			limit = { scope:target_country = { is_subject_type = subject_type_dominion } }
+			is_incorporated = no
+		}
+	}
+	
+	accept_effect = {
+		if = {
+			limit = { exists = scope:second_state }	
+			scope:target_country = {
+				add_liberty_desire = {
+					value = "scope:second_state.ai_state_value(scope:target_country)"
+					divide = 5
+					max = 100
+					min = 20
+				}				
+			}
+			create_incident = {
+				country = scope:target_country
+				value = {
+					value = "scope:second_state.ai_state_value(scope:target_country)"
+					divide = 10
+					max = 50
+					min = 10						
+				}
+			}					
+			scope:second_state = { set_state_owner = root }		
+		}
+	}
+	
+	ai = {
+		evaluation_chance = {
+			value = 0.0
+
+			if = {
+				limit = {
+					any_subject_or_below = {
+						OR = { 
+							is_not_sufficiently_independent = yes
+							is_a_colonial_subject_gov = yes
+						}
+					}					
+				}
+				add = 0.1
+			}				
+		}		
+	
+		will_select_as_second_state = {
+			is_incorporated = no		
+		}	
+		
+		will_propose_with_states = {
+			exists = scope:second_state
+			
+			# The AI only uses take state on disconnected colonial bits of subjects which are adjacent to their own lands
+			NOT = {
+				any_neighbouring_state = {
+					owner = root.owner
+					is_incorporated = yes
+				}
+			}			
+			
+			scope:second_state = {
+				any_neighbouring_state = {
+					owner = root
+				}
+			}
+
+			# This may seem odd, but is intentional
+			# If the overlord is domineering they should be focusing on reducing autonomy and annexing the subject instead of just taking disconnected colonial bits
+			has_attitude = {
+				who = scope:target_country
+				attitude = protective
+			}		
+		}	
+	
+		propose_score = {
+			value = 10
+		}
+	}
+}
+
+demand_state = {
+	groups= {
+		subject
+	}
+	
+	texture = "gfx/interface/icons/diplomatic_action_icons/take_state.dds"
+	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_13_handle_states"
+	
+	requires_approval = yes
+	should_notify_third_parties = yes
+	show_effect_in_tooltip = yes
+	state_selection = second_required
+    second_state_list = second_country_and_subjects
+	can_use_obligations = yes
+
+	possible = {
+		is_player = yes
+		is_diplomatic_play_committed_participant = no
+		scope:target_country = { is_diplomatic_play_committed_participant = no }
+		is_revolutionary = no
+	}
+	
+	second_state_trigger = {
+		OR = {
+			scope:country = { is_adjacent_to_state = root } # must either be adjacent to the initiating country, or
+			AND = {											# be a Homeland of its culture, with a port available for market connection
+				is_homeland_of_country_cultures = scope:country
+				has_port = yes
+				scope:country = { has_port = yes }
+			}
+		}
+		OR = {
+			AND = { 										# if owned by the target of the action, it must not be incorporated
+				owner = scope:target_country
+				is_incorporated = no
+			}
+			scope:target_country = { 						# if owned by one of the target's subjects, that subject must either be a Puppet or a Vassal
+				any_subject_or_below = {
+					root.owner = this
+					NOT = { root.owner = scope:country }
+					OR = { 
+						is_not_sufficiently_independent = yes
+						is_a_colonial_subject_gov = yes
+					}
+				}
+			}
+		}
+		is_capital = no
+		is_under_colonization = no
+	}
+	
+	accept_effect = {
+		if = {
+			limit = { exists = scope:second_state }
+			
+			# Giving a state from one subject to another
+			if = {
+				limit = { scope:second_state = { NOT = { owner = scope:target_country } } }	
+				scope:second_state.owner = { save_temporary_scope_as = subject_taken_from }
+				scope:subject_taken_from = {
+					add_liberty_desire = {
+						value = "scope:second_state.ai_state_value(scope:subject_taken_from)"
+						divide = 5
+						max = 100
+						min = 20
+					}
+				}
+			}
+			
+			add_liberty_desire = {
+				value = 0
+				subtract = "scope:second_state.ai_state_value(root)"
+				divide = 5
+				max = -5
+				min = -50
+			}	
+			scope:second_state = { set_state_owner = root }		
+		}
+	}
+	
+	ai = {
+		evaluation_chance = {
+			value = {
+				add = liberty_desire
+				subtract = 75
+				divide = 100
+			}
+
+			if = {
+				limit = {
+					is_subject_type = subject_type_dominion
+				}
+				add = 0.1
+			}
+			
+		}
+	
+		accept_score = {
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+				value = -100
+			}		
+			
+			if = {
+				limit = { exists = scope:second_state }
+				subtract = {
+					value = scope:second_state.ai_state_value:root	
+					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_SECOND_STATE"
+					min = 10
+				}
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+				if = {
+					limit = {
+						has_attitude = {
+							who = scope:actor
+							attitude = protective
+						}	
+					}
+					value = 50
+				}				
+				else_if = {
+					limit = {
+						has_attitude = {
+							who = scope:actor
+							attitude = domineering
+						}	
+					}
+					value = -50
+				}							
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ACTOR_LIBERTY_DESIRE"
+				value = "scope:actor.liberty_desire"
+				subtract = 50
+				multiply = 3
+				min = -50
+				max = 50
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RELATIONS"		
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:friendly
+					}
+					value = 50
+				}	
+				else_if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:amicable
+					}
+					value = 25
+				}					
+				else_if = {
+					limit = {
+						"relations(scope:actor)" >=  relations_threshold:cordial
+					}
+					value = 10
+				}
+				else_if = {
+					limit = {
+						"relations(scope:actor)" > relations_threshold:poor
+					}
+					value = -25
+				}					
+				else = {
+					value = -50
+				}				
+			}
+		}
+		
+		use_obligation_chance = {
+			value = 10
+		}
+		
+		owe_obligation_chance = {
+			value = 10	
+		}
+	}
+}

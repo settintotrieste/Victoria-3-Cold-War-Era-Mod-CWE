@@ -1,0 +1,515 @@
+﻿da_increase_autonomy_of_subject = {
+	groups = {
+		overlord
+	}
+	requires_approval = no
+	show_effect_in_tooltip = yes
+	
+	texture = "gfx/interface/icons/diplomatic_action_icons/da_increase_autonomy.dds"
+	confirmation_sound = "event:/SFX/UI/SubjectInteractions/subject_button_small_autonomy_increased"
+
+	potential = {
+		scope:target_country = {
+			is_subject_of = root
+			can_increase_autonomy = yes
+		}
+	}
+
+	possible = {
+	
+		scope:target_country = {
+			can_increase_autonomy = yes
+			NOT = { is_diplomatic_play_enemy_of = root }			
+		}			
+		
+		custom_tooltip = {
+			text = "CHANGE_AUTONOMY_ON_COOLDOWN_OVERLORD"
+			NOT = {
+				scope:target_country = {
+					any_diplomatic_catalyst = {
+						is_diplomatic_catalyst_type = catalyst_autonomy_change_imposed
+						target = root
+					}
+				}
+			}
+		}
+		
+	}
+
+	accept_effect = {
+		scope:target_country = {
+			add_liberty_desire = -30
+
+			#TARGET is converted into a dominion/satellite
+			scope:target_country = { 
+				
+				#Colonial subjects
+				if = {
+					limit = { is_subject_type = subject_type_dominion }
+					remove_diplomatic_pact = {
+						country = scope:actor
+						type = dominion
+					}
+					if = {
+						limit = { scope:actor = { is_a_monarchy = yes } }
+						activate_law = law_type:law_HOS_monarch
+						scope:actor = {
+							create_diplomatic_pact = {
+								country = scope:target_country
+								type = personal_union
+							}
+						}
+					}
+					else = {
+						scope:actor = {
+							create_diplomatic_pact = {
+								country = scope:target_country
+								type = protectorate
+							}
+						}
+					}
+				}
+				else_if = {
+					limit = { is_subject_type = subject_type_semi_autonomous_colony }
+					remove_diplomatic_pact = {
+						country = scope:actor
+						type = semi_autonomous_colony
+					}
+					scope:actor = {
+						create_diplomatic_pact = {
+							country = scope:target_country
+							type = dominion
+						}
+					}
+				}
+				else_if = {
+					limit = { is_subject_type = subject_type_mandate }
+					remove_diplomatic_pact = {
+						country = scope:actor
+						type = mandate
+					}
+					scope:actor = {
+						create_diplomatic_pact = {
+							country = scope:target_country
+							type = satellite
+						}
+					}
+				}
+				
+				#Normal subjects
+				else_if = {
+					limit = { is_subject_type = subject_type_satellite }
+					remove_diplomatic_pact = {
+						country = scope:actor
+						type = satellite
+					}
+					scope:actor = {
+						create_diplomatic_pact = {
+							country = scope:target_country
+							type = protectorate
+						}
+					}
+				}
+				else_if = {
+					limit = { is_subject_type = subject_type_puppet }
+					remove_diplomatic_pact = {
+						country = scope:actor
+						type = puppet
+					}
+					scope:actor = {
+						create_diplomatic_pact = {
+							country = scope:target_country
+							type = satellite
+						}
+					}
+				}
+				else_if = {
+					limit = { is_subject_type = subject_type_special_administrative_region }
+					remove_diplomatic_pact = {
+						country = scope:actor
+						type = special_administrative_region
+					}
+					scope:actor = {
+						create_diplomatic_pact = {
+							country = scope:target_country
+							type = satellite
+						}
+					}
+				}
+				else = {
+					increase_autonomy = yes
+				}
+				
+			}
+			
+		}
+		create_unidirectional_truce = { country = scope:target_country months = 60 }
+		hidden_effect = {
+			scope:target_country = {
+				create_diplomatic_catalyst = {
+					type = catalyst_autonomy_change_imposed
+					target = root
+				}		
+			}
+		}		
+	}
+	
+	ai = {
+		evaluation_chance = {
+			value = 0.25		
+		}	
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = {
+			scope:target_country = {
+				liberty_desire >= 75
+			}
+			OR = {	
+				AND = {
+					"relations(scope:target_country)" >= relations_threshold:friendly
+					has_attitude = {
+						who = scope:target_country
+						attitude = protective
+					}	
+					OR = {
+						has_strategy = ai_strategy_anti_imperialism
+						has_strategy = ai_strategy_maintain_power_balance
+					}
+				}				
+				scope:target_country = { "potential_diplomatic_play_power_ratio(root)" >= 0.75 }
+			}					
+		}	
+	}
+}
+
+da_increase_autonomy_of_self = {
+	groups = {
+		subject
+	}
+	requires_approval = yes
+	show_effect_in_tooltip = yes
+	can_use_obligations = yes
+	uses_random_approval = yes
+
+	texture = "gfx/interface/icons/diplomatic_action_icons/da_increase_autonomy.dds"
+	
+	potential = {
+		is_subject = yes
+		can_increase_autonomy = yes
+	}
+
+	possible = {
+		scope:target_country = {
+			NOT = {
+				is_diplomatic_play_enemy_of = root
+			}
+		}
+		liberty_desire >= 75
+		can_increase_autonomy = yes		
+		
+		custom_tooltip = {
+			text = "REQUEST_AUTONOMY_ON_COOLDOWN"
+			NOT = {
+				scope:target_country = {
+					any_diplomatic_catalyst = {
+						is_diplomatic_catalyst_type = catalyst_autonomy_increase_requested
+						target = root
+					}
+				}
+			}		
+		}
+		custom_tooltip = {
+			text = "CHANGE_AUTONOMY_ON_COOLDOWN_SUBJECT"
+			NOT = {
+				scope:target_country = {
+					any_diplomatic_catalyst = {
+						is_diplomatic_catalyst_type = catalyst_autonomy_change_imposed
+						target = scope:target_country
+					}					
+				}
+			}
+		}			
+	}
+
+	accept_effect = {
+		add_liberty_desire = -30
+		
+		#Colonial subjects
+		if = {
+			limit = { is_subject_type = subject_type_dominion }
+			remove_diplomatic_pact = {
+				country = scope:actor
+				type = dominion
+			}
+			if = {
+				limit = { scope:actor = { is_a_monarchy = yes } }
+				activate_law = law_type:law_HOS_monarch
+				scope:actor = {
+					create_diplomatic_pact = {
+						country = scope:target_country
+						type = personal_union
+					}
+				}
+			}
+			else = {
+				scope:actor = {
+					create_diplomatic_pact = {
+						country = scope:target_country
+						type = protectorate
+					}
+				}
+			}
+		}
+		else_if = {
+			limit = { is_subject_type = subject_type_semi_autonomous_colony }
+			remove_diplomatic_pact = {
+				country = scope:actor
+				type = semi_autonomous_colony
+			}
+			scope:actor = {
+				create_diplomatic_pact = {
+					country = scope:target_country
+					type = dominion
+				}
+			}
+		}
+		else_if = {
+			limit = { is_subject_type = subject_type_mandate }
+			remove_diplomatic_pact = {
+				country = scope:actor
+				type = mandate
+			}
+			scope:actor = {
+				create_diplomatic_pact = {
+					country = scope:target_country
+					type = satellite
+				}
+			}
+		}
+		
+		#Normal subjects
+		else_if = {
+			limit = { is_subject_type = subject_type_satellite }
+			remove_diplomatic_pact = {
+				country = scope:actor
+				type = satellite
+			}
+			scope:actor = {
+				create_diplomatic_pact = {
+					country = scope:target_country
+					type = protectorate
+				}
+			}
+		}
+		else_if = {
+			limit = { is_subject_type = subject_type_puppet }
+			remove_diplomatic_pact = {
+				country = scope:actor
+				type = puppet
+			}
+			scope:actor = {
+				create_diplomatic_pact = {
+					country = scope:target_country
+					type = satellite
+				}
+			}
+		}
+		else_if = {
+			limit = { is_subject_type = subject_type_special_administrative_region }
+			remove_diplomatic_pact = {
+				country = scope:actor
+				type = special_administrative_region
+			}
+			scope:actor = {
+				create_diplomatic_pact = {
+					country = scope:target_country
+					type = satellite
+				}
+			}
+		}
+		else = {
+			increase_autonomy = yes
+		}
+		
+		create_bidirectional_truce = { country = scope:target_country months = 60 }
+		scope:target_country = { change_relations = { country = root value = -20 } }
+		hidden_effect = {
+			scope:target_country = {
+				create_diplomatic_catalyst = {
+					type = catalyst_autonomy_increase_requested
+					target = root
+				}		
+			}
+			create_diplomatic_catalyst = {
+				type = catalyst_autonomy_change_imposed
+				target = scope:target_country
+			}					
+		}		
+	}
+	
+	decline_effect = {
+		add_liberty_desire = 10
+		scope:target_country = { change_relations = { country = root value = -30 } }
+		hidden_effect = {
+			scope:target_country = {
+				create_diplomatic_catalyst = {
+					type = catalyst_autonomy_increase_requested
+					target = root
+				}		
+			}
+			create_diplomatic_catalyst = {
+				type = catalyst_autonomy_increase_denied
+				target = scope:target_country
+			}				
+		}
+	}
+	
+	ai = {
+		check_acceptance_for_will_break = yes
+		check_acceptance_for_will_propose = yes
+	
+		accept_score = {
+			value = 0
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+				value = -100
+			}		
+
+			if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" > 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					max = 25
+				}					
+			}
+			else_if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" < 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					min = -25
+				}					
+			}						
+							
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+				if = {
+					limit = {
+						has_attitude = {
+							who = scope:actor
+							attitude = protective
+						}	
+					}
+					value = 50
+				}				
+				else_if = {
+					limit = {
+						has_attitude = {
+							who = scope:actor
+							attitude = domineering
+						}	
+					}
+					value = -50
+				}							
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_CHANCE_TO_WIN_DIPLOMATIC_PLAY"
+				value = "scope:actor.potential_diplomatic_play_power_ratio(root)"	
+				subtract = 0.5
+				multiply = 50
+				max = 100
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ACTOR_LIBERTY_DESIRE"
+				value = "scope:actor.liberty_desire"
+				subtract = 75
+				multiply = 2
+				min = -50
+				max = 50
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RELATIONS"		
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:friendly
+					}
+					value = 50
+				}	
+				else_if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:amicable
+					}
+					value = 25
+				}					
+				else_if = {
+					limit = {
+						"relations(scope:actor)" >=  relations_threshold:cordial
+					}
+					value = 10
+				}
+				else_if = {
+					limit = {
+						"relations(scope:actor)" > relations_threshold:poor
+					}
+					value = -25
+				}					
+				else = {
+					value = -50
+				}				
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:infamous
+						"scope:actor.infamy" < infamy_threshold:notorious
+					}
+					value = -10
+				}	
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:notorious
+						"scope:actor.infamy" < infamy_threshold:pariah
+					}
+					value = -25
+				}
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:pariah
+					}
+					value = -50
+				}					
+			}					
+		}
+		
+		propose_score = {
+			value = 100
+		}
+	
+		will_propose = {
+			OR = {
+				has_strategy = ai_strategy_subject_strengthen_self
+				has_strategy = ai_strategy_subject_break_free
+			}
+		}	
+		
+		will_propose_even_if_not_accepted = {
+			always = yes
+		}		
+	}
+}

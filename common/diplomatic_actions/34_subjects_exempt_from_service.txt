@@ -1,0 +1,113 @@
+﻿exempt_from_service = {
+	requires_approval = no
+	groups= { 
+		overlord 
+		power_bloc_leader
+	}
+	
+	texture = "gfx/interface/icons/diplomatic_action_icons/exempt_from_service.dds"
+	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_03_exempt_from_service_benign"
+	selectable = {
+		
+	}
+	
+	potential = {
+		scope:target_country = {
+			is_forced_to_join_plays = root
+			NOT = { is_diplomatic_play_enemy_of = root }
+		}
+	}
+	
+	possible = {
+		always = yes
+	}
+	
+	pact = {	
+		cost = 0
+		forced_duration = 12
+	
+		# is_two_sided_pact = no
+		# show_in_outliner = no
+		# can_be_used_in_sway_offers = no
+		
+		exempt_from_service = yes
+		
+		second_country_gets_income_transfer = no
+		income_transfer_based_on_second_country = no
+		
+		actor_can_break = {
+			always = yes
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				scope:target_country = {
+					OR = {
+						is_subject_of = root
+						power_bloc.power_bloc_leader ?= root
+					}
+				}
+			}
+		}
+		
+		manual_break_effect = {
+			scope:target_country = {
+				if = {
+					limit = { is_subject_of = root }
+					add_liberty_desire = 10
+				}
+			}
+		}
+	}
+	
+	ai = {
+		evaluation_chance = {
+			value = 0.25		
+		}				
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = {
+			has_attitude = {
+				who = scope:target_country
+				attitude = protective
+			}	
+			scope:target_country = { liberty_desire >= 25 }
+			OR = {
+				has_strategy = ai_strategy_colonial_expansion
+				has_strategy = ai_strategy_socialism_in_one_country
+				has_strategy = ai_strategy_anti_imperialism
+			}	
+			scope:target_country = { 
+				OR = {
+					"scope:actor.ai_army_comparison(root)" <= 0.2
+					"potential_diplomatic_play_power_ratio(root)" >= 0.75
+				}
+			}
+		}
+		
+		will_break = {
+			OR = {
+				has_attitude = {
+					who = scope:target_country
+					attitude = domineering
+				}		
+				AND = {
+					scope:target_country = { liberty_desire < 50 }	
+					NOR = {
+						has_strategy = ai_strategy_colonial_expansion
+						has_strategy = ai_strategy_socialism_in_one_country
+						has_strategy = ai_strategy_anti_imperialism
+					}										
+				}
+				scope:target_country = { 
+					"scope:actor.ai_army_comparison(root)" >= 0.4
+					"potential_diplomatic_play_power_ratio(root)" <= 0.5
+				}				
+			}	
+		}		
+	}
+}
+
