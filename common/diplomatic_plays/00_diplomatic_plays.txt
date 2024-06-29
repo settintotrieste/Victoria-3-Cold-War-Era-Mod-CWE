@@ -22,37 +22,6 @@ dp_war_reparations = {
 	on_war_end = {}
 }
 
-dp_open_market = {
-	war_goal = open_market
-	
-	texture = "gfx/interface/icons/war_goals/open_market.dds"
-	
-	selectable_in_lens = {
-		# Replaced by foreign investment rights
-		NOT = { has_dlc_feature = foreign_investment }
-	}
-
-	possible = {
-		NOT = { is_country_type = decentralized }
-		aggressive_diplomatic_plays_permitted = yes
-		NOT = { is_subject_of = scope:target_country }		
-		scope:target_country = {
-			NOT = { is_country_type = decentralized }
-			NOT = { is_subject_of = root }
-		}
-		
-		diplo_play_war_check_cwe = yes
-		
-	}
-
-	ai_acceptance_max = 100 on_weekly_pulse = {}
-
-	on_war_begins = {}
-
-	on_war_end = {}
-}
-
-
 dp_regime_change = {
 	war_goal = regime_change
 	
@@ -272,9 +241,22 @@ dp_independence = {
 	war_goal = independence
 
 	texture = "gfx/interface/icons/war_goals/independence.dds"
+	
+	confirmation_sound = "event:/SFX/UI/SubjectInteractions/subject_button_small_independence"
 
 	possible = {
 		NOT = { is_country_type = decentralized }
+		
+		OR = {
+			can_increase_autonomy = no
+			custom_tooltip = {
+				text = "REQUEST_AUTONOMY_RECENTLY_DENIED"
+				any_diplomatic_catalyst = {
+					is_diplomatic_catalyst_type = catalyst_autonomy_increase_denied
+					target = scope:target_country
+				}
+			}
+		}
 		
 		diplo_play_war_check_cwe = yes
 		
@@ -312,6 +294,27 @@ dp_take_treaty_port = {
 	on_war_end = {}
 }
 
+dp_leave_power_bloc = {
+	requires_interest_marker = no
+
+	war_goal = leave_power_bloc
+
+	texture = "gfx/interface/icons/war_goals/leave_power_bloc.dds"
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		diplo_play_war_check_cwe = yes
+	}
+
+	ai_acceptance_max = 100
+	
+	on_weekly_pulse = {}
+
+	on_war_begins = {}
+
+	on_war_end = {}
+}
+
 dp_increase_autonomy = {
 	war_goal = increase_autonomy
 	
@@ -321,7 +324,14 @@ dp_increase_autonomy = {
 	
 	possible = {
 	
-		is_subject = yes
+		is_subject = yes	
+		custom_tooltip = {
+			text = "REQUEST_AUTONOMY_RECENTLY_DENIED"
+			any_diplomatic_catalyst = {
+				is_diplomatic_catalyst_type = catalyst_autonomy_increase_denied
+				target = scope:target_country
+			}
+		}
 		
 		#THIS has some army
 		NOT = { has_law = law_type:law_peasant_levies }
@@ -329,45 +339,6 @@ dp_increase_autonomy = {
 		#Parliament and Cabinet approves
 		government_has_legislative_simple_majority = yes
 		
-	}
-	
-	ai_acceptance_max = 100 on_weekly_pulse = {}
-	
-	on_war_begins = {}
-
-	on_war_end = {}
-}
-
-dp_reduce_autonomy = {
-	war_goal = reduce_autonomy
-	
-	requires_interest_marker = no
-	
-	texture = "gfx/interface/icons/war_goals/reduce_autonomy.dds"
-	
-	possible = {
-		aggressive_diplomatic_plays_permitted = yes
-		
-		#TARGET is a subject of THIS
-		scope:target_country = { 
-			is_subject = yes 
-			is_direct_subject_of = ROOT
-			
-			#Cannot swipe a mandate by reducing autonomy
-			NOT = { is_subject_type = subject_type_mandate }
-		}
-		
-		diplo_play_war_check_cwe = yes
-		
-		#AI will not reduce the autonomy of any subject unless the subject's capital is a homeland of THIS
-		NAND = {
-			is_player = no
-			scope:target_country = { 
-				capital = { 
-					is_homeland_of_country_cultures = ROOT 
-				} 
-			}
-		}
 	}
 	
 	ai_acceptance_max = 100 on_weekly_pulse = {}
@@ -487,12 +458,15 @@ dp_annex_subject = {
 	
 	texture = "gfx/interface/icons/war_goals/annex_country.dds"
 	
+	confirmation_sound = "event:/SFX/UI/SubjectInteractions/subject_button_small_annex"
+	
 	possible = {
 		NOT = { is_country_type = decentralized }
 		scope:target_country = { NOT = { is_country_type = decentralized } }
 		
 		aggressive_diplomatic_plays_permitted = yes
 		scope:target_country = {
+			liberty_desire < 25
 			is_direct_subject_of = root
 			is_not_sufficiently_independent = yes
 		}
@@ -503,7 +477,22 @@ dp_annex_subject = {
 	
 	ai_acceptance_max = 100 on_weekly_pulse = {}
 	
-	on_war_begins = {}
+	on_war_begins = {
+		scope:initiator = {
+			every_subject_or_below = {
+				limit = {
+					is_direct_subject_of = scope:initiator
+					NOT = { this = scope:target_country }
+				}
+				add_liberty_desire = 25
+				add_modifier = {
+					name = modifier_has_annexed_another_subject
+					months = 60
+					is_decaying = no
+				}
+			}
+		}
+	}
 
 	on_war_end = {}
 }
@@ -734,6 +723,84 @@ dp_un_peacekeeping = {
 
 	on_war_end = {}
 	
+}
+
+dp_join_power_bloc = {
+	war_goal = join_power_bloc
+	texture = "gfx/interface/icons/war_goals/join_power_bloc.dds"
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		aggressive_diplomatic_plays_permitted = yes
+		is_power_bloc_leader = yes # Also checked by wargoal, but here for performance reasons
+		custom_tooltip = {
+			text = dp_join_power_bloc_must_have_declined_invite
+			any_diplomatic_catalyst = {
+				is_diplomatic_catalyst_type = catalyst_declined_bloc_invite
+				target = scope:target_country
+			}			
+		}
+		diplo_play_war_check_cwe = yes
+	}
+
+	ai_acceptance_max = 100
+
+	on_weekly_pulse = {}
+
+	on_war_begins = {}
+
+	on_war_end = {}
+}
+
+dp_force_nationalization = {
+	requires_interest_marker = no
+
+	war_goal = force_nationalization
+	texture = "gfx/interface/icons/war_goals/force_nationalization.dds"
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		aggressive_diplomatic_plays_permitted = yes
+		diplo_play_war_check_cwe = yes
+	}
+
+	selectable_in_lens = {
+		
+	}
+
+	ai_acceptance_max = 100
+
+	on_weekly_pulse = {}
+
+	on_war_begins = {}
+
+	on_war_end = {}
+}
+
+dp_give_foreign_investment_rights = {
+	war_goal = foreign_investment_rights
+
+	requires_interest_marker = yes
+
+	texture = "gfx/interface/icons/war_goals/foreign_investment_rights.dds"
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		aggressive_diplomatic_plays_permitted = yes
+		diplo_play_war_check_cwe = yes
+	}
+
+	selectable_in_lens = {
+		
+	}
+
+	ai_acceptance_max = 100
+
+	on_weekly_pulse = {}
+
+	on_war_begins = {}
+
+	on_war_end = {}
 }
 
 dp_native_uprising = {
