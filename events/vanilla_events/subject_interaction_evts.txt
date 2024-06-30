@@ -1,0 +1,285 @@
+﻿namespace = subject_interactions
+
+# Appointing a governor
+subject_interactions.1 = {
+	type = country_event
+	placement = scope:gubernatorial_candidate_capital
+	title = subject_interactions.1.t
+	desc = subject_interactions.1.d
+	flavor = subject_interactions.1.f
+
+	duration = 3
+
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				is_in_government = yes
+			}
+			save_temporary_scope_as = our_ruling_interest_group
+			save_scope_as = our_ruling_interest_group_permanent
+		}
+		random_primary_culture = {
+			save_scope_as = our_primary_culture
+		}
+		random_subject_or_below = {
+			limit = {
+				has_variable = gubernatorial_candidate
+			}
+			capital = {
+				save_scope_as = gubernatorial_candidate_capital
+			}
+			save_temporary_scope_as = gubernatorial_change_country_temp
+			save_scope_as = gubernatorial_change_country
+			random_primary_culture = {
+				save_scope_as = their_primary_culture
+			}
+			if = {
+				limit = {
+					any_scope_state = {
+						any_scope_culture = {
+							has_homeland = prev
+							NOT = { is_primary_culture_of = scope:gubernatorial_change_country_temp }
+						}
+					}
+				}
+				random_scope_state = {
+					random_scope_culture = {
+						limit = {
+							has_homeland = prev
+							NOT = { is_primary_culture_of = scope:gubernatorial_change_country_temp }
+						}
+						save_scope_as = their_minority_culture
+					}
+				}
+			}
+			random_interest_group = {
+				limit = {
+					is_same_interest_group_type = scope:our_ruling_interest_group
+				}
+				save_scope_as = their_our_ruling_interest_group
+			}
+			# if the subject's ruling IG is the same as the overlord's ruling IG, that will be addressed in event options
+			random_interest_group = {
+				limit = {
+					is_in_government = yes
+				}
+				save_scope_as = their_their_ruling_group
+			}
+		}
+	}
+
+	option = {
+		name = subject_interactions.1.a
+		default_option = yes
+		show_as_unavailable = {
+			always = yes
+		}
+
+		scope:gubernatorial_change_country = {
+			custom_tooltip = {
+				text = subject_interactions.1.a.tt
+				create_character = {
+					ruler = yes
+					culture = scope:our_primary_culture
+					interest_group = scope:their_our_ruling_interest_group
+					traits = {
+					}
+					on_created = {
+						add_trait = political_appointee
+					}
+				}
+			}
+
+			add_liberty_desire = 5
+
+			remove_variable = gubernatorial_candidate
+		}
+
+		scope:our_ruling_interest_group_permanent = {
+			if = {
+				limit = {
+					NOT = {
+						has_modifier = supporting_our_man
+					}
+				}
+				add_modifier = {
+					name = supporting_our_man
+					months = short_modifier_time
+				}
+			}
+		}
+
+		ai_chance = {
+			base = 25
+			modifier = {
+				trigger = {
+					ruler = {
+						has_trait = bigoted
+					}
+				}
+				add = 25
+			}
+		}
+	}
+	option = {
+		name = subject_interactions.1.b
+		show_as_unavailable = {
+			always = yes
+		}
+
+		scope:gubernatorial_change_country = {
+			custom_tooltip = {
+				text = subject_interactions.1.b.tt
+				create_character = {
+					ruler = yes
+					culture = scope:their_primary_culture
+					interest_group = scope:their_their_ruling_group
+					traits = {
+					}
+					on_created = {
+						add_trait = political_appointee
+					}
+				}
+			}
+
+			add_liberty_desire = -5
+
+			remove_variable = gubernatorial_candidate
+		}
+
+		ai_chance = {
+			base = 25
+			modifier = {
+				trigger = {
+					ruler = {
+						has_trait = bigoted
+					}
+				}
+				add = -25
+			}
+			modifier = {
+				trigger = {
+					ruler = {
+						has_trait = tactful
+					}
+				}
+				add = 25
+			}
+		}
+	}
+
+	option = {
+		name = subject_interactions.1.c
+		show_as_unavailable = {
+			exists = scope:their_multicultural_interest_group
+		}
+
+		trigger = {
+			exists = scope:their_minority_culture
+			has_law = law_type:law_multicultural
+
+			scope:gubernatorial_change_country = {
+				any_interest_group = {
+					law_stance = {
+						law = law_type:law_multicultural
+						value > neutral
+					}
+				}
+			}
+		}
+		highlighted_option = yes
+
+		scope:gubernatorial_change_country = {
+			random_interest_group = {
+				limit = {
+					law_stance = {
+						law = law_type:law_multicultural
+						value > neutral
+					}
+				}
+				save_temporary_scope_as = their_multicultural_interest_group
+			}
+
+			custom_tooltip = {
+				text = subject_interactions.1.c.tt
+				create_character = {
+					ruler = yes
+					culture = scope:their_minority_culture
+					interest_group = scope:their_multicultural_interest_group
+					traits = {
+					}
+					on_created = {
+						add_trait = political_appointee
+						if = {
+							limit = {
+								has_trait = bigoted
+							}
+							remove_trait = bigoted
+						}
+						random_list = {
+							1 = { }
+							1 = { add_trait = erudite }
+							1 = { add_trait = literary }
+						}
+					}
+				}
+			}
+
+			if = {
+				limit = {
+					scope:their_multicultural_interest_group = {
+						is_in_government = yes
+					}
+				}
+				add_liberty_desire = -5
+			}
+			else = {
+				add_liberty_desire = 5
+			}
+
+			remove_variable = gubernatorial_candidate
+		}
+
+
+		random_interest_group = {
+			limit = {
+				is_same_interest_group_type = scope:their_multicultural_interest_group
+			}
+			add_modifier = {
+				name = supporting_our_man
+				months = short_modifier_time
+			}
+		}
+
+		ai_chance = {
+			base = 25
+			modifier = {
+				trigger = {
+					ruler = {
+						has_trait = bigoted
+					}
+				}
+				add = -25
+			}
+			modifier = {
+				trigger = {
+					ruler = {
+						OR = {
+							has_trait = imperious
+							has_trait = arrogant
+						}
+					}
+				}
+				add = 25
+			}
+		}
+	}
+}

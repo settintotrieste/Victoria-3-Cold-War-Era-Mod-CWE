@@ -1,0 +1,155 @@
+﻿# Root = War
+# scope:target_country = target of violate sovereignty
+violate_sovereignty_war_check_rule = {
+	violate_sovereignty_war_check = yes
+}
+
+# Root = Country
+has_voting_franchise = {
+	country_has_voting_franchise = yes
+}
+
+# Root = Country
+can_form_power_bloc = {
+	country_can_form_power_bloc = yes
+}
+
+# Root = Country
+can_lead_power_bloc = {
+	country_rank >= rank_value:major_power
+}
+
+# Root = Power Bloc
+is_weak_power_bloc = {
+	power_bloc_is_weak = yes
+}
+
+# Checks if any diplomatic play is possible against the target country
+# Root = Country
+# scope:target_country = target of a diplomatic play
+can_start_diplomatic_plays_against = {
+	# Might be disallowed by power bloc
+	NOT = {
+		custom_tooltip = {
+			text = "power_bloc_disallow_war_bool"
+			is_in_same_power_bloc = scope:target_country
+			power_bloc ?= {
+				modifier:power_bloc_disallow_war_bool = yes
+			}
+			# Conflicts between Overlord and (their own) Subject are always permitted despite Power Bloc special conditions
+			NOR = {
+				is_direct_subject_of = scope:target_country
+				scope:target_country = {
+					is_direct_subject_of = root
+				}
+			}
+		}
+	}
+	NOT = {
+		# Disallow plays targeting your indirect subjects
+		scope:target_country = {
+			is_indirect_subject_of = root
+		}
+	}
+}
+
+# Checks if Country can join the target country's side in a diplomatic play
+# Root = Country
+# scope:target_country = country of the side to join to
+# scope:enemy_country = enemy country of target_country to which we could fight against
+can_join_side_in_diplomatic_play = {
+	# Might be disallowed by power bloc
+	NOT = {
+		custom_tooltip = {
+			text = "POWER_BLOC_CANNOT_SIDE_AGAINST_OVERLORD"
+			is_in_same_power_bloc = scope:target_country
+			is_in_same_power_bloc = scope:enemy_country
+			power_bloc ?= {
+				modifier:power_bloc_disallow_war_bool = yes
+			}
+			# Conflicts between Overlord and (their own) Subject are always permitted despite Power Bloc special conditions
+			# We can join the overlord side but not the subject's one
+			scope:target_country = {
+				is_direct_subject_of = scope:enemy_country
+			}
+		}
+	}
+	NOT = {
+		# Disallow plays targeting your indirect subjects
+		scope:enemy_country = {
+			is_indirect_subject_of = root
+		}
+	}
+}
+
+# Evaluated if the law_type does not have its own trigger for this purpose
+# root = imposing country
+# scope:target_country = country imposed upon
+# scope:law = the law type being considered
+can_impose_law_default = {
+	scope:target_country = {
+		is_subject_of = root
+		OR = {
+			is_subject_type = subject_type_dominion
+			is_not_sufficiently_independent = yes
+		}
+	}
+}
+
+unlock_power_bloc_principle_slot_1 = {
+	always = yes
+}
+
+unlock_power_bloc_principle_slot_2 = {
+	hidden_trigger = {
+		has_dlc_feature = power_bloc_features
+	}
+}
+
+# If you ever change these conditions, remember to update the loc-key: TOOLTIP_LOCKED_PRINCIPLE_SLOT_3_DURING_FORMATION
+unlock_power_bloc_principle_slot_3 = {
+	hidden_trigger = {
+		has_dlc_feature = power_bloc_features
+	}
+	OR = {
+		hidden_trigger = {
+			used_principle_slots >= 3
+		}
+		AND = {
+			power_bloc_rank <= 5
+			num_power_bloc_members >= 5
+		}
+	}
+}
+
+# If you ever change these conditions, remember to update the loc-key: TOOLTIP_LOCKED_PRINCIPLE_SLOT_4_DURING_FORMATION
+unlock_power_bloc_principle_slot_4 = {
+	hidden_trigger = {
+		has_dlc_feature = power_bloc_features
+	}
+	OR = {
+		hidden_trigger = {
+			used_principle_slots = 4
+		}
+		AND = {
+			power_bloc_rank <= 3
+			num_power_bloc_members >= 10
+		}
+	}
+}
+
+unlock_power_bloc_formation_principle_slot_1 = {
+	always = yes
+}
+
+unlock_power_bloc_formation_principle_slot_2 = {
+	has_dlc_feature = power_bloc_features
+}
+
+unlock_power_bloc_formation_principle_slot_3 = {
+	always = no
+}
+
+unlock_power_bloc_formation_principle_slot_4 = {
+	always = no
+}
