@@ -1,0 +1,398 @@
+﻿leverage_threshold_to_invite = 200 	# Minimum leverage advantage from power bloc on country to be able to invite the country
+
+# root = pact
+# root.first_country: first country in the pact
+# root.second_country: second country in the pact
+# root = { liberty_desire < 50 }: compare trigger for current Liberty Desire value root.
+# Must return a value which will be added to the current Liberty Desire in this pact.
+liberty_desire_weekly_change = {
+	add = {
+		value = 0.1
+		desc = "base_value"
+	}	
+
+	add = {
+		if = {
+			limit = { "root.second_country.relations(root.first_country)" < relations_threshold:hostile }
+			add = {
+				add = 0.5
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_RELATIONS_HOSTILE"
+			}
+		}
+		else_if = {
+			limit = { "root.second_country.relations(root.first_country)" < relations_threshold:cold }
+			add = {
+				add = 0.25
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_RELATIONS_COLD"
+			}
+		}
+		else_if = {
+			limit = { "root.second_country.relations(root.first_country)" < relations_threshold:poor }
+			add = {
+				add = 0.10
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_RELATIONS_POOR"
+			}
+		}
+		else_if = {
+			limit = { "root.second_country.relations(root.first_country)" < relations_threshold:cordial }
+			add = {
+				add = 0
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_RELATIONS_NEUTRAL"
+			}
+		}
+		else_if = {
+			limit = { "root.second_country.relations(root.first_country)" >= relations_threshold:friendly }
+			add = {
+				add = -0.1
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_RELATIONS_FRIENDLY"
+			}
+		}
+		else_if = {
+			limit = { "root.second_country.relations(root.first_country)" >= relations_threshold:amicable }
+			add = {
+				add = -0.05
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_RELATIONS_AMICABLE"
+			}
+		}
+		else_if = {
+			limit = { "root.second_country.relations(root.first_country)" >= relations_threshold:cordial }
+			add = {
+				add = -0.025
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_RELATIONS_CORDIAL"				
+			}
+		}
+	}
+	
+	add = {
+		if = {
+			limit = { root.first_country.infamy >= infamy_threshold:pariah }
+			add = 2.0
+		}
+		else_if = {
+			limit = { root.first_country.infamy >= infamy_threshold:notorious }
+			add = 0.25
+		}		
+		else_if = {
+			limit = { root.first_country.infamy >= infamy_threshold:infamous }
+			add = 0.1
+		}		
+		
+		desc = "concept_infamy"
+	}
+	
+	if = {
+		limit = { root.first_country = { has_diplomatic_pact = { who = root.second_country type = da_knowledge_sharing } } }
+		add = {
+			add = -0.05
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_KNOWLEDGE_SHARING"
+		}
+	}
+	
+	if = {
+		limit = { root.first_country = { has_diplomatic_pact = { who = root.second_country type = exempt_from_service } } }
+		add = {
+			add = -0.05
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_EXEMPT_FROM_SERVICE"
+		}
+	}
+		
+	if = {
+		limit = { root.first_country.prestige < 1 }
+		add = {
+			add = 1
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_NO_PRESTIGE_POSITIVE"
+		}
+	}
+	else_if = {
+		limit = { root.second_country.prestige < 1 }
+		add = {
+			add = -0.10
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_NO_PRESTIGE_NEGATIVE"
+		}
+	}	
+	else_if = {
+		limit = {
+			OR = {
+				is_diplomatic_action_type = protectorate
+				is_diplomatic_action_type = tributary
+			}
+		}				
+		if = {
+			limit = { 	
+				root.first_country.prestige > {
+					add = root.second_country.prestige
+					# determines the multiple of prestige the overlord must have achieved in order for prestige advantage to have a negative impact on Liberty Desire rather than positive
+					multiply = 1.5
+				}
+			}
+			add = {
+				add = root.first_country.prestige
+				divide = root.second_country.prestige
+				divide = 150
+				min = 0.01
+				max = 0.05
+				multiply = -1
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_PRESTIGE_DIFFERENCE_1_5_NEGATIVE"
+			}
+		}
+		else_if = {
+			add = {
+				add = root.second_country.prestige
+				multiply = 1.5
+				divide = root.first_country.prestige
+				divide = 3
+				max = 2.5
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_PRESTIGE_DIFFERENCE_1_5_POSITIVE"
+			}
+		}	
+	}
+	else_if = {
+		limit = {
+			OR = {
+				is_diplomatic_action_type = personal_union
+				is_diplomatic_action_type = dominion
+			}
+		}				
+		if = {
+			limit = { 	
+				root.first_country.prestige > {
+					add = root.second_country.prestige
+					# determines the multiple of prestige the overlord must have achieved in order for prestige advantage to have a negative impact on Liberty Desire rather than positive
+					multiply = 2.0
+				}
+			}
+			add = {
+				add = root.first_country.prestige
+				divide = root.second_country.prestige
+				divide = 200
+				min = 0.01
+				max = 0.05
+				multiply = -1
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_PRESTIGE_DIFFERENCE_2_0_NEGATIVE"
+			}
+		}
+		else_if = {
+			add = {
+				add = root.second_country.prestige
+				multiply = 2.0
+				divide = root.first_country.prestige
+				divide = 3
+				max = 2.5
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_PRESTIGE_DIFFERENCE_2_0_POSITIVE"
+			}
+		}	
+	}	
+	else_if = {
+		limit = {
+			OR = {
+				is_diplomatic_action_type = puppet
+				is_diplomatic_action_type = semi_autonomous_colony
+			}
+		}				
+		if = {
+			limit = { 	
+				root.first_country.prestige > {
+					add = root.second_country.prestige
+					# determines the multiple of prestige the overlord must have achieved in order for prestige advantage to have a negative impact on Liberty Desire rather than positive
+					multiply = 3
+				}
+			}
+			add = {
+				add = root.first_country.prestige
+				divide = root.second_country.prestige
+				divide = 300
+				min = 0.01
+				max = 0.05
+				multiply = -1
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_PRESTIGE_DIFFERENCE_3_0_NEGATIVE"
+			}
+		}
+		else_if = {
+			add = {
+				add = root.second_country.prestige
+				multiply = 3
+				divide = root.first_country.prestige
+				divide = 3
+				max = 2.5
+				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_PRESTIGE_DIFFERENCE_3_0_POSITIVE"
+			}
+		}	
+	}		
+	
+	second_country = {
+		add = {
+			ordered_interest_group = {
+				limit = {
+					is_member_of_lobby = lobby_type:lobby_pro_overlord
+					is_in_government = yes
+				}
+				order_by = ig_clout
+				subtract = ig_clout
+				divide = 2
+			}
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_PRO_LOBBY_INTEREST_GROUP_IN_GOVERNMENT"
+		}
+		add = {
+			ordered_interest_group = {
+				limit = {
+					is_member_of_lobby = lobby_type:lobby_pro_overlord
+					is_in_government = no
+				}
+				order_by = ig_clout
+				subtract = ig_clout
+				divide = 4
+			}
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_PRO_LOBBY_INTEREST_GROUP_IN_OPPOSITION"
+		}
+		add = {
+			ordered_interest_group = {
+				limit = {
+					is_member_of_lobby = lobby_type:lobby_anti_overlord
+					is_in_government = yes
+				}
+				order_by = ig_clout
+				add = ig_clout
+				divide = 2
+			}
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ANTI_LOBBY_INTEREST_GROUP_IN_GOVERNMENT"
+		}
+		add = {
+			ordered_interest_group = {
+				limit = {
+					is_member_of_lobby = lobby_type:lobby_anti_overlord
+					is_in_government = no
+				}
+				order_by = ig_clout
+				add = ig_clout
+				divide = 4
+			}
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ANTI_LOBBY_INTEREST_GROUP_IN_OPPOSITION"
+		}
+	}
+	
+	if = {
+		limit = { "root.second_country.economic_dependence(root.first_country)" > 0 }
+		add = {
+			value = 1
+			subtract = "root.second_country.economic_dependence(root.first_country)"
+			divide = 10
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ECONOMIC_DEPENDENCE"
+		}		
+	}
+	else = {
+		add = {
+			value = 1
+			subtract = "root.second_country.economic_dependence(root.first_country)"
+			divide = 3
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ECONOMIC_DEPENDENCE"
+		}	
+	}
+	
+	if = {
+		limit = {
+			root.second_country.market = root.first_country.market
+			root.second_country.capital = { is_isolated_from_market = yes }
+		}
+		add = {
+			value = 1 
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ISOLATED_FROM_MARKET"
+		}
+	}
+	else_if = {
+		limit = {
+			root.second_country.market = root.first_country.market
+			root.first_country.supply_network_strength < 1
+			root.second_country = { has_port = yes }
+		}
+		add = {
+			value = 1
+			subtract = root.first_country.supply_network_strength
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_LOW_SUPPLY_NETWORK_STRENGTH"
+		}
+	}	
+	
+	if = {
+		limit = {
+			root.first_country = { 
+				is_in_power_bloc = yes
+				power_bloc = {
+					has_principle = principle:principle_sacred_civics_2
+				}
+				religion = root.second_country.religion
+			}
+		}
+		desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_SACRED_CIVICS"
+		add = -0.1
+	}	
+	
+	add = {
+		value = root.second_country.modifier:country_liberty_desire_add
+		desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DESC_ADDITIONAL_ADDS"
+	}
+	
+	add = {
+		value = root.first_country.modifier:country_liberty_desire_of_subjects_add
+		desc = "LIBERTY_SUBJECT_DESIRE_WEEKLY_CHANGE_DESC_ADDITIONAL_ADDS"
+	}
+	
+	save_temporary_value_as = pre_scaling_value
+	
+	if = {
+		limit = { 
+			scope:pre_scaling_value < 0
+			second_country = {
+				liberty_desire < 50
+			}
+		}
+		multiply = {
+			add = second_country.liberty_desire
+			divide = 50
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_SCALING_LOW"
+		}
+		max = -0.01
+	}
+	else_if = {
+		limit = { 
+			scope:pre_scaling_value > 0
+			second_country = {
+				liberty_desire > 50
+			}
+		}
+		multiply = {
+			add = 100
+			subtract = second_country.liberty_desire
+			divide = 50
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_SCALING_HIGH"
+		}
+		min = 0.01
+	}	
+	
+	save_temporary_value_as = pre_mult_modifiers_value
+	
+	multiply = {
+		value = 1
+		if = {
+			limit = { scope:pre_mult_modifiers_value > 0 }
+			add = root.second_country.modifier:country_liberty_desire_increase_mult
+		}
+		else_if = {
+			limit = { scope:pre_mult_modifiers_value < 0 }
+			add = root.second_country.modifier:country_liberty_desire_decrease_mult
+		}
+		min = 0
+		desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DESC_ADDITIONAL_MULTS"
+	}
+	
+	if = {
+		limit = {
+			root.second_country = {
+				has_truce_with = root.first_country
+				scope:pre_mult_modifiers_value > 0
+			}
+		}
+		multiply = {
+			value = 0.5
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_TRUCE"
+		}
+	}
+}

@@ -36,6 +36,46 @@ country_has_voting_franchise = {
 	}
 }
 
+country_can_form_power_bloc = {
+	AND = {
+		is_revolutionary = no
+		country_rank >= rank_value:major_power
+	}
+
+}
+
+power_bloc_is_weak = {
+	power_bloc_leader = {
+		country_rank < rank_value:great_power
+	}
+}
+
+country_is_in_different_power_bloc = {
+	is_in_power_bloc = yes
+	$TARGET$ = {
+		is_in_power_bloc = yes
+	}
+
+	NOT = {
+		power_bloc = $TARGET$.power_bloc
+	}
+}
+
+country_is_power_struggle_rival = {
+	power_bloc ?= {
+		OR = {
+			AND = {
+				power_bloc_leader = root
+				power_struggle_contender ?= $TARGET$
+			}
+			AND = {
+				power_bloc_leader = $TARGET$
+				power_struggle_contender ?= root
+			}
+		}
+	}
+}
+
 country_has_education_system = {
 	OR = {
 		has_law = law_type:law_religious_schools
@@ -1068,9 +1108,21 @@ can_reach_target_country = {
 	OR = {
 		has_strategic_adjacency = scope:target_country
 		AND = {
+			has_port = yes
 			navy_size >= 10
+			scope:target_country = { has_port = yes }
+		}
+	}
+}
+
+can_be_reached_by_target_country = {
+	has_diplomatic_relevance = scope:target_country
+	OR = {
+		has_strategic_adjacency = scope:target_country
+		AND = {
 			has_port = yes
 			scope:target_country = { has_port = yes }
+			scope:target_country = { navy_size >= 10 }
 		}
 	}
 }
@@ -1783,5 +1835,56 @@ diplomatic_play_has_no_relations_blocker_with_overlord = {
 			text = DIPLO_ACTION_TOP_OVERLORD_RELATIONS_CORDIAL_OR_GREATER_NOT
 			scope:target_country.overlord.relations:root < relations_threshold:cordial
 		}	
+	}
+}
+
+has_desirable_character_traits = {
+	NOR = {
+		has_trait = senile
+		has_trait = shellshocked
+		has_trait = psychological_affliction
+		has_trait = bandit
+	}
+	OR = {
+		has_trait = ambitious
+		has_trait = meticulous
+		has_trait = charismatic
+		has_trait = romantic
+		has_trait = brave
+		has_trait = pious
+		has_trait = imposing
+		has_trait = honorable
+	}
+}
+
+# Evaluated by scripted rule of similar name if the law_type does not have its own trigger for this purpose
+# root = imposing country
+# scope:target_country = country imposed upon
+# scope:law = the law type being considered
+can_impose_law_default = {
+	scope:target_country = {
+		is_subject_of = root
+		OR = {
+			is_subject_type = subject_type_puppet
+			is_subject_type = subject_type_dominion
+			is_subject_type = subject_type_personal_union
+			is_subject_type = subject_type_vassal
+		}
+	}
+}
+
+pro_foreign_imposition_country = {
+	target = scope:foreign_imposition_country
+	OR = {
+		is_political_lobby_type = lobby_pro_country
+		is_political_lobby_type = lobby_pro_overlord
+	}
+}
+
+anti_foreign_imposition_country = {
+	target = scope:foreign_imposition_country
+	OR = {
+		is_political_lobby_type = lobby_anti_country
+		is_political_lobby_type = lobby_anti_overlord
 	}
 }

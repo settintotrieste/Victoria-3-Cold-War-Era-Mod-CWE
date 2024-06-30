@@ -25,7 +25,7 @@ ai_desires_target_state = {
 		AND = { # AI wants to unify split states
 			scope:target_state = { 
 				is_split_state = yes 
-				region = { 
+				state_region = { 
 					any_scope_state = { owner = root }
 				}
 			}				
@@ -49,5 +49,70 @@ ai_desires_target_state = {
 			has_strategic_adjacency = scope:target_state
 			any_overlord_or_above = { this = scope:target_country }
 		}	
+	}
+}
+
+ai_has_reasons_to_not_oppose_law = {
+	OR = {
+		any_political_movement = {
+			desired_law ?= scope:law.type
+			political_movement_radicalism >= 75
+		}
+		AND = {
+			has_journal_entry = je_government_petition
+			var:desired_law_var	?= scope:law			
+		}
+		AND = {
+			has_journal_entry = je_law_imposition
+			imposed_law	?= scope:law			
+		}
+	}
+}
+
+ai_has_enact_weight_modifier_journal_entries = {
+	OR = {
+		AND = {
+			has_journal_entry = je_government_petition
+			has_variable = desired_law_var
+			scope:law = var:desired_law_var
+		}
+		AND = {
+			has_journal_entry = je_law_imposition
+			scope:law = imposed_law
+		}
+		AND = {
+			has_journal_entry = je_gyojo_shinwon
+			OR = {
+				scope:law = scope:donghak_desired_law_1
+				scope:law = scope:donghak_desired_law_2
+				scope:law = scope:donghak_desired_law_3
+			}
+		}
+	}
+}
+
+has_powerful_protectors = {
+	any_diplomatically_relevant_country = {
+		NOT = { this = scope:actor }
+		NOT = { is_in_same_power_bloc = scope:actor }
+		NOT = { is_subject_of = scope:actor }
+		OR = {
+			country_rank >= scope:actor.country_rank
+			army_size >= scope:actor.army_size
+		}			
+		OR = {
+			has_diplomatic_pact = {
+				who = root
+				type = alliance
+			}
+			has_diplomatic_pact = {
+				who = root
+				type = defensive_pact
+			}
+			has_diplomatic_pact = {
+				who = root
+				type = guarantee_independence
+			}						
+		}							
 	}
 }

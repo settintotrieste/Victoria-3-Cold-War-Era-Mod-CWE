@@ -1,0 +1,752 @@
+﻿identity_trade_league = {
+	power_bloc_modifier = {
+		power_bloc_customs_union_bool = yes
+		power_bloc_mandate_progress_per_great_power_member_add = 10
+		power_bloc_mandate_progress_per_major_power_member_add = 5
+		power_bloc_mandate_progress_per_minor_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_major_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_regional_power_member_add = 1
+		power_bloc_cohesion_per_member_add = -1
+		power_bloc_invite_acceptance_great_power_add = -15
+	}
+
+	leader_modifier = {
+		country_trade_route_quantity_mult = 0.1
+	}
+	
+	non_leader_modifier = {
+		country_convoy_contribution_to_market_owner_add = 0.2
+	}
+
+	can_leave = {
+		OR = {
+			is_power_bloc_leader = yes
+			power_bloc = {
+				leverage_advantage = {
+					target = root
+					value <= 30
+				}
+			}
+		}
+	}
+	
+	possible = {
+		NOT = { has_law = law_type:law_isolationism }
+	}
+
+	icon = "gfx/interface/icons/central_identity_pillars_icons/trade_league.dds"
+	background = "gfx/interface/power_blocs/backgrounds/pb_background_generic.dds"
+
+	mandate_progress = power_bloc_mandate_progress_by_rank
+	
+	on_created = { relations_hit_with_power_bloc_leaders = yes }
+	
+	cohesion = {
+		add = {
+			add = 0.15
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_BASE
+		}
+
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_leader.market.market_number_goods_shortages_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_leader.market.market_number_goods_shortages_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_leader.market.market_number_goods_shortages
+			}
+			multiply = -5
+			desc = POWER_BLOC_COHESION_GOODS_SHORTAGES
+		}
+
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_total_leading_goods_producers_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_total_leading_goods_producers_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_total_leading_goods_producers
+			}
+			multiply = 3
+			desc = POWER_BLOC_COHESION_LEADING_GOODS_PRODUCER
+		}
+
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "power_bloc_share_gdp_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "power_bloc_share_gdp_without(scope:without_country)"
+			}
+			else = {
+				add = power_bloc_share_gdp
+			}
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			multiply = 0.5
+			desc = POWER_BLOC_COHESION_SHARE_GDP
+		}
+		
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_worst_leader_relations
+			}
+			divide = define:NDiplomacy|MIN_RELATIONS
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			multiply = -1
+			max = 0
+			desc = POWER_BLOC_COHESION_WORST_LEADER_RELATIONS
+		}
+		
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_worst_economic_dependence_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_worst_economic_dependence_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_worst_economic_dependence
+			}
+			add = -3.5
+			divide = define:NDiplomacy|ECONOMIC_DEPENDENCE_MAX
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			multiply = 0.5
+			desc = POWER_BLOC_COHESION_WORST_ECONOMIC_DEPENDENCE
+		}
+	}
+	
+	ai_weight = {
+		value = 100
+		
+		if = {
+			limit = {
+				ig:ig_industrialists ?= { is_in_government = yes }
+			}
+			add = 100
+		}		
+		
+		if = {
+			limit = { has_law = law_type:law_free_trade }
+			add = 100
+		}
+		
+		if = {
+			limit = {
+				has_strategy = ai_strategy_economic_imperialism
+			}
+			multiply = 2.0
+		}			
+	}
+}
+
+identity_sovereign_empire = {
+	power_bloc_modifier = {
+		power_bloc_leader_can_make_subjects_bool = yes
+		power_bloc_mandate_progress_per_great_power_member_add = 10
+		power_bloc_mandate_progress_per_major_power_member_add = 5
+		power_bloc_mandate_progress_per_minor_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_major_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_regional_power_member_add = 1
+		power_bloc_invite_acceptance_great_power_add = -20
+		power_bloc_invite_acceptance_major_power_add = -10
+		power_bloc_invite_acceptance_unrecognized_major_power_add = -10
+		power_bloc_invite_acceptance_add = -30
+		power_bloc_cohesion_per_member_add = -3
+	}
+
+	leader_modifier = {
+		country_liberty_desire_of_subjects_add = -0.05
+	}
+
+	non_leader_modifier = {
+	}
+
+	member_modifier = {	
+	}
+	
+	possible = {
+		has_law = law_type:law_HOS_monarch
+	}
+
+	can_leave = {
+		OR = {
+			is_power_bloc_leader = yes
+			power_bloc = {
+				leverage_advantage = {
+					target = root
+					value <= 30
+				}
+			}
+		}
+	}
+
+	icon = "gfx/interface/icons/central_identity_pillars_icons/sovereign_empire.dds"
+	background = "gfx/interface/power_blocs/backgrounds/pb_background_generic.dds"
+
+	visible = {
+		#has_dlc_feature = power_bloc_features
+	}
+
+	mandate_progress = power_bloc_mandate_progress_by_rank
+	
+	on_created = { relations_hit_with_power_bloc_leaders = yes }
+	
+	cohesion = {
+		add = {
+			add = 0.3
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_BASE
+		}
+	
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "power_bloc_share_prestige_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "power_bloc_share_prestige_without(scope:without_country)"
+			}
+			else = {
+				add = power_bloc_share_prestige
+			}
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_SHARE_PRESTIGE
+		}
+		
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_worst_leader_relations
+			}
+			divide = define:NDiplomacy|MIN_RELATIONS
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			multiply = -1
+			max = 0
+			desc = POWER_BLOC_COHESION_WORST_LEADER_RELATIONS
+		}
+		
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_worst_liberty_desire_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_worst_liberty_desire_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_worst_liberty_desire
+			}
+			divide = 100 # liberty desire max value
+			multiply = -1
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_WORST_LIBERTY_DESIRE
+		}
+	}
+	
+	ai_weight = {
+		value = 100
+		
+		if = {
+			limit = {
+				ig:ig_landowners ?= { is_in_government = yes }
+			}
+			add = 100
+		}		
+		
+		add = {
+			value = num_subjects
+			multiply = 25
+			max = 250
+		}
+		
+		if = {
+			limit = {
+				has_strategy = ai_strategy_colonial_expansion
+			}
+			
+			multiply = 2.0
+		}		
+	}
+}
+
+identity_ideological_union = {
+	power_bloc_modifier = {
+		power_bloc_leader_can_regime_change_bool = yes
+		power_bloc_mandate_progress_per_great_power_member_add = 10
+		power_bloc_mandate_progress_per_major_power_member_add = 5
+		power_bloc_mandate_progress_per_minor_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_major_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_regional_power_member_add = 1
+		power_bloc_cohesion_per_member_add = -2
+	}
+
+	leader_modifier = {
+		country_law_enactment_time_mult = -0.1
+		country_can_impose_same_lawgroup_governance_principles_in_power_bloc_bool = yes
+		country_can_impose_same_lawgroup_distribution_of_power_in_power_bloc_bool = yes
+	}
+
+	non_leader_modifier = {
+		country_leader_has_law_enactment_success_mult = 0.3
+	}
+
+	member_modifier = {
+		
+	}
+
+	can_leave = {
+		OR = {
+			is_power_bloc_leader = yes
+			power_bloc = {
+				leverage_advantage = {
+					target = root
+					value <= 30
+				}
+			}
+		}
+	}
+
+	icon = "gfx/interface/icons/central_identity_pillars_icons/ideological_union.dds"
+	background = "gfx/interface/power_blocs/backgrounds/pb_background_generic.dds"
+
+	visible = {
+		#has_dlc_feature = power_bloc_features
+	}
+
+	mandate_progress = power_bloc_mandate_progress_by_rank
+	
+	on_created = { relations_hit_with_power_bloc_leaders = yes }
+
+	cohesion = {
+		add = {
+			add = 0.3
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_BASE
+		}
+	
+		add = {
+			add = legitimacy
+			divide = 100 # legitimacy max value
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			multiply = 0.7
+			desc = POWER_BLOC_COHESION_LEGITIMACY
+		}
+		
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_worst_leader_relations
+			}
+			divide = define:NDiplomacy|MIN_RELATIONS
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			multiply = -1
+			max = 0
+			desc = POWER_BLOC_COHESION_WORST_LEADER_RELATIONS
+		}
+		
+		if = {
+		 	limit = { 
+		 		exists = scope:with_country
+		 		"scope:power_bloc.power_bloc_worst_progressiveness_difference_government_type_with(scope:with_country)" != 0
+		 	}
+		 	add = {
+		 		add = "scope:power_bloc.power_bloc_worst_progressiveness_difference_government_type_with(scope:with_country)"
+		 		divide = 200 # bad progressiveness difference is usually around 100
+		 		multiply = -1
+		 		multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+		 		desc = POWER_BLOC_COHESION_WORST_PROGRESSIVENESS_DIFFERENCE
+		 	}	
+		}
+		else_if = {
+		 	limit = {
+		 		exists = scope:without_country
+		 		"scope:power_bloc.power_bloc_worst_progressiveness_difference_government_type_without(scope:without_country)" != 0
+		 	}
+		 	add = {
+		 		add = "scope:power_bloc.power_bloc_worst_progressiveness_difference_government_type_without(scope:without_country)"
+		 		divide = 200 # bad progressiveness difference is usually around 100
+		 		multiply = -1
+		 		multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+		 		desc = POWER_BLOC_COHESION_WORST_PROGRESSIVENESS_DIFFERENCE
+		 	}
+		}
+		else_if = {
+		 	limit = { "scope:power_bloc.power_bloc_worst_progressiveness_difference_government_type" != 0 }
+		 	add = {
+				add = scope:power_bloc.power_bloc_worst_progressiveness_difference_government_type
+				divide = 200 # bad progressiveness difference is usually around 100
+				multiply = -1
+				multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+				desc = POWER_BLOC_COHESION_WORST_PROGRESSIVENESS_DIFFERENCE
+			}
+		}
+	}
+	
+	ai_weight = {
+		value = 100
+		
+		if = {
+			limit = {
+				ig:ig_intelligentsia ?= { is_in_government = yes }
+			}
+			add = 100
+		}		
+
+		if = { # The forces of reaction
+			limit = { 
+				has_law = law_type:law_HOS_monarch 
+				OR = {
+					has_law = law_type:law_appointed_legislature
+					has_law = law_type:law_technocratic_legislature
+				}
+			}
+			add = 100
+		}		
+		
+		if = { # The forces of revolution
+			limit = { 
+				has_radical_leftist_government = yes
+			}
+			add = 200
+		}
+
+		if = {
+			limit = {
+				OR = {
+					has_strategy = ai_strategy_maintain_power_balance
+					has_strategy = ai_strategy_world_revolution
+					has_strategy = ai_strategy_anti_imperialism
+				}			
+			}	
+			multiply = 2.0
+		}		
+	}
+}
+
+identity_military_treaty_organization = {
+	power_bloc_modifier = {
+		power_bloc_leader_can_add_wargoal_bool = yes
+		power_bloc_mandate_progress_per_great_power_member_add = 10
+		power_bloc_mandate_progress_per_major_power_member_add = 5
+		power_bloc_mandate_progress_per_minor_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_major_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_regional_power_member_add = 1
+		power_bloc_invite_acceptance_great_power_add = -15
+		power_bloc_cohesion_per_member_add = -2
+	}
+
+	leader_modifier = {
+		country_prestige_from_army_power_projection_mult = 0.1
+		country_prestige_from_navy_power_projection_mult = 0.1
+	}
+
+	non_leader_modifier = {
+	}
+
+	member_modifier = {
+		building_training_rate_mult = 0.2
+	}
+	
+	possible = {
+		NOT = { is_neutral = yes }
+	}	
+
+	can_leave = {
+		OR = {
+			is_power_bloc_leader = yes
+			power_bloc = {
+				leverage_advantage = {
+					target = root
+					value <= 30
+				}
+			}
+		}
+	}
+
+	icon = "gfx/interface/icons/central_identity_pillars_icons/military_treaty_organization.dds"
+	background = "gfx/interface/power_blocs/backgrounds/pb_background_generic.dds"
+
+	visible = {
+		#has_dlc_feature = power_bloc_features
+	}
+
+	mandate_progress = power_bloc_mandate_progress_by_rank
+	
+	on_created = { relations_hit_with_power_bloc_leaders = yes }
+	
+	cohesion = {
+		add = {
+			add = 0.3
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_BASE
+		}
+	
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "power_bloc_share_power_projection_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "power_bloc_share_power_projection_without(scope:without_country)"
+			}
+			else = {
+				add = power_bloc_share_power_projection
+			}
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_SHARE_POWER_PROJECTION
+		}
+		
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_worst_infamy_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_worst_infamy_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_worst_infamy
+			}
+			divide = define:NDiplomacy|INFAMY_THRESHOLD_PARIAH
+			multiply = -1
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_WORST_INFAMY
+		}
+		
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_worst_leader_relations
+			}
+			divide = define:NDiplomacy|MIN_RELATIONS
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			multiply = -1
+			max = 0
+			desc = POWER_BLOC_COHESION_WORST_LEADER_RELATIONS
+		}
+	}
+	
+	ai_weight = {
+		value = 100
+		
+		if = {
+			limit = {
+				has_law = law_type:law_professional_army
+			}
+			add = 100
+		}
+
+		if = {
+			limit = {
+				ig:ig_armed_forces ?= { is_in_government = yes }
+			}
+			add = 100
+		}		
+		
+		if = {
+			limit = {
+				OR = {
+					has_strategy = ai_strategy_territorial_expansion
+					has_strategy = ai_strategy_armed_isolationism
+				}			
+			}	
+			multiply = 2.0
+		}			
+	}
+}
+
+identity_religious = {
+	power_bloc_modifier = {
+		power_bloc_leader_can_force_state_religion_bool = yes
+		power_bloc_mandate_progress_per_great_power_member_add = 10
+		power_bloc_mandate_progress_per_major_power_member_add = 5
+		power_bloc_mandate_progress_per_minor_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_major_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_regional_power_member_add = 1
+		power_bloc_cohesion_per_member_add = -2
+	}
+
+	leader_modifier = {
+		state_clergymen_investment_pool_efficiency_mult = 0.25
+	}
+
+	non_leader_modifier = {
+	}
+	
+	possible = {
+		OR = {
+			has_law = law_type:law_state_religion
+			has_law = law_type:law_freedom_of_conscience
+		}
+	}
+
+	member_modifier = {
+		state_conversion_mult = 0.33
+		interest_group_ig_devout_pol_str_mult = 0.25
+	}
+
+	can_leave = {
+		OR = {
+			is_power_bloc_leader = yes
+			power_bloc = {
+				leverage_advantage = {
+					target = root
+					value <= 30
+				}
+			}
+		}
+	}
+
+	icon = "gfx/interface/icons/central_identity_pillars_icons/religious.dds"
+	background = "gfx/interface/power_blocs/backgrounds/pb_background_generic.dds"
+
+	visible = {
+		#has_dlc_feature = power_bloc_features
+	}
+
+	mandate_progress = power_bloc_mandate_progress_by_rank
+	
+	on_created = { relations_hit_with_power_bloc_leaders = yes }
+	
+	cohesion = {
+		add = {
+			add = 0.3
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_BASE
+		}
+	
+		add = {
+			value = define:NPowerBlocs|COHESION_TARGET_MAX
+			multiply = ig:ig_devout.ig_clout
+			add = -10
+			multiply = 4
+			desc = POWER_BLOC_COHESION_DEVOUT_IG_CLOUT
+		}
+
+		if = {
+			limit = {
+				ig:ig_devout = {
+					is_in_government = no
+				}
+			}
+			add = {
+				add = -15
+				desc = POWER_BLOC_COHESION_DEVOUT_IG_NOT_IN_GOVERNMENT
+			}	
+		}
+		
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_worst_leader_relations
+			}
+			divide = define:NDiplomacy|MIN_RELATIONS
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			multiply = -1
+			max = 0
+			desc = POWER_BLOC_COHESION_WORST_LEADER_RELATIONS
+		}
+		
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_religion_population_fraction_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_religion_population_fraction_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_worst_leader_religion_population_fraction
+			}
+			add = -0.5
+			multiply = 0.5
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_LEADER_RELIGION_WORST_POPULATION_SHARE
+		}
+	}
+	
+	ai_weight = {
+		value = 100
+
+		if = {
+			limit = {
+				ig:ig_devout ?= { is_in_government = yes }
+			}
+			add = 100
+		}			
+		
+		if = {
+			limit = {
+				has_law = law_type:law_state_religion
+			}
+			multiply = 1.5
+		}
+		
+		if = {
+			limit = {
+				religion = {
+					NOR = { # Non-abrahamic religions probably wouldn't go for this type of bloc
+						has_discrimination_trait = christian
+						has_discrimination_trait = muslim
+						has_discrimination_trait = jewish
+					}					
+				}			
+			}
+			multiply = 0.1		
+		}		
+	}
+}
