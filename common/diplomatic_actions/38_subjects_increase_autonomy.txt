@@ -37,6 +37,10 @@
 	}
 
 	accept_effect = {
+	
+		#THIS loses infamy
+		change_infamy = -5
+	
 		scope:target_country = {
 			add_liberty_desire = -30
 
@@ -189,7 +193,36 @@
 					}
 				}				
 				scope:target_country = { "potential_diplomatic_play_power_ratio(root)" >= 0.75 }
-			}					
+			}	
+
+			#Does not have historical railroading
+			NOT = { has_global_variable = historical_railroading_active }
+			
+			#AI is willing to grant more autonomy
+			ruler ?= {
+				OR = {
+					has_ideology = ideology:ideology_democratic
+					has_ideology = ideology:ideology_liberal
+				}
+			}
+			
+			#AI weights
+			OR = {
+			
+				#Overlord is in financial difficulty
+				in_default = yes
+				has_healthy_economy = yes
+				
+				#Overlord is a pariah and needs to reduce infamy quickly
+				infamy >= infamy_threshold:pariah
+				
+			}
+			
+			#Do not interfere with historical events
+			game_date >= 1980.1.1
+			has_technology_researched = tech_geopolitics_5
+			scope:target_country = { NOT = { is_subject_type = subject_type_mandate } }
+			
 		}	
 	}
 }
@@ -379,6 +412,10 @@ da_increase_autonomy_of_self = {
 	ai = {
 		check_acceptance_for_will_break = yes
 		check_acceptance_for_will_propose = yes
+	
+		evaluation_chance = {
+			value = 0.5		
+		}
 	
 		accept_score = {
 			value = 0

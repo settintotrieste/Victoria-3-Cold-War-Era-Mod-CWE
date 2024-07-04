@@ -569,6 +569,7 @@ ai_strategy_default = {
 
 		if = {
 			limit = {
+				NOT = { is_adjacent_to_country = scope:target_country } # No interest in treaty ports right next to our lands
 				OR = {
 					scope:target_country = {
 						has_diplomatic_pact = {
@@ -624,19 +625,9 @@ ai_strategy_default = {
 				
 				if = {
 					limit = {
-						OR = {
-							is_country_type = unrecognized
-							scope:target_country = { NOT = { is_country_type = unrecognized } }
-						}						
-					}
-					multiply = 0.5
-				}
-					
-				if = {
-					limit = {
 						has_strategic_adjacency = scope:target_state		
 					}
-					multiply = 1.25
+					multiply = 1.50
 				}	
 
 				if = {
@@ -1157,6 +1148,16 @@ ai_strategy_default = {
 	aggression = {
 		value = 0
 		
+		# More fighting between unrecognized powers
+		if = {
+			limit = {
+				is_country_type = unrecognized
+				scope:target_country = { is_country_type = unrecognized }
+			}
+
+			add = 1
+		}
+		
 		# Higher aggression against subject/overlord if domineering or rebellious
 		if = {
 			limit = {
@@ -1251,7 +1252,12 @@ ai_strategy_default = {
 				add = 50
 			}		
 			else_if = {
-				limit = { country_rank >= rank_value:major_power }
+				limit = { 
+					OR = {
+						country_rank >= rank_value:major_power
+						country_rank >= rank_value:unrecognized_major_power
+					}
+				}
 				add = 25
 			}	
 			else = {
@@ -1442,7 +1448,7 @@ ai_strategy_default = {
 		
 		if = {
 			limit = { country_rank < rank_value:major_power }
-			multiply = 0.75
+			multiply = 0.5
 		}						
 		
 		if = {
@@ -1922,14 +1928,6 @@ ai_strategy_default = {
 				}
 				multiply = 0.5
 			}
-
-			if = {
-				limit = {
-					c:HAI ?= ROOT
-					scope:target_country = { has_variable = haiti_friend }
-				}
-				multiply = 3
-			}
 			
 			# AI implications for Power Blocs: 'befriend' secret goal is more likely towards the Bloc members
 			if = {
@@ -1946,10 +1944,22 @@ ai_strategy_default = {
 							who = scope:target_country
 							type = rivalry
 						}					
-						scope:target_country = { relations:root <= relations_threshold:poor }					
+						scope:target_country = { relations:root <= relations_threshold:poor }			
 					}				
 				}
 				multiply = 0.0
+			}
+			
+			# Don't befriend large isolationist powers
+			if = {
+				limit = { 			
+					NAND = {
+						has_law = law_type:law_isolationism
+						gdp >= 5000000		
+					}	
+				}
+
+				multiply = 0
 			}
 		}
 		reconcile = {
@@ -2448,6 +2458,19 @@ ai_strategy_default = {
 				}
 				multiply = 0
 			}
+			
+			# Don't protect large isolationist powers
+			if = {
+				limit = { 			
+					NAND = {
+						has_law = law_type:law_isolationism
+						gdp >= 5000000		
+					}	
+				}
+
+				multiply = 0
+			}
+			
 		}
 		conquer = {
 			value = 0
@@ -2651,9 +2674,20 @@ ai_strategy_default = {
 				add = 25
 				
 				if = {
-					limit = { has_technology_researched = civilizing_mission }
-					add = 25
-				}					
+					limit = {
+						is_adjacent_to_country = scope:target_country
+						"relations(scope:target_country)" < relations_threshold:amicable							
+					}
+					add = 1000					
+				}
+
+				if = {
+					limit = {
+						power_bloc ?= { has_principle_group = principle_group:principle_group_colonial_offices }
+					}
+					add = 50
+				}
+				
 			}			
 			
 			if = {

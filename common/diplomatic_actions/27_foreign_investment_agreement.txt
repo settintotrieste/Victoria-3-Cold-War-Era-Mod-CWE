@@ -24,21 +24,6 @@
 		
 		#NOT isolationist
 		NOT = { has_law = law_type:law_isolationism }
-		
-		NOT = {
-			has_diplomatic_pact = {
-				who = scope:target_country
-				type = foreign_investment_rights
-			}
-		}
-		scope:target_country = {
-			NOT = {
-				has_diplomatic_pact = {
-					who = scope:actor
-					type = foreign_investment_rights
-				}	
-			}
-		}
 	}
 
 	accept_effect = {
@@ -48,7 +33,35 @@
 			PRO_AMOUNT = 3
 			ANTI_AMOUNT = -3
 			FACTOR = appeasement_foreign_investment_agreement_formed
-		}	
+		}
+		if = {
+			limit = {
+				has_diplomatic_pact = {
+					who = scope:target_country
+					type = foreign_investment_rights
+				}			
+			}
+			remove_diplomatic_pact = {
+				country = scope:target_country
+				type = foreign_investment_rights
+			}	
+		}
+		else_if = {
+			limit = {
+				scope:target_country = {
+					has_diplomatic_pact = {
+						who = scope:actor
+						type = foreign_investment_rights
+					}	
+				}
+			}
+			scope:target_country = {
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = foreign_investment_rights
+				}	
+			}
+		}
 	}
 
 	pact = {
@@ -75,13 +88,23 @@
 
 		requirement_to_maintain = {
 			trigger = {
-				is_subject = no
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_NO_SUBJECT_RELATION"
+					NOT = {
+						is_subject_of = scope:target_country
+						scope:target_country = { is_subject_of = root }
+					}
+				}
 			}
 		}
 
 		requirement_to_maintain = {
 			trigger = {
-				scope:target_country = { is_subject = no }
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_DIPLOMATIC_AUTONOMY"
+					aggressive_diplomatic_plays_permitted = yes
+					scope:target_country = { aggressive_diplomatic_plays_permitted = yes }					
+				}
 			}
 		}
 
@@ -142,6 +165,21 @@
 
 		manual_break_effect = {
 			change_relations = { country = scope:target_country value = -10 }
+			if = {
+				limit = { 
+					NOR = { 
+						is_subject_of = scope:target_country 
+						scope:target_country = { is_subject_of = root }
+					}
+				}
+				add_lobby_appeasement_from_diplomacy_unidirectional = { 
+					FIRST = root
+					SECOND = scope:target_country 
+					PRO_AMOUNT = -3
+					ANTI_AMOUNT = 3
+					FACTOR = appeasement_foreign_investment_agreement_broken
+				}				
+			}
 		}
 
 		auto_break_effect = {
