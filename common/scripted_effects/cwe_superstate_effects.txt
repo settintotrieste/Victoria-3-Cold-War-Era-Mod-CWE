@@ -92,110 +92,108 @@ create_superstate_free_trade_zone = {
 
 create_superstate_customs_union = {
 
-	#Break customs unions with non-superstate members
+	#Create superstate power bloc
 	if = {
 		limit = { 
-			has_variable = superstate_customs_union
-			is_junior_in_customs_union = yes
-			any_country = {
-				leads_customs_union = yes
-				NOT = { shares_same_superstate = yes }
-				NOT = { has_variable = superstate_customs_union }
-			}
-		}
-		every_country = { 
-			limit = { 
-				leads_customs_union = yes
-				NOT = { shares_same_superstate = yes }
-				NOT = { has_variable = superstate_customs_union }
-				has_diplomatic_pact = { who = ROOT type = customs_union }
-			}
-			remove_diplomatic_pact = {
-				country = ROOT
-				type = customs_union
-			}
-		}
-	}
-
-	#Enter into Customs Union with others
-	if = {
-		limit = {
-			has_variable = superstate_customs_union
-			is_junior_in_customs_union = no
-			any_country = {
-				shares_same_superstate = yes
-				is_junior_in_customs_union = no
-				has_variable = superstate_customs_union
-				this.gdp > root.gdp
-			}
-		}
-		every_country = { 
-			limit = { 
-				NOT = { shares_same_superstate = yes }
-				leads_customs_union = yes
-				has_diplomatic_pact = { who = ROOT type = customs_union }
-			}
-			remove_diplomatic_pact = {
-				country = ROOT
-				type = customs_union
-			}
-		}
-		random_country = {
-			limit = { 
-				shares_same_superstate = yes
-				is_junior_in_customs_union = no
-				has_variable = superstate_customs_union
-				this.gdp > root.gdp
-			}
-			create_diplomatic_pact = {
-				country = ROOT
-				type = customs_union
-			}
-			change_relations = { 
-				country = ROOT
-				value = 25
-			}
-		}
-	}
-	else_if = {
-		limit = {
-			has_variable = superstate_customs_union
-			is_junior_in_customs_union = no
-			any_country = {
-				shares_same_superstate = yes
-				is_junior_in_customs_union = no
-				has_variable = superstate_customs_union
-				this.gdp < root.gdp
-			}
-		}
-		every_country = { 
-			limit = { 
-				NOT = { shares_same_superstate = yes }
-				leads_customs_union = yes
-				has_diplomatic_pact = { who = ROOT type = customs_union }
-			}
-			remove_diplomatic_pact = {
-				country = ROOT
-				type = customs_union
-			}
-		}
-		random_country = {
-			limit = { 
-				shares_same_superstate = yes
-				is_junior_in_customs_union = no
-				has_variable = superstate_customs_union
-				this.gdp < root.gdp
-			}
-			ROOT = {
-				create_diplomatic_pact = {
-					country = THIS
-					type = customs_union
+			OR = { 
+				is_in_power_bloc = no
+				AND = { 
+					OR = { 
+						is_power_bloc_leader = yes
+						is_in_power_bloc = yes
+					}
+					power_bloc ?= { 
+						OR = { 
+							power_bloc_leader = { NOT = { shares_same_superstate = yes } }
+							NOT = { has_identity = identity:identity_superstate } 
+						}
+					}
 				}
 			}
-			change_relations = { 
-				country = ROOT
-				value = 25
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_power_bloc = {
+						has_identity = identity:identity_superstate
+						power_bloc_leader = {
+							shares_same_superstate = yes
+						}
+					}
+				}
 			}
+			ordered_country = {
+				limit = {
+					shares_same_superstate = yes
+					is_power_bloc_leader = no
+				}
+				order_by = country_rank
+				save_scope_as = superstate_power_bloc
+			}
+			if = {
+				limit = { exists = scope:superstate_power_bloc }
+				scope:superstate_power_bloc = {
+					if = { limit = { has_variable = XNA_ambitions } create_power_bloc = { name =  XNA map_color = { 66 94 193 } identity = identity_superstate } }
+					else_if = { limit = { has_variable = XCA_ambitions } create_power_bloc = { name =  XCA map_color = { 40 233 255 } identity = identity_superstate } }
+					else_if = { limit = { has_variable = XSA_ambitions } create_power_bloc = { name =  XSA map_color = { 0 36 144 } identity = identity_superstate } }
+					else_if = { limit = { has_variable = XEU_ambitions } create_power_bloc = { name =  XEU map_color = { 70 130 180 } identity = identity_superstate } }
+					else_if = { limit = { has_variable = XER_ambitions } create_power_bloc = { name =  XER map_color = { 177 73 165 } identity = identity_superstate } }
+					else_if = { limit = { has_variable = XAL_ambitions } create_power_bloc = { name =  XAL map_color = { 0 98 51 } identity = identity_superstate } }
+					else_if = { limit = { has_variable = XAU_ambitions } create_power_bloc = { name =  XAU map_color = { 120 98 57 } identity = identity_superstate } }
+					else_if = { limit = { has_variable = XEA_ambitions } create_power_bloc = { name =  XEA map_color = { 0 56 168 } identity = identity_superstate } }
+					else_if = { limit = { has_variable = XSE_ambitions } create_power_bloc = { name =  XSE map_color = { 255 53 35 } identity = identity_superstate } }
+					else_if = { limit = { has_variable = XPI_ambitions } create_power_bloc = { name =  XPI map_color = { 1 41 115 } identity = identity_superstate } }
+				}
+				if = {
+					limit = {  
+						OR = {
+							is_in_power_bloc = yes
+							power_bloc ?= { 
+								OR = { 
+									power_bloc_leader = { NOT = { shares_same_superstate = yes } }
+									NOT = { has_identity = identity:identity_superstate } 
+								}
+							}
+						}
+					}
+					join_power_bloc = scope:superstate_power_bloc
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					is_in_power_bloc = no
+					power_bloc ?= { 
+						OR = { 
+							power_bloc_leader = { NOT = { shares_same_superstate = yes } }
+							NOT = { has_identity = identity:identity_superstate } 
+						}
+					}
+				}
+				any_power_bloc = {
+					has_identity = identity:identity_superstate
+					power_bloc_leader = {
+						shares_same_superstate = yes
+					}
+				}
+			}
+			random_country = {
+				limit = { 
+					shares_same_superstate = yes
+					is_in_power_bloc = yes
+					is_power_bloc_leader = yes
+				}
+				save_scope_as = superstate_power_bloc
+			}
+			if = {
+				limit = { exists = scope:superstate_power_bloc }
+				join_power_bloc = scope:superstate_power_bloc
+			}
+		}
+		change_relations = { 
+			country = ROOT
+			value = 25
 		}
 	}
 
@@ -204,23 +202,11 @@ create_superstate_customs_union = {
 create_superstate_currency_union = {
 
 	#Enter into Currency Union with others
-	every_country = { 
-		limit = { 
-			OR = { 
-				NOT = { shares_same_superstate = yes }
-				leads_customs_union = no
-			} 
-			has_diplomatic_pact = { who = ROOT type = currency_union }
-		}
-		remove_diplomatic_pact = {
-			country = ROOT
-			type = currency_union
-		}
-	}
 	random_country = {
 		limit = { 
 			shares_same_superstate = yes
-			leads_customs_union = yes
+			is_in_same_power_bloc = ROOT
+			is_power_bloc_leader = yes
 			has_variable = superstate_currency_union
 			NOT = { has_diplomatic_pact = { who = ROOT type = currency_union } }
 		}
@@ -238,22 +224,16 @@ create_superstate_currency_union = {
 
 create_superstate_defence_union = {
 
-	every_country = {
+	if = {
 		limit = { 
-			shares_same_superstate = yes
-			has_variable = superstate_defence_union
-			NOR = {
-				has_diplomatic_pact = { who = ROOT type = defensive_pact }
-				has_diplomatic_pact = { who = ROOT type = alliance }
+			is_in_power_bloc = yes
+			power_bloc ?= { 
+				has_identity = identity:identity_superstate 
+				NOT = { has_principle = principle:principle_defensive_cooperation_3 }
 			}
 		}
-		create_diplomatic_pact = {
-			country = ROOT
-			type = defensive_pact
-		}
-		change_relations = { 
-			country = ROOT
-			value = 25
+		power_bloc ?= { 
+			add_principle = principle_defensive_cooperation_3
 		}
 	}
 
@@ -263,70 +243,24 @@ create_superstate_confederation = {
 
 	#Confederate THIS with Superstate
 	if = {
-		limit = { is_subject = yes }
-		make_independent = yes
-	}
-	every_country = {
-		limit = {
-			NOT = { THIS = ROOT }
-			shares_same_superstate = yes
-			is_a_superstate_country_tag = yes
-		}
-		ROOT = { 
-			every_country = {
-				limit = { 
-					has_diplomatic_pact = {
-						country = ROOT
-						type = currency_union
-						is_initiator = yes
-					}
-				}
-				remove_diplomatic_pact = {
-					country = ROOT
-					type = currency_union
+		limit = { 
+			is_power_bloc_leader = no
+			is_in_power_bloc = yes
+			power_bloc ?= { 
+				has_identity = identity:identity_superstate
+				power_bloc_leader = {
+					shares_same_superstate = yes
 				}
 			}
-			every_country = {
-				limit = { 
-					has_diplomatic_pact = {
-						country = ROOT
-						type = legal_union
-						is_initiator = yes
-					}
-				}
-				remove_diplomatic_pact = {
+			NOT = { is_subject_type = subject_type_confederal_state }
+		}
+		power_bloc ?= { 
+			power_bloc_leader ?= {
+				create_diplomatic_pact = {
 					country = ROOT
-					type = legal_union
+					type = confederal_state
 				}
 			}
-			every_country = {
-				limit = { 
-					has_diplomatic_pact = {
-						country = ROOT
-						type = customs_union
-					}
-				}
-				remove_diplomatic_pact = {
-					country = ROOT
-					type = customs_union
-				}
-			}
-		}
-		create_diplomatic_pact = {
-			country = ROOT
-			type = confederal_state
-		}
-		create_diplomatic_pact = {
-			country = ROOT
-			type = currency_union
-		}
-		create_diplomatic_pact = {
-			country = ROOT
-			type = legal_union
-		}
-		create_diplomatic_pact = {
-			country = ROOT
-			type = customs_union
 		}
 	}
 
