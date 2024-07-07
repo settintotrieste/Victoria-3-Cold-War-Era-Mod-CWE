@@ -1699,3 +1699,196 @@ historical_alliances_system.18 = {
     }
 
 }
+
+# Form Communist China Bloc
+historical_alliances_system.19 = {
+    type = country_event
+
+    title = PRC_PB_form.t 							# Title of the event; ADD LOCALISATION
+    desc = PRC_PB_form.d 							# Description of the event; ADD LOCALISATION
+    #flavor = PRC_PB_form.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		OR = { c:CHI ?= this c:PRC ?= this c:ROC ?= this }		# Change TAG of the overlord ****
+		has_global_variable = sino_soviet_split_global_var
+		
+		is_in_power_bloc = no
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_not_neutral = yes
+		
+		#THIS is a super power
+		country_rank >= rank_value:unrecognized_major_power
+		
+		# Event has not been fired before
+		NOT = { has_variable = PRC_PB_form_hae }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = PRC_PB_form_hae							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1				# Accept
+        highlighted_option = yes
+		
+		#Create own bloc
+		if = {
+			limit = { is_in_power_bloc = no }
+			create_power_bloc = {
+				name = SINOSPHERE
+
+				map_color = { 255 165 0 }
+
+				identity = identity_ideological_union
+
+				# subjects are automatically part of the bloc
+			}
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		#Gain relations with fellow communist GP
+		random_country = {
+			limit = { 
+				NOT = { THIS = ROOT }
+				country_rank >= rank_value:great_power
+				is_a_communist_government = yes
+				is_sufficiently_independent = yes
+			}
+			change_relations = {
+				country = ROOT
+				value = 50
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
+
+# Form Non-Aligned Movement Bloc
+historical_alliances_system.20 = {
+    type = country_event
+
+    title = NAM_PB_form.t 							# Title of the event; ADD LOCALISATION
+    desc = NAM_PB_form.d 							# Description of the event; ADD LOCALISATION
+    #flavor = NAM_PB_form.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Not already formed
+		NOT = { has_global_variable = NAM_PB_global_var }
+		
+		#Overlord conditions
+		country_rank >= rank_value:great_power
+		is_in_power_bloc = no
+		NOR = {
+			country_is_in_north_america = yes
+			country_is_in_europe = yes
+		}
+		
+		OR = { 
+			is_a_democracy = yes
+			is_some_kind_of_democracy
+		}
+		is_sufficiently_independent = yes						# is_vassal = no	
+		is_subject = no
+		is_at_war = no											# war = no
+		
+		is_not_neutral = yes
+		
+		# Event has not been fired before
+		NOT = { has_variable = NAM_PB_form_hae }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = NAM_PB_form_hae							# Change variable ****
+		
+		# Fire only once
+		set_global_variable = NAM_PB_global_var
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1				# Accept
+        highlighted_option = yes
+		
+		#Create own bloc
+		if = {
+			limit = { is_in_power_bloc = no }
+			create_power_bloc = {
+				name = NON_ALIGNED_MOVEMENT
+
+				identity = identity_ideological_union
+
+				# subjects are automatically part of the bloc
+			}
+		}
+		
+		#Antagonise other power blocs
+		every_country = {
+			limit = { 
+				NOT = { THIS = ROOT }
+				is_power_bloc_leader = yes
+			}
+			change_relations = {
+				country = ROOT
+				value = -50
+			}
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
