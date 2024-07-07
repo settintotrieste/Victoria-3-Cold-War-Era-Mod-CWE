@@ -43,79 +43,25 @@
 	
 		scope:target_country = {
 			add_liberty_desire = -30
-
-			#TARGET is converted into a dominion/satellite
-			scope:target_country = { 
 				
-				#Colonial subjects
+			#Colonial subjects
+			if = {
+				limit = { is_subject_type = subject_type_dominion }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = dominion
+				}
 				if = {
-					limit = { is_subject_type = subject_type_dominion }
-					remove_diplomatic_pact = {
-						country = scope:actor
-						type = dominion
-					}
-					if = {
-						limit = { scope:actor = { is_a_monarchy = yes } }
-						activate_law = law_type:law_HOS_monarch
-						scope:actor = {
-							create_diplomatic_pact = {
-								country = scope:target_country
-								type = personal_union
-							}
-						}
-					}
-					else = {
-						scope:actor = {
-							create_diplomatic_pact = {
-								country = scope:target_country
-								type = protectorate
-							}
-						}
-					}
-				}
-				else_if = {
-					limit = { is_subject_type = subject_type_semi_autonomous_colony }
-					remove_diplomatic_pact = {
-						country = scope:actor
-						type = semi_autonomous_colony
-					}
-					if = {
-						limit = { scope:actor = { is_a_monarchy = yes } }
-						scope:actor = {
-							create_diplomatic_pact = {
-								country = scope:target_country
-								type = dominion
-							}
-						}
-					}
-					else = {
-						create_diplomatic_pact = {
-							country = scope:target_country
-							type = satellite
-						}
-					}
-				}
-				else_if = {
-					limit = { is_subject_type = subject_type_mandate }
-					remove_diplomatic_pact = {
-						country = scope:actor
-						type = mandate
-					}
+					limit = { scope:actor = { is_a_monarchy = yes } }
+					activate_law = law_type:law_HOS_monarch
 					scope:actor = {
 						create_diplomatic_pact = {
 							country = scope:target_country
-							type = satellite
+							type = personal_union
 						}
 					}
 				}
-				
-				#Normal subjects
-				else_if = {
-					limit = { is_subject_type = subject_type_satellite }
-					remove_diplomatic_pact = {
-						country = scope:actor
-						type = satellite
-					}
+				else = {
 					scope:actor = {
 						create_diplomatic_pact = {
 							country = scope:target_country
@@ -123,36 +69,98 @@
 						}
 					}
 				}
-				else_if = {
-					limit = { is_subject_type = subject_type_puppet }
-					remove_diplomatic_pact = {
-						country = scope:actor
-						type = puppet
-					}
-					scope:actor = {
-						create_diplomatic_pact = {
-							country = scope:target_country
-							type = satellite
-						}
-					}
+			}
+			else_if = {
+				limit = { is_subject_type = subject_type_semi_autonomous_colony }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = semi_autonomous_colony
 				}
-				else_if = {
-					limit = { is_subject_type = subject_type_special_administrative_region }
-					remove_diplomatic_pact = {
-						country = scope:actor
-						type = special_administrative_region
-					}
+				if = {
+					limit = { scope:actor = { is_a_monarchy = yes } }
 					scope:actor = {
 						create_diplomatic_pact = {
 							country = scope:target_country
-							type = satellite
+							type = dominion
 						}
 					}
 				}
 				else = {
-					increase_autonomy = yes
+					scope:actor = {
+						create_diplomatic_pact = {
+							country = scope:target_country
+							type = satellite
+						}
+					}
 				}
-				
+			}
+			else_if = {
+				limit = { is_subject_type = subject_type_mandate }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = mandate
+				}
+				if = {
+					limit = { scope:actor = { is_a_monarchy = yes } }
+					scope:actor = {
+						create_diplomatic_pact = {
+							country = scope:target_country
+							type = dominion
+						}
+					}
+				}
+				else = {
+					scope:actor = {
+						create_diplomatic_pact = {
+							country = scope:target_country
+							type = satellite
+						}
+					}
+				}
+			}
+			
+			#Normal subjects
+			else_if = {
+				limit = { is_subject_type = subject_type_satellite }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = satellite
+				}
+				scope:actor = {
+					create_diplomatic_pact = {
+						country = scope:target_country
+						type = protectorate
+					}
+				}
+			}
+			else_if = {
+				limit = { is_subject_type = subject_type_puppet }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = puppet
+				}
+				scope:actor = {
+					create_diplomatic_pact = {
+						country = scope:target_country
+						type = satellite
+					}
+				}
+			}
+			else_if = {
+				limit = { is_subject_type = subject_type_special_administrative_region }
+				remove_diplomatic_pact = {
+					country = scope:actor
+					type = special_administrative_region
+				}
+				scope:actor = {
+					create_diplomatic_pact = {
+						country = scope:target_country
+						type = puppet
+					}
+				}
+			}
+			else = {
+				increase_autonomy = yes
 			}
 			
 		}
@@ -279,27 +287,30 @@ da_increase_autonomy_of_self = {
 	accept_effect = {
 		add_liberty_desire = -30
 		
+		#TARGET loses infamy
+		scope:target_country = { change_infamy = -5 }
+		
 		#Colonial subjects
 		if = {
 			limit = { is_subject_type = subject_type_dominion }
 			remove_diplomatic_pact = {
-				country = scope:actor
+				country = scope:target_country
 				type = dominion
 			}
 			if = {
-				limit = { scope:actor = { is_a_monarchy = yes } }
+				limit = { scope:target_country = { is_a_monarchy = yes } }
 				activate_law = law_type:law_HOS_monarch
-				scope:actor = {
+				scope:target_country = {
 					create_diplomatic_pact = {
-						country = scope:target_country
+						country = scope:actor
 						type = personal_union
 					}
 				}
 			}
 			else = {
-				scope:actor = {
+				scope:target_country = {
 					create_diplomatic_pact = {
-						country = scope:target_country
+						country = scope:actor
 						type = protectorate
 					}
 				}
@@ -308,26 +319,48 @@ da_increase_autonomy_of_self = {
 		else_if = {
 			limit = { is_subject_type = subject_type_semi_autonomous_colony }
 			remove_diplomatic_pact = {
-				country = scope:actor
+				country = scope:target_country
 				type = semi_autonomous_colony
 			}
-			scope:actor = {
-				create_diplomatic_pact = {
-					country = scope:target_country
-					type = dominion
+			if = {
+				limit = { scope:target_country = { is_a_monarchy = yes } }
+				scope:target_country = {
+					create_diplomatic_pact = {
+						country = scope:actor
+						type = dominion
+					}
+				}
+			}
+			else = {
+				scope:target_country = {
+					create_diplomatic_pact = {
+						country = scope:actor
+						type = satellite
+					}
 				}
 			}
 		}
 		else_if = {
 			limit = { is_subject_type = subject_type_mandate }
 			remove_diplomatic_pact = {
-				country = scope:actor
+				country = scope:target_country
 				type = mandate
 			}
-			scope:actor = {
-				create_diplomatic_pact = {
-					country = scope:target_country
-					type = satellite
+			if = {
+				limit = { scope:target_country = { is_a_monarchy = yes } }
+				scope:target_country = {
+					create_diplomatic_pact = {
+						country = scope:actor
+						type = dominion
+					}
+				}
+			}
+			else = {
+				scope:target_country = {
+					create_diplomatic_pact = {
+						country = scope:actor
+						type = satellite
+					}
 				}
 			}
 		}
@@ -336,12 +369,12 @@ da_increase_autonomy_of_self = {
 		else_if = {
 			limit = { is_subject_type = subject_type_satellite }
 			remove_diplomatic_pact = {
-				country = scope:actor
+				country = scope:target_country
 				type = satellite
 			}
-			scope:actor = {
+			scope:target_country = {
 				create_diplomatic_pact = {
-					country = scope:target_country
+					country = scope:actor
 					type = protectorate
 				}
 			}
@@ -349,12 +382,12 @@ da_increase_autonomy_of_self = {
 		else_if = {
 			limit = { is_subject_type = subject_type_puppet }
 			remove_diplomatic_pact = {
-				country = scope:actor
+				country = scope:target_country
 				type = puppet
 			}
-			scope:actor = {
+			scope:target_country = {
 				create_diplomatic_pact = {
-					country = scope:target_country
+					country = scope:actor
 					type = satellite
 				}
 			}
@@ -362,13 +395,13 @@ da_increase_autonomy_of_self = {
 		else_if = {
 			limit = { is_subject_type = subject_type_special_administrative_region }
 			remove_diplomatic_pact = {
-				country = scope:actor
+				country = scope:target_country
 				type = special_administrative_region
 			}
-			scope:actor = {
+			scope:target_country = {
 				create_diplomatic_pact = {
-					country = scope:target_country
-					type = satellite
+					country = scope:actor
+					type = puppet
 				}
 			}
 		}
