@@ -436,7 +436,7 @@ ai_strategy_default = {
 						OR = {
 							scope:target_state = { 
 								is_split_state = yes 
-								region = { 
+								state_region = { 
 									any_scope_state = { owner = ROOT }
 								}
 							}
@@ -551,7 +551,7 @@ ai_strategy_default = {
 			limit = {	
 				scope:target_state = { 
 					is_treaty_port = yes 
-					region = { 
+					state_region = { 
 						any_scope_state = { 
 							OR = {
 								owner = { is_subject_of = ROOT }
@@ -1143,7 +1143,7 @@ ai_strategy_default = {
 	# How likely is the AI to start a diplomatic play against another country if their attitude allows for it
 	# Using this value in other strategies will function additively
 	aggression = {
-		value = 0
+		value = 0.5
 		
 		# More fighting between unrecognized powers
 		if = {
@@ -1151,8 +1151,7 @@ ai_strategy_default = {
 				is_country_type = unrecognized
 				scope:target_country = { is_country_type = unrecognized }
 			}
-
-			add = 1
+			add = 0.5
 		}
 		
 		# Higher aggression against subject/overlord if domineering or rebellious
@@ -1180,7 +1179,7 @@ ai_strategy_default = {
 					}
 				}
 			}
-			add = 25
+			add = 100
 		}
 
 		# Aggression against radical leftists
@@ -1193,7 +1192,7 @@ ai_strategy_default = {
 					}
 				}
 			}
-			add = 5
+			add = 1
 		}
 		
 		if = {
@@ -1203,7 +1202,7 @@ ai_strategy_default = {
 					has_radical_leftist_economy = yes				
 				}				
 			}
-			add = 5
+			add = 1
 		}
 		
         # Neutral Switzerland
@@ -1224,13 +1223,12 @@ ai_strategy_default = {
 
 		add = {
 			value = investment_pool_income
-			divide = 750 # 1 construction output per this much into the investment pool				
+			divide = 500 # 1 construction output per this much into the investment pool				
 		}
 		
 		add = {
 			value = income
-					
-			divide = 3000 # 1 construction output per this much income
+			divide = 2500 # 1 construction output per this much income
 
 			min = 0
 		}		
@@ -1315,12 +1313,57 @@ ai_strategy_default = {
 			divide = 100000000 # 1 level of barracks per 100 million unincorporated population	
 		}
 		
-		max = 250 # No more than 250 from population
+		# Coastal population reduces spending on army as that spending is needed for navy too
+		subtract = {
+			value = cached_ai_incorporated_coastal_population
+			divide = 1000000 
+		}		
+
+		subtract = {
+			value = cached_ai_unincorporated_coastal_population
+			divide = 4000000 
+		}
+		
+		# Extra army size from rank
+		if = {
+			limit = { country_rank = rank_value:super_power }
+			add = 20
+		}
+		if = {
+			limit = { country_rank >= rank_value:great_power }
+			add = 10
+		}
+		if = {
+			limit = { country_rank = rank_value:major_power }
+			add = 5
+		}
+
+		save_temporary_value_as = pre_overseas_empire_value
+
+		# Countries with a huge overseas subject population should focus more on navy
+		subtract = {
+			value = cached_ai_overseas_subject_population
+			divide = 10000000
+			max = {
+				value = scope:pre_overseas_empire_value
+				divide = 2
+			}
+		}
+		
+		max = 200 # No more than 200 from population & rank
 
 		add = {
-			value = gdp
-			divide = 50000000 # 1 level of barracks per 50000k gdp
-		}				
+			value = income
+			multiply = {
+				value = 1
+				subtract = { # Coastal population reduces spending on army as that spending is needed for navy too
+					value = cached_ai_incorporated_coastal_population
+					divide = cached_ai_incorporated_population
+					divide = 2
+				}
+			}
+			divide = 2000 # 1 level of barracks per 2k income
+		}	
 		
 		# More advanced standing armies are expensive and should be smaller relative to population
 		if = {
@@ -1395,14 +1438,14 @@ ai_strategy_default = {
 			divide = 100000000
 		}	
 
-		max = 250 # No more than 250 from population		
+		max = 100 # No more than 100 from population
 
-		# 1 level of naval base per 100 million gdp, multiplied by relative incorporated coastal population to total incorporated population
+		# 1 level of naval base per 3k income, multiplied by relative incorporated coastal population to total incorporated population
 		add = {
-			value = gdp
+			value = income
 			divide = cached_ai_incorporated_population
 			multiply = cached_ai_incorporated_coastal_population
-			divide = 100000000 
+			divide = 3000
 		}			
 		
 		# More advanced navies are expensive and should be smaller relative to population
@@ -1554,7 +1597,7 @@ ai_strategy_default = {
 	# scope:military_formation = military formation
 	# Using this value in other strategies will function additively
 	conscript_battalion_ratio = {
-		value = 0
+		value = 0.5
 		if = {
 			limit = { has_law = law_type:law_national_militia }
 			add = 5
@@ -1949,13 +1992,12 @@ ai_strategy_default = {
 			
 			# Don't befriend large isolationist powers
 			if = {
-				limit = { 			
-					NAND = {
+				limit = { 	
+					scope:target_country = {
 						has_law = law_type:law_isolationism
-						gdp >= 5000000		
-					}	
+						gdp >= 5000000			
+					}
 				}
-
 				multiply = 0
 			}
 		}
@@ -2279,7 +2321,19 @@ ai_strategy_default = {
 					is_subject_of = scope:target_country	
 				}
 				multiply = 0.0	
-			}				
+			}
+			
+			# Don't protect large isolationist powers
+			if = {
+				limit = { 
+					scope:target_country = {
+						has_law = law_type:law_isolationism
+						gdp >= 5000000		
+					}
+				}
+
+				multiply = 0
+			}
 		}		
 		antagonize = {
 			value = 0
@@ -2364,7 +2418,7 @@ ai_strategy_default = {
 				limit = {
 					has_game_rule = low_ai_aggression
 				}
-				multiply = 1.5 # Yes, this is actually intended to be an increase - it's to partially compensate for lowered conquer/dominate desires
+				multiply = 1.25 # Yes, this is actually intended to be an increase - it's to partially compensate for lowered conquer/dominate desires
 			}				
 			
 			if = {
@@ -2453,18 +2507,6 @@ ai_strategy_default = {
 						has_friendly_diplomatic_pact = { TARGET = scope:target_country } 			
 					}				
 				}
-				multiply = 0
-			}
-			
-			# Don't protect large isolationist powers
-			if = {
-				limit = { 			
-					NAND = {
-						has_law = law_type:law_isolationism
-						gdp >= 5000000		
-					}	
-				}
-
 				multiply = 0
 			}
 			
@@ -2589,14 +2631,14 @@ ai_strategy_default = {
 				limit = {
 					has_game_rule = high_ai_aggression
 				}
-				multiply = 1.5
+				multiply = 1.25
 			}
 			
 			if = {
 				limit = {
 					has_game_rule = low_ai_aggression
 				}
-				multiply = 0.5
+				multiply = 0.75
 			}		
 			
 			# AI implications for Power Blocs: 'conquer' secret goal is more likely towards the country from another Bloc
@@ -2791,14 +2833,14 @@ ai_strategy_default = {
 				limit = {
 					has_game_rule = high_ai_aggression
 				}
-				multiply = 1.5
+				multiply = 1.25
 			}
 			
 			if = {
 				limit = {
 					has_game_rule = low_ai_aggression
 				}
-				multiply = 0.5
+				multiply = 0.75
 			}
 			
 			# Shouldn't usually upset diplomatic pacts unless they're bankrupt or infamous

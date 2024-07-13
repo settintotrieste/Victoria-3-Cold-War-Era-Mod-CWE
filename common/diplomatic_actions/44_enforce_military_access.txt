@@ -12,10 +12,8 @@
 
 	possible = {
 		is_at_war = yes
-
-		scope:target_country = {
-			is_diplomatic_play_committed_participant = no
-			NOT = { is_diplomatic_play_enemy_of = root }
+		any_scope_war = {
+			NOT = { is_war_participant = scope:target_country }
 		}
 	}
 
@@ -26,16 +24,49 @@
 				side = root
 			}
 		}
-
-		scope:target_country = {
-			add_liberty_desire = 20
+		if = {
+			limit = {
+				scope:target_country = { 
+					OR = { 
+						is_a_colonial_subject_gov = yes
+						is_in_our_personal_union = yes
+					}
+				}
+			}
+			scope:target_country = {
+				add_liberty_desire = 10
+			}			
+		}
+		else = {
+			scope:target_country = {
+				add_liberty_desire = 20
+			}		
 		}
 	}
 
 	ai = {
-		#TODO PRCAL-23110
 		evaluation_chance = {
 			value = 0.0
+			if = {
+				limit = { is_at_war = yes }
+				add = 1.0				
+			}
 		}
+		
+		propose_score = {
+			value = 1000
+		}
+
+		will_propose = {
+			any_scope_war = {
+				NOT = { is_war_participant = scope:target_country }
+				any_war_participant = {
+					NOT = { this = root }
+					is_adjacent_to_country = scope:target_country
+					NOT = { is_adjacent_to_country = root }
+				}
+			}
+		}
+		
 	}
 }
