@@ -14,27 +14,37 @@
 	}	
 	
 	potential = {
+	
 		power_bloc ?= {
 			scope:target_country.power_bloc ?= this
 		}
+		
+		#THIS and TARGET are not enemies in a DP
+		hidden_trigger = { NOT = { is_diplomatic_play_enemy_of = scope:target_country } }
+		
 	}
 	
 	possible = {
+	
+		#THIS does not share the same government type as TARGET
 		custom_tooltip = {
 			text = "FORCE_REGIME_CHANGE_GOV_PRINCIPLES_DIST_POWER_PROGRESSIVENESS_DIFFERENCE"
-			100 <= {
-				add = {
-					add = active_law:lawgroup_governance_principles.type.progressiveness
-					subtract = scope:target_country.active_law:lawgroup_governance_principles.type.progressiveness
-					abs = yes
-				}
-				add = {
-					add = active_law:lawgroup_distribution_of_power.type.progressiveness
-					subtract = scope:target_country.active_law:lawgroup_distribution_of_power.type.progressiveness
-					abs = yes
-				}
+			OR = {
+			
+				#Legislature laws
+				AND = { has_law = law_type:law_appointed_legislature scope:target_country = { NOT = { has_law = law_type:law_appointed_legislature } } }
+				AND = { has_law = law_type:law_technocratic_legislature scope:target_country = { NOT = { has_law = law_type:law_technocratic_legislature } } }
+				AND = { has_law = law_type:law_democratic_legislature scope:target_country = { NOT = { has_law = law_type:law_democratic_legislature } } }
+				
+				#Head of State laws
+				AND = { has_law = law_type:law_HOS_monarch scope:target_country = { NOR = { has_law = law_type:law_HOS_monarch has_law = law_type:law_HOS_president } } }
+				AND = { has_law = law_type:law_HOS_president scope:target_country = { NOR = { has_law = law_type:law_HOS_president has_law = law_type:law_HOS_monarch } } }
+				AND = { has_law = law_type:law_HOS_religious_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_religious_leader } } }
+				AND = { has_law = law_type:law_HOS_nationalist_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_nationalist_leader } } }
+				AND = { has_law = law_type:law_HOS_communist_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_communist_leader } } }
+				
 			}
-		}	
+		}
 	
 		power_bloc = {
 			current_cohesion_percentage >= 0.5
@@ -46,10 +56,32 @@
 			value = scope:target_country.prestige
 			multiply = 3
 		}
+		
+		#THIS is not at war with TARGET
+		NOT = { has_war_with = scope:target_country }
+		OR = { 
+			AND = {
+				has_truce_with = scope:target_country
+				scope:target_country = { is_subject_of = scope:actor }
+			}
+			NOT = { has_truce_with = scope:target_country }
+		}
+		
+		#THIS is legally and politically capable of intervention
+		OR = { 
+			has_interventionist_fp = yes
+			is_a_dictatorship = yes
+		}
+		
 	}
 	
 	accept_effect = {
-		regime_change = scope:target_country
+	
+		#Infamy
+		change_infamy = 5
+	
+		#Replace laws
+		scope:target_country = { copy_laws = scope:actor }
 		scope:target_country = {
 			add_modifier = {
 				name = installed_regime
@@ -61,6 +93,33 @@
 		power_bloc = {
 			add_cohesion_percent = scaled_cohesion_cost
 		}
+		
+		#Ruler of TARGET is removed from office
+		scope:target_country = {
+			random_list = { 
+				1 = { 
+					random_scope_character = { limit = { is_ruler = yes } kill_character = yes }
+				}
+				1 = { 
+					random_scope_character = { limit = { is_ruler = yes } convert_IG_ideology_to_agitator_ideology = yes exile_character_with_martyrdom = yes } 
+					get_ruler_for:presidential_elective = {
+						set_character_as_ruler = yes
+					}
+				}
+			}
+		}
+		
+		scope:target_country = {
+			#Lobby
+			add_lobby_appeasement_from_diplomacy_unidirectional = { 
+				FIRST = scope:target_country
+				SECOND = scope:actor
+				PRO_AMOUNT = -10
+				ANTI_AMOUNT = 10
+				FACTOR = appeasement_embargo_declared
+			}
+		}
+		
 	}
 	
 	ai = {
@@ -69,6 +128,11 @@
 		}
 		
 		will_propose = {
+		
+			NOT = { has_global_variable = historical_railroading_active }
+			
+			infamy < infamy_threshold:notorious
+		
 			power_bloc = { current_cohesion_percentage >= 0.75 }
 			"ai_ideological_opinion(scope:target_country)" <= -50			
 			OR = {
