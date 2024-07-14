@@ -11,6 +11,151 @@ liberty_desire_weekly_change = {
 		desc = "base_value"
 	}	
 
+	second_country = {
+		if = {
+			limit = { 
+				OR = { 
+					is_a_colonial_subject_gov = yes 
+					is_subject_type = subject_type_puppet
+				}
+			}
+			add = {
+				if = {
+					limit = {  
+						root.first_country = { has_law = law_type:law_colonial_exploitation }
+					}
+					add = {
+						add = 0.08
+						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ANTI_COLONIALISM"
+					}
+				}
+				else_if = {
+					limit = {  
+						root.first_country = { has_law = law_type:law_colonial_resettlement }
+					}
+					add = {
+						add = 0.04
+						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ANTI_COLONIALISM"
+					}
+				}
+				else = {
+					add = {
+						add = 0.02
+						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ANTI_COLONIALISM"
+					}
+				}
+			}
+		}
+		add = {
+			if = {
+				limit = {  
+					has_jingoistic_ruler = yes
+					ruler ?= { culture = { culture_is_discriminated_in = root.second_country } }
+				}
+				add = {
+					add = 0.1
+					desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_NON_NATIVE_RULER"
+				}
+			}
+		}
+		
+	}
+	
+	first_country = {
+		add = {
+			if = {
+				limit = {  
+					ruler ?= { culture = { culture_is_discriminated_in = root.second_country } }
+				}
+				if = {
+					limit = { has_law = law_type:law_multicultural }
+					add = {
+						add = 0.02
+						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_CULTURES"
+					}
+				}
+				else_if = {
+					limit = { has_law = law_type:law_cultural_exclusion }
+					add = {
+						add = 0.04
+						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_CULTURES"
+					}
+				}
+				else_if = {
+					limit = { has_law = law_type:law_racial_segregation }
+					add = {
+						add = 0.06
+						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_CULTURES"
+					}
+				}
+				else_if = {
+					limit = { has_law = law_type:law_national_supremacy }
+					add = {
+						add = 0.08
+						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_CULTURES"
+					}
+				}
+				else = {
+					add = {
+						add = 0.10
+						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_CULTURES"
+					}
+				}
+			}
+		}
+		add = {
+			if = {
+				limit = {  
+					religion = { NOT = { shares_trait_with_state_religion = root.second_country } }
+				}
+				if = {
+					limit = { has_law = law_type:law_freedom_of_conscience }
+					add = {
+						add = 0.02
+						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_RELIGIONS"
+					}
+				}
+				else_if = {
+					limit = { has_law = law_type:law_total_separation }
+					add = {
+						add = 0.04
+						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_RELIGIONS"
+					}
+				}
+				else = {
+					add = {
+						add = 0.05
+						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_RELIGIONS"
+					}
+				}
+			}
+		}
+	}
+	
+	if = {
+		limit = { root.second_country.country_turmoil > 0.01 }
+		add = {
+			add = root.second_country.country_turmoil
+			max = 0.50
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_SUBJECT_TURMOIL"
+		}
+	}
+	
+	add = {
+		add = root.second_country.legitimacy
+		subtract = root.first_country.legitimacy
+		divide = 1000
+		desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_LEGITIMACY"
+	}
+	
+	if = {
+		limit = { root.first_country = { has_diplomatic_pact = { who = root.second_country type = military_cooperation_agreement } } }
+		add = {
+			add = -0.05
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_MILITARY_PRESENCE"
+		}
+	}
+
 	add = {
 		if = {
 			limit = { "root.second_country.relations(root.first_country)" < relations_threshold:hostile }
@@ -95,7 +240,7 @@ liberty_desire_weekly_change = {
 			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_EXEMPT_FROM_SERVICE"
 		}
 	}
-		
+	
 	if = {
 		limit = { root.first_country.prestige < 1 }
 		add = {
