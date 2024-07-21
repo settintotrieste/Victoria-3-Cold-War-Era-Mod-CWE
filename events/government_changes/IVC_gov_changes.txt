@@ -1,0 +1,272 @@
+namespace = IVC_gov_changes
+
+# Autocratic Rulers
+IVC_gov_changes.1 = {
+    type = country_event
+
+    title = IVC_1960_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = IVC_1960_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = IVC_1960_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:IVC ?= this
+		
+		OR = {
+			AND = {
+				NOT = { has_variable = IVC_1960_hgc }
+				game_date >= 1960.11.3							# START DATE: Date colony became self governing ****
+				game_date < 1970.11.3							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				is_a_republican_democracy = yes
+			}
+			AND = {
+				NOT = { has_variable = IVC_1993_hgc }
+				game_date >= 1993.12.7							# START DATE: Date colony became self governing ****
+				game_date < 1999.12.24							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				is_a_republican_democracy = yes
+			}
+			AND = {
+				NOT = { has_variable = IVC_1999_hgc }
+				game_date >= 1999.12.24							# START DATE: Date colony became self governing ****
+				game_date < 2009.12.24							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				is_a_republican_democracy = yes
+			}
+		}
+		
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		if = {
+			limit = {
+				game_date >= 1960.11.3							# START DATE: Date colony became self governing ****
+				game_date < 1970.11.3							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = IVC_1960_hgc							# Change variable ****
+		}
+		if = {
+			limit = {
+				game_date >= 1993.12.7							# START DATE: Date colony became self governing ****
+				game_date < 1999.12.24							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = IVC_1993_hgc							# Change variable ****
+		}
+		if = {
+			limit = {
+				game_date >= 1999.12.24							# START DATE: Date colony became self governing ****
+				game_date < 2009.12.24							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = IVC_1999_hgc							# Change variable ****
+		}
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_dictatorship = yes
+		
+		#Set ruler
+		if = {
+			limit = {
+				game_date >= 1960.11.3							# START DATE: Date colony became self governing ****
+				game_date < 1970.11.3							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_presidential_republic = yes
+			create_character = {
+				first_name = "Felix_Houphouet_Boigny_first_name"
+				last_name = "Felix_Houphouet_Boigny_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1905.10.18
+				interest_group = ig_industrialists
+				ideology = ideology_autocratic
+				culture = cu:ivorian
+				religion = rel:catholic
+				traits = {
+					innovative
+					charismatic
+					tactful
+				}
+			}
+		}
+		if = {
+			limit = {
+				game_date >= 1993.12.7							# START DATE: Date colony became self governing ****
+				game_date < 1999.12.24							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_presidential_republic = yes
+			create_character = {
+				first_name = "Henri_Konan_Bedie_first_name"
+				last_name = "Henri_Konan_Bedie_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1934.5.5
+				interest_group = ig_industrialists
+				ideology = ideology_autocratic
+				culture = cu:ivorian
+				religion = rel:catholic
+				traits = {
+					grifter
+					reserved
+					tactful
+				}
+			}
+		}
+		if = {
+			limit = {
+				game_date >= 1999.12.24							# START DATE: Date colony became self governing ****
+				game_date < 2009.12.24							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_nationalist_republic = yes
+			create_character = {
+				first_name = "Robert_Guei_first_name"
+				last_name = "Robert_Guei_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1941.3.16
+				interest_group = ig_rural_folk
+				ideology = ideology_autocratic
+				culture = cu:ivorian
+				religion = rel:catholic
+				traits = {
+					grifter
+					cruel
+					reckless
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = poor
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Return to democracy
+IVC_gov_changes.2 = {
+    type = country_event
+
+    title = IVC_2000_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = IVC_2000_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = IVC_2000_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:IVC ?= this
+		game_date >= 2000.10.26									# START DATE: Date colony became self governing ****
+		game_date < 2010.10.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		OR = { 
+			is_a_presidential_regime = yes
+			is_a_nationalist_government = yes
+		}
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = IVC_2000_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = IVC_2000_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_presidential_republic = yes
+		effect_starting_politics_democratic = yes
+		
+		#Laurent Gbagbo
+		create_character = {
+			first_name = "Laurent_Gbagbo_first_name"
+			last_name = "Laurent_Gbagbo_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1945.5.31
+			interest_group = ig_rural_folk
+			ideology = ideology_autocratic
+			culture = cu:ivorian
+			religion = rel:catholic
+			traits = {
+				persistent
+				brave
+				bigoted
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
