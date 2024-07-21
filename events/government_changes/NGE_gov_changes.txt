@@ -1,0 +1,316 @@
+namespace = NGE_gov_changes
+
+# Military Coups
+NGE_gov_changes.1 = {
+    type = country_event
+
+    title = NGE_1966_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = NGE_1966_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = NGE_1966_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:NGE ?= this
+		
+		OR = {
+			AND = {
+				NOT = { has_variable = NGE_1966_hgc }
+				game_date >= 1966.1.15							# START DATE: Date colony became self governing ****
+				game_date < 1976.1.15							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				is_a_republican_democracy = yes
+			}
+			AND = {
+				NOT = { has_variable = NGE_1983_hgc }
+				game_date >= 1983.12.31							# START DATE: Date colony became self governing ****
+				game_date < 1993.11.17							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				is_a_republican_democracy = yes
+			}
+			AND = {
+				NOT = { has_variable = NGE_1993_hgc }
+				game_date >= 1993.11.17							# START DATE: Date colony became self governing ****
+				game_date < 1999.5.29							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				is_a_republican_democracy = yes
+			}
+		}
+		
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		if = {
+			limit = {
+				game_date >= 1966.1.15							# START DATE: Date colony became self governing ****
+				game_date < 1976.1.15							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = NGE_1966_hgc							# Change variable ****
+		}
+		if = {
+			limit = {
+				game_date >= 1983.12.31							# START DATE: Date colony became self governing ****
+				game_date < 1993.11.17							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = NGE_1983_hgc							# Change variable ****
+		}
+		if = {
+			limit = {
+				game_date >= 1993.11.17							# START DATE: Date colony became self governing ****
+				game_date < 1999.5.29							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = NGE_1993_hgc							# Change variable ****
+		}
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_dictatorship = yes
+		
+		#Set ruler
+		if = {
+			limit = {
+				game_date >= 1966.1.15							# START DATE: Date colony became self governing ****
+				game_date < 1976.1.15							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_nationalist_republic = yes
+			create_character = {
+				first_name = "Yakubu_Gowon_first_name"
+				last_name = "Yakubu_Gowon_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1934.10.19
+				interest_group = ig_armed_forces
+				ideology = ideology_autocratic
+				culture = cu:nigerian
+				religion = rel:protestant
+				traits = {
+					cruel
+					charismatic
+					persistent
+				}
+			}
+		}
+		if = {
+			limit = {
+				game_date >= 1983.12.31							# START DATE: Date colony became self governing ****
+				game_date < 1993.11.17							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_presidential_republic = yes
+			create_character = {
+				first_name = "Muhammadu_Buhari_first_name"
+				last_name = "Muhammadu_Buhari_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1942.12.17
+				interest_group = ig_industrialists
+				ideology = ideology_autocratic
+				culture = cu:nigerian
+				religion = rel:sunni
+				traits = {
+					cruel
+					innovative
+					brave
+				}
+			}
+		}
+		if = {
+			limit = {
+				game_date >= 1993.11.17							# START DATE: Date colony became self governing ****
+				game_date < 1999.5.29							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_presidential_republic = yes
+			create_character = {
+				first_name = "Sani_Abacha_first_name"
+				last_name = "Sani_Abacha_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1943.9.20
+				interest_group = ig_rural_folk
+				ideology = ideology_autocratic
+				culture = cu:nigerian
+				#religion = rel:animist
+				traits = {
+					cruel
+					grifter
+					expensive_tastes
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = poor
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Return to democracy
+NGE_gov_changes.2 = {
+    type = country_event
+
+    title = NGE_1999_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = NGE_1999_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = NGE_1999_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:NGE ?= this
+		
+		OR = {
+			AND = {
+				NOT = { has_variable = NGE_1979_hgc }
+				game_date >= 1979.10.1							# START DATE: Date colony became self governing ****
+				game_date < 1983.12.31							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				OR = { 
+					is_a_republican_regime = yes
+					is_a_nationalist_government = yes
+				}
+			}
+			AND = {
+				NOT = { has_variable = NGE_1993_1_hgc }
+				game_date >= 1993.8.26							# START DATE: Date colony became self governing ****
+				game_date < 1993.11.17							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				OR = { 
+					is_a_republican_regime = yes
+					is_a_nationalist_government = yes
+				}
+			}
+			AND = {
+				NOT = { has_variable = NGE_1999_hgc }
+				game_date >= 1999.5.29							# START DATE: Date colony became self governing ****
+				game_date < 2009.5.29							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				OR = { 
+					is_a_republican_regime = yes
+					is_a_nationalist_government = yes
+				}
+			}
+		}
+		
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		if = {
+			limit = {
+				game_date >= 1979.10.1							# START DATE: Date colony became self governing ****
+				game_date < 1983.12.31							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = NGE_1979_hgc							# Change variable ****
+		}
+		if = {
+			limit = {
+				game_date >= 1993.8.26							# START DATE: Date colony became self governing ****
+				game_date < 1993.11.17							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = NGE_1993_1_hgc						# Change variable ****
+		}
+		if = {
+			limit = {
+				game_date >= 1999.5.29							# START DATE: Date colony became self governing ****
+				game_date < 2009.5.29							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = NGE_1999_hgc							# Change variable ****
+		}
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_democratic = yes
+		if = {
+			limit = {
+				game_date >= 1979.10.1							# START DATE: Date colony became self governing ****
+				game_date < 1983.12.31							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_presidential_republic = yes
+		}
+		if = {
+			limit = {
+				game_date >= 1993.8.26							# START DATE: Date colony became self governing ****
+				game_date < 1993.11.17							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_presidential_republic = yes
+		}
+		if = {
+			limit = {
+				game_date >= 1999.5.29							# START DATE: Date colony became self governing ****
+				game_date < 2009.5.29							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_presidential_republic = yes
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
