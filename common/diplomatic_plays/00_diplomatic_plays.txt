@@ -249,18 +249,54 @@ dp_independence = {
 	possible = {
 		NOT = { is_country_type = decentralized }
 		
-		OR = {
-			can_increase_autonomy = no
-			custom_tooltip = {
-				text = "REQUEST_AUTONOMY_RECENTLY_DENIED"
-				any_diplomatic_catalyst = {
-					is_diplomatic_catalyst_type = catalyst_autonomy_increase_denied
-					target = scope:target_country
-				}
+		#Edging closer to war
+		custom_tooltip = {
+			text = "REQUEST_AUTONOMY_RECENTLY_DENIED"
+			any_diplomatic_catalyst = {
+				is_diplomatic_catalyst_type = catalyst_autonomy_increase_denied
+				target = scope:target_country
 			}
 		}
 		
-		diplo_play_war_check_cwe = yes
+		#Bad relations with TARGET
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+			scope:target_country.relations:root < relations_threshold:poor
+		}
+		
+		#THIS has some army
+		NOT = { has_law = law_type:law_peasant_levies }
+		
+		#Domestic pressure for independence
+		OR = { 
+		
+			#Overlord and Subject rulers are incompatible
+			ruler ?= {
+				culture = { culture_is_discriminated_in = scope:target_country }
+			}
+			AND = {
+				scope:target_country = { 
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				ROOT = {
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+			}
+		
+		}
+		
+		#Parliament and Cabinet approves
+		government_has_legislative_simple_majority = yes
 		
 	}
 
