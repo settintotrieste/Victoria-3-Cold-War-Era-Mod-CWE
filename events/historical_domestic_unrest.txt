@@ -3675,3 +3675,174 @@ historical_domestic_unrest.38 = {
     }
 
 }
+
+# 2011 Minsk Metro bombing
+historical_domestic_unrest.39 = {
+    type = country_event
+	placement = scope:terror_attack_state
+
+    title = BYE_Minsk_attack_2011.t 							# Title of the event; ADD LOCALISATION
+    desc = BYE_Minsk_attack_2011.d 								# Description of the event; ADD LOCALISATION
+    #flavor = BYE_Minsk_attack_2011.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_vandalized_storefront.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_fire.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:BYE ?= this											# Change TAG of the overlord ****
+		game_date >= 2011.4.11									# START DATE: Date colony became self governing ****
+		game_date < 2021.4.11									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		#is_a_democracy = yes									# Correct gov types
+		#is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = BYE_Minsk_attack_2011_hdu }		# CHANGE ****
+		
+		#Cause of unrest
+		has_state_in_state_region = STATE_MINSK
+		
+    }
+	
+	immediate = {
+	
+		#Mark state
+		random_scope_state = {
+			limit = { state_region = s:STATE_MINSK }
+			save_scope_as = terror_attack_state
+		}
+	
+		# Fire only once
+		set_variable = BYE_Minsk_attack_2011_hdu				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option				# Oh no
+		
+		#Property damage
+		random_scope_state = {
+			limit = { state_region = s:STATE_MINSK }
+			state_region = {
+				add_devastation = 10
+			}
+		}
+		
+		#Domestic reaction
+		add_loyalists = {
+			value = medium_radicals
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+}
+
+# The Belarusian Protests, 2020
+historical_domestic_unrest.40 = {
+    type = country_event
+
+    title = BYE_May_Protests.t 									# Title of the event; ADD LOCALISATION
+    desc = BYE_May_Protests.d 									# Description of the event; ADD LOCALISATION
+    #flavor = BYE_May_Protests.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/africa_public_protest.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:BYE ?= this											# Change TAG of the overlord ****
+		game_date >= 2020.5.24									# START DATE: Date colony became self governing ****
+		game_date < 2030.5.24									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_republican_regime = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = BYE_May_Protests_hdu }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		#Create agitator
+		create_character = {
+			first_name = "Sviatlana_Tsikhanouskaya_first_name"
+			last_name = "Sviatlana_Tsikhanouskaya_last_name"
+			is_agitator = yes historical = yes female = yes
+			birth_date = 1982.9.11
+			interest_group = ig_petty_bourgeoisie
+			ideology = ideology_agitator_pro_human_rights
+            culture = cu:byelorussian
+			religion = rel:orthodox
+			traits = {
+				charismatic
+				brave
+				persistent
+			}
+			on_created = { set_variable = Sviatlana_Tsikhanouskaya }
+		}
+	
+		# Fire only once
+		set_variable = BYE_May_Protests_hdu						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		
+		change_infamy = 5
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			strata = middle
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2				# No
+		default_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_democratic = yes
+		random_scope_character = {
+			limit = { has_variable = BYE_May_Protests_hdu }
+			set_character_as_ruler = yes
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			strata = rich
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
