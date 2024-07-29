@@ -1,8 +1,10 @@
-je_inject_tekhpromfinplans_button = {
-	name = "je_inject_tekhpromfinplans_button"
-	desc = "je_inject_tekhpromfinplans_button_desc"
+je_start_inject_tekhpromfinplans_button = {
+	name = "je_start_inject_tekhpromfinplans_button"
+	desc = "je_start_inject_tekhpromfinplans_button_desc"
 
 	visible = { 
+		
+		NOT = { has_variable = injecting_tekhpromfinplans }
 		
 	}
 
@@ -22,64 +24,9 @@ je_inject_tekhpromfinplans_button = {
 
 	effect = {
 		
-		#Deposit money
-		if = {
-			limit = { 
-				weekly_net_fixed_income >= 10000
-				weekly_net_fixed_income < 100000
-			}
-			add_investment_pool = 10000
-			add_treasury = -10000
-		}
-		if = {
-			limit = { 
-				weekly_net_fixed_income >= 100000
-				weekly_net_fixed_income < 1000000
-			}
-			add_investment_pool = 100000
-			add_treasury = -100000
-		}
-		if = {
-			limit = { 
-				weekly_net_fixed_income >= 1000000
-				weekly_net_fixed_income < 10000000
-			}
-			add_investment_pool = 1000000
-			add_treasury = -1000000
-		}
-		if = {
-			limit = { 
-				weekly_net_fixed_income >= 10000000
-				weekly_net_fixed_income < 100000000
-			}
-			add_investment_pool = 10000000
-			add_treasury = -10000000
-		}
-		if = {
-			limit = { 
-				weekly_net_fixed_income >= 100000000
-				weekly_net_fixed_income < 1000000000
-			}
-			add_investment_pool = 100000000
-			add_treasury = -100000000
-		}
-		if = {
-			limit = { 
-				weekly_net_fixed_income >= 1000000000
-			}
-			add_investment_pool = 1000000000
-			add_treasury = -1000000000
-		}
+		set_variable = injecting_tekhpromfinplans
 		
-		#Determine Investment Pool Size
-		set_variable = {
-			name = tekhpromfinplans_fund_size
-			value = root.investment_pool
-		}
-		change_variable = {
-			name = tekhpromfinplans_fund_size
-			divide = 1000000
-		}
+		inject_tekhpromfinplans = yes
 		
 		#Can only fire once per month
 		set_variable = { name = tekhpromfinplans_fund_timer months = 1 }
@@ -93,6 +40,51 @@ je_inject_tekhpromfinplans_button = {
 				is_at_war = no
 			}
 			add = 50
+		}
+	}
+	
+}
+
+je_stop_inject_tekhpromfinplans_button = {
+	name = "je_stop_inject_tekhpromfinplans_button"
+	desc = "je_stop_inject_tekhpromfinplans_button_desc"
+
+	visible = { 
+		
+		has_variable = injecting_tekhpromfinplans
+		
+	}
+
+	possible = {
+		
+		#Can only fire once per month
+		custom_tooltip = {
+			text = start_tekhpromfinplans.tt
+			NOT = { has_variable = tekhpromfinplans_fund_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		remove_variable = injecting_tekhpromfinplans
+		
+		#Can only fire once per month
+		set_variable = { name = tekhpromfinplans_fund_timer months = 1 }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		modifier = {
+			trigger = {
+				NAND = {
+					weekly_net_fixed_income > 10000
+					scaled_debt < 0.5
+					is_at_war = no
+				}
+			}
+			add = 100
 		}
 	}
 	

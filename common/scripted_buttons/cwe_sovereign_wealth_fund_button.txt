@@ -1,12 +1,16 @@
-je_withdraw_sovereign_fund_button = {
-	name = "je_withdraw_sovereign_fund_button"
-	desc = "je_withdraw_sovereign_fund_button_desc"
+je_start_withdraw_sovereign_fund_button = {
+	name = "je_start_withdraw_sovereign_fund_button"
+	desc = "je_start_withdraw_sovereign_fund_button_desc"
 
 	visible = { 
+		
+		NOT = { has_variable = withdrawing_sovereign_wealth_fund }
 		
 	}
 
 	possible = {
+	
+		hidden_trigger = { NOT = { has_variable = depositing_sovereign_wealth_fund } }
 	
 		#Sufficient funds to withdraw
 		investment_pool > 10000
@@ -51,63 +55,9 @@ je_withdraw_sovereign_fund_button = {
 
 	effect = {
 		
-		#Withdraw money
-		if = {
-			limit = { 
-				investment_pool >= 10000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 10000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 100000
-			}
-			add_treasury = 10000
-			add_investment_pool = -10000
-		}
-		if = {
-			limit = { 
-				investment_pool >= 100000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 100000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 1000000
-			}
-			add_treasury = 100000
-			add_investment_pool = -100000
-		}
-		if = {
-			limit = { 
-				investment_pool >= 1000000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 1000000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 10000000
-			}
-			add_treasury = 1000000
-			add_investment_pool = -1000000
-		}
-		if = {
-			limit = { 
-				investment_pool >= 10000000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 10000000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 100000000
-			}
-			add_treasury = 10000000
-			add_investment_pool = -10000000
-		}
-		if = {
-			limit = { 
-				investment_pool >= 100000000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 100000000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 1000000000
-			}
-			add_treasury = 100000000
-			add_investment_pool = -100000000
-		}
-		if = {
-			limit = { 
-				investment_pool >= 1000000000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 1000000000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 10000000000
-			}
-			add_treasury = 1000000000
-			add_investment_pool = -1000000000
-		}
+		set_variable = withdrawing_sovereign_wealth_fund
 		
-		calculate_sovereign_wealth_fund = yes
+		withdraw_sovereign_wealth_fund = yes
 		
 		#Can only fire once per month
 		set_variable = { name = sovereign_wealth_fund_timer months = 1 }
@@ -126,15 +76,73 @@ je_withdraw_sovereign_fund_button = {
 	
 }
 
-je_inject_sovereign_fund_button = {
+je_stop_withdraw_sovereign_fund_button = {
+	name = "je_stop_withdraw_sovereign_fund_button"
+	desc = "je_stop_withdraw_sovereign_fund_button_desc"
+
+	visible = {
+		
+		has_variable = withdrawing_sovereign_wealth_fund
+		
+	}
+
+	possible = {
+	
+		hidden_trigger = { NOT = { has_variable = depositing_sovereign_wealth_fund } }
+	
+		#Can only fire once per month
+		custom_tooltip = {
+			text = withdraw_deposit_sovereign_fund.tt
+			NOT = { has_variable = sovereign_wealth_fund_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		remove_variable = withdrawing_sovereign_wealth_fund
+		
+		#Can only fire once per month
+		set_variable = { name = sovereign_wealth_fund_timer months = 1 }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		modifier = {
+			trigger = {
+				#Conditions no longer suitable
+				NAND = {
+			
+					#Sufficient funds to withdraw
+					investment_pool > 10000
+					investment_pool > root.var:sovereign_wealth_fund_withdrawal_amount
+					root.var:sovereign_wealth_fund_withdrawal_amount >= 10000 
+					
+					#Gold reserves are not full
+					gold_reserves < gold_reserves_limit
+					
+				}
+			}
+			add = 100
+		}
+	}
+	
+}
+
+je_start_inject_sovereign_fund_button = {
 	name = "je_inject_sovereign_fund_button"
 	desc = "je_inject_sovereign_fund_button_desc"
 
 	visible = { 
 		
+		NOT = { has_variable = depositing_sovereign_wealth_fund }
+		
 	}
 
 	possible = {
+	
+		hidden_trigger = { NOT = { has_variable = withdrawing_sovereign_wealth_fund } }
 	
 		#Sufficient funds to deposit
 		gold_reserves > 10000
@@ -176,63 +184,9 @@ je_inject_sovereign_fund_button = {
 
 	effect = {
 		
-		#Deposit money
-		if = {
-			limit = { 
-				gold_reserves >= 10000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 10000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 100000
-			}
-			add_investment_pool = 10000
-			add_treasury = -10000
-		}
-		if = {
-			limit = { 
-				gold_reserves >= 100000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 100000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 1000000
-			}
-			add_investment_pool = 100000
-			add_treasury = -100000
-		}
-		if = {
-			limit = { 
-				gold_reserves >= 1000000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 1000000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 10000000
-			}
-			add_investment_pool = 1000000
-			add_treasury = -1000000
-		}
-		if = {
-			limit = { 
-				gold_reserves >= 10000000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 10000000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 100000000
-			}
-			add_investment_pool = 10000000
-			add_treasury = -10000000
-		}
-		if = {
-			limit = { 
-				gold_reserves >= 100000000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 100000000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 1000000000
-			}
-			add_investment_pool = 100000000
-			add_treasury = -100000000
-		}
-		if = {
-			limit = { 
-				gold_reserves >= 1000000000
-				root.var:sovereign_wealth_fund_withdrawal_amount >= 1000000000
-				root.var:sovereign_wealth_fund_withdrawal_amount < 10000000000
-			}
-			add_investment_pool = 1000000000
-			add_treasury = -1000000000
-		}
+		set_variable = depositing_sovereign_wealth_fund
 		
-		calculate_sovereign_wealth_fund = yes
+		deposit_sovereign_wealth_fund = yes
 		
 		#Can only fire once per month
 		set_variable = { name = sovereign_wealth_fund_timer months = 1 }
@@ -244,6 +198,54 @@ je_inject_sovereign_fund_button = {
 		modifier = { 
 			trigger = { 
 				gold_reserves < gold_reserves_limit
+			}
+			add = 10 
+		}
+	}
+	
+}
+
+je_stop_inject_sovereign_fund_button = {
+	name = "je_stop_inject_sovereign_fund_button"
+	desc = "je_stop_inject_sovereign_fund_button"
+
+	visible = {
+		
+		has_variable = depositing_sovereign_wealth_fund
+		
+	}
+
+	possible = {
+	
+		hidden_trigger = { NOT = { has_variable = withdrawing_sovereign_wealth_fund } }
+		
+		#Can only fire once per month
+		custom_tooltip = {
+			text = withdraw_deposit_sovereign_fund.tt
+			NOT = { has_variable = sovereign_wealth_fund_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		remove_variable = depositing_sovereign_wealth_fund
+		
+		#Can only fire once per month
+		set_variable = { name = sovereign_wealth_fund_timer months = 1 }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		modifier = { 
+			trigger = { 
+				#Conditions no longer suitable
+				NAND = {
+					gold_reserves > 10000
+					gold_reserves > root.var:sovereign_wealth_fund_withdrawal_amount
+					root.var:sovereign_wealth_fund_withdrawal_amount >= 10000
+				}
 			}
 			add = 10 
 		}
