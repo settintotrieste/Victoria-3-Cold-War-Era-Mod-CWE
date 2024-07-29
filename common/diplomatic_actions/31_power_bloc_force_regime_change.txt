@@ -94,16 +94,21 @@
 			add_cohesion_percent = scaled_cohesion_cost
 		}
 		
-		#Ruler of TARGET is removed from office
+		#Ruler of TARGET is removed from office, if ruler is not the same interest group
 		scope:target_country = {
-			random_list = { 
-				1 = { 
-					random_scope_character = { limit = { is_ruler = yes } kill_character = yes }
+			if = {
+				limit = {
+					ruler ?= { interest_group = { NOT = { is_same_interest_group_type = scope:actor.ruler.interest_group } } }
 				}
-				1 = { 
-					random_scope_character = { limit = { is_ruler = yes } convert_IG_ideology_to_agitator_ideology = yes exile_character_with_martyrdom = yes } 
-					get_ruler_for:presidential_elective = {
-						set_character_as_ruler = yes
+				random_list = { 
+					1 = { 
+						random_scope_character = { limit = { is_ruler = yes } kill_character = yes }
+					}
+					1 = { 
+						random_scope_character = { limit = { is_ruler = yes } convert_IG_ideology_to_agitator_ideology = yes exile_character_with_martyrdom = yes } 
+						get_ruler_for:presidential_elective = {
+							set_character_as_ruler = yes
+						}
 					}
 				}
 			}
@@ -124,44 +129,67 @@
 	
 	ai = {
 		evaluation_chance = {
-			value = 0.025 # AI shouldn't use this very often
+			value = 0.25
 		}
 		
 		will_propose = {
 		
-			OR = { 
-				NOT = { has_global_variable = historical_railroading_active }
+			OR = {
+			
 				AND = {
-					is_a_communist_dictatorship = yes
+				
+					NOT = { has_global_variable = historical_railroading_active }
+					
+					infamy < infamy_threshold:notorious
+					
+					power_bloc = { current_cohesion_percentage >= 0.75 }
+					
+					"ai_ideological_opinion(scope:target_country)" <= -50			
+					OR = {
+						"ai_ideological_opinion(scope:target_country)" <= -100
+						has_attitude = {
+							who = scope:target_country
+							attitude = domineering
+						}					
+						AND = {
+							has_radical_leftist_government = no			
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+						AND = {
+							has_radical_leftist_economy = no			
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}		
+					}
+					
+				}
+				
+				AND = {
+					scope:actor = { is_a_communist_government = yes }
 					scope:target_country = {
 						NOT = { is_a_communist_government = yes }
 					}
 				}
-			}
-			
-			infamy < infamy_threshold:notorious
-		
-			power_bloc = { current_cohesion_percentage >= 0.75 }
-			"ai_ideological_opinion(scope:target_country)" <= -50			
-			OR = {
-				"ai_ideological_opinion(scope:target_country)" <= -100
-				has_attitude = {
-					who = scope:target_country
-					attitude = domineering
-				}					
+				
 				AND = {
-					has_radical_leftist_government = no			
+					scope:actor = { is_a_theocratic_government = yes }
 					scope:target_country = {
-						has_radical_leftist_government = yes
+						NOT = { is_a_theocratic_government = yes }
 					}
 				}
+				
 				AND = {
-					has_radical_leftist_economy = no			
+					scope:actor = { is_a_nationalist_government = yes }
 					scope:target_country = {
-						has_radical_leftist_economy = yes
+						NOT = { is_a_nationalist_government = yes }
 					}
-				}		
+				}
+				
 			}
+			
 		}
 
 		propose_score = {								
