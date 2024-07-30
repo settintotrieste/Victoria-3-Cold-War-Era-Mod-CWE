@@ -1527,3 +1527,428 @@ historical_union_formation.20 = {
     }
 
 }
+
+#Federation of Arab Republics - LBY
+historical_union_formation.21 = {
+    type = country_event
+	placement = c:EGY
+
+    title = LBY_EGY_union.t 				# Title of the event; ADD LOCALISATION
+    desc = LBY_EGY_union.d 					# Description of the event; ADD LOCALISATION
+    #flavor = LBY_EGY_union.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:LBY ?= this
+		game_date >= 1972.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1982.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_nationalist_government = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#No UAR
+		NOT = { exists = c:UAR }
+		
+		#Union candidate conditions
+		exists = c:EGY
+		c:EGY ?= {
+			is_a_nationalist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		exists = c:SYR
+		c:SYR ?= {
+			is_a_nationalist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = LBY_EGY_union_huf }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = LBY_EGY_union_huf						# Change variable ****
+		
+	}
+    
+	option = {
+        name = historical_union_formation.option.1				# Accept annexation by FROM
+        highlighted_option = yes
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			culture = cu:libyan
+		}
+		
+		#Mark
+		set_variable = FAR_former
+		
+		#Option to accept
+		every_country = {
+			limit = { 
+				OR = { 
+					c:EGY ?= this 
+					c:SYR ?= this
+					AND = {
+						exists = c:IRQ
+						c:IRQ ?= {
+							is_a_nationalist_government = yes
+							is_sufficiently_independent = yes
+							is_at_war = no
+						}
+					}
+				}
+			}
+			trigger_event = { id = historical_union_formation.22 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_formation.option.2				# Refuse annexation by FROM
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Federation of Arab Republics - EGY, SYR, IRQ
+historical_union_formation.22 = {
+    type = country_event
+	placement = scope:FAR_former
+
+    title = LBY_EGY_union.t 				# Title of the event; ADD LOCALISATION
+    desc = LBY_EGY_union.d 					# Description of the event; ADD LOCALISATION
+    #flavor = LBY_EGY_union.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+	
+	immediate = {
+		
+		#Libya annexes THIS
+		random_country = {
+			limit = { has_variable = FAR_former }
+			save_scope_as = FAR_former
+		}
+		
+	}
+	
+	option = {
+        name = historical_gov_changes.option.1				# Refuse land transfer request by FROM
+		highlighted_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = scope:FAR_former
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 90 
+			modifier = { 
+				trigger = { 
+					scope:FAR_former ?= { is_player = yes }
+				} 
+				add = -100 
+			}
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Accept land transfer request by FROM
+		default_option = yes
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		#Change tag to UAR
+		if = {
+			limit = { 
+				scope:FAR_former ?= { 
+					NOT = { exists = c:UAR }
+					NOT = { c:UAR ?= this }
+				}
+			}
+			scope:FAR_former ?= { 
+				change_tag = UAR
+			}
+		}
+		scope:FAR_former ?= { 
+			if = {
+				limit = { ROOT = { c:EGY ?= this } }
+				add_primary_culture = cu:egyptian
+			}
+			if = {
+				limit = { ROOT = { c:SYR ?= this } }
+				add_primary_culture = cu:syrian
+			}
+			if = {
+				limit = { ROOT = { c:IRQ ?= this } }
+				add_primary_culture = cu:iraqi
+			}
+		}
+		
+		#FAR former annexes THIS
+		scope:FAR_former ?= {
+			annex_with_incorporation = ROOT
+		}
+		
+		ai_chance = { 
+			base = 10 
+			modifier = { 
+				trigger = { 
+					has_global_variable = historical_railroading_active
+					scope:FAR_former ?= { is_player = no }
+				} 
+				add = -100 
+			}
+		}
+		
+    }
+
+}
+
+#Union of Arab Republics - IRQ
+historical_union_formation.23 = {
+    type = country_event
+	placement = c:SYR
+
+    title = IRQ_SYR_union.t 				# Title of the event; ADD LOCALISATION
+    desc = IRQ_SYR_union.d 					# Description of the event; ADD LOCALISATION
+    #flavor = IRQ_SYR_union.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:IRQ ?= this
+		game_date >= 1972.10.1									# START DATE: Date colony became self governing ****
+		game_date < 1982.10.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_nationalist_government = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#No UAR
+		NOT = { exists = c:UAR }
+		
+		#Union candidate conditions
+		exists = c:SYR
+		c:SYR ?= {
+			is_a_nationalist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = IRQ_SYR_union_huf }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = IRQ_SYR_union_huf						# Change variable ****
+		
+	}
+    
+	option = {
+        name = historical_union_formation.option.1				# Accept annexation by FROM
+        highlighted_option = yes
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			culture = cu:iraqi
+		}
+		
+		#Mark
+		set_variable = UAR_former
+		
+		#Option to accept
+		every_country = {
+			limit = { 
+				OR = { 
+					c:SYR ?= this 
+					AND = {
+						exists = c:EGY
+						c:EGY ?= {
+							is_a_nationalist_government = yes
+							is_sufficiently_independent = yes
+							is_at_war = no
+						}
+					}
+				}
+			}
+			trigger_event = { id = historical_union_formation.24 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_formation.option.2				# Refuse annexation by FROM
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Union of Arab Republics - SYR, IRQ
+historical_union_formation.24 = {
+    type = country_event
+	placement = scope:UAR_former
+
+    title = IRQ_SYR_union.t 				# Title of the event; ADD LOCALISATION
+    desc = IRQ_SYR_union.d 					# Description of the event; ADD LOCALISATION
+    #flavor = IRQ_SYR_union.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+	
+	immediate = {
+		
+		#Iraq annexes THIS
+		random_country = {
+			limit = { has_variable = UAR_former }
+			save_scope_as = UAR_former
+		}
+		
+	}
+	
+	option = {
+        name = historical_gov_changes.option.1				# Refuse land transfer request by FROM
+		highlighted_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = scope:UAR_former
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 90 
+			modifier = { 
+				trigger = { 
+					NAND = {
+						c:EGY ?= this
+						has_global_variable = historical_railroading_active
+					}
+					scope:UAR_former ?= { is_player = yes }
+				}
+				add = -100 
+			}
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Accept land transfer request by FROM
+		default_option = yes
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		#Change tag to UAR
+		if = {
+			limit = { 
+				scope:UAR_former ?= { 
+					NOT = { exists = c:UAR }
+					NOT = { c:UAR ?= this }
+				}
+			}
+			scope:UAR_former ?= { 
+				change_tag = UAR
+			}
+		}
+		scope:UAR_former ?= {
+			if = {
+				limit = { ROOT = { c:SYR ?= this } }
+				add_primary_culture = cu:syrian
+			}
+			if = {
+				limit = { ROOT = { c:EGY ?= this } }
+				add_primary_culture = cu:egyptian
+			}
+		}
+		
+		#UAR former annexes THIS
+		scope:UAR_former ?= {
+			annex_with_incorporation = ROOT
+		}
+		
+		ai_chance = { 
+			base = 10 
+			modifier = { 
+				trigger = { 
+					has_global_variable = historical_railroading_active
+					scope:UAR_former ?= { is_player = no }
+				}
+				add = -100 
+			}
+		}
+		
+    }
+
+}
