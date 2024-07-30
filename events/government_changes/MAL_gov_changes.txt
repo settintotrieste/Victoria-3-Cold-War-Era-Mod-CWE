@@ -1,0 +1,325 @@
+namespace = MAL_gov_changes
+
+# Autocratic Rulers
+MAL_gov_changes.1 = {
+    type = country_event
+
+    title = MAL_1960_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = MAL_1960_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = MAL_1960_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:MAL ?= this
+		
+		OR = {
+			AND = {
+				NOT = { has_variable = MAL_1960_hgc }
+				game_date >= 1960.6.20							# START DATE: Date colony became self governing ****
+				game_date < 1968.11.19							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				is_a_republican_democracy = yes
+			}
+			AND = {
+				NOT = { has_variable = MAL_1968_hgc }
+				game_date >= 1968.11.19							# START DATE: Date colony became self governing ****
+				game_date < 1978.11.19							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				is_a_republican_regime = yes
+			}
+			AND = {
+				NOT = { has_variable = MAL_2012_hgc }
+				game_date >= 2012.3.21							# START DATE: Date colony became self governing ****
+				game_date < 2022.3.21							# END DATE: All historical events must not fire 10 years after the START DATE ****
+				is_a_republican_democracy = yes
+			}
+		}
+		
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		if = {
+			limit = {
+				game_date >= 1960.6.20							# START DATE: Date colony became self governing ****
+				game_date < 1968.11.19							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = MAL_1960_hgc							# Change variable ****
+		}
+		if = {
+			limit = {
+				game_date >= 1968.11.19							# START DATE: Date colony became self governing ****
+				game_date < 1978.11.19							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = MAL_1968_hgc							# Change variable ****
+		}
+		if = {
+			limit = {
+				game_date >= 2012.3.21							# START DATE: Date colony became self governing ****
+				game_date < 2022.3.21							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = MAL_2012_hgc							# Change variable ****
+		}
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_dictatorship = yes
+		
+		#Set ruler
+		if = {
+			limit = {
+				game_date >= 1960.6.20							# START DATE: Date colony became self governing ****
+				game_date < 1968.11.19							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_presidential_republic = yes
+			effect_starting_politics_economic_policy_state_capitalism = yes
+			create_character = {
+				first_name = "Modibo_Keita_first_name"
+				last_name = "Modibo_Keita_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1915.6.4
+				interest_group = ig_trade_unions
+				ideology = ideology_autocratic
+				culture = cu:malian
+				religion = rel:catholic
+				traits = {
+					innovative
+					reckless
+					ambitious
+				}
+			}
+		}
+		if = {
+			limit = {
+				game_date >= 1993.12.7							# START DATE: Date colony became self governing ****
+				game_date < 1991.12.24							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_nationalist_republic = yes
+			effect_starting_politics_economic_policy_interventionism = yes
+			create_character = {
+				first_name = "Moussa_Traore_first_name"
+				last_name = "Moussa_Traore_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1936.9.25
+				interest_group = ig_industrialists
+				ideology = ideology_autocratic
+				culture = cu:malian
+				religion = rel:catholic
+				traits = {
+					grifter
+					cruel
+					persistent
+				}
+			}
+		}
+		if = {
+			limit = {
+				game_date >= 2012.3.21							# START DATE: Date colony became self governing ****
+				game_date < 2022.3.21							# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_nationalist_republic = yes
+			create_character = {
+				first_name = "Amadou_Sanogo_first_name"
+				last_name = "Amadou_Sanogo_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1972.1.1
+				interest_group = ig_armed_forces
+				ideology = ideology_autocratic
+				culture = cu:malian
+				religion = rel:catholic
+				traits = {
+					grifter
+					cruel
+					reckless
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = poor
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Return to democracy
+MAL_gov_changes.2 = {
+    type = country_event
+
+    title = MAL_1991_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = MAL_1991_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = MAL_1991_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:MAL ?= this
+		
+		OR = {
+			AND = {
+				NOT = { has_variable = MAL_1991_hgc }
+				game_date >= 1991.3.26								# START DATE: Date colony became self governing ****
+				game_date < 2001.3.26								# END DATE: All historical events must not fire 10 years after the START DATE ****
+				OR = { 
+					is_a_republican_regime = yes
+					is_a_nationalist_government = yes
+				}
+			}
+			AND = {
+				NOT = { has_variable = MAL_2012_hgc }
+				game_date >= 2012.4.12								# START DATE: Date colony became self governing ****
+				game_date < 2022.4.12								# END DATE: All historical events must not fire 10 years after the START DATE ****
+				OR = { 
+					is_a_republican_regime = yes
+					is_a_nationalist_government = yes
+				}
+			}
+		}
+		
+		is_sufficiently_independent = yes							# is_vassal = no		
+		is_at_war = no												# war = no
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		if = {
+			limit = {
+				game_date >= 1991.3.26								# START DATE: Date colony became self governing ****
+				game_date < 2001.3.26								# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = MAL_1991_hgc								# Change variable ****
+		}
+		if = {
+			limit = {
+				game_date >= 2012.4.12								# START DATE: Date colony became self governing ****
+				game_date < 2022.4.12								# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			set_variable = MAL_2012_hgc								# Change variable ****
+		}
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1						# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_democratic = yes
+		if = {
+			limit = {
+				game_date >= 1991.3.26								# START DATE: Date colony became self governing ****
+				game_date < 2001.3.26								# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_presidential_republic = yes
+			create_character = {
+				first_name = "Alpha_Oumar_Konare_first_name"
+				last_name = "Alpha_Oumar_Konare_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1946.2.2
+				interest_group = ig_rural_folk
+				ideology = ideology_democratic
+				culture = cu:malian
+				religion = rel:catholic
+				traits = {
+					persistent
+					brave
+					erudite
+				}
+			}
+		}
+		if = {
+			limit = {
+				game_date >= 2012.4.12								# START DATE: Date colony became self governing ****
+				game_date < 2022.4.12								# END DATE: All historical events must not fire 10 years after the START DATE ****
+			}
+			effect_starting_politics_presidential_republic = yes
+			create_character = {
+				first_name = "Dioncounda_Traore_first_name"
+				last_name = "Dioncounda_Traore_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1942.2.23
+				interest_group = ig_rural_folk
+				ideology = ideology_democratic
+				culture = cu:malian
+				religion = rel:catholic
+				traits = {
+					persistent
+					brave
+					erudite
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
