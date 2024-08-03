@@ -1,0 +1,161 @@
+﻿seize_shipping = {
+	groups= { general } 
+	requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	unlocking_technologies = {
+		tech_military_navy_doctrine_2
+	}
+
+	potential = {
+	
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#THIS and Target are not revolutionary
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no } 
+		
+		#THIS is at war with TARGET
+		has_war_with = scope:target_country
+		
+		#THIS and TARGET are connected to the sea
+		has_port = yes
+		scope:target_country = { has_port = yes }
+		
+		#THIS is not a subject
+		is_sufficiently_independent = yes
+		
+	}
+	
+	possible = {
+		
+		#THIS has larger navy than TARGET
+		navy_size > scope:target_country.navy_size
+		
+		#Correct ruler ideology
+		OR = { 
+			has_jingoistic_ruler = yes
+			scope:target_country = { has_diplomatic_pact = { who = scope:actor type = seize_shipping } }
+		}
+		
+	}
+	
+	is_hostile = yes
+	
+	pact = {
+		cost = 50
+		is_two_sided_pact = no
+		infamy_affects_maintenance = yes
+		
+		#Seize shipping punish TARGET by diverting money to THIS
+		income_transfer = 0.05
+		second_country_gets_income_transfer = no
+		income_transfer_based_on_second_country = yes
+		
+		first_modifier = {
+			country_infamy_generation_mult = 0.05
+		}
+		
+		second_modifier = {
+			country_convoys_capacity_mult = -0.05
+		}
+		
+		### Validation requirements ###
+		
+		requirement_to_maintain = { 
+		
+			trigger = {
+				
+				#THIS is not decentralized
+				NOT = { is_country_type = decentralized }
+				scope:target_country = { NOT = { is_country_type = decentralized } }
+				
+				#THIS and Target are not revolutionary
+				is_revolutionary = no is_secessionist = no
+				scope:target_country = { is_revolutionary = no is_secessionist = no } 
+				
+				#THIS is at war with TARGET
+				has_war_with = scope:target_country
+				
+				#THIS and TARGET are connected to the sea
+				has_port = yes
+				scope:target_country = { has_port = yes }
+				
+				#THIS is not a subject
+				is_sufficiently_independent = yes
+				
+				#THIS has larger navy than TARGET
+				navy_size > scope:target_country.navy_size
+				
+				#THIS is not broke
+				in_default = no
+				
+				#Correct ruler ideology
+				OR = { 
+					has_jingoistic_ruler = yes
+					scope:target_country = { has_diplomatic_pact = { who = scope:actor type = seize_shipping } }
+				}
+			
+			}
+			
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Add infamy
+		change_infamy = 5
+		
+		#Lobby
+		add_lobby_appeasement_from_diplomacy_unidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country 
+			PRO_AMOUNT = -5
+			ANTI_AMOUNT = 5
+			FACTOR = appeasement_embargo_declared
+		}
+		
+		#Antagonise allies
+		every_country = {
+			limit = { has_diplomatic_pact = { who = scope:target_country type = alliance } }
+			change_relations = { country = scope:actor value = -50 }
+		}
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0.25		
+		}
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			
+			#AI will seize shipping if desperate
+			scope:actor.infamy < infamy_threshold:pariah
+			OR = {
+				scope:actor = { any_scope_war = { has_war_support = { target = scope:target_country value < 0 } } }
+				in_default = yes
+				enemy_occupation > 0.25
+			}
+			
+		}
+		
+		will_break = {
+			
+			#AI will seize shipping if desperate
+			scope:actor.infamy >= infamy_threshold:pariah
+			
+		}
+		
+	}
+	
+}
