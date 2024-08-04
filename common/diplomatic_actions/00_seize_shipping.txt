@@ -19,7 +19,10 @@
 		scope:target_country = { is_revolutionary = no is_secessionist = no } 
 		
 		#THIS is at war with TARGET
-		has_war_with = scope:target_country
+		OR = { 
+			has_war_with = scope:target_country
+			issued_letters_of_marque = yes
+		}
 		
 		#THIS and TARGET are connected to the sea
 		has_port = yes
@@ -33,12 +36,21 @@
 	possible = {
 		
 		#THIS has larger navy than TARGET
-		navy_size > scope:target_country.navy_size
+		OR = { 
+			navy_size > scope:target_country.navy_size
+			issued_letters_of_marque = yes
+		}
 		
 		#Correct ruler ideology
 		OR = { 
 			has_jingoistic_ruler = yes
 			scope:target_country = { has_diplomatic_pact = { who = scope:actor type = seize_shipping } }
+		}
+		
+		#THIS has poor or less relations with Target
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+			scope:target_country.relations:root <= relations_threshold:poor
 		}
 		
 	}
@@ -78,7 +90,16 @@
 				scope:target_country = { is_revolutionary = no is_secessionist = no } 
 				
 				#THIS is at war with TARGET
-				has_war_with = scope:target_country
+				OR = { 
+					has_war_with = scope:target_country
+					issued_letters_of_marque = yes
+				}
+				
+				#THIS has poor or less relations with Target
+				custom_tooltip = {
+					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+					scope:target_country.relations:root <= relations_threshold:poor
+				}
 				
 				#THIS and TARGET are connected to the sea
 				has_port = yes
@@ -88,7 +109,10 @@
 				is_sufficiently_independent = yes
 				
 				#THIS has larger navy than TARGET
-				navy_size > scope:target_country.navy_size
+				OR = { 
+					navy_size > scope:target_country.navy_size
+					issued_letters_of_marque = yes
+				}
 				
 				#THIS is not broke
 				in_default = no
@@ -108,7 +132,14 @@
 	accept_effect = {
 		
 		#Add infamy
-		change_infamy = 5
+		if = {
+			limit = { has_war_with = scope:target_country }
+			change_infamy = 5
+		}
+		else_if = {
+			limit = { issued_letters_of_marque = yes }
+			change_infamy = 1
+		}
 		
 		#Lobby
 		add_lobby_appeasement_from_diplomacy_unidirectional = { 

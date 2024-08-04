@@ -1,0 +1,116 @@
+je_hire_privateers_button = {
+	name = "je_hire_privateers_button"
+	desc = "je_hire_privateers_button_desc"
+
+	visible = { 
+		
+		NOT = { has_variable = issued_letters_of_marque }
+		
+	}
+
+	possible = {
+		
+		is_sufficiently_independent = yes
+		
+		has_jingoistic_ruler = yes
+		
+		in_default = no
+		
+		#Can only fire once per month
+		custom_tooltip = {
+			text = start_letters_of_marque.tt
+			NOT = { has_variable = letters_of_marque_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		#Allow seize shipping diplo action to be used before war
+		set_variable = issued_letters_of_marque
+		
+		#Add costs
+		hidden_effect = { remove_modifier = letters_of_marque }
+		add_modifier = { name = letters_of_marque }
+		
+		#Can only fire once per month
+		set_variable = { name = letters_of_marque_timer months = 1 }
+		
+		#Notify 3P
+		save_scope_as = letters_of_marque_issuer
+		every_country = {
+			limit = { 
+				NOT = { this = ROOT }
+				has_journal_entry = je_piracy_system 
+			}
+			post_notification = issued_letters_of_marque_notification
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if country is rich
+		modifier = { 
+			trigger = { 
+				weekly_net_fixed_income > 100000
+			}
+			add = 50 
+		}
+		
+	}
+	
+}
+
+je_fire_privateers_button = {
+	name = "je_fire_privateers_button"
+	desc = "je_fire_privateers_button_desc"
+
+	visible = { 
+		
+		OR = { 
+			has_variable = issued_letters_of_marque
+			has_modifier = letters_of_marque
+		}
+		
+	}
+
+	possible = {
+		
+		#Can only fire once per month
+		custom_tooltip = {
+			text = start_letters_of_marque.tt
+			NOT = { has_variable = letters_of_marque_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		remove_variable = issued_letters_of_marque
+		remove_modifier = letters_of_marque
+		
+		#Can only fire once per month
+		set_variable = { name = letters_of_marque_timer months = 1 }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if country is rich
+		modifier = { 
+			trigger = { 
+				OR = { 
+					scope:actor.infamy >= infamy_threshold:pariah
+					NOT = { has_jingoistic_ruler = yes }
+					in_default = yes
+				}
+			}
+			add = 50 
+		}
+		
+	}
+	
+}
