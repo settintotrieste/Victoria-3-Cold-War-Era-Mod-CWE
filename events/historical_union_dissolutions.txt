@@ -2799,3 +2799,126 @@ historical_union_dissolution.15 = {
     }
 
 }
+
+#Union of African States
+historical_union_dissolution.16 = {
+    type = country_event
+
+    title = UAS_GHA.t 					# Title of the event; ADD LOCALISATION
+    desc = UAS_GHA.d 					# Description of the event; ADD LOCALISATION
+    #flavor = UAS_GHA.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:GHA ?= this
+		game_date >= 1963.6.1									# START DATE: Date colony became self governing ****
+		game_date < 1973.6.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		OR = { 
+			is_a_presidential_regime = yes
+			is_a_presidential_democracy = yes
+		}
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Confederation exists
+		OR = { 
+			AND = {
+				exists = c:GUI
+				c:GUI ?= {
+					is_subject_of = ROOT
+					is_subject_type = subject_type_confederal_state
+				}
+			}
+			AND = {
+				exists = c:MAL
+				c:MAL ?= {
+					is_subject_of = ROOT
+					is_subject_type = subject_type_confederal_state
+				}
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = UAS_GHA_hud }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = UAS_GHA_hud								# Change variable ****
+	
+	}
+    
+    option = {
+        name = historical_union_dissolution.option.1			# Accept secesssion
+        highlighted_option = yes
+		
+		#Dissolve confederation
+		every_country = {
+			limit = {
+				OR = {
+					c:GUI ?= this 
+					c:MAL ?= this 
+				}
+				is_subject_of = ROOT
+				is_subject_type = subject_type_confederal_state
+			}
+			make_independent = yes
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_dissolution.option.2			# Refuse secesssion
+		default_option = yes
+		
+		# Internal unrest
+		every_country = {
+			limit = {
+				OR = {
+					c:GUI ?= this
+					c:MAL ?= this
+				}
+				is_subject_of = ROOT
+				is_subject_type = subject_type_confederal_state
+			}
+			add_radicals = {
+				value = large_radicals
+			}
+			add_modifier = { 
+				name = nationalist_agitation 
+				months = 60 
+				is_decaying = yes 
+			}
+			add_liberty_desire = 100
+		}
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = nationalist_agitation 
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
