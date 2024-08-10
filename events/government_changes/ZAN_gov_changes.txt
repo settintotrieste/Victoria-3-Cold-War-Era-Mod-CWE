@@ -1,0 +1,99 @@
+namespace = ZAN_gov_changes
+
+# Zanzibar Revolution, 1964
+ZAN_gov_changes.1 = {
+    type = country_event
+
+    title = ZAN_1964_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = ZAN_1964_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = ZAN_1964_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:ZAN ?= this
+		game_date >= 1964.1.12									# START DATE: Date colony became self governing ****
+		game_date < 1964.1.12									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_monarchy = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = ZAN_1964_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = ZAN_1964_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Becomes independent
+		if = {
+			limit = { is_subject = yes }
+			make_independent = yes
+		}
+		
+		#Enact new regime
+		effect_starting_politics_communist_republic = yes
+		effect_starting_politics_democratic = yes
+		
+		#Create new leader
+		create_character = {
+			first_name = "Abeid_Karume_first_name"
+			last_name = "Abeid_Karume_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1905.8.4
+			interest_group = ig_rural_folk
+			ideology = ideology_elitist
+			culture = cu:zanzibari
+			religion = rel:protestant
+			traits = {
+				ambitious
+				charismatic
+				wrathful
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = poor
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
