@@ -584,3 +584,130 @@ PEU_gov_changes.6 = {
     }
 
 }
+
+# 2022 Peruvian Self-Coup Attempt
+PEU_gov_changes.7 = {
+    type = country_event
+
+    title = PEU_2022_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = PEU_2022_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = PEU_2022_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:PEU ?= this
+		game_date >= 2022.12.7									# START DATE: Date colony became self governing ****
+		game_date < 2032.12.7									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		OR = { 
+			left_wing_ruling_coalition = yes						# Correct Ruling Coalition
+			has_global_variable = historical_railroading_active
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = PEU_2022_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = PEU_2022_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Dina Boluarte
+		create_character = {
+			first_name = "Dina_Boluarte_first_name"
+			last_name = "Dina_Boluarte_last_name"
+			ruler = yes ig_leader = yes historical = yes female = yes
+			birth_date = 1962.5.31
+			interest_group = ig_trade_unions
+			ideology = ideology_power_hungry
+			culture = cu:peruvian
+			religion = rel:catholic
+			traits = {
+				ambitious
+				cruel
+				direct
+			}
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = rich
+		}
+		add_radicals = {
+			value = medium_radicals
+			strata = middle
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_dictatorship = yes
+		
+		#Pedro Castillo
+		create_character = {
+			first_name = "Pedro_Castillo_first_name"
+			last_name = "Pedro_Castillo_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1969.10.19
+			interest_group = ig_trade_unions
+			ideology = ideology_autocratic
+			culture = cu:peruvian
+			religion = rel:catholic
+			traits = {
+				ambitious
+				reckless
+				direct
+			}
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			strata = rich
+		}
+		add_radicals = {
+			value = large_radicals
+			strata = middle
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

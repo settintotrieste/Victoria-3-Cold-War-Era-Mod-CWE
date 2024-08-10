@@ -3940,3 +3940,112 @@ historical_domestic_unrest.41 = {
     }
 
 }
+
+# Attempted Assassination of Donald Trump
+historical_domestic_unrest.42 = {
+    type = country_event
+
+    title = USA_assassinate_DJT.t 								# Title of the event; ADD LOCALISATION
+    desc = USA_assassinate_DJT.d 								# Description of the event; ADD LOCALISATION
+    #flavor = USA_assassinate_DJT.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_public_figure_assassination.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 2024.7.13									# START DATE: Date colony became self governing ****
+		game_date < 2034.7.13									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_assassinate_DJT_hdu }		# CHANGE ****
+		
+		#Cause of unrest
+		any_scope_character = {
+			has_variable = character_is_Trump
+			has_role = politician
+			is_ruler = no
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_assassinate_DJT_hdu					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		default_option = yes
+		
+		random_scope_character = {
+			limit = { has_variable = character_is_Trump }
+			add_modifier = {
+				name = modifier_political_martyr
+				months = 60
+				is_decaying = yes 
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2				# No
+		
+		#Kill character
+		random_scope_character = {
+			limit = { has_variable = character_is_Trump }
+			kill_character = yes
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_landowners
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_devout
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
