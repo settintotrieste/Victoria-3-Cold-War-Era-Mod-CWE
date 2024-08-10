@@ -91,14 +91,75 @@
 	
 	on_complete = {
 		
-		#Select ruler if a regime, only if the ruler's interest group is in government
+		#Method to select ruler if a regime
 		if = {
 			limit = { 
 				is_a_regime_type_government = yes 
 				NOT = { has_variable = committed_electoral_fraud }
 			}
+			
+			#Enforce ruler IG restrictions for ideological republics
 			if = {
-				limit = { 
+				limit = {
+					OR = {
+						is_a_communist_government = yes
+						is_a_theocratic_government = yes
+					}
+				}
+				if = {
+					limit = {
+						is_a_communist_government = yes
+						ruler ?= {
+							interest_group = {
+								OR = {
+									is_interest_group_type = ig_industrialists
+									is_interest_group_type = ig_landowners
+									is_interest_group_type = ig_devout
+								}
+							}
+						}
+					}
+					custom_tooltip = {
+						text = enforce_ruler_restriction.tt
+						random_scope_character = {
+							limit = { 
+								is_ruler = no
+								has_role = politician
+								is_interest_group_type = ig_trade_unions
+							}
+							set_character_as_ruler = yes
+						}
+					}
+				}
+				if = {
+					limit = {
+						is_a_theocratic_government = yes
+						ruler ?= {
+							interest_group = {
+								OR = {
+									is_interest_group_type = ig_petty_bourgeoisie
+									is_interest_group_type = ig_trade_unions
+								}
+							}
+						}
+					}
+					custom_tooltip = {
+						text = enforce_ruler_restriction.tt
+						random_scope_character = {
+							limit = { 
+								is_ruler = no
+								has_role = politician
+								is_interest_group_type = ig_devout
+							}
+							set_character_as_ruler = yes
+						}
+					}
+				}
+			}
+			
+			#Select ruler if a regime, only if the ruler's interest group is in government
+			else_if = {
+				limit = {
 					ruler ?= { 
 						interest_group = { 
 							is_in_government = yes 
@@ -116,11 +177,13 @@
 					}
 				}
 			}
+			
 			else = {
 				custom_tooltip = {
 					text = semi_dictatorial_transfer_of_power_2.tt
 				}
 			}
+			
 		}
 		
 		#Electoral fraud
