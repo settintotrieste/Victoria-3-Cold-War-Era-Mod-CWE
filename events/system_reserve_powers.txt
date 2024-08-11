@@ -627,3 +627,186 @@ reserve_powers_system.6 = {
 	}
 	
 }
+
+#Institutional Veto
+reserve_powers_system.7 = {
+	type = country_event
+
+	title = institutional_veto.t
+	desc = institutional_veto.d
+	flavor = institutional_veto.f
+
+	event_image = {
+		video = "gfx/event_pictures/asia_politician_parliament_motion.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		enacting_any_law = yes
+		
+		NOT = { has_variable = institutional_veto_overruled }
+		
+		is_a_dictatorship = yes
+		
+		OR = {
+			AND = {
+				has_law = law_type:law_HOS_monarch
+				OR = {
+					#is_enacting_law = law_type:law_HOS_monarch
+					is_enacting_law = law_type:law_HOS_president
+					is_enacting_law = law_type:law_HOS_religious_leader
+					is_enacting_law = law_type:law_HOS_nationalist_leader
+					is_enacting_law = law_type:law_HOS_communist_leader
+				}
+			}
+			AND = {
+				has_law = law_type:law_HOS_president
+				OR = {
+					is_enacting_law = law_type:law_HOS_monarch
+					#is_enacting_law = law_type:law_HOS_president
+					is_enacting_law = law_type:law_HOS_religious_leader
+					is_enacting_law = law_type:law_HOS_nationalist_leader
+					is_enacting_law = law_type:law_HOS_communist_leader
+				}
+			}
+			AND = {
+				has_law = law_type:law_HOS_religious_leader
+				OR = {
+					is_enacting_law = law_type:law_HOS_monarch
+					is_enacting_law = law_type:law_HOS_president
+					#is_enacting_law = law_type:law_HOS_religious_leader
+					is_enacting_law = law_type:law_HOS_nationalist_leader
+					is_enacting_law = law_type:law_HOS_communist_leader
+				}
+			}
+			AND = {
+				has_law = law_type:law_HOS_nationalist_leader
+				OR = {
+					is_enacting_law = law_type:law_HOS_monarch
+					is_enacting_law = law_type:law_HOS_president
+					is_enacting_law = law_type:law_HOS_religious_leader
+					#is_enacting_law = law_type:law_HOS_nationalist_leader
+					is_enacting_law = law_type:law_HOS_communist_leader
+				}
+			}
+			AND = {
+				has_law = law_type:law_HOS_communist_leader
+				OR = {
+					is_enacting_law = law_type:law_HOS_monarch
+					is_enacting_law = law_type:law_HOS_president
+					is_enacting_law = law_type:law_HOS_religious_leader
+					is_enacting_law = law_type:law_HOS_nationalist_leader
+					#is_enacting_law = law_type:law_HOS_communist_leader
+				}
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		
+	}
+
+	option = {
+		name = institutional_veto_accept_option 		#Accept the institutional veto
+		default_option = yes
+		
+		#Government will drop the law
+		if = {
+			limit = { enacting_any_law = yes }
+			add_enactment_setback = 3
+		}
+		
+		#IGs that low the current law will be even angrier
+		every_interest_group = {
+			limit = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value > neutral
+				}
+			}
+			hidden_effect = {
+				remove_modifier = ig_angry_with_government
+			}
+			add_modifier = { name = ig_angry_with_government years = 2 is_decaying = yes }
+		}
+		
+		ai_chance = {
+			base = 90
+		}
+		
+	}
+	
+	option = {
+		name = institutional_veto_reject_option 		#Reject the institutional veto
+		
+		set_variable = institutional_veto_overruled
+		
+		#Add set back
+		if = {
+			limit = { 
+				enacting_any_law = yes
+				enactment_setback_count < 2 
+			}
+			add_enactment_setback = 1
+		}
+		else_if = {
+			limit = { 
+				enacting_any_law = yes
+			}
+			hidden_effect = {
+				remove_modifier = ruler_restrained
+			}
+			add_enactment_modifier = {
+				name = ruler_restrained
+			}
+		}
+		
+		#IGs that hate the current law will be even angrier
+		every_interest_group = {
+			limit = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+			}
+			hidden_effect = {
+				remove_modifier = ig_angry_with_government
+			}
+			add_modifier = { name = ig_angry_with_government years = 2 is_decaying = yes }
+		}
+		
+		#National instability
+		hidden_effect = {
+			remove_modifier = stirrings_of_revolution
+		}
+		add_modifier = {
+			name = stirrings_of_revolution
+			years = 5
+			is_decaying = yes
+		}
+		
+		ai_chance = {
+			base = 10
+			modifier = { 
+				trigger = { 
+					has_global_variable = historical_railroading_active 
+				} 
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
