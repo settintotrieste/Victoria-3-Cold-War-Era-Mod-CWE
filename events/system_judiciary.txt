@@ -1639,3 +1639,176 @@ judiciary_system.16 = {
 	}
 	
 }
+
+#Legal Challenge to Law Enactment
+judiciary_system.17 = {
+	type = country_event
+
+	title = judiciary_veto.t
+	desc = judiciary_veto.d
+	flavor = judiciary_veto.f
+
+	event_image = {
+		video = "gfx/event_pictures/asia_politician_parliament_motion.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		enacting_any_law = yes
+		
+		NOT = { has_variable = judiciary_veto_overruled }
+		
+		OR = {
+		
+			AND = {
+				supreme_court_is_progressive = yes
+				any_interest_group = {
+					is_in_government = no
+					leader = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
+			}
+			
+			AND = {
+				supreme_court_is_regressive = yes
+				any_interest_group = {
+					is_in_government = yes
+					leader = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Mark plaintiff
+		if = {
+			limit = { supreme_court_is_progressive = yes }
+			random_interest_group = {
+				limit = { 
+					is_in_government = no
+					leader = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
+				save_scope_as = legal_challenge_plaintiff_scope
+			}
+		}
+		if = {
+			limit = { supreme_court_is_regressive = yes }
+			random_interest_group = {
+				limit = { 
+					is_in_government = yes
+					leader = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
+				save_scope_as = legal_challenge_plaintiff_scope
+			}
+		}
+		
+		#Mark law under enactment
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		
+	}
+
+	option = {
+		name = judicial_veto_accept_option 		#Accept the Judicial veto
+		default_option = yes
+		
+		#Drop law
+		if = {
+			limit = { enacting_any_law = yes }
+			add_enactment_setback = 3
+		}
+		
+		ai_chance = {
+			base = 50
+		}
+		
+	}
+	
+	option = {
+		name = judicial_veto_reject_option 		#Reject the Judicial veto
+		
+		set_variable = judiciary_veto_overruled
+		
+		#Add set back
+		if = {
+			limit = { 
+				enacting_any_law = yes
+				enactment_setback_count < 2 
+			}
+			add_enactment_setback = 1
+		}
+		else_if = {
+			limit = { 
+				enacting_any_law = yes
+			}
+			hidden_effect = {
+				remove_modifier = ruler_restrained
+			}
+			add_enactment_modifier = {
+				name = ruler_restrained
+			}
+		}
+		
+		#Opposition IGs are angry
+		if = {
+			limit = { supreme_court_is_progressive = yes }
+			effect_opposition_angry_with_government = yes
+		}
+		if = {
+			limit = { supreme_court_is_regressive = yes }
+			effect_government_angry_with_ruler = yes
+		}
+		
+		ai_chance = {
+			base = 50
+		}
+		
+	}
+	
+}

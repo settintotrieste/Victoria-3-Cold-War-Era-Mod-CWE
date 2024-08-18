@@ -1,0 +1,127 @@
+namespace = politicians_system
+
+#Randomly retire rulers
+politicians_system.1 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		#Not at war
+		is_at_war = no
+		
+		#Has an elderly ruler, politician or agitator
+		OR = {
+			
+			#Ruler (dictators retire by dying)
+			AND = {
+				NOT = { is_a_dictatorship = yes }
+				ruler ?= {
+					NOT = { has_variable = is_ruler_for_life }
+					OR = { 
+						AND = { 
+							is_historical = yes
+							age >= 90
+						}
+						OR = {
+							age >= 80
+							AND = {
+								age >= 70
+								has_trait = sickly
+							}
+						}
+					}
+				}
+			}
+			
+			#IG Leaders & Agitators
+			any_scope_character = {
+				is_ruler = no
+				OR = { 
+					has_role = politician
+					has_role = agitator
+				}
+				OR = {
+					AND = { 
+						is_historical = yes
+						age >= 90
+					}
+					OR = {
+						age >= 80
+						AND = {
+							age >= 70
+							has_trait = sickly
+						}
+					}
+				}
+			}
+		
+		}
+		
+	}
+
+	immediate = {
+		
+		#Retire the elderly
+		random_scope_character = {
+		
+			limit = {
+			
+				OR = {
+					
+					#Rulers
+					AND = {
+						is_ruler = yes
+						NOT = { has_variable = is_ruler_for_life }
+						owner = { NOT = { is_a_dictatorship = yes } }
+						OR = { 
+							AND = { 
+								is_historical = yes
+								age >= 90
+							}
+							OR = {
+								age >= 80
+								AND = {
+									age >= 70
+									has_trait = sickly
+								}
+							}
+						}
+					}
+					
+					#Politicians & Agitators
+					AND = { 
+						is_ruler = no
+						OR = { 
+							has_role = politician
+							has_role = agitator
+						}
+						OR = {
+							AND = { 
+								is_historical = yes
+								age >= 90
+							}
+							OR = {
+								age >= 80
+								AND = {
+									age >= 70
+									has_trait = sickly
+								}
+							}
+						}
+					}
+					
+				}
+				
+			}
+			
+			save_scope_as = retiring_politician_scope
+			
+		}
+		
+		#Notify player of retirement
+		post_notification = ig_leader_has_retired
+		
+	}
+
+}
