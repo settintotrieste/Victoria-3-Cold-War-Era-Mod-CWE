@@ -2373,3 +2373,98 @@ historical_economy.27 = {
     }
 
 }
+
+# Iranian White Revolution
+historical_economy.28 = {
+    type = country_event
+
+    title = PER_NEM_Reforms.t 								# Title of the event; ADD LOCALISATION
+    desc = PER_NEM_Reforms.d 								# Description of the event; ADD LOCALISATION
+    #flavor = PER_NEM_Reforms.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:PER ?= this
+		game_date >= 1963.1.26									# START DATE: Date colony became self governing ****
+		game_date < 1973.1.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_regime_monarchy = yes								# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = PER_NEM_Reforms_hee }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = PER_NEM_Reforms_hee						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		activate_law = law_type:law_social_capitalism
+		activate_law = law_type:law_limited_private_land_ownership
+		activate_law = law_type:law_full_womens_rights
+		if = {
+			limit = { 
+				NOT = { has_law = law_type:law_public_schools } 
+			}
+			activate_law = law_type:law_public_schools
+		}
+		if = {
+			limit = { 
+				has_law = law_type:law_child_labor_allowed
+			}
+			activate_law = law_type:law_restricted_child_labor
+		}
+		if = {
+			limit = { 
+				NOT = { has_law = law_type:law_high_social_security }
+			}
+			activate_law = law_type:law_high_social_security
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_devout
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = middle
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
