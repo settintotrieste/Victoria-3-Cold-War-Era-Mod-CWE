@@ -1,0 +1,307 @@
+﻿je_popular_revolution = {
+	icon = "gfx/interface/icons/invention_icons/human_rights.dds"
+
+	group = je_group_crises
+
+	is_shown_when_inactive = {
+		
+	}
+	
+	possible = {
+		
+		#Dictatorship
+		is_a_dictatorship = yes
+		
+		#Has a revolutionary movement
+		any_political_movement = {
+			is_revolutionary_movement = yes
+			any_supporting_interest_group = {
+				is_in_government = no
+				leader = {
+					character_is_democratic = yes
+				}
+			}
+		}
+		
+		#At peace
+		is_at_war = no
+		
+		#Weak Government
+		OR = { 
+			government_legitimacy < 25
+			country_turmoil > 0.25
+			capital ?= { turmoil >= 0.50 }
+		}
+		
+	}
+
+	immediate = {
+		
+		#Mark population revolution leader
+		random_interest_group = {
+			limit = {
+				is_in_government = no
+				is_insurrectionary = yes
+				leader = {
+					character_is_democratic = yes
+				}
+			}
+			save_scope_as = popular_revolution_ig
+		}
+		
+		#Set timer
+		set_variable = {
+			name = popular_revolution_var
+			value = 0
+		}
+		
+	}
+
+	on_weekly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					has_variable = popular_revolution_var
+					scope:popular_revolution_ig ?= {
+						OR = {
+							is_powerful = no
+							ig_approval >= 0
+						}
+					}
+				}
+				change_variable = {
+					name = popular_revolution_var
+					add = -1
+				}
+			}
+			if = {
+				limit = {
+					has_variable = popular_revolution_var
+					scope:popular_revolution_ig ?= {
+						is_powerful = no
+						ig_approval < 0
+					}
+				}
+				change_variable = {
+					name = popular_revolution_var
+					add = 2
+				}
+			}
+			if = {
+				limit = {
+					has_variable = popular_revolution_var
+					scope:popular_revolution_ig ?= {
+						is_powerful = yes
+						ig_approval < 0
+					}
+				}
+				change_variable = {
+					name = popular_revolution_var
+					add = 2
+				}
+			}
+			if = {
+				limit = { 
+					has_variable = popular_revolution_var 
+				}
+				clamp_variable = {
+					name = popular_revolution_var
+					max = 100
+					min = 0
+				}
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		
+	}
+
+	complete = {
+		scope:popular_revolution_ig ?= {
+			ig_approval < 0
+		}
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+	}
+
+	on_complete = {
+		remove_variable = popular_revolution_var
+		
+		custom_tooltip = {
+			text = popular_revolution_success_tt
+		
+			#Cancel law enactment
+			if = {
+				limit = {
+					exists = currently_enacting_law
+				}
+				currently_enacting_law = {
+					type = {
+						save_scope_as = law_being_enacted
+					}
+					currently_active_law_in_group = {
+						type = {
+							save_scope_as = law_being_replaced
+						}
+					}
+				}
+				if = {
+					limit = {
+						scope:popular_revolution_ig = {
+							prefers_law = { # If we prefer the current law to the enacting law
+								law = scope:law_being_replaced
+								comparison_law = scope:law_being_enacted
+							}
+						}
+					}
+					cancel_enactment = yes
+				}
+			}
+			
+			#Democratisation
+			if = {
+				limit = {  
+					scope:popular_revolution_ig ?= {
+						law_stance = {
+							law = law_type:law_HOS_monarch
+							value > approve
+						}
+					}
+				}
+				activate_law = law_type:law_HOS_monarch
+				activate_law = law_type:law_HOG_prime_minister
+			}
+			else_if = {
+				limit = {  
+					scope:popular_revolution_ig ?= {
+						law_stance = {
+							law = law_type:law_HOS_president
+							value > approve
+						}
+						law_stance = {
+							law = law_type:law_HOG_prime_minister
+							value > approve
+						}
+					}
+				}
+				activate_law = law_type:law_HOS_monarch
+				activate_law = law_type:law_HOG_prime_minister
+			}
+			else_if = {
+				limit = {  
+					scope:popular_revolution_ig ?= {
+						law_stance = {
+							law = law_type:law_HOS_president
+							value > approve
+						}
+						law_stance = {
+							law = law_type:law_HOG_president_prime_minister
+							value > approve
+						}
+					}
+				}
+				activate_law = law_type:law_HOS_monarch
+				activate_law = law_type:law_HOG_president_prime_minister
+			}
+			else = {
+				activate_law = law_type:law_HOS_president
+				activate_law = law_type:law_HOG_none
+			}
+			effect_starting_politics_democratic = yes
+			
+		}
+		
+		#Replace ruler
+		scope:popular_revolution_ig ?= {
+			leader = { set_character_as_ruler = yes }
+		}
+		
+	}
+
+	fail = {
+		
+		OR = {
+		
+			#No more revolutionary political movements
+			NOT = {
+				any_political_movement = {
+					is_revolutionary_movement = yes
+				}
+			}
+			
+			#No longer a dictatorship
+			custom_tooltip = {
+				text = is_not_a_dictatorship_tt
+				NOT = { is_a_dictatorship = yes }
+			}
+			
+		}
+		
+	}
+
+	on_fail = {
+		remove_variable = popular_revolution_var
+	}
+
+	invalid = {
+	
+		OR = {
+		
+			NOT = {
+				exists = scope:popular_revolution_ig
+			}
+			
+			scope:popular_revolution_ig ?= {
+				OR = {
+					is_in_government = yes
+					leader = { is_ruler = yes }
+				}
+			}
+			
+		}
+	}
+
+	on_invalid = {
+		remove_variable = popular_revolution_var
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = popular_revolution_advancing
+				trigger = {
+					scope:popular_revolution_ig = {
+						ig_approval < 0
+					}
+				}
+			}
+			triggered_desc = {
+				desc = popular_revolution_declining
+				trigger = {
+					scope:popular_revolution_ig = {
+						ig_approval >= 0
+					}
+				}
+			}
+		}
+	}
+
+	current_value = {
+		value = root.var:popular_revolution_var
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+
+	progressbar = yes
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+	can_revolution_inherit = no
+
+	weight = 100
+}
