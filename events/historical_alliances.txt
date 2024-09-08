@@ -1909,3 +1909,168 @@ historical_alliances_system.20 = {
     }
 
 }
+
+# The INF Treaty - USA
+historical_alliances_system.21 = {
+    type = country_event
+	placement = c:SOV
+
+    title = USA_SOV_INF.t 							# Title of the event; ADD LOCALISATION
+    desc = USA_SOV_INF.d 							# Description of the event; ADD LOCALISATION
+    #flavor = USA_SOV_INF.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 1987.12.8									# START DATE: Date colony became self governing ****
+		game_date < 1997.12.8									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#THIS is a super power
+		country_rank = rank_value:super_power
+		
+		#Has nuclear weapons
+		has_modifier = nuclear_capability
+		
+		#Soviet conditions
+		exists = c:SOV
+		c:SOV = {
+			
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+			country_rank = rank_value:super_power
+			
+			#Has nuclear weapons
+			has_modifier = nuclear_capability
+			
+			ruler ?= { character_is_democratic = yes }
+			
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_SOV_INF_hae }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_SOV_INF_hae								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		c:SOV = {
+			trigger_event = { id = historical_alliances_system.22 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		change_infamy = 5
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The INF Treaty - SOV
+historical_alliances_system.22 = {
+    type = country_event
+	placement = c:USA
+
+    title = USA_SOV_INF.t 							# Title of the event; ADD LOCALISATION
+    desc = USA_SOV_INF.d 							# Description of the event; ADD LOCALISATION
+    #flavor = USA_SOV_INF.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#USA will protect this country through a defensive pact
+		if = { 
+			limit = { 
+				NOT = { 
+					has_diplomatic_pact = {
+						who = c:USA
+						type = nuclear_de_escalation_treaty
+					}
+				}
+			}
+			create_diplomatic_pact = {
+				country = c:USA
+				type = nuclear_de_escalation_treaty
+			}
+		}
+		change_relations = {
+			country = c:USA
+			value = 25
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		change_relations = {
+			country = c:USA
+			value = -25
+		}
+		
+		change_infamy = 5
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
