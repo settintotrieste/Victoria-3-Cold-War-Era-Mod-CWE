@@ -4130,3 +4130,92 @@ historical_domestic_unrest.43 = {
     }
 
 }
+
+# Assassination of Yitzhak Rabin
+historical_domestic_unrest.44 = {
+    type = country_event
+
+    title = ISR_assassinate_YR.t 								# Title of the event; ADD LOCALISATION
+    desc = ISR_assassinate_YR.d 								# Description of the event; ADD LOCALISATION
+    #flavor = ISR_assassinate_YR.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_public_figure_assassination.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:ISR ?= this											# Change TAG of the overlord ****
+		game_date >= 1995.11.4									# START DATE: Date colony became self governing ****
+		game_date < 2005.11.4									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = ISR_assassinate_YR_hdu }			# CHANGE ****
+		
+		#Cause of unrest
+		ruler ?= { has_variable = Yitzhak_Rabin }
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = ISR_assassinate_YR_hdu					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		default_option = yes
+		
+		#Kill character
+		ruler ?= {
+			kill_character = yes
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			culture = cu:palestinian
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2				# No
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_devout
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
