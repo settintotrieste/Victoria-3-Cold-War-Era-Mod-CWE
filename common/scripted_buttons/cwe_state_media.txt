@@ -1,0 +1,311 @@
+je_state_media_system_praise_leader_button = {
+	name = "je_state_media_system_praise_leader_button"
+	desc = "je_state_media_system_praise_leader_button_desc"
+
+	visible = { 
+		
+		
+		
+	}
+
+	possible = {
+		
+		#Has enough action points
+		trigger_if = {
+			limit = { has_variable = state_media_capacity }
+			custom_tooltip = {
+				text = state_media_action_10_points.tt
+				root.var:state_media_capacity > 10
+			}
+		}
+		
+	}
+
+	effect = {
+	
+		#Apply effects
+		add_modifier = { 
+			name = positive_news_story
+			years = 1
+			is_decaying = yes
+		}
+		
+		#Deduct action points
+		if = {
+			limit = { has_variable = state_media_capacity }
+			custom_tooltip = {
+				text = state_media_action_subtract_10_points.tt
+				change_variable = {
+					name = state_media_capacity
+					add = -10
+				}
+			}
+		}
+		
+		#Anger an Opposition IG
+		random_interest_group = {
+			limit = { 
+				is_in_government = no 
+			}
+			save_scope_as = scope_opposition_target
+		}
+		if = {
+			limit = { exists = scope:scope_opposition_target }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:scope_opposition_target
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if ruler is hated
+		modifier = { 
+			trigger = { 
+				ruler ?= { popularity < 25 }
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_state_media_system_smear_opposition_button = {
+	name = "je_state_media_system_smear_opposition_button"
+	desc = "je_state_media_system_smear_opposition_button_desc"
+
+	visible = { 
+		
+		
+		
+	}
+
+	possible = {
+	
+		#Ruler must not be democratic
+		exists = ruler
+		ruler ?= {
+			NOR = {
+				has_ideology = ideology:ideology_democratic
+				has_ideology = ideology:ideology_liberal
+			}
+		}
+		
+		#Has enough action points
+		trigger_if = {
+			limit = { has_variable = state_media_capacity }
+			custom_tooltip = {
+				text = state_media_action_10_points.tt
+				root.var:state_media_capacity > 10
+			}
+		}
+		
+		#Has at least 1 unsmeared opposition IG leader
+		any_interest_group = {
+    		is_in_government = no
+			leader ?= { 
+				is_ruler = no
+				NOT = { has_modifier = smear_story } 
+			}
+		}
+		
+		#Once a month only
+		hidden_trigger = {
+			NOT = { has_variable = state_media_action_timer }
+		}
+		
+	}
+
+	effect = {
+	
+		#Apply effects
+		random_scope_character = {
+			limit = { 
+				has_role = politician
+				interest_group = {
+					is_in_government = no
+				}
+				is_ruler = no
+				NOT = { has_modifier = smear_story } 
+			}
+			add_modifier = { 
+				name = smear_story
+				years = 1
+				is_decaying = yes
+			}
+			interest_group = { save_scope_as = angry_opposition_ig }
+		}
+		if = {
+			limit = { exists = scope:angry_opposition_ig }
+			add_radicals = {
+				value = large_radicals
+				interest_group = scope:angry_opposition_ig
+			}
+		}
+		
+		#Deduct action points
+		if = {
+			limit = { has_variable = state_media_capacity }
+			custom_tooltip = {
+				text = state_media_action_subtract_10_points.tt
+				change_variable = {
+					name = state_media_capacity
+					add = -10
+				}
+			}
+		}
+		
+		#One at a time
+		set_variable = {
+			name = state_media_action_timer
+			months = 1
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if ruler is hated
+		modifier = { 
+			trigger = { 
+				ruler ?= { popularity < 25 }
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_state_media_system_distract_public_button = {
+	name = "je_state_media_system_distract_public_button"
+	desc = "je_state_media_system_distract_public_button_desc"
+
+	visible = { 
+		
+		
+		
+	}
+
+	possible = {
+		
+		#Has enough action points
+		trigger_if = {
+			limit = { has_variable = state_media_capacity }
+			custom_tooltip = {
+				text = state_media_action_10_points.tt
+				root.var:state_media_capacity > 10
+			}
+		}
+		
+		#Not already distracting public
+		NOT = { has_modifier = distracting_story }
+		
+	}
+
+	effect = {
+	
+		#Apply effects
+		add_modifier = { 
+			name = distracting_story
+			years = 1
+		}
+		
+		#Deduct action points
+		if = {
+			limit = { has_variable = state_media_capacity }
+			custom_tooltip = {
+				text = state_media_action_subtract_10_points.tt
+				change_variable = {
+					name = state_media_capacity
+					add = -10
+				}
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if ruler is hated
+		modifier = { 
+			trigger = { 
+				country_turmoil > 0.25
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_state_media_system_stir_nationalism_button = {
+	name = "je_state_media_system_stir_nationalism_button"
+	desc = "je_state_media_system_stir_nationalism_button_desc"
+
+	visible = { 
+		
+		
+		
+	}
+
+	possible = {
+		
+		#Has enough action points
+		trigger_if = {
+			limit = { has_variable = state_media_capacity }
+			custom_tooltip = {
+				text = state_media_action_10_points.tt
+				root.var:state_media_capacity > 10
+			}
+		}
+		
+		#Not already stirring nationalism
+		NOT = { has_modifier = stirring_nationalism }
+		
+	}
+
+	effect = {
+	
+		#Apply effects
+		add_modifier = { 
+			name = stirring_nationalism
+			years = 1
+		}
+		
+		#Deduct action points
+		if = {
+			limit = { has_variable = state_media_capacity }
+			custom_tooltip = {
+				text = state_media_action_subtract_10_points.tt
+				change_variable = {
+					name = state_media_capacity
+					add = -10
+				}
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if ruler is hated
+		modifier = { 
+			trigger = { 
+				ruler ?= {
+					character_is_autocratic = yes
+				}
+			}
+			add = 10
+		}
+		
+	}
+	
+}
