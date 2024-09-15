@@ -1,0 +1,151 @@
+je_private_media_system_bribe_media_button = {
+	name = "je_private_media_system_bribe_media_button"
+	desc = "je_private_media_system_bribe_media_button_desc"
+
+	visible = { 
+		
+		
+		
+	}
+
+	possible = {
+		
+		in_default = no
+		
+		#Media is insufficiently loyal
+		trigger_if = {
+			limit = { has_variable = private_media_loyalty }
+			custom_tooltip = {
+				text = private_media_is_not_100_loyal.tt
+				root.var:private_media_loyalty < 100
+			}
+		}
+		
+		#Not already bribing private media
+		NOT = { has_modifier = subsidising_private_media }
+		
+	}
+
+	effect = {
+		
+		#Add loyalty
+		if = {
+			limit = { has_variable = private_media_loyalty }
+			custom_tooltip = {
+				text = private_media_action_add_25_points.tt
+				change_variable = {
+					name = private_media_loyalty
+					add = 25
+				}
+			}
+		}
+		
+		#Pay bribe
+		add_modifier = {
+			name = subsidising_private_media
+			months = 6
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if ruler is hated
+		modifier = { 
+			trigger = { 
+				ruler ?= { popularity < 25 }
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_private_media_system_poke_media_button = {
+	name = "je_private_media_system_poke_media_button"
+	desc = "je_private_media_system_poke_media_button_desc"
+
+	visible = { 
+		
+		ruler ?= {
+			interest_group = {
+				NOR = {
+					is_interest_group_type = ig_industrialists
+					is_interest_group_type = ig_petty_bourgeoisie
+				}
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#Media has loyalty to lose
+		trigger_if = {
+			limit = { has_variable = private_media_loyalty }
+			custom_tooltip = {
+				text = private_media_is_not_0_loyal.tt
+				root.var:private_media_loyalty > 0
+			}
+		}
+		
+		#Once a month only
+		custom_tooltip = {
+			text = state_media_action_timer.tt
+			NOT = { has_variable = private_media_action_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		#Add loyalty
+		if = {
+			limit = { has_variable = private_media_loyalty }
+			custom_tooltip = {
+				text = private_media_action_subtract_25_points.tt
+				change_variable = {
+					name = private_media_loyalty
+					add = -25
+				}
+			}
+		}
+		
+		#Add effect
+		add_radicals = {
+			value = medium_radicals
+			strata = rich
+		}
+		add_radicals = {
+			value = small_radicals
+			strata = middle
+		}
+		add_loyalists = {
+			value = small_radicals
+			strata = poor
+		}
+		
+		#One at a time
+		set_variable = {
+			name = private_media_action_timer
+			months = 1
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if ruler is loved
+		modifier = { 
+			trigger = { 
+				ruler ?= { popularity > 50 }
+			}
+			add = 10
+		}
+		
+	}
+	
+}
