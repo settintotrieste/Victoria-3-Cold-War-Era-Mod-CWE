@@ -2083,3 +2083,248 @@ conduct_hostile_espionage_8 = {
 	}
 	
 }
+
+#Spread Propaganda
+conduct_hostile_espionage_9 = {
+	groups= { general } requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	unlocking_technologies = {
+		
+	}
+
+	potential = {
+	
+		has_journal_entry = je_secret_police_system
+	
+		#THIS has spies in TARGET
+		has_diplomatic_pact = {
+			who = scope:target_country
+			type = conduct_hostile_espionage
+			is_initiator = yes
+		}
+		
+	}
+	
+	possible = {
+		
+		#TARGET has an open media to exploit
+		scope:target_country = { 
+			country_has_an_open_media = yes 
+		}
+		
+		#Has diplomats
+		NOR = { 
+			has_diplomats_expelled = scope:target_country
+			scope:target_country = { has_diplomats_expelled = scope:actor }
+		}
+		
+		#Has enough action points
+		custom_tooltip = {
+			text = secret_police_action_25_points.tt
+			has_variable = secret_police_action_points
+			root.var:secret_police_action_points > 25
+		}
+		
+		#Cooldown
+		custom_tooltip = {
+			text = secret_police_action_timer.tt
+			NOT = { has_variable = secret_police_action_timer }
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Subtract action points
+		custom_tooltip = {
+			text = secret_police_action_subtract_25_points.tt
+			if = {
+				limit = { has_variable = secret_police_action_points }
+				change_variable = { 
+					name = secret_police_action_points
+					add = -25
+				}
+			}
+		}
+		
+		#Gain Loyalty
+		custom_tooltip = {
+			text = secret_police_gain_loyalty_5_points.tt
+			change_variable = { 
+				name = secret_police_loyalty
+				add = 5
+			}
+			clamp_variable = {
+				name = secret_police_loyalty
+				max = 100
+				min = 0
+			}
+		}
+		
+		#Increase appeasement of both sides
+		add_lobby_appeasement_from_diplomacy_bidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country
+			PRO_AMOUNT = 2
+			ANTI_AMOUNT = -2
+			FACTOR = appeasement_embargo_declared
+		}
+		
+		#Gain infamy
+		change_infamy = 5
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0.25		
+		}
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			infamy < infamy_threshold:infamous
+			OR = { 
+				has_attitude = {
+					who = scope:target_country
+					attitude <= antagonistic
+				}
+				has_diplomatic_pact = { who = scope:target_country type = rivalry }
+				scope:target_country.relations:root < relations_threshold:poor
+			}
+		}
+		
+	}
+	
+}
+
+#Create diplomatic incident
+conduct_hostile_espionage_10 = {
+	groups= { general } requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	unlocking_technologies = {
+		
+	}
+
+	potential = {
+	
+		has_journal_entry = je_secret_police_system
+	
+		#THIS has spies in TARGET
+		has_diplomatic_pact = {
+			who = scope:target_country
+			type = conduct_hostile_espionage
+			is_initiator = yes
+		}
+		
+	}
+	
+	possible = {
+		
+		#TARGET has rivals or neighbouring countries
+		any_country = { 
+			OR = { 
+				is_adjacent_to_country = ROOT
+				has_diplomatic_pact = { who = scope:target_country type = rivalry }
+			}
+		}
+		
+		#Has enough action points
+		custom_tooltip = {
+			text = secret_police_action_25_points.tt
+			has_variable = secret_police_action_points
+			root.var:secret_police_action_points > 25
+		}
+		
+		#Cooldown
+		custom_tooltip = {
+			text = secret_police_action_timer.tt
+			NOT = { has_variable = secret_police_action_timer }
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Subtract action points
+		custom_tooltip = {
+			text = secret_police_action_subtract_25_points.tt
+			if = {
+				limit = { has_variable = secret_police_action_points }
+				change_variable = { 
+					name = secret_police_action_points
+					add = -25
+				}
+			}
+		}
+		
+		#Gain Loyalty
+		custom_tooltip = {
+			text = secret_police_gain_loyalty_5_points.tt
+			change_variable = { 
+				name = secret_police_loyalty
+				add = 5
+			}
+			clamp_variable = {
+				name = secret_police_loyalty
+				max = 100
+				min = 0
+			}
+		}
+		
+		#Decrease appeasement of both sides
+		random_country = { 
+			limit = { 
+				OR = { 
+					is_adjacent_to_country = ROOT
+					has_diplomatic_pact = { who = scope:target_country type = rivalry }
+				}
+			}
+			save_scope_as = third_party_country
+		}
+		add_lobby_appeasement_from_diplomacy_bidirectional = { 
+			FIRST = scope:third_party_country
+			SECOND = scope:target_country
+			PRO_AMOUNT = -1
+			ANTI_AMOUNT = 1
+			FACTOR = appeasement_embargo_declared
+		}
+		change_relations = { country = ROOT value = -10 }
+		
+		#Gain infamy
+		change_infamy = 5
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0.25		
+		}
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			infamy < infamy_threshold:infamous
+			OR = { 
+				has_attitude = {
+					who = scope:target_country
+					attitude <= antagonistic
+				}
+				has_diplomatic_pact = { who = scope:target_country type = rivalry }
+				scope:target_country.relations:root < relations_threshold:poor
+			}
+		}
+		
+	}
+	
+}

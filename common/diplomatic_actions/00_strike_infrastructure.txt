@@ -1,0 +1,355 @@
+strike_infrastructure = {
+	groups= { general }
+	should_notify_third_parties = no
+
+	unlocking_technologies = {
+		tech_military_theory_4
+	}
+
+	potential = {
+		
+		#Parties are not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#Not a civil war country
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#THIS has independent foreign affairs
+		is_sufficiently_independent = yes
+		
+		#TARGET is at war with THIS
+		has_war_with = scope:target_country
+		
+		#TARGET satellites have not already been attacked
+		scope:target_country = { 
+			OR = { 
+				has_building = building_railway
+				has_building = building_port
+				has_building = building_power_plant
+				has_building = building_hydroelectric_power_plant
+				has_building = building_communications_network
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#THIS has an army of decent size
+		army_size > 10
+		
+		#THIS is not broke
+		in_default = no
+		
+		#Only radical leaders think of destroying satellites
+		exists = ruler
+		ruler = {
+			OR = {
+				has_ideology = ideology:ideology_autocratic
+				has_ideology = ideology:ideology_power_hungry
+			}
+		}
+		
+		#THIS has strategic bombardment capability
+		any_scope_building = {
+			is_building_type = building_barracks
+			level >= 1
+			NOT = { has_active_production_method = pm_no_organization }
+		}
+		any_military_formation = {
+			filter = {
+				is_army = yes
+			}
+			any_combat_unit = {
+				OR = {
+					has_unit_type = unit_type:combat_unit_type_airforce_3
+					has_unit_type = unit_type:combat_unit_type_airforce_4
+					has_unit_type = unit_type:combat_unit_type_airforce_5
+					has_unit_type = unit_type:combat_unit_type_airforce_6
+					has_unit_type = unit_type:combat_unit_type_airforce_7
+					has_unit_type = unit_type:combat_unit_type_airforce_8
+					has_unit_type = unit_type:combat_unit_type_airforce_9
+					has_unit_type = unit_type:combat_unit_type_airforce_10
+				}
+			}
+			percent >= 0.50
+		}
+		
+		#THIS can reach the TARGET
+		OR = {
+		
+			#THIS has direct access to the TARGET through land
+			has_strategic_land_adjacency = scope:target_country
+			
+			#THIS has direct access to the TARGET through the sea (but only if THIS has a stronger navy than TARGET)
+			AND = {
+				navy_size >= 10
+				has_port = yes
+				scope:target_country = { has_port = yes }
+				navy_size > scope:target_country.navy_size
+			}
+			
+			#THIS has access to the TARGET through an ally
+			any_scope_ally = {
+				has_strategic_land_adjacency = scope:target_country
+			}
+			
+			#THIS has access to the TARGET through a subject
+			any_country = {
+				is_subject_of = ROOT
+				has_strategic_land_adjacency = scope:target_country
+			}
+			
+			#THIS has access to the TARGET through an enemy 3P
+			any_country = {
+				has_war_with = ROOT
+				has_strategic_land_adjacency = scope:target_country
+			}
+			
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Lobby
+		add_lobby_appeasement_from_diplomacy_unidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country 
+			PRO_AMOUNT = -1
+			ANTI_AMOUNT = 1
+			FACTOR = appeasement_embargo_declared
+		}
+		
+		#THIS destroys the infrastructure buildings of TARGET in order of GDP
+		scope:target_country  = {
+			ordered_scope_state = {
+				limit = {
+					OR = { 
+						has_building = building_railway
+						has_building = building_port
+						has_building = building_power_plant
+						has_building = building_hydroelectric_power_plant
+						has_building = building_communications_network
+					}
+				}
+				order_by = gdp
+				save_scope_as = strike_infrastructure_state
+			}
+			strike_infrastructure_state ?= {
+				if = { 
+					limit = { has_building = building_railway } 
+					random_list = { 
+						1 = { remove_building = building_railway } 
+						1 = { 
+							modifier = { 
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_weak_civil_defence_law } 
+									}
+									add = 1.25
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_moderate_civil_defence_law } 
+									}
+									add = 1.50
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_very_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+							} 
+						}
+					} 
+				}
+				if = { 
+					limit = { has_building = building_port } 
+					random_list = { 
+						1 = { remove_building = building_port } 
+						1 = { 
+							modifier = { 
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_weak_civil_defence_law } 
+									}
+									add = 1.25
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_moderate_civil_defence_law } 
+									}
+									add = 1.50
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_very_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+							} 
+						}
+					} 
+				}
+				if = { 
+					limit = { has_building = building_power_plant } 
+					random_list = { 
+						1 = { remove_building = building_power_plant } 
+						1 = { 
+							modifier = { 
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_weak_civil_defence_law } 
+									}
+									add = 1.25
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_moderate_civil_defence_law } 
+									}
+									add = 1.50
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_very_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+							} 
+						}
+					} 
+				}
+				if = { 
+					limit = { has_building = building_hydroelectric_power_plant } 
+					random_list = { 
+						1 = { remove_building = building_hydroelectric_power_plant } 
+						1 = { 
+							modifier = { 
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_weak_civil_defence_law } 
+									}
+									add = 1.25
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_moderate_civil_defence_law } 
+									}
+									add = 1.50
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_very_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+							} 
+						}
+					} 
+				}
+				if = { 
+					limit = { has_building = building_communications_network } 
+					random_list = { 
+						1 = { remove_building = building_communications_network } 
+						1 = { 
+							modifier = { 
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_weak_civil_defence_law } 
+									}
+									add = 1.25
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_moderate_civil_defence_law } 
+									}
+									add = 1.50
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_very_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+							} 
+						}
+					} 
+				}
+				state_region = { add_devastation = 25 }
+			}
+		}
+		
+		#International community does not like THIS
+		change_infamy = 2
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0.25		
+		}
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			
+			OR = {
+			
+				#THIS is going to capitulate
+				any_scope_war = {
+					has_war_support = {
+						target = scope:actor
+						value < 0
+					}
+				}
+				
+				#TARGET has a stronger military than THIS
+				scope:target_country = {
+					navy_size > scope:actor.navy_size
+					army_size > scope:actor.army_size
+				}
+			
+			}
+			
+		}
+		
+	}
+	
+}
