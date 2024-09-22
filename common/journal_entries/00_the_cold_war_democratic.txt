@@ -2,6 +2,8 @@
 	icon = "gfx/interface/icons/invention_icons/democracy.dds"
 
 	group = je_group_foreign_affairs
+	
+	scripted_progress_bar = cold_war_balance_progress_bar
 
 	is_shown_when_inactive = {
 		
@@ -22,11 +24,25 @@
 	}
 
 	immediate = {
+	
 		set_global_variable = cold_war_ongoing
 		
 		random_country = {
 			limit = { country_rank = rank_value:super_power is_a_communist_government = yes }
 			save_scope_as = communist_rival_superpower
+		}
+		
+		if = {
+			limit = { NOT = { has_global_variable = cold_war_eastern_bloc_strength } }
+			set_global_variable = { name = cold_war_eastern_bloc_strength value = 0 }
+		}
+		if = {
+			limit = { NOT = { has_global_variable = cold_war_western_bloc_strength } }
+			set_global_variable = { name = cold_war_western_bloc_strength value = 0 }
+		}
+		if = {
+			limit = { NOT = { has_global_variable = cold_war_balance_of_power } }
+			set_global_variable = { name = cold_war_balance_of_power value = 0 }
 		}
 		
 	}
@@ -132,6 +148,50 @@
 		#No penalty if THIS turned into something other than democratic or communist
 	
 		remove_global_variable = cold_war_ongoing
+		
+	}
+	
+	on_monthly_pulse = {
+		
+		effect = {
+		
+			#Set variables
+			set_global_variable = { name = cold_war_eastern_bloc_strength value = 1 }
+			set_global_variable = { name = cold_war_western_bloc_strength value = 1 }
+			
+			#Calculate Eastern Bloc strength
+			every_country = {
+				limit = { 
+					is_a_communist_government = yes 
+					country_rank >= rank_value:great_power
+				}
+				change_global_variable = { name = cold_war_eastern_bloc_strength add = this.prestige }
+			}
+			
+			#Calculate Western Bloc strength
+			every_country = {
+				limit = { 
+					is_a_democracy = yes 
+					country_rank >= rank_value:great_power
+				}
+				change_global_variable = { name = cold_war_western_bloc_strength add = this.prestige }
+			}
+			
+			#Calculate balance
+			set_global_variable = {
+				name = cold_war_balance_of_power
+				value = global_var:cold_war_western_bloc_strength
+			}
+			change_global_variable = {
+				name = cold_war_balance_of_power
+				subtract = global_var:cold_war_eastern_bloc_strength
+			}
+			change_global_variable = {
+				name = cold_war_balance_of_power
+				divide = 1000
+			}
+			
+		}
 		
 	}
 
