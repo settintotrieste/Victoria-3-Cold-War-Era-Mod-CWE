@@ -2775,3 +2775,242 @@ historical_economy.31 = {
     }
 
 }
+
+# Oil Crisis, 1973
+historical_economy.32 = {
+    type = country_event
+
+    title = oil_crisis_1973.t 										# Title of the event; ADD LOCALISATION
+    desc = oil_crisis_1973.d 										# Description of the event; ADD LOCALISATION
+    #flavor = oil_crisis_1973.f 										# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_factory_closed.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#OPEC Leader
+		OR = { 
+			c:NEJ ?= this
+			has_modifier = OPEC_leader
+		}
+		game_date >= 1973.10.1
+		game_date < 1983.10.1
+		
+		is_a_regime_monarchy = yes									# Correct gov types
+		is_sufficiently_independent = yes							# is_vassal = no
+		
+		#Arab country
+		OR = { has_modifier = OPEC_member has_modifier = OPEC_leader }
+		any_primary_culture = { OR = { has_discrimination_trait = arab_speaking has_discrimination_trait = middle_eastern_heritage } }
+		
+		#Cause
+		exists = c:ISR
+		c:ISR ?= {
+			is_sufficiently_independent = yes
+			has_attitude = { who = c:EGY attitude = antagonistic }
+		}
+		exists = c:EGY
+		c:EGY ?= {
+			is_sufficiently_independent = yes
+			OR = { 
+				has_variable = yom_kippur_war_hiw
+				has_attitude = { who = c:ISR attitude = antagonistic }
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = oil_crisis_1973_hee }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = oil_crisis_1973_hee							# Change variable ****
+		
+	}
+	
+	option = {
+        name = historical_gov_changes.option.1						# Accept
+        highlighted_option = yes
+		
+		#Prestige
+		add_modifier = {
+			name = national_pride_modifier
+			years = 5
+			is_decaying = yes
+		}
+		
+		#Always clear everything first
+		every_country = {
+			limit = { 
+				OR = { 
+					has_modifier = OPEC_member 
+					has_modifier = OPEC_leader 
+				} 
+				any_primary_culture = { OR = { has_discrimination_trait = arab_speaking has_discrimination_trait = middle_eastern_heritage } }
+			}
+		
+			hidden_effect = {
+				every_scope_state = {
+					remove_modifier = very_low_OPEC_oil_quota
+					remove_modifier = low_OPEC_oil_quota
+					remove_modifier = medium_OPEC_oil_quota
+					remove_modifier = high_OPEC_oil_quota
+					remove_modifier = very_high_OPEC_oil_quota
+				}
+			}
+			
+			#Add quota to all oil producing states
+			every_scope_state = {
+				limit = { has_building = building_oil_rig }
+				add_modifier = { name = very_low_OPEC_oil_quota }
+			}
+			
+			#Inform country of change
+			trigger_event = { id = OPEC_system.8 }
+		}
+		
+		#Diplomatic effect
+		every_country = {
+			limit = { 
+				country_rank >= rank_value:great_power
+				is_a_democracy = yes 
+			}
+			change_relations = { who = ROOT value = -50 }
+		}
+		hidden_effect = {
+			every_country = {
+				limit = { 
+					country_rank < rank_value:great_power
+					is_a_democracy = yes 
+				}
+				change_relations = { who = ROOT value = -25 }
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2						# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_devout
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_landowners
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Oil Crisis, 1979
+historical_economy.33 = {
+    type = country_event
+
+    title = oil_crisis_1979.t 										# Title of the event; ADD LOCALISATION
+    desc = oil_crisis_1979.d 										# Description of the event; ADD LOCALISATION
+    #flavor = oil_crisis_1979.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_factory_closed.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+	
+		c:PER ?= this
+		game_date >= 1979.1.1
+		game_date < 1989.1.1
+		
+		is_a_theocratic_government = yes							# Correct gov types
+		is_sufficiently_independent = yes							# is_vassal = no
+		
+		#THIS produces Oil
+		has_building = building_oil_rig
+		
+		# Event has not been fired before
+		NOT = { has_variable = oil_crisis_1979_hee }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = oil_crisis_1979_hee							# Change variable ****
+		
+	}
+	
+	option = {
+        name = historical_gov_changes.option.1						# Accept
+        highlighted_option = yes
+		
+		#Disruption to oil production
+		every_scope_state = { 
+			if = { 
+				limit = { 
+					any_scope_building = { 
+						is_building_type = building_oil_rig 
+					} 
+				} 
+				remove_building = building_oil_rig 
+			} 
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2						# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
