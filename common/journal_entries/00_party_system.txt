@@ -1,0 +1,407 @@
+﻿je_party_system = {
+	icon = "gfx/interface/icons/invention_icons/corporate_charters.dds"
+
+	group = je_group_internal_affairs
+	
+	scripted_button = je_party_system_favour_radicals_button
+	scripted_button = je_party_system_favour_moderates_button
+	scripted_button = je_party_system_favour_reformists_button
+	scripted_button = je_party_system_favour_noone_button
+	
+	is_shown_when_inactive = {
+		
+		NOT = { has_law = law_type:law_parties_not_allowed }
+		
+	}
+	
+	possible = {
+		
+		any_interest_group = {
+			is_in_government = yes
+			has_party = yes
+		}
+		
+	}
+
+	immediate = {
+		
+		random_interest_group = {
+			limit = {
+				is_in_government = yes
+				has_party = yes 
+				is_strongest_ig_in_government = yes
+			}
+			party ?= { save_scope_as = ruling_party_scope }
+		}
+		
+		#Set Party Lean
+		set_variable = { 
+			name = party_radicalism
+			value = 50
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+		
+		effect = {
+		
+			#Determine strongest IG in Government 
+			random_interest_group = {
+				limit = {
+					is_in_government = yes
+					has_party = yes
+					is_strongest_ig_in_government = yes
+				}
+				save_scope_as = dominant_gov_IG
+			}
+		
+			#Lose Party Radicalism (More likely to get democratic leaders)
+			if = {
+				limit = { 
+					has_variable = party_radicalism
+					scope:dominant_gov_IG ?= {
+						ig_approval >= 0
+						ig_approval < 5
+					}
+					government_legitimacy > 50
+				}
+				change_variable = {
+					name = party_radicalism
+					add = -1
+				}
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism
+					scope:dominant_gov_IG ?= {
+						ig_approval >= 5
+						ig_approval < 10
+					}
+					government_legitimacy > 50
+				}
+				change_variable = {
+					name = party_radicalism
+					add = -2
+				}
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism
+					scope:dominant_gov_IG ?= {
+						ig_approval >= 10
+						ig_approval < 15
+					}
+					government_legitimacy > 50
+				}
+				change_variable = {
+					name = party_radicalism
+					add = -3
+				}
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism
+					scope:dominant_gov_IG ?= {
+						ig_approval >= 15
+						ig_approval < 20
+					}
+					government_legitimacy > 50
+				}
+				change_variable = {
+					name = party_radicalism
+					add = -4
+				}
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism
+					scope:dominant_gov_IG ?= {
+						ig_approval >= 20
+					}
+					government_legitimacy > 50
+				}
+				change_variable = {
+					name = party_radicalism
+					add = -5
+				}
+			}
+			
+			#Gain Party Radicalism (more likely to get autocratic leaders)
+			if = {
+				limit = { 
+					has_variable = party_radicalism
+					OR = {
+						scope:dominant_gov_IG ?= {
+							ig_approval < 0
+							ig_approval >= -5
+						}
+						government_legitimacy < 50
+					}
+				}
+				change_variable = {
+					name = party_radicalism
+					add = 1
+				}
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism
+					OR = { 
+						scope:dominant_gov_IG ?= {
+							ig_approval < -5
+							ig_approval >= -10
+						}
+						government_legitimacy < 50
+					}
+				}
+				change_variable = {
+					name = party_radicalism
+					add = 2
+				}
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism
+					OR = {
+						scope:dominant_gov_IG ?= {
+							ig_approval < -10
+							ig_approval >= -15
+						}
+						government_legitimacy < 50
+					}
+				}
+				change_variable = {
+					name = party_radicalism
+					add = 3
+				}
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism
+					OR = {
+						scope:dominant_gov_IG ?= {
+							ig_approval < -15
+							ig_approval >= -20
+						}
+						government_legitimacy < 50
+					}
+				}
+				change_variable = {
+					name = party_radicalism
+					add = 4
+				}
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism
+					OR = {
+						scope:dominant_gov_IG ?= {
+							ig_approval < -20
+						}
+						government_legitimacy < 50
+					}
+				}
+				change_variable = {
+					name = party_radicalism
+					add = 5
+				}
+			}
+			
+			# Effect of Leader intervention
+			if = {
+				limit = {
+					has_variable = party_radicalism
+					OR = { 
+						has_variable = party_system_favour_radicals 
+						AND = {
+							has_variable = party_system_favour_moderates
+							root.var:party_radicalism < 40
+						}
+					}
+				}
+				change_variable = {
+					name = party_radicalism
+					add = 5
+				}
+			}
+			if = {
+				limit = { 
+					has_variable = party_radicalism
+					OR = { 
+						has_variable = party_system_favour_reformists
+						AND = {
+							has_variable = party_system_favour_moderates
+							root.var:party_radicalism > 60
+						}
+					}
+				}
+				change_variable = {
+					name = party_radicalism
+					add = -5
+				}
+			}
+			
+			#Apply min max values
+			if = {
+				limit = { has_variable = party_radicalism }
+				clamp_variable = {
+					name = party_radicalism
+					max = 100
+					min = 0
+				}
+			}
+			
+			#Determine Party Lean
+			if = {
+				limit = { 
+					has_variable = party_radicalism 
+					root.var:party_radicalism >= 80
+				}
+				remove_variable = very_reformist_party
+				remove_variable = reformist_party
+				remove_variable = moderate_party
+				remove_variable = radical_party
+				set_variable = very_radical_party
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism 
+					root.var:party_radicalism < 80
+					root.var:party_radicalism >= 60
+				}
+				remove_variable = very_reformist_party
+				remove_variable = reformist_party
+				remove_variable = moderate_party
+				set_variable = radical_party
+				remove_variable = very_radical_party
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism 
+					root.var:party_radicalism < 60
+					root.var:party_radicalism >= 40
+				}
+				remove_variable = very_reformist_party
+				remove_variable = reformist_party
+				set_variable = moderate_party
+				remove_variable = radical_party
+				remove_variable = very_radical_party
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism 
+					root.var:party_radicalism < 40
+					root.var:party_radicalism >= 20
+				}
+				remove_variable = very_reformist_party
+				set_variable = reformist_party
+				remove_variable = moderate_party
+				remove_variable = radical_party
+				remove_variable = very_radical_party
+			}
+			else_if = {
+				limit = { 
+					has_variable = party_radicalism 
+					root.var:party_radicalism < 20
+				}
+				set_variable = very_reformist_party
+				remove_variable = reformist_party
+				remove_variable = moderate_party
+				remove_variable = radical_party
+				remove_variable = very_radical_party
+			}
+			
+		}
+		
+	}
+
+	fail = {
+		
+		OR = {
+		
+			has_law = law_type:law_parties_not_allowed
+			
+			NOT = {
+				any_interest_group = {
+					is_in_government = yes
+					has_party = yes 
+				}
+			}
+			
+			NOT = { exists = scope:ruling_party_scope }
+			
+		}
+		
+	}
+	
+	on_fail = {
+		
+		#Clear variables
+		remove_variable = party_radicalism
+		remove_variable = very_reformist_party
+		remove_variable = reformist_party
+		remove_variable = moderate_party
+		remove_variable = radical_party
+		remove_variable = very_radical_party
+		
+		#Remove effects
+		hidden_effect = {
+			every_scope_character = {
+				limit = { has_modifier = party_outcast }
+				remove_modifier = party_outcast
+			}
+		}
+		
+		#Remove modifiers
+		if = {
+			limit = { has_modifier = divided_party }
+			remove_modifier = divided_party
+		}
+		
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = very_reformist_party
+				trigger = {
+					has_variable = very_reformist_party
+				}
+			}
+			triggered_desc = {
+				desc = reformist_party
+				trigger = {
+					has_variable = reformist_party
+				}
+			}
+			triggered_desc = {
+				desc = radical_party
+				trigger = {
+					has_variable = radical_party
+				}
+			}
+			triggered_desc = {
+				desc = very_radical_party
+				trigger = {
+					has_variable = very_radical_party
+				}
+			}
+			triggered_desc = {
+				desc = moderate_party
+				trigger = {
+					
+				}
+			}
+		}
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = no
+
+	transferable = no
+
+	progressbar = no
+	
+}
