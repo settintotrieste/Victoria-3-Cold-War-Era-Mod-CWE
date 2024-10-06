@@ -667,3 +667,101 @@ historical_diplomatic_incidents.8 = {
     }
 
 }
+
+# Operation PBSuccess
+historical_diplomatic_incidents.9 = {
+    type = country_event
+	placement = c:GUA
+
+    title = USA_GUA_Overthrow.t 								# Title of the event; ADD LOCALISATION
+    desc = USA_GUA_Overthrow.d 									# Description of the event; ADD LOCALISATION
+    #flavor = USA_GUA_Overthrow.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 1954.5.27									# START DATE: Date colony became self governing ****
+		game_date < 1964.5.27									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		country_rank = rank_value:super_power
+		
+		NOT = { has_law = law_type:law_no_espionage }
+		
+		#Target
+		exists = c:GUA
+		c:GUA ?= {
+			has_variable = GUA_decree_600
+			is_a_democracy = yes
+			is_sufficiently_independent = yes					# is_vassal = no		
+			is_at_war = no										# war = no
+		}
+		
+		#Cause of unrest
+		cold_war_ongoing = yes
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_GUA_Overthrow_hdi }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_GUA_Overthrow_hdi					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Infamy
+		create_incident = {
+			country = c:GUA
+			value = 5
+		} 
+		
+		#Mark Guatemala for attack
+		c:GUA ?= {
+			set_variable = USA_GUA_Overthrow
+		}
+		change_relations = { 
+			country = c:GUA 
+			value = -100 
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = small_radicals
+			interest_group = ig:ig_industrialists
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
