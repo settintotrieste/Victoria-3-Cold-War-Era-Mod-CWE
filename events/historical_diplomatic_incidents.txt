@@ -765,3 +765,137 @@ historical_diplomatic_incidents.9 = {
     }
 
 }
+
+# Operation Storm-333
+historical_diplomatic_incidents.10 = {
+    type = country_event
+	placement = c:AFG
+
+    title = SOV_AFG_Overthrow.t 								# Title of the event; ADD LOCALISATION
+    desc = SOV_AFG_Overthrow.d 									# Description of the event; ADD LOCALISATION
+    #flavor = SOV_AFG_Overthrow.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_public_figure_assassination.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SOV ?= this											# Change TAG of the overlord ****
+		game_date >= 1979.12.27									# START DATE: Date colony became self governing ****
+		game_date < 1989.12.27									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		country_rank = rank_value:super_power
+		
+		NOT = { is_neutral = yes }
+		
+		#Target
+		exists = c:AFG
+		c:AFG ?= {
+			OR = { 
+				ruler ?= { has_variable = Hafizullah_Amin }
+				AND = {
+					ruler ?= { NOT = { has_variable = Nur_Muhammad_Taraki } }
+					has_global_variable = historical_railroading_active
+				}
+			}
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes					# is_vassal = no		
+			OR = { 
+				has_war_with = ROOT
+				is_adjacent_to_country = ROOT
+			}
+		}
+		
+		#Cause of unrest
+		cold_war_ongoing = yes
+		
+		# Event has not been fired before
+		NOT = { has_variable = SOV_AFG_Overthrow_hdi }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SOV_AFG_Overthrow_hdi					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Kill AFG ruler
+		c:AFG ?= { 
+			ruler ?= { kill_character = yes } 
+			create_character = {
+				first_name = "Babrak_Karmal_first_name"
+				last_name = "Babrak_Karmal_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1929.1.6
+				interest_group = ig_trade_unions
+				ideology = ideology_autocratic
+				traits = {
+					reserved
+					wrathful
+					imperious
+				}
+				on_created = { set_variable = Babrak_Karmal }
+			}
+		}
+		
+		#Infamy
+		create_incident = {
+			country = c:AFG
+			value = 5
+		} 
+		
+		#Mark AFG for attack
+		c:AFG ?= {
+			set_variable = SOV_AFG_Overthrow
+		}
+		change_relations = { 
+			country = c:AFG
+			value = -100 
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
