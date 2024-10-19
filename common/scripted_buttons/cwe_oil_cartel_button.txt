@@ -1,0 +1,303 @@
+je_oil_cartel_system_regulate_button = {
+	name = "je_oil_cartel_system_regulate_button"
+	desc = "je_oil_cartel_system_regulate_button_desc"
+
+	visible = { 
+		
+		NOT = { has_variable = oil_cartel_system_regulate }
+		
+	}
+
+	possible = {
+		
+		NOT = { has_law = law_type:law_laissez_faire }
+		
+		government_has_legislative_simple_majority = yes
+		
+		#Once a year only
+		custom_tooltip = {
+			text = oil_cartel_action_timer.tt
+			NOT = { has_variable = oil_cartel_action_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		set_variable = oil_cartel_system_regulate
+		
+		#Once a year only
+		set_variable = { 
+			name = oil_cartel_action_timer 
+			years = 1 
+		}
+		
+		#Domestic effect
+		add_radicals = {
+			strata = rich
+			value = large_radicals
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI
+		modifier = { 
+			trigger = { 
+				root.ruler.interest_group ?= {
+					OR = {
+						law_stance = {
+							law = law_type:law_command_economy
+							value > neutral
+						}
+						law_stance = {
+							law = law_type:law_semi_command_economy
+							value > neutral
+						}
+						law_stance = {
+							law = law_type:law_cooperative_ownership
+							value > neutral
+						}
+						law_stance = {
+							law = law_type:law_state_capitalism
+							value > neutral
+						}
+					}
+				}
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_oil_cartel_system_deregulate_button = {
+	name = "je_oil_cartel_system_deregulate_button"
+	desc = "je_oil_cartel_system_deregulate_button_desc"
+
+	visible = { 
+		
+		has_variable = oil_cartel_system_regulate
+		
+		NOT = { is_a_command_economy = yes }
+		
+	}
+
+	possible = {
+		
+		government_has_legislative_simple_majority = yes
+		
+		#Once a year only
+		custom_tooltip = {
+			text = oil_cartel_action_timer.tt
+			NOT = { has_variable = oil_cartel_action_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		set_variable = oil_cartel_system_regulate
+		
+		#Once a year only
+		set_variable = { 
+			name = oil_cartel_action_timer 
+			years = 1 
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI
+		modifier = { 
+			trigger = { 
+				root.ruler.interest_group ?= {
+					NAND = {
+						law_stance = {
+							law = law_type:law_command_economy
+							value > neutral
+						}
+						law_stance = {
+							law = law_type:law_semi_command_economy
+							value > neutral
+						}
+						law_stance = {
+							law = law_type:law_cooperative_ownership
+							value > neutral
+						}
+						law_stance = {
+							law = law_type:law_state_capitalism
+							value > neutral
+						}
+					}
+				}
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_oil_cartel_system_increase_output_button = {
+	name = "je_oil_cartel_system_increase_output_button"
+	desc = "je_oil_cartel_system_increase_output_button_desc"
+
+	visible = { 
+		
+		has_variable = oil_cartel_system_regulate
+		
+	}
+
+	possible = {
+		
+		OR = {
+			has_modifier = very_low_oil_quota
+			has_modifier = low_oil_quota
+			has_modifier = medium_oil_quota
+			has_modifier = large_oil_quota
+			#has_modifier = very_large_oil_quota
+		}
+		
+	}
+
+	effect = {
+		
+		if = {
+			limit = { has_modifier = very_low_oil_quota }
+			remove_modifier = very_low_oil_quota
+			add_modifier = { name = low_oil_quota }
+		}
+		else_if = {
+			limit = { has_modifier = low_oil_quota }
+			remove_modifier = low_oil_quota
+			add_modifier = { name = medium_oil_quota }
+		}
+		else_if = {
+			limit = { has_modifier = medium_oil_quota }
+			remove_modifier = medium_oil_quota
+			add_modifier = { name = large_oil_quota }
+		}
+		else_if = {
+			limit = { has_modifier = large_oil_quota }
+			remove_modifier = large_oil_quota
+			add_modifier = { name = very_large_oil_quota }
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI
+		modifier = { 
+			trigger = { 
+				NOT = { has_modifier = large_oil_quota }
+				market_capital.market ?= { 
+					mg:oil ?= {
+						market_goods_pricier >= 0.25
+						market_goods_pricier < 0.50
+					} 
+				} 
+			}
+			add = 10
+		}
+		modifier = { 
+			trigger = { 
+				NOT = { has_modifier = very_large_oil_quota }
+				market_capital.market ?= { 
+					mg:oil ?= {
+						market_goods_pricier >= 0.50
+					} 
+				} 
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_oil_cartel_system_decrease_output_button = {
+	name = "je_oil_cartel_system_decrease_output_button"
+	desc = "je_oil_cartel_system_decrease_output_button_desc"
+
+	visible = { 
+		
+		has_variable = oil_cartel_system_regulate
+		
+	}
+
+	possible = {
+		
+		OR = {
+			#has_modifier = very_low_oil_quota
+			has_modifier = low_oil_quota
+			has_modifier = medium_oil_quota
+			has_modifier = large_oil_quota
+			has_modifier = very_large_oil_quota
+		}
+		
+	}
+
+	effect = {
+		
+		if = {
+			limit = { has_modifier = very_large_oil_quota }
+			remove_modifier = very_large_oil_quota
+			add_modifier = { name = large_oil_quota }
+		}
+		else_if = {
+			limit = { has_modifier = large_oil_quota }
+			remove_modifier = large_oil_quota
+			add_modifier = { name = medium_oil_quota }
+		}
+		else_if = {
+			limit = { has_modifier = medium_oil_quota }
+			remove_modifier = medium_oil_quota
+			add_modifier = { name = low_oil_quota }
+		}
+		else_if = {
+			limit = { has_modifier = low_oil_quota }
+			remove_modifier = low_oil_quota
+			add_modifier = { name = very_low_oil_quota }
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI
+		modifier = { 
+			trigger = { 
+				NOT = { has_modifier = low_oil_quota }
+				market_capital.market ?= { 
+					mg:oil ?= {
+						market_goods_cheaper >= 0.25
+						market_goods_cheaper < 0.50
+					} 
+				} 
+			}
+			add = 10
+		}
+		modifier = { 
+			trigger = { 
+				NOT = { has_modifier = very_low_oil_quota }
+				market_capital.market ?= { 
+					mg:oil ?= {
+						market_goods_cheaper >= 0.50
+					} 
+				} 
+			}
+			add = 10
+		}
+		
+	}
+	
+}

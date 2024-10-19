@@ -1,0 +1,263 @@
+﻿je_oil_cartel_system = {
+	icon = "gfx/interface/icons/invention_icons/pumpjacks.dds"
+
+	group = je_group_internal_affairs
+	
+	scripted_button = je_oil_cartel_system_increase_output_button
+	scripted_button = je_oil_cartel_system_decrease_output_button
+	
+	scripted_button = je_oil_cartel_system_regulate_button
+	scripted_button = je_oil_cartel_system_deregulate_button
+	
+	is_shown_when_inactive = {
+		
+		#Has oil
+		any_scope_state = {
+			has_potential_resource = bg_oil_extraction
+		}
+		
+	}
+	
+	possible = {
+		
+		#Not a member of OPEC
+		NOT = { has_modifier = OPEC_member }
+		
+		#Has oil production buildings
+		has_building = building_oil_rig
+		
+	}
+
+	immediate = {
+		
+		#Give boost to industry
+		every_scope_state = {
+			limit = { has_building = building_oil_rig }
+			add_modifier = {
+				name = state_oil_rush
+				years = 10
+				is_decaying = yes
+			}
+		}
+		
+		#Medium quota
+		add_modifier = { name = medium_oil_quota }
+		
+		#Auto regulate oil industry
+		if = {
+			limit = { 
+				NOT = { has_variable = oil_cartel_system_regulate } 
+				is_a_command_economy = yes
+			}
+			set_variable = oil_cartel_system_regulate
+		}
+		#Auto deregulate oil industry
+		if = {
+			limit = { 
+				has_variable = oil_cartel_system_regulate
+				has_law = law_type:law_laissez_faire
+			}
+			remove_variable = oil_cartel_system_regulate
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+		
+		effect = {
+		
+			#Auto regulate oil industry
+			if = {
+				limit = { 
+					NOT = { has_variable = oil_cartel_system_regulate } 
+					is_a_command_economy = yes
+				}
+				set_variable = oil_cartel_system_regulate
+			}
+			#Auto deregulate oil industry
+			if = {
+				limit = { 
+					has_variable = oil_cartel_system_regulate
+					has_law = law_type:law_laissez_faire
+				}
+				remove_variable = oil_cartel_system_regulate
+			}
+			
+		}
+	
+	}
+	
+	on_yearly_pulse = {
+		
+		effect = {
+		
+			#Effect of Oil Cartel
+			if = {
+				limit = { 
+					NOT = { has_variable = oil_cartel_system_regulate } 
+				}
+				
+				#Clear modifiers
+				remove_modifier = very_low_oil_quota
+				remove_modifier = low_oil_quota
+				remove_modifier = medium_oil_quota
+				remove_modifier = large_oil_quota
+				remove_modifier = very_large_oil_quota
+				
+				#Set oil price
+				if = {
+					limit = { 
+						market_capital.market ?= { 
+							mg:oil ?= {
+								market_goods_cheaper >= 0.50
+							} 
+						} 
+					} 
+					add_modifier = { name = very_low_oil_quota }
+				}
+				else_if = {
+					limit = { 
+						market_capital.market ?= { 
+							mg:oil ?= {
+								market_goods_cheaper < 0.50
+								market_goods_cheaper >= 0.25
+							} 
+						} 
+					} 
+					add_modifier = { name = low_oil_quota }
+				}
+				else_if = {
+					limit = { 
+						market_capital.market ?= { 
+							mg:oil ?= {
+								OR = { 
+									market_goods_cheaper < 0.25
+									market_goods_pricier < 0.25
+								}
+							} 
+						} 
+					} 
+					add_modifier = { name = medium_oil_quota }
+				}
+				else_if = {
+					limit = { 
+						market_capital.market ?= { 
+							mg:oil ?= { 
+								market_goods_pricier >= 0.25
+								market_goods_pricier < 0.50
+							} 
+						} 
+					} 
+					add_modifier = { name = large_oil_quota }
+				}
+				else_if = {
+					limit = { 
+						market_capital.market ?= { 
+							mg:oil ?= { 
+								market_goods_pricier >= 0.50
+							} 
+						} 
+					} 
+					add_modifier = { name = very_large_oil_quota }
+				}
+				
+			}
+			if = {
+				limit = {
+					has_variable = oil_cartel_system_regulate
+					OR = {
+						has_modifier = very_low_oil_quota
+						has_modifier = low_oil_quota
+						has_modifier = medium_oil_quota
+						has_modifier = large_oil_quota
+						has_modifier = very_large_oil_quota
+					}
+				}
+				remove_modifier = very_low_oil_quota
+				remove_modifier = low_oil_quota
+				remove_modifier = medium_oil_quota
+				remove_modifier = large_oil_quota
+				remove_modifier = very_large_oil_quota
+			}
+			
+		}
+		
+	}
+
+	fail = {
+		
+		OR = {
+		
+			#No longer has oil or oil production
+			NOR = { 
+				any_scope_state = {
+					has_potential_resource = bg_oil_extraction
+				}
+				has_building = building_oil_rig
+			}
+			
+			#Member of OPEC
+			has_modifier = OPEC_member
+			
+		}
+		
+	}
+	
+	on_fail = {
+		
+		#Clear variables
+		remove_variable = oil_cartel_system_regulate
+		hidden_effect = { 
+			remove_modifier = very_low_oil_quota
+			remove_modifier = low_oil_quota
+			remove_modifier = medium_oil_quota
+			remove_modifier = large_oil_quota
+			remove_modifier = very_large_oil_quota
+		}
+		
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = very_low_oil_quota
+				trigger = {
+					has_modifier = very_low_oil_quota
+				}
+			}
+			triggered_desc = {
+				desc = low_oil_quota
+				trigger = {
+					has_modifier = low_oil_quota
+				}
+			}
+			triggered_desc = {
+				desc = medium_oil_quota
+				trigger = {
+					has_modifier = medium_oil_quota
+				}
+			}
+			triggered_desc = {
+				desc = large_oil_quota
+				trigger = {
+					has_modifier = large_oil_quota
+				}
+			}
+			triggered_desc = {
+				desc = very_large_oil_quota
+				trigger = {
+					has_modifier = very_large_oil_quota
+				}
+			}
+		}
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = no
+
+	transferable = no
+
+	progressbar = no
+	
+}
