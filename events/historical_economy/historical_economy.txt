@@ -3093,3 +3093,162 @@ historical_economy.34 = {
     }
 
 }
+
+# Historical Oil Production
+historical_economy.35 = {
+    type = country_event
+
+    title = historical_oil_production.t 						# Title of the event; ADD LOCALISATION
+    desc = historical_oil_production.d 							# Description of the event; ADD LOCALISATION
+    #flavor = historical_oil_production.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		game_date >= 1950.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1980.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		# Event has not been fired before
+		NOT = { has_variable = historical_oil_production_hee }	# CHANGE ****
+		
+		#Has oil production buildings
+		NOT = { has_building = building_oil_rig }
+		
+		#Has oil tech
+		has_technology_researched = tech_mining_2
+		
+		#Has oil
+		any_scope_state = {
+			has_potential_resource = bg_oil_extraction
+		}
+		
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		in_default = no
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = historical_oil_production_hee			# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Create oil industry
+		every_scope_state = {
+			limit = { has_potential_resource = bg_oil_extraction }
+			create_building = {
+				building = building_oil_rig
+				level = 1
+				reserves = 1
+				subsidized = yes
+			}
+			owner = { add_treasury = -10000 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Brexit
+historical_economy.36 = {
+    type = country_event
+
+    title = GBR_brexit.t 										# Title of the event; ADD LOCALISATION
+    desc = GBR_brexit.d 										# Description of the event; ADD LOCALISATION
+    #flavor = GBR_brexit.f 										# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:GBR ?= this
+		game_date >= 2016.6.23									# START DATE: Date colony became self governing ****
+		game_date < 2026.6.23									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#In EU
+		has_journal_entry = je_superstate_system
+		OR = { 
+			has_variable = superstate_free_trade_zone
+			has_variable = superstate_customs_union
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = GBR_brexit_hee }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = GBR_brexit_hee							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Leave Superstate
+		activate_law = law_type:law_nationalist_fp
+		set_variable = brexit_done
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = medium_radicals
+			strata = poor
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

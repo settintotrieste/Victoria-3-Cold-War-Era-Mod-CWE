@@ -5125,3 +5125,91 @@ historical_domestic_unrest.53 = {
     }
 
 }
+
+# The Dirty War
+historical_domestic_unrest.54 = {
+    type = country_event
+
+    title = ARG_dirty_war_1974.t 								# Title of the event; ADD LOCALISATION
+    desc = ARG_dirty_war_1974.d 								# Description of the event; ADD LOCALISATION
+    #flavor = ARG_dirty_war_1974.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_police_breaking_door.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:ARG ?= this											# Change TAG of the overlord ****
+		game_date >= 1974.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1984.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_nationalist_government = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		right_wing_ruling_coalition = yes
+		
+		NOT = { has_law = law_type:law_slavery_political }
+		
+		# Event has not been fired before
+		NOT = { has_variable = ARG_dirty_war_1974_hdu }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = ARG_dirty_war_1974_hdu					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		
+		#State terrorism
+		activate_law = law_type:law_slavery_political
+		if = {
+			limit = { NOT = { has_law = law_type:law_draconian_policing } }
+			activate_law = law_type:law_draconian_policing
+		}
+		if = {
+			limit = { NOT = { has_law = law_type:law_secret_police } }
+			activate_law = law_type:law_secret_police
+		}
+		
+		change_infamy = 5
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2					# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
