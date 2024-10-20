@@ -899,3 +899,373 @@ historical_diplomatic_incidents.10 = {
     }
 
 }
+
+# The Berlin Wall - EGR
+historical_diplomatic_incidents.11 = {
+    type = country_event
+
+    title = EGR_WGR_Berlin_Wall.t 								# Title of the event; ADD LOCALISATION
+    desc = EGR_WGR_Berlin_Wall.d 								# Description of the event; ADD LOCALISATION
+    #flavor = EGR_WGR_Berlin_Wall.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_engineer_blueprint.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:EGR ?= this											# Change TAG of the overlord ****
+		game_date >= 1961.4.13									# START DATE: Date colony became self governing ****
+		game_date < 1971.4.13									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Borders are not closed
+		NOT = { has_law = law_type:law_closed_borders }
+		has_state_in_state_region = STATE_BRANDENBURG
+		
+		#Cause of unrest
+		exists = c:WGR
+		c:WGR = {
+			is_a_democracy = yes								# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			has_state_in_state_region = STATE_BRANDENBURG
+		}
+		NOT = { is_subject_of = c:WGR }
+		
+		# Event has not been fired before
+		NOT = { has_variable = EGR_WGR_Berlin_Wall_hdi }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = EGR_WGR_Berlin_Wall_hdi					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Close borders
+		activate_law = law_type:law_closed_borders
+		add_treasury = -100000
+		set_variable = Berlin_Wall_Constructed
+		
+		#WGR to react
+		change_relations = { country = c:WGR value = -100 }
+		create_incident = {
+			country = c:WGR
+			value = 20
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2					# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Fall of The Berlin Wall - EGR
+historical_diplomatic_incidents.12 = {
+    type = country_event
+
+    title = EGR_WGR_Berlin_Wall_Fall.t 							# Title of the event; ADD LOCALISATION
+    desc = EGR_WGR_Berlin_Wall_Fall.d 							# Description of the event; ADD LOCALISATION
+    #flavor = EGR_WGR_Berlin_Wall_Fall.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:EGR ?= this											# Change TAG of the overlord ****
+		game_date >= 1989.11.9									# START DATE: Date colony became self governing ****
+		game_date < 1999.11.9									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Borders are closed
+		has_variable = Berlin_Wall_Constructed
+		has_law = law_type:law_closed_borders
+		has_state_in_state_region = STATE_BRANDENBURG
+		
+		#Cause of unrest
+		exists = c:WGR
+		c:WGR = {
+			is_a_democracy = yes								# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			has_state_in_state_region = STATE_BRANDENBURG
+		}
+		NOT = { is_subject_of = c:WGR }
+		
+		#Soviet Thaw
+		exists = c:SOV
+		c:SOV = {
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			ruler ?= { NOT = { character_is_autocratic = yes } }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = EGR_WGR_Berlin_Wall_Fall_hdi }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = EGR_WGR_Berlin_Wall_Fall_hdi				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Close borders
+		activate_law = law_type:law_no_migration_controls
+		
+		#WGR to react
+		change_relations = { country = c:WGR value = 100 }
+		
+		#Domestic reaction
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		
+		#International reaction
+		change_infamy = -10
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2					# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Bay of Pigs Invasion - USA
+historical_diplomatic_incidents.13 = {
+    type = country_event
+	placement = c:CUB
+
+    title = USA_CUB_Overthrow.t 								# Title of the event; ADD LOCALISATION
+    desc = USA_CUB_Overthrow.d 									# Description of the event; ADD LOCALISATION
+    #flavor = USA_CUB_Overthrow.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_battlefield_trenches.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 1961.4.17									# START DATE: Date colony became self governing ****
+		game_date < 1971.4.17									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		country_rank = rank_value:super_power
+		
+		NOT = { has_law = law_type:law_no_espionage }
+		
+		#Target
+		exists = c:CUB
+		c:CUB ?= {
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes					# is_vassal = no		
+			is_at_war = no										# war = no
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_CUB_Overthrow_hdi }			# CHANGE ****
+		
+		#Cause of unrest
+		cold_war_ongoing = yes
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_CUB_Overthrow_hdi					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Infamy
+		create_incident = {
+			country = c:CUB
+			value = 5
+		} 
+		
+		#Mark Cuba for attack
+		c:CUB ?= {
+			trigger_event = { id = historical_diplomatic_incidents.14 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = small_radicals
+			interest_group = ig:ig_industrialists
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Bay of Pigs Invasion - CUB
+historical_diplomatic_incidents.14 = {
+    type = country_event
+
+    title = USA_CUB_Overthrow.t 								# Title of the event; ADD LOCALISATION
+    desc = USA_CUB_Overthrow.d 									# Description of the event; ADD LOCALISATION
+    #flavor = USA_CUB_Overthrow.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_battlefield_trenches.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Invasion is repelled
+		capital ?= {
+			state_region = {
+				add_devastation = 25
+			}
+		}
+		change_relations = { country = c:USA value = -200 }
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		#Becomes independent
+		if = {
+			limit = { is_subject = yes }
+			make_independent = yes
+		}
+		
+		#Enact new regime
+		effect_starting_politics_presidential_republic = yes
+		effect_starting_politics_dictatorship = yes
+		effect_starting_politics_economic_policy_laissez_faire = yes
+		
+		#Become a US vassal
+		c:USA ?= {
+			create_diplomatic_pact = {
+				country = c:CUB
+				type = puppet
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
