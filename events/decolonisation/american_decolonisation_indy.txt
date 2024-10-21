@@ -1364,3 +1364,90 @@ american_decolonisation_indy.13 = {
     }
 
 }
+
+#South Vietnam
+american_decolonisation_indy.14 = {
+    type = country_event
+	placement = c:SVM
+
+    title = american_south_vietnam.indy.t 						# Title of the event; ADD LOCALISATION
+    desc = american_south_vietnam.indy.d 						# Description of the event; ADD LOCALISATION
+    #flavor = american_south_vietnam.indy.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this
+		game_date >= 1973.3.29
+		game_date < 1983.3.29
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		exists = c:SVM
+		c:SVM = { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_sufficiently_independent = yes
+		}
+		exists = c:NVM
+		c:NVM = { 												# Change TAG of the colony ****
+			NOT = { is_direct_subject_of = ROOT }
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = american_south_vietnam_indy }	# CHANGE ****
+		
+    }
+	
+	immediate = { 
+		
+		# Fire only once
+		set_variable = american_south_vietnam_indy				# Change variable ****
+		
+	}
+    
+    option = {
+        name = american_decolonisation_indy.option.1			# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		c:SVM = { 												# Change TAG of the colony ****
+			make_independent = yes
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = american_decolonisation_indy.option.2				# REFUSE
+		default_option = yes
+		
+		#Domestic
+		effect_increase_opposition_radicals = yes
+		add_modifier = { 
+			name = domestic_unrest
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
