@@ -1,8 +1,12 @@
-je_borrow_multilateral_banks_button = {
-	name = "je_borrow_multilateral_banks_button"
-	desc = "je_borrow_multilateral_banks_button_desc"
+je_start_borrow_multilateral_banks_button = {
+	name = "je_start_borrow_multilateral_banks_button"
+	desc = "je_start_borrow_multilateral_banks_button_desc"
 
 	visible = { 
+		
+		#Not already borrowing
+		NOT = { has_variable = borrow_multilateral_banks_active }
+		NOT = { has_variable = repay_multilateral_banks_active }
 		
 		#Can borrow money
 		has_variable = currency_borrowing_pool_domestic
@@ -35,144 +39,11 @@ je_borrow_multilateral_banks_button = {
 	effect = {
 		
 		#Borrow money
-		if = {
-			limit = { 
-				root.var:currency_borrow_money_monthly_limit >= 1000
-				root.var:currency_borrow_money_monthly_limit < 10000
-			}
-			add_treasury = 1000
-			change_variable = {
-				name = currency_borrowing_pool_domestic
-				add = -1000
-			}
-			change_variable = {
-				name = currency_borrowed_money
-				add = 1000
-			}
-		}
-		if = {
-			limit = { 
-				root.var:currency_borrow_money_monthly_limit >= 10000
-				root.var:currency_borrow_money_monthly_limit < 100000
-			}
-			add_treasury = 10000
-			change_variable = {
-				name = currency_borrowing_pool_domestic
-				add = -10000
-			}
-			change_variable = {
-				name = currency_borrowed_money
-				add = 10000
-			}
-		}
-		if = {
-			limit = { 
-				root.var:currency_borrow_money_monthly_limit >= 100000
-				root.var:currency_borrow_money_monthly_limit < 1000000
-			}
-			add_treasury = 100000
-			change_variable = {
-				name = currency_borrowing_pool_domestic
-				add = -100000
-			}
-			change_variable = {
-				name = currency_borrowed_money
-				add = 100000
-			}
-		}
-		if = {
-			limit = { 
-				root.var:currency_borrow_money_monthly_limit >= 1000000
-				root.var:currency_borrow_money_monthly_limit < 10000000
-			}
-			add_treasury = 1000000
-			change_variable = {
-				name = currency_borrowing_pool_domestic
-				add = -1000000
-			}
-			change_variable = {
-				name = currency_borrowed_money
-				add = 1000000
-			}
-		}
-		if = {
-			limit = { 
-				root.var:currency_borrow_money_monthly_limit >= 10000000
-				root.var:currency_borrow_money_monthly_limit < 100000000
-			}
-			add_treasury = 10000000
-			change_variable = {
-				name = currency_borrowing_pool_domestic
-				add = -10000000
-			}
-			change_variable = {
-				name = currency_borrowed_money
-				add = 10000000
-			}
-		}
-		if = {
-			limit = { 
-				root.var:currency_borrow_money_monthly_limit >= 100000000
-				root.var:currency_borrow_money_monthly_limit < 1000000000
-			}
-			add_treasury = 100000000
-			change_variable = {
-				name = currency_borrowing_pool_domestic
-				add = -100000000
-			}
-			change_variable = {
-				name = currency_borrowed_money
-				add = 100000000
-			}
-		}
-		if = {
-			limit = { 
-				root.var:currency_borrow_money_monthly_limit >= 1000000000
-				root.var:currency_borrow_money_monthly_limit < 10000000000
-			}
-			add_treasury = 1000000000
-			change_variable = {
-				name = currency_borrowing_pool_domestic
-				add = -1000000000
-			}
-			change_variable = {
-				name = currency_borrowed_money
-				add = 1000000000
-			}
-		}
-		if = {
-			limit = { 
-				root.var:currency_borrow_money_monthly_limit >= 10000000000
-				root.var:currency_borrow_money_monthly_limit < 100000000000
-			}
-			add_treasury = 10000000000
-			change_variable = {
-				name = currency_borrowing_pool_domestic
-				add = -10000000000
-			}
-			change_variable = {
-				name = currency_borrowed_money
-				add = 10000000000
-			}
-		}
-		if = {
-			limit = { 
-				root.var:currency_borrow_money_monthly_limit >= 100000000000
-			}
-			add_treasury = 100000000000
-			change_variable = {
-				name = currency_borrowing_pool_domestic
-				add = -100000000000
-			}
-			change_variable = {
-				name = currency_borrowed_money
-				add = 100000000000
-			}
-		}
+		borrow_international_loan = yes
 		
-		calculate_total_borrowing_pool = yes
-		calculate_borrowed_money = yes
-		calculate_borrowed_money_repayment_rate = yes
+		#Start monthly borrowing
+		set_variable = borrow_multilateral_banks_active
+		remove_variable = repay_multilateral_banks_active
 		
 		#Can only fire once per month
 		set_variable = { name = multilateral_bank_loan_timer months = 1 }
@@ -191,11 +62,57 @@ je_borrow_multilateral_banks_button = {
 	
 }
 
-je_repay_multilateral_banks_button = {
-	name = "je_repay_multilateral_banks_button"
-	desc = "je_repay_multilateral_banks_button_desc"
+je_stop_borrow_multilateral_banks_button = {
+	name = "je_stop_borrow_multilateral_banks_button"
+	desc = "je_stop_borrow_multilateral_banks_button_desc"
 
 	visible = { 
+		
+		has_variable = borrow_multilateral_banks_active
+		
+	}
+
+	possible = {
+	
+		#Can only borrow once a month
+		custom_tooltip = {
+			text = borrow_repay_multilateral_banks.tt
+			NOT = { has_variable = multilateral_bank_loan_timer } 
+		}
+		
+	}
+
+	effect = {
+		
+		#Stop monthly borrowing
+		remove_variable = borrow_multilateral_banks_active
+		
+		#Can only fire once per month
+		set_variable = { name = multilateral_bank_loan_timer months = 1 }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		modifier = { 
+			trigger = { 
+				scaled_debt < 0
+			}
+			add = 10 
+		}
+	}
+	
+}
+
+je_start_repay_multilateral_banks_button = {
+	name = "je_start_repay_multilateral_banks_button"
+	desc = "je_start_repay_multilateral_banks_button_desc"
+
+	visible = { 
+		
+		#Not already repaying loans
+		NOT = { has_variable = borrow_multilateral_banks_active }
+		NOT = { has_variable = repay_multilateral_banks_active }
 		
 		#Has borrowed money
 		has_variable = currency_borrowed_money
@@ -222,7 +139,12 @@ je_repay_multilateral_banks_button = {
 
 	effect = {
 		
+		#Repay loan
 		calculate_borrowed_money_repayment_large = yes
+		
+		#Start repaying loan
+		set_variable = repay_multilateral_banks_active
+		remove_variable = borrow_multilateral_banks_active
 		
 		#Can only fire once per month
 		set_variable = { name = multilateral_bank_loan_timer months = 1 }
@@ -234,6 +156,48 @@ je_repay_multilateral_banks_button = {
 		modifier = { 
 			trigger = { 
 				gold_reserves > 0
+			}
+			add = 10 
+		}
+	}
+	
+}
+
+je_stop_repay_multilateral_banks_button = {
+	name = "je_stop_repay_multilateral_banks_button"
+	desc = "je_stop_repay_multilateral_banks_button_desc"
+
+	visible = { 
+		
+		has_variable = repay_multilateral_banks_active
+		
+	}
+
+	possible = {
+	
+		#Can only repay once a month
+		custom_tooltip = {
+			text = borrow_repay_multilateral_banks.tt
+			NOT = { has_variable = multilateral_bank_loan_timer } 
+		}
+		
+	}
+
+	effect = {
+		
+		#Start repaying loan
+		remove_variable = repay_multilateral_banks_active
+		
+		#Can only fire once per month
+		set_variable = { name = multilateral_bank_loan_timer months = 1 }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		modifier = { 
+			trigger = { 
+				gold_reserves <= 0
 			}
 			add = 10 
 		}

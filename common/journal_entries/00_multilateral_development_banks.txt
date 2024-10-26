@@ -3,8 +3,10 @@ je_multilateral_development_banks = {
 
 	group = je_group_international_organisations
 
-	scripted_button = je_borrow_multilateral_banks_button
-	scripted_button = je_repay_multilateral_banks_button
+	scripted_button = je_start_borrow_multilateral_banks_button
+	scripted_button = je_stop_borrow_multilateral_banks_button
+	scripted_button = je_start_repay_multilateral_banks_button
+	scripted_button = je_stop_repay_multilateral_banks_button
 
 	possible = {
 		
@@ -21,6 +23,54 @@ je_multilateral_development_banks = {
 		calculate_borrowed_money = yes
 		calculate_borrowed_money_interest = yes
 		calculate_borrowed_money_repayment = yes
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			#Auto inject/withdraw
+			if = {
+				limit = { 
+					has_variable = borrow_multilateral_banks_active
+					NOT = { has_variable = repay_multilateral_banks_active }
+				}
+				if = {
+					limit = {
+						#Can borrow money
+						has_variable = currency_borrowing_pool_domestic
+						has_variable = currency_borrowed_money
+						has_variable = currency_borrow_money_monthly_limit
+						root.var:currency_borrowed_money < root.var:currency_borrowing_pool_domestic
+						root.var:currency_borrow_money_monthly_limit >= 1000
+						
+						#Has currency exchange
+						has_variable = currency_exchange_rate
+					}
+					borrow_international_loan = yes
+				}
+			}
+			if = {
+				limit = { 
+					NOT = { has_variable = borrow_multilateral_banks_active }
+					has_variable = repay_multilateral_banks_active
+				}
+				if = {
+					limit = { 
+						#Has borrowed money
+						has_variable = currency_borrowed_money
+						has_variable = currency_borrowed_money_yearly_repayment_display
+						root.var:currency_borrowed_money > 0
+						
+						#Has currency exchange
+						has_variable = currency_exchange_rate
+					}
+					calculate_borrowed_money_repayment_large = yes
+				}
+			}
+			
+		}
+		
 	}
 	
 	on_yearly_pulse = {
