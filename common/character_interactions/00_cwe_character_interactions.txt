@@ -689,3 +689,147 @@ retire_civil_servant = {
 	}
 	
 }
+
+ban_character_political_party = {
+	icon = "gfx/interface/icons/generic_icons/map_list_cross.dds"
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+
+	potential = {
+		owner = scope:actor
+		has_role = politician
+		is_ruler = no
+		interest_group = {
+			NOT = { has_variable = IG_party_banned }
+			has_party = yes
+		}
+	}
+
+	possible = {
+		
+		owner = { 
+			OR = {
+				has_law = law_type:law_outlawed_dissent
+				has_law = law_type:law_censorship
+				has_law = law_type:law_rigged_voting
+			}
+			ruler ?= { character_is_autocratic = yes }
+		}
+		
+		interest_group ?= {
+			is_in_government = no
+			save_temporary_scope_as = IG_banned_from_parties
+			custom_tooltip = {
+				text = party_not_banned.tt
+				NOT = { has_variable = IG_party_banned }
+			}
+		}
+		
+	}
+
+	effect = {
+		this.interest_group = {
+			save_scope_as = IG_banned_from_parties
+			custom_tooltip = {
+				text = party_banned.tt
+				set_variable = IG_party_banned
+			}
+			this.party ?= { 
+				save_scope_as = party_affected_by_banned_IG 
+				remove_ig_from_party = scope:IG_banned_from_parties
+			}
+		}
+		owner = {
+			every_interest_group = {
+				limit = { 
+					has_party = yes
+					party ?= { is_same_party_type = scope:party_affected_by_banned_IG } 
+				}
+				save_scope_as = IG_affected_by_banned_IG
+				owner = { 
+					add_radicals = {
+						value = very_large_radicals
+						interest_group = scope:IG_affected_by_banned_IG
+					}
+				}
+			}
+			post_notification = IG_party_ban_notification
+		}
+	}
+
+	cooldown = { months = 6 }
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = {
+				interest_group = {
+					is_marginal = no
+					ig_approval <= -5
+				}
+			}
+			add = 10
+		}
+	}
+	
+}
+
+unban_character_political_party = {
+	icon = "gfx/interface/icons/generic_icons/checkbox_greencheck.dds"
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/character_invite"
+
+	potential = {
+		owner = scope:actor
+		has_role = politician
+		interest_group = {
+			has_variable = IG_party_banned
+		}
+	}
+
+	possible = {
+		
+		interest_group ?= {
+			save_temporary_scope_as = IG_banned_from_parties
+		}
+		
+	}
+
+	effect = {
+		this.interest_group = {
+			save_scope_as = IG_banned_from_parties
+			custom_tooltip = {
+				text = party_unbanned.tt
+				remove_variable = IG_party_banned
+			}
+		}
+		owner = {
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:IG_banned_from_parties
+			}
+			post_notification = IG_party_unban_notification
+		}
+	}
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval > 5
+				}
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				owner = {
+					ruler ?= { 
+						NOT = { character_is_autocratic = yes } 
+					}
+				}
+			}
+			add = 10
+		}
+	}
+	
+}
