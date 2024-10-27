@@ -1269,3 +1269,140 @@ historical_diplomatic_incidents.14 = {
     }
 
 }
+
+# Chagos Islands Deportation
+historical_diplomatic_incidents.15 = {
+    type = country_event
+	placement = scope:chagos_islands
+
+    title = GBR_Chagos_Island_deport.t 							# Title of the event; ADD LOCALISATION
+    desc = GBR_Chagos_Island_deport.d 							# Description of the event; ADD LOCALISATION
+    #flavor = GBR_Chagos_Island_deport.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/africa_soldiers_breaking_protest.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:GBR ?= this											# Change TAG of the overlord ****
+		game_date >= 1973.4.27									# START DATE: Date colony became self governing ****
+		game_date < 1983.4.27									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Owns Chagos Islands
+		p:x5B5C22 ?= {
+			owner = ROOT
+		}
+		
+		#Cause of dispute
+		exists = c:MRT
+		c:MRT = {
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			NOT = { is_subject_of = ROOT }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = GBR_Chagos_Island_deport_hdi }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		#Mark states
+		capital ?= { save_scope_as = capital_scope }
+		random_scope_state = {
+			limit = { state_region = s:STATE_CEYLON }
+			save_scope_as = chagos_islands
+		}
+	
+		# Fire only once
+		set_variable = GBR_Chagos_Island_deport_hdi				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Deport Chagos Islanders
+		random_scope_state = {
+			limit = { state_region = s:STATE_CEYLON }
+			every_scope_pop = {
+				limit = {
+					culture = cu:mauritian
+				}
+				move_pop = scope:capital_scope
+			}
+		}
+		
+		#MRT to react
+		random_country = {
+			limit = {
+				c:MRT ?= this
+			}
+			change_relations = { country = ROOT value = -100 }
+			save_scope_as = MRT_tag
+		}
+		
+		#USA to react
+		random_country = {
+			limit = {
+				c:USA ?= this
+				is_a_democracy = yes
+				is_sufficiently_independent = yes
+				is_at_war = no
+				country_rank = rank_value:super_power
+			}
+			change_relations = { country = ROOT value = 50 }
+		}
+		
+		#Add infamy
+		if = {
+			limit = { exists = scope:MRT_tag }
+			create_incident = {
+				country = scope:MRT_tag
+				value = 10
+			}
+		}
+		else = {
+			change_infamy = 5
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2					# No
+		default_option = yes
+		
+		#USA to react
+		random_country = {
+			limit = {
+				c:USA ?= this
+				is_a_democracy = yes
+				is_sufficiently_independent = yes
+				is_at_war = no
+				country_rank = rank_value:super_power
+			}
+			change_relations = { country = ROOT value = -100 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

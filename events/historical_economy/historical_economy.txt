@@ -3252,3 +3252,108 @@ historical_economy.36 = {
     }
 
 }
+
+# Abenomics
+historical_economy.37 = {
+    type = country_event
+
+    title = JAP_ELR_Reforms.t 								# Title of the event; ADD LOCALISATION
+    desc = JAP_ELR_Reforms.d 								# Description of the event; ADD LOCALISATION
+    #flavor = JAP_ELR_Reforms.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:JAP ?= this
+		game_date >= 2012.12.26									# START DATE: Date colony became self governing ****
+		game_date < 2020.9.16									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_parliamentary_democracy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		NOR = {
+			has_law = law_type:law_free_trade
+			has_law = law_type:law_interventionism
+			has_law = law_type:law_very_expansionary_monetary_policy
+			has_law = law_type:law_pro_industry_regulations
+			has_law = law_type:law_globalist_fp
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = JAP_ELR_Reforms_hee }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = JAP_ELR_Reforms_hee						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		activate_law = law_type:law_free_trade
+		activate_law = law_type:law_interventionism
+		activate_law = law_type:law_very_expansionary_monetary_policy
+		remove_variable = independent_central_bank
+		set_variable = { name = central_bank_timer years = 1 }
+		activate_law = law_type:law_pro_industry_regulations
+		activate_law = law_type:law_globalist_fp
+		
+		#Shinzo Abe
+		create_character = {
+			first_name = "Shinzo_Abe_first_name"
+			last_name = "Shinzo_Abe_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1954.9.21
+			interest_group = ig_industrialists
+			ideology = ideology_elitist
+			culture = cu:japanese
+			religion = rel:shinto
+			traits = {
+				charismatic
+				ambitious
+				innovative
+			}
+			on_created = { set_variable = Shinzo_Abe }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			strata = rich
+		}
+		add_radicals = {
+			value = large_radicals
+			strata = middle
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
