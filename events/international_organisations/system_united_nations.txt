@@ -1585,7 +1585,7 @@ united_nations.19 = {
 	flavor = IMF_loan_request.f
 
 	event_image = {
-		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+		video = "gfx/event_pictures/europenorthamerica_capitalists_meeting.bk2"
 	}
 
 	icon = "gfx/interface/icons/event_icons/united_nations.dds"
@@ -1604,14 +1604,74 @@ united_nations.19 = {
 		}
 	}
 
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:imf_loan_debtor
+		}
+	}
+
 	option = {
 		name = imf_loan_option.1			#Accept
 		highlighted_option = yes
 		
-		#Bankroll FROM
-		create_diplomatic_pact = {
-			country = scope:imf_loan_debtor
-			type = bankroll
+		#Take on debt
+		if = {
+			limit = {
+				exists = scope:imf_loan_debtor
+				scope:imf_loan_debtor ?= {
+					scaled_debt > 0.05
+				}
+				can_take_on_scaled_debt = {
+					who = scope:imf_loan_debtor
+					value = 0.05
+				}
+			}
+			take_on_scaled_debt = {
+				who = scope:imf_loan_debtor
+				value = 0.05
+			}
+			if = {
+				limit = {
+					root = {
+						owes_obligation_to = scope:imf_loan_debtor
+					}			
+				}
+				root = { set_owes_obligation_to = { country = scope:imf_loan_debtor setting = no } }
+				change_relations = { country = scope:imf_loan_debtor value = 10 }
+			}		
+			else_if = {
+				limit = {
+					scope:imf_loan_debtor = {
+						NOT = { owes_obligation_to = root }					
+					}			
+				}
+				scope:imf_loan_debtor = { set_owes_obligation_to = { country = root setting = yes } }
+				change_relations = { country = scope:imf_loan_debtor value = 10 }
+			}
+			else = {
+				change_relations = { country = scope:imf_loan_debtor value = 30 }
+			}
+		}
+		else = {
+			create_diplomatic_pact = {
+				country = scope:imf_loan_debtor
+				type = bankroll
+			}
+			change_relations = { country = scope:imf_loan_debtor value = 30 }
+		}
+		
+		#Lobby
+		if = {
+			limit = {
+				exists = scope:imf_loan_debtor
+			}
+			add_lobby_appeasement_from_diplomacy_bidirectional = { 
+				FIRST = root
+				SECOND = scope:imf_loan_debtor
+				PRO_AMOUNT = 1
+				ANTI_AMOUNT = -1
+				FACTOR = appeasement_defensive_pact_formed
+			}
 		}
 		
 		#Mark FROM as receiving an IMF loan
@@ -1625,19 +1685,8 @@ united_nations.19 = {
 				add_modifier = { name = imf_loan_debtor months = 60 }
 			}
 			
-			change_relations = {
-				country = ROOT
-				value = 25
-			}
-			
 			remove_variable = imf_loan_applicant
 			
-		}
-		
-		#Mark THIS as giving an IMF loan
-		if = {
-			limit = { NOT = { has_modifier = imf_loan_creditor } }
-			add_modifier = { name = imf_loan_creditor months = 60 }
 		}
 		
 		ai_chance = { 
@@ -1649,6 +1698,8 @@ united_nations.19 = {
 	option = {
 		name = imf_loan_option.2			#Reject
 		default_option = yes
+		
+		change_relations = { country = scope:imf_loan_debtor value = -5 }
 		
 		ai_chance = { 
 			base = 0
