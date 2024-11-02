@@ -22,7 +22,7 @@
 		OR = {
 			AND = {
 				any_scope_war = {
-					is_warleader = scope:target_country
+					#is_warleader = scope:target_country
 					is_war_participant = scope:actor
 					is_war_participant = scope:target_country
 				}
@@ -30,13 +30,16 @@
 				has_war_with = scope:target_country
 				NOT = { is_in_war_together = scope:target_country }
 			}
-			any_country = {
-				has_diplomatic_pact = { who = scope:actor type = station_nuclear_weapons is_initiator = no }
-				has_war_with = scope:target_country
-				any_scope_war = {
-					is_warleader = scope:target_country
+			AND = {
+				NOT = { is_in_war_together = scope:target_country }
+				any_country = {
+					has_diplomatic_pact = { who = scope:actor type = station_nuclear_weapons is_initiator = no }
+					has_war_with = scope:target_country
+					#any_scope_war = {
+					#	is_warleader = scope:target_country
+					#}
+					is_diplomatic_play_enemy_of = scope:target_country
 				}
-				is_diplomatic_play_enemy_of = scope:target_country
 			}
 		}
 		
@@ -72,9 +75,10 @@
 		is_sufficiently_independent = yes
 		
 		#THIS is a war leader
-		any_scope_war = {
-			is_warleader = scope:actor
-		}
+		#any_scope_war = {
+		#	is_warleader = scope:actor
+		#}
+		
 	}
 	
 	accept_effect = {
@@ -99,9 +103,36 @@
 					OR = { 
 						AND = { initiator_is = scope:target_country target_is = scope:actor }
 						AND = { initiator_is = scope:actor target_is = scope:target_country }
+						AND = { 
+							any_scope_play_involved = { this = scope:actor }
+							any_scope_play_involved = { this = scope:target_country }
+						}
 					}
 				}
-				end_play = yes
+				if = {
+					limit = {
+						any_scope_initiator_ally = { this = scope:target_country }
+					}
+					remove_initiator_backers = scope:target_country
+				}
+				if = {
+					limit = {
+						any_scope_target_ally = { this = scope:target_country }
+					}
+					remove_target_backers = scope:target_country
+				}
+				if = {
+					limit = {
+						initiator_is = scope:target_country
+					}
+					end_play = yes
+				}
+				if = {
+					limit = {
+						target_is = scope:target_country
+					}
+					end_play = yes
+				}
 			}
 			scope:actor = { 
 				create_bidirectional_truce = {
@@ -116,9 +147,9 @@
 			limit = {
 				has_diplomatic_pact = { who = scope:actor type = station_nuclear_weapons is_initiator = no }
 				has_war_with = scope:target_country
-				any_scope_war = {
-					is_warleader = scope:target_country
-				}
+				#any_scope_war = {
+				#	is_warleader = scope:target_country
+				#}
 				is_diplomatic_play_enemy_of = scope:target_country
 			}
 			save_scope_as = THIS_umbrella_country_scope
@@ -132,9 +163,36 @@
 						OR = { 
 							AND = { initiator_is = scope:target_country target_is = scope:THIS_umbrella_country_scope }
 							AND = { initiator_is = scope:THIS_umbrella_country_scope target_is = scope:target_country }
+							AND = { 
+								any_scope_play_involved = { this = scope:target_country }
+								any_scope_play_involved = { this = scope:THIS_umbrella_country_scope }
+							}
 						}
 					}
-					end_play = yes
+					if = {
+						limit = {
+							any_scope_initiator_ally = { this = scope:target_country }
+						}
+						remove_initiator_backers = scope:target_country
+					}
+					if = {
+						limit = {
+							any_scope_target_ally = { this = scope:target_country }
+						}
+						remove_target_backers = scope:target_country
+					}
+					if = {
+						limit = {
+							initiator_is = scope:target_country
+						}
+						end_play = yes
+					}
+					if = {
+						limit = {
+							target_is = scope:target_country
+						}
+						end_play = yes
+					}
 				}
 				scope:THIS_umbrella_country_scope = { 
 					create_bidirectional_truce = {
@@ -150,12 +208,9 @@
 	decline_effect = {
 		
 		#THIS gains infamy for unprovoked nuclear attack
-		scope:actor = { change_infamy = 100 }
-		custom_tooltip = {
-			text = everyone_is_angry_custom_tooltip
-			every_country = {
-				change_relations = { country = scope:actor value = -100 }
-			}
+		create_incident = {
+			country = scope:target_country
+			value = 100
 		}
 		
 		#Notice
