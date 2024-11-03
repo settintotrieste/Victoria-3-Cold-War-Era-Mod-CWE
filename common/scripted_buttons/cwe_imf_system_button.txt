@@ -1,0 +1,367 @@
+je_imf_system_request_loan_button = {
+	name = "je_imf_system_request_loan_button"
+	desc = "je_imf_system_request_loan_button_desc"
+
+	visible = { 
+		
+		#THIS has not already taken out a loan
+		NOT = { has_modifier = imf_loan_debtor }
+		
+		#THIS has not recently called for a loan
+		NOT = { has_variable = imf_loan_timer }
+		
+		#UN can only take 1 request at a time
+		NOT = { any_country = { has_variable = imf_loan_applicant } }
+		
+	}
+
+	possible = {
+	
+		#Is irretrievably insolvent OR is bordering on insolvency OR is a weak wartime economy
+		OR = { 
+		
+			#is_player = yes
+		
+			AND = { 
+				scaled_debt > 0.75
+				has_healthy_economy = no
+			}
+			
+			AND = { 
+				scaled_debt > 0.25
+				has_healthy_economy = no
+				is_at_war = yes
+			}
+			
+		}
+	
+		#Not in an election campaign
+		in_election_campaign = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+		#There is a higher ranked country willing to lend & is not already lending
+		any_country = {
+			has_modifier = unga_member
+			
+			NOT = { is_a_communist_government = yes }
+			
+			has_healthy_economy = yes
+			in_default = no
+			
+			NOT = { has_diplomatic_pact = { who = ROOT type = bankroll is_initiator = yes } }
+			can_take_on_scaled_debt = {
+				who = root
+				value = 0.05
+			}
+			
+			#country_rank > root.country_rank
+			
+			#relations:root >= relations_threshold:amicable
+		}
+		
+	}
+
+	effect = {
+		
+		#Mark THIS as the potential debtor
+		set_variable = { name = imf_loan_applicant months = 6 }
+		
+		#Get some baseline IMF support
+		add_modifier = { name = imf_loan_debtor months = 60 }
+	
+		#Send out invitation to bankroll THIS
+		custom_tooltip = {
+			text = request_imf_loan.tt
+			every_country = {
+				limit = { 
+					NOT = { THIS = ROOT }
+					has_modifier = unga_member
+					NOT = { is_a_communist_government = yes }
+					has_healthy_economy = yes
+					in_default = no
+					NOT = { has_diplomatic_pact = { who = ROOT type = bankroll is_initiator = yes } }
+					can_take_on_scaled_debt = {
+						who = root
+						value = 0.05
+					}
+					#country_rank > root.country_rank
+				}
+				trigger_event = { id = united_nations.19 }
+			}
+		}
+		
+		#THIS enacts free market laws
+		if = { 
+			limit = { NOT = { has_law = law_type:law_free_trade } }
+			activate_law = law_type:law_free_trade
+		}
+		if = {
+			limit = { NOT = { has_law = law_type:law_laissez_faire } }
+			activate_law = law_type:law_laissez_faire
+		}
+	
+		#Timer
+		set_variable = { name = imf_loan_timer months = 12 }
+		
+	}
+	
+	ai_chance = {
+		base = 100
+		modifier = {
+			trigger = {
+				#Radical governments do not seek foreign intervention
+				OR = { 
+					is_a_communist_government = yes
+					is_a_theocratic_government = yes
+					is_a_nationalist_government = yes
+				}
+			}
+			add = -100
+		}
+	}
+	
+}
+
+je_imf_system_request_development_assistance_button = {
+	name = "je_imf_system_request_development_assistance_button"
+	desc = "je_imf_system_request_development_assistance_button_desc"
+
+	visible = { 
+		
+		
+		
+	}
+
+	possible = {
+		
+		#THIS has not already taken out a loan
+		NOT = { has_modifier = imf_development_assistance }
+		
+		#Need development
+		average_sol < average_expected_sol
+		
+		#Not at war
+		is_at_war = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+	}
+
+	effect = {
+		
+		#Receive IMF assistance
+		add_modifier = { 
+			name = imf_development_assistance 
+			years = 5 
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+		modifier = {
+			trigger = {
+				#Radical governments do not seek foreign intervention
+				OR = { 
+					is_a_communist_government = yes
+					is_a_theocratic_government = yes
+					is_a_nationalist_government = yes
+				}
+			}
+			add = -100
+		}
+	}
+	
+}
+
+je_imf_system_buy_sdr_button = {
+	name = "je_imf_system_buy_sdr_button"
+	desc = "je_imf_system_buy_sdr_button_desc"
+
+	visible = { 
+		
+		has_variable = SDR_local_amount
+		has_global_variable = SDR_global_marketplace_amount
+		
+	}
+
+	possible = {
+		
+		scaled_debt > 0
+		
+		trigger_if = { 
+			limit = { has_global_variable = SDR_global_marketplace_amount }
+			custom_tooltip = {
+				text = has_sufficient_SDR_in_marketplace.tt
+				global_var:SDR_global_marketplace_amount > 1000000
+			}
+		}
+		trigger_if = { 
+			limit = { has_variable = SDR_buy_local_gold_reserve_minimum }
+			gold_reserves_limit >= root.var:SDR_buy_local_gold_reserve_minimum
+			gold_reserves < gold_reserves_limit
+		}
+		
+		custom_tooltip = {
+			text = imf_sell_sdr_timer.tt
+			NOT = { has_variable = imf_sell_sdr_timer }
+		}
+		
+	}
+
+	effect = {
+	
+		#Create buy orders
+		if = {
+			limit = { has_global_variable = SDR_global_marketplace_amount }
+			change_global_variable = {
+				name = SDR_global_marketplace_amount
+				add = -1000000
+			}
+			set_global_variable = {
+				name = SDR_global_marketplace_amount_display
+				value = global_var:SDR_global_marketplace_amount
+			}
+			change_global_variable = {
+				name = SDR_global_marketplace_amount_display
+				divide = 1000000
+			}
+		}
+		if = {
+			limit = { has_variable = SDR_local_actual_amount }
+			#custom_tooltip = {
+			#	text = gain_SDR.tt
+				set_variable = {
+					name = SDR_local_actual_amount
+					value = 1000000
+				}
+			#}
+			calculate_buy_SDR = yes
+		}
+		if = {
+			limit = { 
+				has_global_variable = SDR_global_marketplace_amount 
+				global_var:SDR_global_marketplace_amount >= 1000000
+			}
+			set_global_variable = SDR_on_sale
+		}
+		
+		#Recalculate
+		remove_global_variable = imf_SDR_caculated_timer
+		calculate_SDR_values_full = yes
+	
+		#Timer
+		set_variable = { name = imf_buy_sdr_timer months = 1 }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		modifier = {
+			trigger = {
+				has_healthy_economy = no
+				has_global_variable = SDR_global_marketplace_amount
+			}
+			add = 1
+		}
+	}
+	
+}
+
+je_imf_system_sell_sdr_button = {
+	name = "je_imf_system_sell_sdr_button"
+	desc = "je_imf_system_sell_sdr_button_desc"
+
+	visible = { 
+		
+		has_variable = SDR_local_amount
+		has_global_variable = SDR_global_marketplace_amount
+		
+	}
+
+	possible = {
+		
+		trigger_if = { 
+			limit = { has_variable = SDR_local_amount }
+			custom_tooltip = {
+				text = THIS_has_sufficient_SDR.tt
+				root.var:SDR_local_amount > 1000000
+			}
+		}
+		trigger_if = { 
+			limit = { has_variable = SDR_sell_local_gold_reserve_minimum }
+			gold_reserves > root.var:SDR_sell_local_gold_reserve_minimum
+		}
+		
+		custom_tooltip = {
+			text = imf_buy_sdr_timer.tt
+			NOT = { has_variable = imf_buy_sdr_timer }
+		}
+		
+	}
+
+	effect = {
+	
+		#Create sell orders
+		if = {
+			limit = { has_global_variable = SDR_global_marketplace_amount }
+			change_global_variable = {
+				name = SDR_global_marketplace_amount
+				add = 1000000
+			}
+			set_global_variable = {
+				name = SDR_global_marketplace_amount_display
+				value = global_var:SDR_global_marketplace_amount
+			}
+			change_global_variable = {
+				name = SDR_global_marketplace_amount_display
+				divide = 1000000
+			}
+		}
+		if = {
+			limit = { has_variable = SDR_local_actual_amount }
+			#custom_tooltip = {
+			#	text = spend_SDR.tt
+				set_variable = {
+					name = SDR_local_actual_amount
+					value = -1000000
+				}
+			#}
+			calculate_sell_SDR = yes
+		}
+		if = {
+			limit = { 
+				has_global_variable = SDR_global_marketplace_amount 
+				global_var:SDR_global_marketplace_amount < 1000000
+			}
+			remove_global_variable = SDR_on_sale
+		}
+		
+		#Recalculate
+		remove_global_variable = imf_SDR_caculated_timer
+		calculate_SDR_values_full = yes
+	
+		#Timer
+		set_variable = { name = imf_sell_sdr_timer months = 1 }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		modifier = {
+			trigger = {
+				has_global_variable = SDR_on_sale
+				OR = { 
+					has_law = law_type:law_regionalist_fp
+					has_law = law_type:law_globalist_fp
+				}
+				has_healthy_economy = yes
+			}
+			add = 1
+		}
+	}
+	
+}

@@ -1,0 +1,255 @@
+calculate_imf_currency_exchange = {
+	
+	if = {
+		limit = { has_law = law_type:law_very_expansionary_monetary_policy }
+		set_variable = {
+			name = SDR_exchange_rate
+			value = 0.25
+		}
+	}
+	else_if = {
+		limit = { has_law = law_type:law_expansionary_monetary_policy }
+		set_variable = {
+			name = SDR_exchange_rate
+			value = 0.5
+		}
+	}
+	else_if = {
+		limit = { has_law = law_type:law_neutral_monetary_policy }
+		set_variable = {
+			name = SDR_exchange_rate
+			value = 1
+		}
+	}
+	else_if = {
+		limit = { has_law = law_type:law_deflationary_monetary_policy }
+		set_variable = {
+			name = SDR_exchange_rate
+			value = 1.5
+		}
+	}
+	else_if = {
+		limit = { has_law = law_type:law_very_deflationary_monetary_policy }
+		set_variable = {
+			name = SDR_exchange_rate
+			value = 2
+		}
+	}
+	else = {
+		set_variable = {
+			name = SDR_exchange_rate
+			value = 1
+		}
+	}
+
+}
+
+calculate_SDR_values = {
+
+	if = {
+		limit = { NOT = { has_global_variable = imf_SDR_caculated_timer } }
+		#Calculate SDR
+		set_global_variable = {
+			name = SDR_global_amount
+			value = 1
+		}
+		every_country = {
+			limit = { has_journal_entry = je_imf_system }
+			set_variable = {
+				name = SDR_inflation_adjusted_gold_reserves
+				value = this.gold_reserves
+			}
+			if = {
+				limit = { has_variable = SDR_exchange_rate }
+				change_variable = {
+					name = SDR_inflation_adjusted_gold_reserves
+					multiply = this.var:SDR_exchange_rate
+				}
+			}
+			if = {
+				limit = { has_variable = SDR_inflation_adjusted_gold_reserves }
+				change_global_variable = {
+					name = SDR_global_amount
+					add = this.var:SDR_inflation_adjusted_gold_reserves
+				}
+			}
+		}
+		#Calculate Global GDP
+		set_global_variable = {
+			name = SDR_GDP_global_amount
+			value = 1
+		}
+		every_country = {
+			limit = { has_journal_entry = je_imf_system }
+			change_global_variable = {
+				name = SDR_GDP_global_amount
+				add = this.gdp
+			}
+		}
+		set_global_variable = {
+			name = imf_SDR_caculated_timer
+			months = 2
+		}
+	}
+	
+	#Determine SDR local limit
+	if = {
+		limit = { 
+			has_global_variable = SDR_global_amount
+			has_global_variable = SDR_GDP_global_amount
+		}
+		set_variable = {
+			name = SDR_GDP_local_amount
+			value = root.gdp
+		}
+		change_variable = {
+			name = SDR_GDP_local_amount
+			divide = global_var:SDR_GDP_global_amount
+		}
+		set_variable = {
+			name = SDR_local_amount
+			value = global_var:SDR_global_amount
+		}
+		change_variable = {
+			name = SDR_local_amount
+			multiply = root.var:SDR_GDP_local_amount
+		}
+	}
+	
+	#Calculate display values
+	if = {
+		limit = { 
+			has_variable = SDR_local_amount
+		}
+		set_variable = {
+			name = SDR_local_amount_display
+			value = root.var:SDR_local_amount
+		}
+		change_variable = {
+			name = SDR_local_amount_display
+			divide = 1000000
+		}
+	}
+	if = {
+		limit = { 
+			has_global_variable = SDR_global_amount
+		}
+		set_variable = {
+			name = SDR_global_amount_display
+			value = global_var:SDR_global_amount
+		}
+		change_variable = {
+			name = SDR_global_amount_display
+			divide = 1000000
+		}
+	}
+
+}
+
+calculate_exchange_rate_adjusted_SDR_local_amount = {
+
+	if = {
+		limit = { has_variable = SDR_local_amount }
+		set_variable = {
+			name = SDR_local_actual_amount
+			value = root.var:SDR_local_amount
+		}
+		change_variable = {
+			name = SDR_local_actual_amount
+			multiply = root.var:SDR_exchange_rate
+		}
+	}
+
+}
+
+calculate_gold_reserve_minimum_SDR = {
+
+	if = {
+		limit = { has_variable = SDR_local_amount }
+		set_variable = {
+			name = SDR_buy_local_gold_reserve_minimum
+			value = 1000000
+		}
+		change_variable = {
+			name = SDR_buy_local_gold_reserve_minimum
+			divide = root.var:SDR_exchange_rate
+		}
+	}
+	if = {
+		limit = { has_variable = SDR_local_amount }
+		set_variable = {
+			name = SDR_sell_local_gold_reserve_minimum
+			value = 1000000
+		}
+		change_variable = {
+			name = SDR_sell_local_gold_reserve_minimum
+			multiply = root.var:SDR_exchange_rate
+		}
+	}
+
+}
+
+calculate_SDR_values_full = {
+
+	calculate_SDR_values = yes
+	calculate_imf_currency_exchange = yes
+	calculate_exchange_rate_adjusted_SDR_local_amount = yes
+	calculate_gold_reserve_minimum_SDR = yes
+
+}
+
+calculate_buy_SDR = {
+	
+	if = {
+		limit = { has_law = law_type:law_very_expansionary_monetary_policy }
+		add_treasury = 4000000
+	}
+	else_if = {
+		limit = { has_law = law_type:law_expansionary_monetary_policy }
+		add_treasury = 2000000
+	}
+	else_if = {
+		limit = { has_law = law_type:law_neutral_monetary_policy }
+		add_treasury = 1000000
+	}
+	else_if = {
+		limit = { has_law = law_type:law_deflationary_monetary_policy }
+		add_treasury = 500000
+	}
+	else_if = {
+		limit = { has_law = law_type:law_very_deflationary_monetary_policy }
+		add_treasury = 250000
+	}
+	else = {
+		add_treasury = 1000000
+	}
+
+}
+
+calculate_sell_SDR = {
+	
+	if = {
+		limit = { has_law = law_type:law_very_expansionary_monetary_policy }
+		add_treasury = -250000
+	}
+	else_if = {
+		limit = { has_law = law_type:law_expansionary_monetary_policy }
+		add_treasury = -500000
+	}
+	else_if = {
+		limit = { has_law = law_type:law_neutral_monetary_policy }
+		add_treasury = -1000000
+	}
+	else_if = {
+		limit = { has_law = law_type:law_deflationary_monetary_policy }
+		add_treasury = -2000000
+	}
+	else_if = {
+		limit = { has_law = law_type:law_very_deflationary_monetary_policy }
+		add_treasury = -4000000
+	}
+	else = {
+		add_treasury = -1000000
+	}
+
+}
