@@ -2942,3 +2942,285 @@ historical_union_dissolution.16 = {
     }
 
 }
+
+#2018 Bangsamoro Organic Law
+historical_union_dissolution.17 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = PHI_MGD_dissolution.t 								# Title of the event; ADD LOCALISATION
+    desc = PHI_MGD_dissolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = PHI_MGD_dissolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:PHI ?= this
+		game_date >= 2018.8.10
+		game_date < 2028.8.10
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:MGD										# Change TAG of the colony ****
+		}
+		any_scope_state = { 
+			state_region = { is_homeland = cu:moro }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = PHI_MGD_dissolution_hud }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH ROOT SECTION
+		random_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:moro }		# Change homeland identity to match colony to be released ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = PHI_MGD_dissolution_hud					# Change variable ****
+	
+	}
+    
+	option = {
+        name = italian_decolonisation_indy.option.1			# Grant autonomy
+		highlighted_option = yes
+		
+		#Subject becomes independent
+		create_country = {
+			tag = MGD										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# Laws
+				if = { 
+					limit = { 
+						ROOT = { 
+							is_a_monarchy = yes 
+						}
+					}
+					effect_starting_politics_constitutional_monarchy = yes
+				}
+				else = {
+					effect_starting_politics_presidential_republic = yes
+				}
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+				
+				effect_starting_politics_fiat_standard = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:MGD }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:moro }			# Change homeland identity to match colony to be released ****
+				}
+				set_state_owner = c:MGD									# Change TAG to colony ****
+			}
+			create_diplomatic_pact = {
+				country = c:MGD
+				type = special_administrative_region
+			}
+			create_diplomatic_pact = {
+				country = c:MGD
+				type = legal_union
+			}
+			create_diplomatic_pact = {
+				country = c:MGD
+				type = currency_union
+			}
+			set_relations = { country = c:MGD value = 100 }
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+    option = {
+        name = historical_union_dissolution.option.2		# Refuse Autonomy
+		default_option = yes
+		
+		# Internal unrest
+		add_radicals = {
+			culture = cu:moro
+			value = large_radicals
+		}
+		every_scope_state = {
+			limit = { state_region = { is_homeland = cu:moro } }
+			add_modifier = { 
+				name = nationalist_agitation 
+				months = 60 
+				is_decaying = yes 
+			} 
+		}
+		
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
+
+#1991 Independence of Somaliland
+historical_union_dissolution.18 = {
+    type = country_event
+
+    title = SOM_SML_dissolution.t 								# Title of the event; ADD LOCALISATION
+    desc = SOM_SML_dissolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = SOM_SML_dissolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SOM ?= this
+		game_date >= 1991.5.18
+		game_date < 2001.5.18
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:SML										# Change TAG of the colony ****
+		}
+		owns_entire_state_region = STATE_SOMALILAND
+		
+		# Event has not been fired before
+		NOT = { has_variable = SOM_SML_dissolution_hud }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SOM_SML_dissolution_hud					# Change variable ****
+	
+	}
+    
+	option = {
+        name = italian_decolonisation_indy.option.1			# Grant autonomy
+		highlighted_option = yes
+		
+		#Subject becomes independent
+		create_country = {
+			tag = SML										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			province = p:x7D4764 
+			province = p:x284319 
+			province = p:x8AA210 
+			province = p:x3BB51B 
+			province = p:xAE76D1 
+			province = p:xD3EE2E 
+			province = p:x2FB806 
+			province = p:xDF951C 
+			province = p:x20E090 
+			province = p:xD6084C 
+			province = p:x678D0D 
+			province = p:xCA0AFC 
+			province = p:x395C77 
+			province = p:xDDAC33 
+			province = p:x184064 
+			province = p:xCCC39F 
+			province = p:x089FE7 
+			province = p:xF2A924 
+			province = p:x524E91 
+			province = p:x0CE1C7 
+			province = p:x5C2622 
+			province = p:x2C4BFE 
+			province = p:x48FFF1 
+			province = p:xC6A5CB 
+			province = p:x9DA796 
+			province = p:xF9565C 
+			province = p:x12FDBA 
+			province = p:x7FBAFA 
+			province = p:x4A6DFD 
+			province = p:xE19C5A 
+			province = p:x9ACA9E 
+			province = p:x85FD85 
+			province = p:xDEFB4F 
+			province = p:xD85A85
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+				
+				effect_starting_politics_fiat_standard = yes
+				
+			}
+			
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+    option = {
+        name = historical_union_dissolution.option.2		# Refuse Autonomy
+		default_option = yes
+		
+		# Internal unrest
+		add_radicals = {
+			culture = cu:somalilander
+			value = very_large_radicals
+		}
+		
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
