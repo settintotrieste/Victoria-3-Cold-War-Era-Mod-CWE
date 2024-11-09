@@ -10,12 +10,14 @@ je_imf_system_request_loan_button = {
 		#THIS has not recently called for a loan
 		NOT = { has_variable = imf_loan_timer }
 		
-		#UN can only take 1 request at a time
-		NOT = { any_country = { has_variable = imf_loan_applicant } }
-		
 	}
 
 	possible = {
+	
+		#UN can only take 1 request at a time
+		hidden_trigger = { 
+			NOT = { any_country = { has_variable = imf_loan_applicant } }
+		}
 	
 		#Is irretrievably insolvent OR is bordering on insolvency OR is a weak wartime economy
 		OR = { 
@@ -23,7 +25,7 @@ je_imf_system_request_loan_button = {
 			#is_player = yes
 		
 			AND = { 
-				scaled_debt > 0.75
+				scaled_debt > 0.50
 				has_healthy_economy = no
 			}
 			
@@ -241,13 +243,6 @@ je_imf_system_buy_sdr_button = {
 			}
 			calculate_buy_SDR = yes
 		}
-		if = {
-			limit = { 
-				has_global_variable = SDR_global_marketplace_amount 
-				global_var:SDR_global_marketplace_amount >= 1000000
-			}
-			set_global_variable = SDR_on_sale
-		}
 		
 		#Recalculate
 		#remove_global_variable = imf_SDR_caculated_timer
@@ -332,13 +327,6 @@ je_imf_system_sell_sdr_button = {
 			}
 			calculate_sell_SDR = yes
 		}
-		if = {
-			limit = { 
-				has_global_variable = SDR_global_marketplace_amount 
-				global_var:SDR_global_marketplace_amount < 1000000
-			}
-			remove_global_variable = SDR_on_sale
-		}
 		
 		#Recalculate
 		#remove_global_variable = imf_SDR_caculated_timer
@@ -353,20 +341,26 @@ je_imf_system_sell_sdr_button = {
 				change_infamy = -5
 			}
 			1 = {
-				random_country = {
-					limit = {  
-						has_journal_entry = je_imf_system
-						NOT = { owes_obligation_to = root }
+				custom_tooltip = {
+					text = imf_obligation_random_imf_country.tt
+					random_country = {
+						limit = {  
+							has_journal_entry = je_imf_system
+							NOT = { owes_obligation_to = root }
+						}
+						set_owes_obligation_to = { country = root setting = yes }
 					}
-					set_owes_obligation_to = { country = root setting = yes }
 				}
 			}
 			1 = {
-				random_country = {
-					limit = {  
-						has_journal_entry = je_imf_system
+				custom_tooltip = {
+					text = imf_relations_random_imf_country.tt
+					random_country = {
+						limit = {  
+							has_journal_entry = je_imf_system
+						}
+						change_relations = { country = root value = 10 }
 					}
-					change_relations = { country = root value = 10 }
 				}
 			}
 			17 = {
@@ -380,12 +374,12 @@ je_imf_system_sell_sdr_button = {
 		base = 0
 		modifier = {
 			trigger = {
-				has_global_variable = SDR_on_sale
 				OR = { 
 					has_law = law_type:law_regionalist_fp
 					has_law = law_type:law_globalist_fp
 				}
 				has_healthy_economy = yes
+				has_global_variable = SDR_global_marketplace_amount
 			}
 			add = 1
 		}
