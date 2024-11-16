@@ -54,11 +54,14 @@ american_decolonisation.1 = {
 			save_scope_as = colonial_state
 		}
 		
+		# Fire only once
+		set_variable = american_micronesia_sgc						# Change variable ****
+		
 	}
     
     option = {
         name = american_decolonisation.option.1				#Grant them self-government
-        default_option = yes highlighted_option = yes
+        highlighted_option = yes
 		
 		#Release country
 		create_country = {
@@ -125,6 +128,7 @@ american_decolonisation.1 = {
 	
 	option = {
         name = american_decolonisation.option.2					# REFUSE
+		default_option = yes 
 		
 		# Natives are angry!
 		every_scope_state = {
@@ -143,6 +147,100 @@ american_decolonisation.1 = {
 		
 		# Fire only once
 		set_variable = american_micronesia_sgc						# Change variable ****
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Puerto Rico Constitution
+american_decolonisation.2 = {
+    type = country_event
+	placement = c:PUR
+
+    title = american_puerto_rico.sgc.t 				# Title of the event; ADD LOCALISATION
+    desc = american_puerto_rico.sgc.d 				# Description of the event; ADD LOCALISATION
+    #flavor = american_puerto_rico.sgc.f 			# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 1952.7.25									# START DATE: Date colony became self governing ****
+		game_date < 1962.7.25									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		exists = c:PUR
+		c:PUR ?= {
+			is_a_colonial_subject_gov = yes
+			is_subject_of = root
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = american_puerto_rico_sgc }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = american_puerto_rico_sgc					# Change variable ****
+		
+	}
+    
+    option = {
+        name = american_decolonisation.option.1					# Grant them self-government
+        highlighted_option = yes
+		
+		#Enact new regime
+		c:PUR ?= {
+			effect_starting_politics_presidential_republic = yes
+			effect_starting_politics_democratic = yes
+		}
+		
+		#Change subject type
+		hidden_effect = { c:PUR ?= { make_independent = yes } }
+		create_diplomatic_pact = {
+			country = c:PUR
+			type = special_administrative_region
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = american_decolonisation.option.2					# REFUSE
+		default_option = yes
+		
+		# Natives are angry!
+		c:PUR ?= {
+			add_radicals = {
+				value = large_radicals
+			}
+			every_scope_state = {
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 5
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
