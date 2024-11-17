@@ -5479,3 +5479,80 @@ historical_domestic_unrest.57 = {
     }
 
 }
+
+# The Trump Wall
+historical_domestic_unrest.58 = {
+    type = country_event
+
+    title = USA_great_wall_2017.t 								# Title of the event; ADD LOCALISATION
+    desc = USA_great_wall_2017.d 								# Description of the event; ADD LOCALISATION
+    #flavor = USA_great_wall_2017.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_police_breaking_door.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/law_enforcement.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 2017.1.20									# START DATE: Date colony became self governing ****
+		game_date < 2027.1.20									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		ruler ?= { has_variable = character_is_Trump }
+		
+		has_law = law_type:law_no_migration_controls
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_great_wall_2017_hdu }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_great_wall_2017_hdu					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		
+		#Tighten the border
+		activate_law = law_type:law_migration_controls
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2					# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_landowners
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
