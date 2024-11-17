@@ -2265,3 +2265,168 @@ historical_union_formation.28 = {
     }
 
 }
+
+#Federation of Bosnia and Herzegovina
+historical_union_formation.29 = {
+    type = country_event
+
+    title = HZB_RSK_BOS_union.t 				# Title of the event; ADD LOCALISATION
+    desc = HZB_RSK_BOS_union.d 					# Description of the event; ADD LOCALISATION
+    #flavor = HZB_RSK_BOS_union.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:BOS ?= this
+		game_date >= 1995.12.14									# START DATE: Date colony became self governing ****
+		game_date < 2005.12.14									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Union candidate conditions
+		OR = { 
+			AND = {
+				exists = c:RSK
+				c:RSK ?= {
+					is_some_kind_of_democracy = yes
+					is_sufficiently_independent = yes
+					is_at_war = no
+				}
+			}
+			AND = {
+				exists = c:HZB
+				c:HZB ?= {
+					is_some_kind_of_democracy = yes
+					is_sufficiently_independent = yes
+					is_at_war = no
+				}
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = HZB_RSK_BOS_union_huf }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = HZB_RSK_BOS_union_huf					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_union_formation.option.1				# Accept annexation by FROM
+        highlighted_option = yes
+		
+		#Option to accept
+		every_country = {
+			limit = { 
+				OR = { 
+					c:RSK ?= this 
+					c:HZB ?= this 
+				}
+			}
+			trigger_event = { id = historical_union_formation.30 } 
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = united_states_formation.option.2					# Refuse annexation by FROM
+		default_option = yes
+		
+		add_loyalists = {
+			value = very_large_radicals
+			culture = cu:bosniak
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Federation of Bosnia and Herzegovina - recipient
+historical_union_formation.30 = {
+    type = country_event
+
+    title = HZB_RSK_BOS_union.t 				# Title of the event; ADD LOCALISATION
+    desc = HZB_RSK_BOS_union.d 					# Description of the event; ADD LOCALISATION
+    #flavor = HZB_RSK_BOS_union.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+    
+    option = {
+        name = historical_union_formation.option.1			# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Create Federation
+		effect_starting_politics_democratic = yes
+		
+		if = {
+			limit = { c:RSK ?= this }
+			c:BOS = {
+				effect_starting_politics_constitutional_federal_state = yes
+				create_diplomatic_pact = {
+					country = ROOT
+					type = special_administrative_region
+				}
+			}
+			change_relations = { country = c:BOS value = 100 }
+		}
+		else = {
+			c:BOS = { annex = ROOT }
+		}
+		
+		ai_chance = { 
+			base = 99
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_formation.option.2			# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:BOS
+			value = -100
+		}
+		
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 1 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
