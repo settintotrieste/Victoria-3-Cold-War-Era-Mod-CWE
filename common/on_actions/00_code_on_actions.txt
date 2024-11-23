@@ -1,5 +1,46 @@
 ﻿# For on_actions launched by the code itself.
 
+# No root scope set
+on_monthly_pulse = {
+	effect = {
+		every_character_in_exile_pool = {
+			limit = {
+				is_historical = no
+				popularity <= -100
+			}
+			kill_character = yes
+		}
+
+		every_character_in_jail = { # Music too loud? Right to jail. Right away. Driving too fast? Jail. Slow? Jail. You undercook fish? Believe it or not, jail.
+			save_scope_as = prisoner_scope
+			change_variable = { name = prison_time_var subtract = 1 }
+			if = {
+				limit = {
+					NOT = {
+						exists = var:prison_country
+					}
+				}
+				kill_character = yes
+			}
+			else_if = {
+				limit = {
+					exists = var:prison_country
+					var:prison_time_var <= 0
+				}
+				free_character_from_void = yes
+				owner ?= {
+					post_notification = prisoner_out_of_jail
+				}
+				remove_variable = prison_country
+				remove_variable = prison_time_var
+			}
+		}
+
+	}
+}
+
+on_yearly_pulse = { }
+
 # Root = Country
 on_monthly_pulse_country = {
 	events = {
@@ -362,11 +403,9 @@ on_monthly_pulse_character = {
 	}
 }
 on_yearly_pulse_character = {
-	random_events = {
-		20 = character_events.1
+	on_actions = {
+		on_wounded
 	}
-
-
 }
 on_half_yearly_pulse_character = {}
 on_five_year_pulse_character = {}
@@ -381,7 +420,14 @@ on_monthly_pulse_state = {
 	}
 
 }
-on_half_yearly_pulse_state = {}
+
+on_half_yearly_pulse_state = {
+	random_events = {
+		delay = { days = 23 }
+		1 = paralegal_discrimination.1
+	}
+}
+
 on_yearly_pulse_state = {
 	random_events = {
 		80 = 0
@@ -1968,12 +2014,6 @@ on_civil_war_won = {
 	effect = {
 		if = {
 			limit = {
-				has_global_variable = achievement_revo_needed
-			}
-			set_global_variable = achievement_revolutionary
-		}
-		if = {
-			limit = {
 				has_variable = anti_monarchist_revolution
 			}
 			if = {
@@ -1989,6 +2029,13 @@ on_civil_war_won = {
 				add_journal_entry = { type = je_abolish_monarchy }
 			}
 			remove_variable = anti_monarchist_revolution
+		}
+		### Garbage collection
+		if = {
+			limit = {
+				has_variable = civil_war_type_var
+			}
+			remove_variable = civil_war_type_var
 		}
 	}
 }
@@ -2335,10 +2382,40 @@ on_native_uprising = {
 	}
 }
 
+# Root = country
+# scope:area = harvest condition area
+# scope:state = affected state with the highest intensity
+# scope:duration = duration of the harvest condition in days
+# scope:num_states = the number of affected states in the country
+# scope:intensity = the highest intensity of the affected states
+on_harvest_condition_started_in_country = {
+	effect = {
+		if = {
+			limit = {
+				scope:intensity > 3
+			}
+			post_notification = harvest_condition_started_in_country_important
+		}
+		else = {
+			post_notification = harvest_condition_started_in_country
+		}
+	}
+}
+
 # Root = state
 on_state_incorporation = {
 	effect = {
 		
+	}
+}
+on_state_owner_change = {
+	effect = {
+		assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
+	}
+}
+on_state_created = { 
+	effect = { 
+		assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
 	}
 }
 
@@ -2623,6 +2700,24 @@ on_character_recruitment = {
 					}
 				}
 			}
+		}
+	}
+}
+
+# Root = country
+on_become_subject = {
+	effect = {
+		every_scope_state = {
+			assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
+		}
+	}
+}
+
+# Root = country
+on_become_independent = {
+	effect = { 
+		every_scope_state = {
+			assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
 		}
 	}
 }
