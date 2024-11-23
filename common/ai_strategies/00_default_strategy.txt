@@ -736,7 +736,7 @@ ai_strategy_default = {
 		# Don't want treaty ports on countries in our market
 		if = {
 			limit = {
-				market_capital.market = scope:target_country.market_capital.market
+				market_capital.market ?= scope:target_country.market_capital.market
 			}
 			multiply = 0
 		}			
@@ -1223,15 +1223,46 @@ ai_strategy_default = {
 
 		add = {
 			value = investment_pool_income
-			divide = 500 # 1 construction output per this much into the investment pool				
+			divide = 1000 # 1 construction output per this much into the investment pool				
 		}
 		
 		add = {
 			value = income
-			divide = 2500 # 1 construction output per this much income
+			divide = 5000 # 1 construction output per this much income
 
 			min = 0
+			max = 200 # Above a certain point more government income isn't going to lead to more AI government construction
+		}
+
+		add = {
+			value = total_population
+			
+			divide = 2000000 # 1 construction output per this much population
+			max = 100
+		}
+
+		# Kickstart private investors If above this population value
+		if = {
+			limit = {
+				total_population >= 2000000
+			}
+			add = 10
 		}		
+		
+		# Add a baseline for high rank
+		if = {
+			limit = { country_rank >= rank_value:great_power }
+			add = 75
+		}		
+		else_if = {
+			limit = { 
+				OR = {
+					country_rank >= rank_value:major_power
+					country_rank >= rank_value:unrecognized_major_power
+				}
+			}
+			add = 50
+		}
 		
 		# Add a baseline if trying to industrialize
 		if = {
@@ -1240,51 +1271,11 @@ ai_strategy_default = {
 					has_strategy = ai_strategy_resource_expansion
 					has_strategy = ai_strategy_industrial_expansion
 				}
-			}
-
-			if = {
-				limit = { country_rank >= rank_value:great_power }
-				add = 50
-			}		
-			else_if = {
-				limit = { 
-					OR = {
-						country_rank >= rank_value:major_power
-						country_rank >= rank_value:unrecognized_major_power
-					}
-				}
-				add = 25
 			}	
-			else = {
-				add = 10
-			}				
-		}			
-
-		if = {
-			limit = { has_law = law_type:law_natural_resource_focus }
-			multiply = 0.75
+			multiply = 1.25				
 		}		
 
-		if = {
-			limit = { has_strategy = ai_strategy_placate_population }
-			multiply = 0.5
-		}
-		else_if = {
-			limit = {
-				NOR = {
-					has_strategy = ai_strategy_resource_expansion
-					has_strategy = ai_strategy_industrial_expansion				
-				}
-			}
-			multiply = 0.75
-		}
-		
-		if = {
-			limit = { has_strategy = ai_strategy_maintain_mandate_of_heaven }
-			multiply = 0.1		
-		}		
-
-		min = 1
+		min = 10
 		max = 1000
 	}
 	
@@ -1343,7 +1334,7 @@ ai_strategy_default = {
 		# Countries with a huge overseas subject population should focus more on navy
 		subtract = {
 			value = cached_ai_overseas_subject_population
-			divide = 10000000
+			divide = 20000000
 			max = {
 				value = scope:pre_overseas_empire_value
 				divide = 2
@@ -1360,9 +1351,9 @@ ai_strategy_default = {
 					value = cached_ai_incorporated_coastal_population
 					divide = cached_ai_incorporated_population
 					divide = 2
-				}
+				}		
 			}
-			divide = 2000 # 1 level of barracks per 2k income
+			divide = 2500 # 1 level of barracks per 2.5k income					
 		}	
 		
 		# More advanced standing armies are expensive and should be smaller relative to population
@@ -1426,7 +1417,7 @@ ai_strategy_default = {
 	wanted_navy_size = {
 		value = 0
 	
-		# 1 level of naval base per 1000k coastal incorporated population							
+		# 1 level of naval base per 1 million coastal incorporated population							
 		add = {
 			value = cached_ai_incorporated_coastal_population
 			divide = 1000000
@@ -1446,13 +1437,22 @@ ai_strategy_default = {
 
 		max = 100 # No more than 100 from population
 
-		# 1 level of naval base per 3k income, multiplied by relative incorporated coastal population to total incorporated population
+		# 1 level of naval base per 5k income, multiplied by relative incorporated coastal population to total incorporated population
 		add = {
 			value = income
 			divide = cached_ai_incorporated_population
 			multiply = cached_ai_incorporated_coastal_population
-			divide = 3000
-		}			
+			divide = 5000
+		}
+
+		if = { # GPs and MPs should want to maintain a bit of a navy
+			limit = { country_rank = rank_value:great_power }
+			add = 25		
+		}
+		else_if = {
+			limit = { country_rank = rank_value:major_power }
+			add = 10
+		}
 		
 		# More advanced navies are expensive and should be smaller relative to population
 		if = {
@@ -1478,7 +1478,7 @@ ai_strategy_default = {
 					has_strategy = ai_strategy_economic_imperialism
 				}
 			}
-			multiply = 1.25
+			multiply = 1.15
 		}
 
 		if = {
@@ -1642,14 +1642,12 @@ ai_strategy_default = {
 					has_law = law_type:law_semi_command_economy
 				}
 			}
-
 			add = 100
 		}
 		if = {
 			limit = {
 				has_law = law_type:law_state_capitalism
 			}
-
 			add = 50
 		}
 		
@@ -1659,6 +1657,7 @@ ai_strategy_default = {
 	# Using this value in other strategies will result in several multiplications
 	building_group_weights = {
 		bg_nuclear_weapons = 2
+		bg_agriculture = 1.25
 	}
 	
 	# Which buildings should the AI subsidize
@@ -1799,6 +1798,13 @@ ai_strategy_default = {
 				country_rank >= rank_value:great_power
 			}
 		}
+		grain = {
+			stance = wants_high_supply
+			trigger = {
+				has_famine = yes
+			}
+		}
+		
 	}
 	
 	# How many of its interests should the AI dedicate to regions with unrecognized and decentralized powers
@@ -1880,7 +1886,7 @@ ai_strategy_default = {
 				value = "ai_ideological_opinion(scope:target_country)"
 				multiply = 0.05
 				add = 1
-				min = 0.25
+				min = 0.5
 				max = 2.0
 			}	
 			
@@ -2047,7 +2053,7 @@ ai_strategy_default = {
 				value = "ai_ideological_opinion(scope:target_country)"
 				multiply = 0.05
 				add = 1
-				min = 0.25
+				min = 0.5
 				max = 2.0
 			}
 
@@ -2199,7 +2205,7 @@ ai_strategy_default = {
 				value = "ai_ideological_opinion(scope:target_country)"
 				multiply = 0.05
 				add = 1
-				min = 0.25
+				min = 0.5
 				max = 2.0
 			}	
 			
@@ -2389,7 +2395,7 @@ ai_strategy_default = {
 				value = "ai_ideological_opinion(scope:target_country)"
 				multiply = -0.05
 				add = 1
-				min = 0.25
+				min = 0.5
 				max = 2.0
 			}	
 
@@ -2554,7 +2560,7 @@ ai_strategy_default = {
 				value = "ai_ideological_opinion(scope:target_country)"
 				multiply = -0.05
 				add = 1
-				min = 0.25
+				min = 0.5
 				max = 2.0
 			}	
 			
@@ -2756,7 +2762,7 @@ ai_strategy_default = {
 				value = "ai_ideological_opinion(scope:target_country)"
 				multiply = -0.05
 				add = 1
-				min = 0.25
+				min = 0.5
 				max = 2.0
 			}	
 			
@@ -2991,7 +2997,18 @@ ai_strategy_default = {
 		
 		return_state = {
 			add = scope:target_state.ai_state_value:root	
-
+			if = {
+				limit = {
+					scope:target_country = {
+						has_attitude = {
+							who = ROOT
+							attitude = loyal
+						}
+					}
+				}
+				
+				multiply = 0.25		
+			}
 			if = {
 				limit = {
 					is_diplomatic_play_enemy_of = scope:target_country
