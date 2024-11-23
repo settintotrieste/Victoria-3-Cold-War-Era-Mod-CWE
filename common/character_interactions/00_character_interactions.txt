@@ -22,13 +22,13 @@ grant_command_to_ruler = {
 			has_role = general
 			has_role = admiral
 		}
-		owner = scope:actor
+		owner ?= scope:actor
 	}
 
 	possible = {
 		age >= define:NCharacters|ADULT_AGE
 		is_female = no
-		owner = {
+		owner ?= {
 			ruler_can_have_command = yes
 			is_a_nationalist_government = yes
 		}
@@ -75,7 +75,7 @@ remove_command_from_ruler = {
 	potential = {
 		is_ruler = yes
 		has_role = general
-		owner = scope:actor
+		owner ?= scope:actor
 	}
 
 	possible = {
@@ -92,7 +92,7 @@ remove_command_from_ruler = {
 		value = 0
 		if = {
 			limit = {
-				owner = {	
+				owner ?= {	
 					any_scope_general = {
 						exists = yes
 						NOT = {
@@ -106,7 +106,7 @@ remove_command_from_ruler = {
 		if = {
 			limit = {
 				NOT = {
-					owner = {
+					owner ?= {
 						is_at_war = yes
 					}
 				}
@@ -129,24 +129,37 @@ grant_leadership_to_agitator = {
 	potential = {
 		NOT = { has_modifier = unsg_character }
 		has_role = agitator
-		owner = scope:actor
+		exists = owner
+		owner ?= scope:actor
 	}
 
 	possible = {
 		interest_group = {
 			is_in_government = yes
 		}
-		
-		# Foreigners cannot be IG leaders unless the country is multicultural
-		scope:actor ?= {
-			has_law = law_type:law_multicultural
+		trigger_if = {
+			limit = { owner ?= { has_law = law_type:law_state_atheism } }
+			root.owner ?= {
+				country_average_cultural_acceptance = {
+					target = root.culture
+					value >= acceptance_status_4
+				}
+			}
 		}
-		
-		# Cannot give leadership if character is a culturally discriminated exile
-		character_is_discriminated = no	
+		trigger_else = {
+			character_acceptance = { target = scope:actor value >= acceptance_status_4 }
+		}
 		OR = {
 			is_female = no
 			scope:actor ?= { has_law = law_type:law_full_womens_rights }
+		}
+		custom_tooltip = {
+			text = grant_leadership_must_be_pressured_ig
+			political_movement ?= {
+				any_influenced_interest_group = {
+					this = root.interest_group
+				}
+			}		
 		}
 		
 	}
@@ -211,7 +224,7 @@ grant_command_to_agitator = {
 		has_role = agitator
 		NOT = { has_role = general }
 		NOT = { has_role = admiral }
-		owner = scope:actor
+		owner ?= scope:actor
 	}
 
 	possible = {
@@ -256,7 +269,7 @@ grant_command_to_agitator = {
 		if = {
 			limit = {
 				NOT = {
-					owner = {	
+					owner ?= {	
 						any_scope_general = {
 							exists = yes
 						}
@@ -267,7 +280,7 @@ grant_command_to_agitator = {
 		}
 		if = {
 			limit = {
-				owner = {
+				owner ?= {
 					any_scope_war = {
 						any_scope_front = {
 							is_vulnerable_front = root
@@ -285,7 +298,7 @@ marry_ruler_or_heir = {
 	clicksound = "event:/SFX/UI/Military/command_grant"
 
 	potential = {
-		owner = scope:actor
+		owner ?= scope:actor
 		OR = {
 			is_ruler = yes
 			is_heir = yes
@@ -319,7 +332,7 @@ marry_ruler_or_heir = {
 	}
 	effect = {
 		set_variable = spouse_seeker
-		owner = { 
+		owner ?= { 
 			trigger_event = { id = wedding.2 popup = yes } 
 		}
 	}
@@ -335,9 +348,9 @@ abdicate_monarch = {
 	clicksound = "event:/SFX/UI/Military/command_grant"
 
 	potential = {
-		owner = scope:actor
+		owner ?= scope:actor
 		is_ruler = yes
-		owner = {
+		owner ?= {
 			is_a_regime_monarchy = yes
 		}
 		exists = owner.heir
@@ -354,7 +367,7 @@ abdicate_monarch = {
 			popularity <= -50
 			has_trait = psychological_affliction
 			age >= 75
-			owner = {
+			owner ?= {
 				any_interest_group = {
 					is_insurrectionary = yes
 				}
@@ -363,7 +376,7 @@ abdicate_monarch = {
 		trigger_if = {
 			limit = {
 				NOT = {
-					owner = {
+					owner ?= {
 						any_interest_group = {
 							is_insurrectionary = yes
 						}
@@ -380,18 +393,18 @@ abdicate_monarch = {
 		custom_tooltip = leader_abdicates_the_throne_display_tt
 		if = {
 			limit = {
-				owner = {
+				owner ?= {
 					any_interest_group = {
 						is_insurrectionary = yes
 					}
 				}
 			}
-			owner = {
+			owner ?= {
 				trigger_event = { id = resignation.3 popup = yes }
 			}
 		}
 		else = {
-			owner = {
+			owner ?= {
 				trigger_event = { id = wedding.3 popup = yes }
 			}
 		}
@@ -485,7 +498,7 @@ exile_character = {
 			}
 		}
 	
-		owner = {
+		owner ?= {
 			OR = { 
 				has_law = law_type:law_outlawed_dissent
 				AND = { 
@@ -510,7 +523,7 @@ exile_character = {
 			NOT = { has_modifier = cabinet_minister }
 		}
 		
-		owner = {
+		owner ?= {
 			exists = ruler
 			ruler = {
 				OR = {
@@ -525,7 +538,7 @@ exile_character = {
 			NOT = {
 				OR = {
 					AND = {
-						owner = {
+						owner ?= {
 							OR = { 
 								has_modifier = communist_ruling_party_ideology
 								has_modifier = market_socialist_ruling_party_ideology
@@ -537,7 +550,7 @@ exile_character = {
 						has_ideology = ideology:ideology_agitator_communist
 					}
 					AND = {
-						owner = {
+						owner ?= {
 							OR = { 
 								has_modifier = fascist_ruling_party_ideology
 								
@@ -547,7 +560,7 @@ exile_character = {
 						has_ideology = ideology:ideology_agitator_nationalist
 					}
 					AND = {
-						owner = {
+						owner ?= {
 							OR = { 
 								has_modifier = traditionalist_ruling_party_ideology
 								has_modifier = conservative_ruling_party_ideology
@@ -558,7 +571,7 @@ exile_character = {
 						has_ideology = ideology:ideology_agitator_monarchist
 					}
 					AND = {
-						owner = {
+						owner ?= {
 							OR = { 
 								has_modifier = traditionalist_ruling_party_ideology
 								has_modifier = conservative_ruling_party_ideology
@@ -568,14 +581,14 @@ exile_character = {
 						has_ideology = ideology:ideology_agitator_theocrat
 					}
 					AND = {
-						owner = {
+						owner ?= {
 							has_law = law_type:law_HOS_president
 						}
 						has_ideology = ideology:ideology_agitator_republican
 					}
 					AND = {
 						OR = {
-							owner = {
+							owner ?= {
 								OR = { 
 									has_modifier = social_democratic_ruling_party_ideology
 									has_modifier = liberal_ruling_party_ideology
@@ -601,7 +614,7 @@ exile_character = {
 						has_ideology = ideology:ideology_agitator_anti_human_rights
 					}
 					AND = {
-						owner = {
+						owner ?= {
 							is_at_war = yes
 						}
 						has_ideology = ideology:ideology_agitator_pro_war_rights
@@ -619,14 +632,14 @@ exile_character = {
 		this = {
 			save_scope_as = exile_scope
 		}
-		owner = {
+		owner ?= {
 			save_scope_as = exiling_country_scope
 		}
 		if = {
 			limit = {
 				has_role = politician
 			}
-			owner = {
+			owner ?= {
 				scope:relevant_ig = {
 					add_modifier = {
 						name = modifier_exiled_leader
@@ -663,7 +676,7 @@ exile_character = {
 				remove_character_role = politician
 			}
 		}
-		owner = {
+		owner ?= {
 			custom_tooltip = exiling_dissident_radicals_factors
 		}
 		# Extra radical from exiling a popular character
@@ -671,7 +684,7 @@ exile_character = {
 			limit = {
 				popularity >= 50
 			}
-			owner = {
+			owner ?= {
 				add_radicals = {
 					value = small_radicals
 					interest_group = scope:relevant_ig
@@ -681,9 +694,9 @@ exile_character = {
 		# Standard radicals from having Right of Assembly
 		if = {
 			limit = {
-				owner = { has_law = law_type:law_limited_free_speech }
+				owner ?= { has_law = law_type:law_limited_free_speech }
 			}
-			owner = {
+			owner ?= {
 				add_radicals = {
 					value = medium_radicals
 					interest_group = scope:relevant_ig
@@ -693,9 +706,9 @@ exile_character = {
 		# Fewer radicals from Censorship
 		else_if = {
 			limit = {
-				owner = { has_law = law_type:law_censorship }
+				owner ?= { has_law = law_type:law_censorship }
 			}
-			owner = {
+			owner ?= {
 				add_radicals = {
 					value = small_radicals
 					interest_group = scope:relevant_ig
@@ -1008,7 +1021,7 @@ retire_commander = {
 	clicksound = "event:/SFX/UI/Military/commander_retire"
 
 	potential = {
-		owner = scope:actor
+		owner ?= scope:actor
 		is_commander = yes
 		is_ruler = no
 	}
@@ -1140,7 +1153,7 @@ retire_commander = {
 		}
 		if = {
 			limit = {		
-				owner = {
+				owner ?= {
 					OR = {
 						is_diplomatic_play_committed_participant = yes
 						is_at_war = yes
@@ -1151,7 +1164,7 @@ retire_commander = {
 		}
 		if = {
 			limit = {
-				owner = {
+				owner ?= {
 					any_scope_war = {
 						any_scope_front = {
 							is_vulnerable_front = root
@@ -1188,7 +1201,7 @@ return_to_home_country = {
 			empty_agitator_slots >= 1
 		}
 		can_agitate = root.home_country
-		owner = {
+		owner ?= {
 			has_diplomatic_pact = {
 				type = rivalry
 				who = root.home_country
@@ -1200,7 +1213,7 @@ return_to_home_country = {
 		this = {
 			save_scope_as = repatriated_scope
 		}
-		owner = {
+		owner ?= {
 			save_scope_as = repatriator_country_scope
 		}
 		home_country = {
@@ -1227,8 +1240,8 @@ foster_national_agitation = {
 	
 		is_in_exile_pool = no
 		has_role = agitator
-		owner = scope:actor
-		owner = {
+		owner ?= scope:actor
+		owner ?= {
 			any_primary_culture = {
 				this = root.culture
 			}
@@ -1252,13 +1265,13 @@ foster_national_agitation = {
 			custom_tooltip = {
 				text = is_rival_of_owner_tt
 				OR = {
-					owner = {
+					owner ?= {
 						has_diplomatic_pact = {
 							who = root.owner
 							type = rivalry
 						}
 					}
-					root.owner = {
+					root.owner ?= {
 						has_diplomatic_pact = {
 							who = prev.owner
 							type = rivalry
@@ -1268,7 +1281,7 @@ foster_national_agitation = {
 			}
 			custom_tooltip = {
 				text = not_homeland_of_states_tt
-				owner = {
+				owner ?= {
 					NOR = {
 						this = root.owner
 						any_primary_culture = {
@@ -1284,7 +1297,7 @@ foster_national_agitation = {
 		root.culture = {
 			save_scope_as = agitation_culture
 		}
-		root.owner = {
+		root.owner ?= {
 			save_scope_as = agitation_sponsor
 		}
 		random_state = {
@@ -1293,20 +1306,20 @@ foster_national_agitation = {
 					is_homeland = root.culture
 				}
 				OR = {
-					owner = {
+					owner ?= {
 						has_diplomatic_pact = {
 							who = root.owner
 							type = rivalry
 						}
 					}
-					root.owner = {
+					root.owner ?= {
 						has_diplomatic_pact = {
 							who = prev.owner
 							type = rivalry
 						}
 					}
 				}
-				owner = {
+				owner ?= {
 					NOR = {
 						this = root.owner
 						any_primary_culture = {
@@ -1320,7 +1333,7 @@ foster_national_agitation = {
 				culture = root.culture
 				value = large_radicals
 			}
-			owner = {
+			owner ?= {
 				post_notification = nationalism_national_agitation_occurred
 				change_relations = {
 					country = root.owner value = -10
