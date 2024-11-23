@@ -3,7 +3,7 @@
 # cost												The cost in AUT to set this Decree on a state (scales with Power Rank)
 # unlocking_technologies							A list of technologies, at least one of which must be known to the country to use this Focus
 # unlocking_laws									A list of laws, at least one which must be active in the country to use this Focus. If the country switches away from all unlocking laws the Focus will be removed
-# valid												A trigger in state context that determines if the Decree is permitted or not; should invalidate the Decree on a weekly basis if found invalid 
+# state_trigger												A trigger in state context that determines if the Decree is permitted or not; should invalidate the Decree on a weekly basis if found invalid 
 # ai_weight											Scripted value which determines the chance of getting the Decree by AI
 
 decree_road_maintenance = {
@@ -85,8 +85,11 @@ decree_violent_suppression = {
 		tech_politics_2
 	}
 	
-	valid = {
-		owner = { NOT = { has_law = law_type:law_lenient_policing } }
+	country_trigger = {
+		NOT = { has_law = law_type:law_full_free_speech }
+		NOT = { has_law = law_type:law_lenient_policing }
+	}
+	state_trigger = {
 		turmoil >= 0.25	
 	}
 	modifier = {
@@ -133,8 +136,28 @@ decree_emergency_relief = {
 		tech_economy_1
 	}
 	modifier = {
-		state_welfare_payments_add = 0.5
+		state_tax_collection_mult = -0.5
+		state_infrastructure_mult = 0.1
+		state_market_access_price_impact = 0.05
+		state_food_security_add = 0.05
 	}
+
+	state_trigger = {
+		OR = {
+			has_famine = yes
+			devastation > 0.2
+			ROOT.state_region = {
+				OR = {
+					has_harvest_condition = flood
+					has_harvest_condition = wildfire
+					has_harvest_condition = drought
+					has_harvest_condition = disease_outbreak
+					has_harvest_condition = extreme_winds	
+				}
+			}	
+		}
+	}
+
 	cost = 200
 	
 	ai_weight = {
@@ -162,10 +185,29 @@ decree_emergency_relief = {
 
 decree_promote_social_mobility = {
 	texture = "gfx/interface/icons/decree/decree_promote_social_mobility.dds"
+	
+	state_trigger = {
+		NOT = {
+			AND = {
+				owner = {
+					OR = {
+						has_law = law_type:law_hindu_caste_enforced
+						has_law = law_type:law_hindu_caste_codified
+					}
+				}
+				religion_percent_state = {
+					target = rel:hindu  
+					value >= 0.3
+				}
+			}
+		}
+	}
+
 	modifier = {
-		state_education_access_wealth_add = 0.01
+		state_education_access_add = 0.25
 		state_pop_qualifications_mult = 0.25
 	}
+
 	cost = 200
 	
 	ai_weight = {
@@ -220,7 +262,7 @@ decree_promote_national_values = {
 	unlocking_technologies = {
 		#centralization
 	}
-	valid = {
+	state_trigger = {
 		OR = {
 			has_assimilating_pops = yes
 			has_converting_pops = yes
@@ -296,7 +338,7 @@ decree_encourage_manufacturing_industry = {
 	unlocking_technologies = {
 		tech_manufacturing_1
 	}	
-	valid = {
+	state_trigger = {
 		NOR = { 
 			has_decree = decree_encourage_agricultural_industry
 			has_decree = decree_encourage_resource_industry
@@ -352,7 +394,7 @@ decree_encourage_agricultural_industry = {
 	unlocking_technologies = {
 		tech_agriculture_1
 	}	
-	valid = {
+	state_trigger = {
 		NOR = { 
 			has_decree = decree_encourage_services_industry
 			has_decree = decree_encourage_manufacturing_industry 
@@ -428,7 +470,7 @@ decree_encourage_resource_industry = {
 		tech_mining_1
 		tech_logging_1
 	}	
-	valid = {
+	state_trigger = {
 		NOR = { 
 			has_decree = decree_encourage_manufacturing_industry 
 			has_decree = decree_encourage_agricultural_industry
@@ -504,7 +546,7 @@ decree_encourage_resource_industry = {
 
 decree_greener_grass_campaign = {
 	texture = "gfx/interface/icons/decree/decree_greener_grass_campaign.dds"
-	valid = {
+	state_trigger = {
 		is_isolated_from_market = no
 	}
 	modifier = {
@@ -570,15 +612,33 @@ decree_enlistment_efforts = {
 	unlocking_technologies = {
 		tech_politics_1
 	}
+	
+	country_trigger = {
+		OR = { 
+			NOT = { has_law = law_type:law_peasant_levies }
+			is_at_war = yes
+		}
+	}
+	
 	cost = 200
 	
 	ai_weight = {
-		value = 0	
+		value = 0
+
 		if = {
 			limit = {
 				any_scope_building = {
 					is_building_type = building_barracks
-					count >= 25
+					count >= 5
+				}				
+			}
+			add = 25
+		}		
+		if = {
+			limit = {
+				any_scope_building = {
+					is_building_type = building_barracks
+					count >= 10
 				}				
 			}
 			add = 50
@@ -587,11 +647,12 @@ decree_enlistment_efforts = {
 			limit = {
 				any_scope_building = {
 					is_building_type = building_barracks
-					count >= 50
+					count >= 25
 				}			
 			}
-			add = 50
+			add = 75
 		}
+
 		if = {
 			limit = {
 				any_scope_building = {
@@ -611,5 +672,5 @@ decree_enlistment_efforts = {
 			add = 50
 		}		
 	}
+	
 }
-
