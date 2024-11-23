@@ -16,9 +16,9 @@ resign_from_office = {
 	clicksound = "event:/SFX/UI/Military/command_grant"
 
 	potential = {
-		owner = scope:actor
+		owner ?= scope:actor
 		is_ruler = yes
-		owner = {
+		owner ?= {
 			NOR = {
 				is_a_regime_monarchy = yes
 				is_a_theocratic_dictatorship = yes
@@ -41,9 +41,41 @@ resign_from_office = {
 				has_trait = senile
 				has_trait = wounded
 			}
-			owner = {
-				any_interest_group = {
+			owner ?= {
+				any_political_movement = {
 					is_insurrectionary = yes
+					exists = most_desired_law			
+					trigger_if = {
+						limit = { 
+							is_insurrectionary = yes
+							exists = most_desired_law
+						}
+						most_desired_law ?= { save_temporary_scope_as = revolutionary_law }
+						custom_tooltip = {	
+							text = ruler_disapproves_of_revolutionary_law					
+							root = {
+								law_enactment_stance = {
+									law = scope:revolutionary_law
+									value <= neutral
+								}						
+								OR = {
+									law_enactment_stance = {
+										law = scope:revolutionary_law
+										value < neutral
+									}
+									interest_group ?= {
+										law_enactment_stance = {
+											law = scope:revolutionary_law
+											value < neutral
+										}									
+									}
+								}
+							}	
+						}						
+					}
+					trigger_else = {
+						custom_tooltip = ruler_disapproves_of_revolutionary_law_contextless
+					}
 				}
 			}
 		}
@@ -52,18 +84,18 @@ resign_from_office = {
 	effect = {
 		if = {
 			limit = {
-				owner = {
+				owner ?= {
 					any_interest_group = {
 						is_insurrectionary = yes
 					}
 				}
 			}
-			owner = {
+			owner ?= {
 				trigger_event = { id = resignation.2 popup = yes }
 			}
 		}
 		else = {
-			owner = {
+			owner ?= {
 				trigger_event = { id = resignation.1 popup = yes }
 			}
 		}
@@ -127,6 +159,126 @@ resign_from_office = {
 				is_historical = yes		
 			}
 			add = -1000
+		}
+	}
+}
+
+send_to_jail = {
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+
+	potential = {
+		is_in_exile_pool = no
+		is_in_void = no
+		is_ruler = no
+		is_heir = no
+		has_role = agitator
+		is_immortal = no
+	}
+
+	show_requirements = yes
+
+	possible = {
+		owner ?= {
+		
+			NOT = { has_law = law_type:law_full_free_speech }
+			
+			ruler ?= { character_is_autocratic = yes }
+			
+		}
+	}
+
+	effect = {
+		this = {
+			save_scope_as = prisoner_scope
+		}
+		trigger_event = { id = jail.1 popup = yes }
+	}
+
+	cooldown = { months = short_modifier_time }
+
+	ai_chance = {
+		value = -50
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -5
+				}		
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -10
+				}		
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					is_a_democracy = yes
+				}			
+			}
+			add = -25
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_outlawed_dissent
+				}			
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_censorship
+				}			
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_limited_free_speech
+				}			
+			}
+			add = -20
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					any_interest_group = {
+						is_insurrectionary = yes
+					}
+				}			
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					ruler = {
+						OR = {
+							has_trait = cruel
+						}
+					}
+				}			
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					ruler = {
+						OR = {
+							has_trait = imperious
+						}
+					}
+				}			
+			}
+			add = 10
 		}
 	}
 }
