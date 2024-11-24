@@ -453,6 +453,7 @@ lobby_proposal.3 = { # Pro-Lobby Opportunity
 					has_variable = pro_lobby_proposal_power_bloc
 					has_variable = pro_lobby_proposal_power_bloc_invite
 					has_variable = pro_lobby_proposal_investment_agreement
+					has_variable = pro_lobby_proposal_military_assistance
 				}
 			}
 		}
@@ -611,6 +612,7 @@ lobby_proposal.4 = { # Anti-Lobby Opportunity
 					has_variable = anti_lobby_proposal_power_bloc
 					has_variable = anti_lobby_proposal_power_bloc_invite
 					has_variable = anti_lobby_proposal_investment_agreement
+					has_variable = anti_lobby_proposal_military_assistance
 				}
 			}
 			NOT = {
@@ -1012,8 +1014,11 @@ lobby_events.2 = {
 		OR = {
 			any_political_lobby = {
 				is_political_lobby_type = lobby_anti_country
-				target = {
-					discriminates_religion = ROOT.religion
+				target.capital = {
+					state_religious_acceptance = {  
+						target = ROOT.religion
+						value < religious_acceptance_very_low 
+					}
 				}
 
 				custom_tooltip = {
@@ -1022,7 +1027,12 @@ lobby_events.2 = {
 			}
 			any_diplomatically_relevant_country = {
 				is_valid_lobby_target = yes
-				discriminates_religion = ROOT.religion
+				capital = {
+					state_religious_acceptance = {  
+						target = ROOT.religion
+						value < religious_acceptance_very_low
+					}
+				}
 				custom_tooltip = {
 					text = religion_is_discriminated_tt
 				}
@@ -1038,16 +1048,22 @@ lobby_events.2 = {
 			limit = {
 				any_political_lobby = {
 					is_political_lobby_type = lobby_anti_country
-					target = {
-						discriminates_religion = ROOT.religion
+					target.capital = {
+						state_religious_acceptance = {  
+							target = ROOT.religion
+							value < religious_acceptance_very_low
+						}
 					}
 				}
 			}
 			random_political_lobby = {
 				limit = {
 					is_political_lobby_type = lobby_anti_country
-					target = {
-						discriminates_religion = ROOT.religion
+					target.capital = {
+						state_religious_acceptance = {  
+							target = ROOT.religion
+							value < religious_acceptance_very_low 
+						}
 					}
 				}
 				target = {
@@ -1060,7 +1076,12 @@ lobby_events.2 = {
 			random_diplomatically_relevant_country = {
 				limit = {
 					is_valid_lobby_target = yes
-					discriminates_religion = ROOT.religion
+					capital = {
+						state_religious_acceptance = {  
+							target = ROOT.religion
+							value < religious_acceptance_very_low 
+						}
+					}
 				}
 				save_scope_as = relevant_country
 			}
@@ -1184,6 +1205,17 @@ lobby_events.3 = {
 				relations:root >= relations_threshold:poor
 				THIS.techs_researched >= ROOT.techs_researched
 				is_valid_lobby_target = yes
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = {
+				exists = scope:relevant_ig
+			}
+			NOT = {
+				exists = scope:relevant_country
 			}
 		}
 	}
@@ -1480,7 +1512,7 @@ lobby_events.5 = {
 				is_political_lobby_type = lobby_pro_country
 				target = {
 					relations:root >= relations_threshold:poor
-					market = {
+					market ?= {
 						NOT = { owner = root }
 						any_trade_route = {
 							is_trade_route_productive = yes
@@ -1512,7 +1544,7 @@ lobby_events.5 = {
 					is_political_lobby_type = lobby_pro_country
 					target = {
 						relations:root >= relations_threshold:poor
-						market_capital.market = {
+						market_capital.market ?= {
 							NOT = { owner = root }
 							any_trade_route = {
 								is_trade_route_productive = yes
@@ -1528,7 +1560,7 @@ lobby_events.5 = {
 					is_political_lobby_type = lobby_pro_country
 					target = {
 						relations:root >= relations_threshold:poor
-						market_capital.market = {
+						market_capital.market ?= {
 							NOT = { owner = root }
 							any_trade_route = {
 								is_trade_route_productive = yes
@@ -1540,7 +1572,7 @@ lobby_events.5 = {
 				}
 				target = {
 					save_scope_as = relevant_country
-					market_capital.market = {
+					market_capital.market ?= {
 						random_trade_route = {
 							limit = {
 								is_trade_route_productive = yes
@@ -1584,6 +1616,15 @@ lobby_events.5 = {
 					}
 				}
 			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOR = {
+			exists = scope:relevant_goods
+			exists = scope:relevant_lobby
+			exists = scope:relevant_ig
+			exists = scope:relevant_country
 		}
 	}
 	
@@ -3648,6 +3689,13 @@ lobby_events.18 = {
 			save_scope_as = relevant_ig
 		}
 	}
+
+	cancellation_trigger = {
+		NOR = {
+			exists = scope:relevant_ig
+			exists = scope:relevant_country
+		}
+	}
 	
 	option = {
 		name = lobby_events.18.a 
@@ -4570,7 +4618,11 @@ fund_lobbies_events.4 = { # Politician implicated in improperly spending foreign
 	
 	option = {
 		name = fund_lobbies_events.4.a 
-		default_option = yes
+		trigger = {
+			scope:relevant_character = {
+				is_immortal = no
+			}
+		}
 		random_list = {
 			50 = {
 				custom_tooltip = {
@@ -4598,6 +4650,7 @@ fund_lobbies_events.4 = { # Politician implicated in improperly spending foreign
 
 	option = {
 		name = fund_lobbies_events.4.b
+		default_option = yes
 		if = {
 			limit = {
 				scope:relevant_character = {

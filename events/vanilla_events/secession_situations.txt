@@ -22,31 +22,43 @@ secession_events.1 = {
 	duration = 3
 
 	trigger = {
-		highest_secession_progress > 0
-		highest_secession_progress < 0.3
+		any_political_movement = {
+			is_secessionist = yes
+			exists = culture
+			civil_war ?= {
+				civil_war_progress < 0.3
+			}
+		}
 	}
 
+	cooldown = { months = normal_modifier_time }
+
 	immediate = {
-		random_scope_culture = {
+		random_political_movement = {
 			limit = {
-				culture_secession_progress = {
-					target = root
-					value > 0
-				}
-				culture_secession_progress = {
-					target = root
-					value < 0.3
+				is_secessionist = yes
+				exists = culture
+				civil_war ?= {
+					civil_war_progress < 0.3
 				}
 			}
-			save_scope_as = secessionist_culture
+			save_scope_as = secessionist_movement
+			culture ?= {
+				save_scope_as = secessionist_culture
+			}
 		}
 	}
 
 	option = {
 		name = secession_events.1.a
-		add_loyalists = {
-			value = 0.05
-			culture = scope:secessionist_culture
+		scope:secessionist_movement = {
+			add_modifier = {
+				name = modifier_refuting_secessionist_manifesto_movement
+				months = normal_modifier_time
+			}
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_medium
+			}
 		}
 		add_modifier = {
 			name = refuting_secessionist_manifesto
@@ -62,9 +74,14 @@ secession_events.1 = {
 				has_law = law_type:law_censorship
 			}
 		}
-		add_loyalists = {
-			value = 0.1
-			culture = scope:secessionist_culture
+		scope:secessionist_movement = {
+			add_modifier = {
+				name = modifier_censoring_secessionist_manifesto_movement
+				months = normal_modifier_time
+			}
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_large
+			}
 		}
 		add_modifier = {
 			name = suppressing_secessionist_manifesto
@@ -75,9 +92,14 @@ secession_events.1 = {
 	option = {
 		name = secession_events.1.c
 		default_option = yes
-		add_radicals = {
-			value = large_radicals
-			culture = scope:secessionist_culture
+		scope:secessionist_movement = {
+			add_modifier = {
+				name = modifier_secessionist_manifesto_circulating
+				months = normal_modifier_time
+			}
+			civil_war ?= {
+				add_civil_war_progress = revolution_advance_medium
+			}
 		}
 	}
 }
@@ -102,30 +124,37 @@ secession_events.2 = {
 	duration = 3
 
 	trigger = {
-		highest_secession_progress > 0
-		highest_secession_progress < 0.3
+		any_political_movement = {
+			is_secessionist = yes
+			exists = culture
+			civil_war ?= {
+				civil_war_progress < 0.3
+			}
+		}
 	}
 
+	cooldown = { months = normal_modifier_time }
+
 	immediate = {
-		random_scope_culture = {
+		random_political_movement = {
 			limit = {
-				culture_secession_progress = {
-					target = root
-					value > 0
-				}
-				culture_secession_progress = {
-					target = root
-					value < 0.3
+				is_secessionist = yes
+				exists = culture
+				civil_war ?= {
+					civil_war_progress < 0.3
 				}
 			}
-			save_scope_as = secessionist_culture
+			save_scope_as = secessionist_movement
+			culture ?= {
+				save_scope_as = secessionist_culture
+			}
 		}
 	}
 
 	option = {
 		name = secession_events.2.a
 		add_loyalists = {
-			value = 0.1
+			value = medium_radicals
 			culture = scope:secessionist_culture
 		}
 		add_modifier = {
@@ -164,27 +193,43 @@ secession_events.3 = {
 	duration = 3
 
 	trigger = {
-		highest_secession_progress > 0
-		highest_secession_progress < 0.3
+		any_political_movement = {
+			is_secessionist = yes
+			exists = culture
+			civil_war ?= {
+				civil_war_progress < 0.3
+			}
+		}
 	}
 
+	cooldown = { months = normal_modifier_time }
+
 	immediate = {
-		random_scope_culture = {
+		random_political_movement = {
 			limit = {
-				culture_secession_progress = {
-					target = root
-					value > 0
-				}
-				culture_secession_progress = {
-					target = root
-					value < 0.3
+				is_secessionist = yes
+				exists = culture
+				civil_war ?= {
+					civil_war_progress < 0.3
 				}
 			}
-			save_scope_as = secessionist_culture
+			save_scope_as = secessionist_movement
+			culture ?= {
+				save_scope_as = secessionist_culture
+			}
 		}
 		random_interest_group = {
 			limit = {
 				is_in_government = no
+				trigger_if = {
+					limit = {
+						c:BIC ?= root
+					}
+					NOR = {
+						is_interest_group_type = ig_armed_forces
+						is_interest_group_type = ig_industrialists
+					}
+				}
 			}
 			save_scope_as = secessionist_ig
 		}
@@ -193,19 +238,43 @@ secession_events.3 = {
 	option = {
 		name = secession_events.3.a
 		add_radicals = {
-			value = large_radicals
+			value = small_radicals
 			culture = scope:secessionist_culture
+		}
+		custom_tooltip = {
+			text = secessionist_agitator_tt
+			create_character = {
+				is_agitator = yes
+				interest_group = scope:secessionist_ig
+				culture = scope:secessionist_culture
+				traits = {
+					charismatic
+					basic_political_operator
+				}
+			}
+		}
+		scope:secessionist_movement = {
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_medium
+			}
 		}
 	}
 
 	option = {
 		name = secession_events.3.b
 		default_option = yes
-		create_character = {
-			#role = politician # Remove this line
-			ig_leader = yes
-			interest_group = scope:secessionist_ig
-			culture = scope:secessionist_culture
+		custom_tooltip = {
+			text = secessionist_leader_tt
+			create_character = {
+				ig_leader = yes
+				interest_group = scope:secessionist_ig
+				culture = scope:secessionist_culture
+				ideology = ideology:ideology_reformer
+				traits = {
+					charismatic
+					basic_political_operator
+				}
+			}
 		}
 	}
 }
@@ -232,23 +301,32 @@ secession_events.4 = {
 	duration = 3
 
 	trigger = {
-		highest_secession_progress > 0.3
-		highest_secession_progress < 0.7
+		any_political_movement = {
+			is_secessionist = yes
+			exists = culture
+			civil_war ?= {
+				civil_war_progress >= 0.3
+				civil_war_progress < 0.7
+			}
+		}
 	}
 
+	cooldown = { months = normal_modifier_time }
+
 	immediate = {
-		random_scope_culture = {
+		random_political_movement = {
 			limit = {
-				culture_secession_progress = {
-					target = root
-					value > 0.3
-				}
-				culture_secession_progress = {
-					target = root
-					value < 0.7
+				is_secessionist = yes
+				exists = culture
+				civil_war ?= {
+					civil_war_progress >= 0.3
+					civil_war_progress < 0.7
 				}
 			}
-			save_scope_as = secessionist_culture
+			save_scope_as = secessionist_movement
+			culture ?= {
+				save_scope_as = secessionist_culture
+			}
 		}
 	}
 
@@ -284,14 +362,22 @@ secession_events.4 = {
 				}
 			}
 		}
+		scope:secessionist_movement = {
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_medium
+			}
+		}
 	}
 
 	option = {
 		name = secession_events.4.b
 		default_option = yes
-		add_radicals = {
-			value = large_radicals
-			culture = scope:secessionist_culture
+		scope:secessionist_movement = {
+			add_modifier = {
+				name = modifier_secessionist_rallies
+				months = normal_modifier_time
+				is_decaying = yes
+			}
 		}
 	}
 }
@@ -317,18 +403,16 @@ secession_events.5 = {
 	duration = 3
 
 	trigger = {
-		highest_secession_progress > 0.3
-		highest_secession_progress < 0.7
-		any_scope_culture = {
-			culture_secession_progress = {
-				target = root
-				value > 0.3
+		any_political_movement = {
+			is_secessionist = yes
+			exists = culture
+			civil_war ?= {
+				civil_war_progress >= 0.3
+				civil_war_progress < 0.7
 			}
-			culture_secession_progress = {
-				target = root
-				value < 0.7
+			culture ?= {
+				save_temporary_scope_as = secessionist_culture
 			}
-			save_temporary_scope_as = secessionist_culture
 		}
 		any_interest_group = {
 			leader = {
@@ -337,19 +421,22 @@ secession_events.5 = {
 		}
 	}
 
+	cooldown = { months = normal_modifier_time }
+
 	immediate = {
-		random_scope_culture = {
+		random_political_movement = {
 			limit = {
-				culture_secession_progress = {
-					target = root
-					value > 0.3
-				}
-				culture_secession_progress = {
-					target = root
-					value < 0.7
+				is_secessionist = yes
+				exists = culture
+				civil_war ?= {
+					civil_war_progress >= 0.3
+					civil_war_progress < 0.7
 				}
 			}
-			save_scope_as = secessionist_culture
+			save_scope_as = secessionist_movement
+			culture ?= {
+				save_scope_as = secessionist_culture
+			}
 		}
 		random_interest_group = {
 			limit = {
@@ -383,6 +470,15 @@ secession_events.5 = {
 				months = normal_modifier_time
 			}
 		}
+		scope:secessionist_movement = {
+			add_modifier = {
+				name = modifier_suppressed_secessionist_speech
+				months = normal_modifier_time
+			}
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_medium
+			}
+		}
 	}
 
 	option = {
@@ -391,14 +487,16 @@ secession_events.5 = {
 			base = 50
 		}
 		scope:secessionist_ig = {
+			leader = {
+				add_modifier = {
+					name = modifier_frosty_reception
+					months = normal_modifier_time
+				}
+			}
 			add_modifier = {
 				name = secessionist_leader_ignored
 				months = normal_modifier_time
 			}
-		}
-		add_radicals = {
-			value = large_radicals
-			culture = scope:secessionist_culture
 		}
 	}
 
@@ -408,9 +506,11 @@ secession_events.5 = {
 		ai_chance = {
 			base = 50
 		}
-		add_radicals = {
-			value = very_large_radicals
-			culture = scope:secessionist_culture
+		scope:secessionist_movement = {
+			add_modifier = {
+				name = modifier_tolerating_secession_movement
+				months = normal_modifier_time
+			}
 		}
 	}
 }
@@ -435,8 +535,14 @@ secession_events.6 = {
 	duration = 3
 
 	trigger = {
-		highest_secession_progress > 0.3
-		highest_secession_progress < 0.7
+		any_political_movement = {
+			is_secessionist = yes
+			exists = culture
+			civil_war ?= {
+				civil_war_progress >= 0.3
+				civil_war_progress < 0.7
+			}
+		}
 		has_law = law_type:law_national_supremacy
 		any_interest_group = {
 			law_stance = {
@@ -446,19 +552,22 @@ secession_events.6 = {
 		}
 	}
 
+	cooldown = { months = normal_modifier_time }
+
 	immediate = {
-		random_scope_culture = {
+		random_political_movement = {
 			limit = {
-				culture_secession_progress = {
-					target = root
-					value > 0.3
-				}
-				culture_secession_progress = {
-					target = root
-					value < 0.7
+				is_secessionist = yes
+				exists = culture
+				civil_war ?= {
+					civil_war_progress >= 0.3
+					civil_war_progress < 0.7
 				}
 			}
-			save_scope_as = secessionist_culture
+			save_scope_as = secessionist_movement
+			culture ?= {
+				save_scope_as = secessionist_culture
+			}
 		}
 		random_interest_group = {
 			limit = {
@@ -479,14 +588,24 @@ secession_events.6 = {
 				months = normal_modifier_time
 			}
 		}
+		scope:secessionist_movement = {
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_medium
+			}
+		}
 	}
 
 	option = {
 		name = secession_events.6.b
 		default_option = yes
-		add_radicals = {
-			value = large_radicals
-			culture = scope:secessionist_culture
+		scope:secessionist_movement = {
+			add_modifier = {
+				name = modifier_recognized_legal_discrimination
+				months = normal_modifier_time
+			}
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_small
+			}
 		}
 	}
 }
@@ -513,18 +632,30 @@ secession_events.7 = {
 	duration = 3
 
 	trigger = {
-		highest_secession_progress > 0.7
+		any_political_movement = {
+			is_secessionist = yes
+			exists = culture
+			civil_war ?= {
+				civil_war_progress >= 0.7
+			}
+		}
 	}
 
+	cooldown = { months = normal_modifier_time }
+
 	immediate = {
-		random_scope_culture = {
+		random_political_movement = {
 			limit = {
-				culture_secession_progress = {
-					target = root
-					value > 0.7
+				is_secessionist = yes
+				exists = culture
+				civil_war ?= {
+					civil_war_progress >= 0.7
 				}
 			}
-			save_scope_as = secessionist_culture
+			save_scope_as = secessionist_movement
+			culture ?= {
+				save_scope_as = secessionist_culture
+			}
 		}
 	}
 
@@ -532,7 +663,7 @@ secession_events.7 = {
 	option = {
 		name = secession_events.7.a
 		add_radicals = {
-			value = large_radicals
+			value = small_radicals
 			culture = scope:secessionist_culture
 		}
 	}
@@ -541,12 +672,17 @@ secession_events.7 = {
 	option = {
 		name = secession_events.7.b
 		add_radicals = {
-			value = 0.05
+			value = medium_radicals
 			culture = scope:secessionist_culture
 		}
 		add_modifier = {
 			name = illuminations_canceled
 			months = normal_modifier_time
+		}
+		scope:secessionist_movement = {
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_medium
+			}
 		}
 	}
 
@@ -557,6 +693,11 @@ secession_events.7 = {
 		add_modifier = {
 			name = revolution_canceled
 			months = normal_modifier_time
+		}
+		scope:secessionist_movement = {
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_large
+			}
 		}
 	}
 }
@@ -573,11 +714,19 @@ secession_events.8 = {
 	duration = 3
 
 	trigger = {
-		highest_secession_progress > 0.7
+		any_political_movement = {
+			is_secessionist = yes
+			exists = culture
+			civil_war ?= {
+				civil_war_progress >= 0.7
+			}
+		}
 		any_scope_building = {
 			is_building_type = building_government_administration
 		}
 	}
+
+	cooldown = { months = normal_modifier_time }
 
 	event_image = {
 		video = "unspecific_fire"
@@ -588,14 +737,18 @@ secession_events.8 = {
 	icon = "gfx/interface/icons/event_icons/event_fire.dds"
 
 	immediate = {
-		random_scope_culture = {
+		random_political_movement = {
 			limit = {
-				culture_secession_progress = {
-					target = root
-					value > 0.7
+				is_secessionist = yes
+				exists = culture
+				civil_war ?= {
+					civil_war_progress >= 0.7
 				}
 			}
-			save_scope_as = secessionist_culture
+			save_scope_as = secessionist_movement
+			culture ?= {
+				save_scope_as = secessionist_culture
+			}
 		}
 		random_scope_state = {
 			limit = {
@@ -613,6 +766,11 @@ secession_events.8 = {
 			value = large_radicals
 			culture = scope:secessionist_culture
 		}
+		scope:secessionist_movement = {
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_large
+			}
+		}
 		scope:terrorist_attack_state.state_region = {
 			add_devastation = 15
 		}
@@ -621,7 +779,6 @@ secession_events.8 = {
 	option = {
 		name = secession_events.8.b
 		default_option = yes
-
 		every_interest_group = {
 			limit = {
 				law_stance = {
@@ -632,6 +789,11 @@ secession_events.8 = {
 			add_modifier = {
 				name = soft_on_minorities
 				months = normal_modifier_time
+			}
+		}
+		scope:secessionist_movement = {
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_medium
 			}
 		}
 		scope:terrorist_attack_state.state_region = {
@@ -660,59 +822,76 @@ secession_events.9 = {
 	duration = 3
 
 	trigger = {
-		highest_secession_progress > 0.7
-		has_law = law_type:law_secret_police
-		any_scope_state = {
-			any_scope_culture = {
-				culture_secession_progress = {
-					target = root
-					value > 0.7
-				}
+		any_political_movement = {
+			is_secessionist = yes
+			exists = culture
+			civil_war ?= {
+				civil_war_progress >= 0.7
+			}
+			culture ?= {
 				save_temporary_scope_as = secessionist_culture
 			}
 		}
-		any_interest_group = {
-			leader = {
-				has_culture = scope:secessionist_culture
-				is_busy = no
-			}
+		has_law = law_type:law_secret_police
+		any_scope_character = {
+			has_culture = scope:secessionist_culture
+			is_busy = no
+			is_immortal = no
 		}
 	}
 
+	cooldown = { months = normal_modifier_time }
+
 	immediate = {
-		random_scope_culture = {
+		random_political_movement = {
 			limit = {
-				culture_secession_progress = {
-					target = root
-					value > 0.7
+				is_secessionist = yes
+				exists = culture
+				civil_war ?= {
+					civil_war_progress >= 0.7
 				}
 			}
-			save_scope_as = secessionist_culture
+			save_scope_as = secessionist_movement
+			culture ?= {
+				save_scope_as = secessionist_culture
+			}
 		}
-		random_interest_group = {
+		random_scope_character = {
 			limit = {
-				leader = {
-					has_culture = scope:secessionist_culture
-					is_busy = no
-				}
+				has_culture = scope:secessionist_culture
+				is_busy = no
+				is_immortal = no
 			}
-			leader = {
-				save_scope_as = secessionist_leader
-			}
+			save_scope_as = secessionist_leader
 		}
 	}
 
 	option = {
 		name = secession_events.9.a
-		scope:secessionist_leader = { kill_character = yes }
-		add_loyalists = {
-			value = 0.1
+		add_radicals = {
+			value = large_radicals
 			culture = scope:secessionist_culture
+		}
+		scope:secessionist_leader = {
+			kill_character = yes
+		}
+		scope:secessionist_movement = {
+			add_modifier = {
+				name = modifier_assassinated_secessionist_leader
+				months = normal_modifier_time
+			}
+			civil_war ?= {
+				add_civil_war_progress = revolution_retreat_very_large
+			}
 		}
 	}
 
 	option = {
 		name = secession_events.9.b
 		default_option = yes
+		add_loyalists = {
+			value = small_radicals
+			culture = scope:secessionist_culture
+		}
 	}
 }
