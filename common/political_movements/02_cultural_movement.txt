@@ -3,7 +3,8 @@
 	
 	ideology = ideology_ethno_nationalist
 	character_ideologies = {	
-		ideology_ethno_nationalist
+		ideology_autocratic
+		ideology_power_hungry
 	}
 	
 	creation_trigger = {}
@@ -17,16 +18,18 @@
 			is_primary_culture_of = root.owner
 		}	
 		OR = {
-			has_ideology = ideology:ideology_fascist
-			has_ideology = ideology:ideology_jingoist_leader		
-			has_ideology = ideology:ideology_ethno_nationalist
+			has_ideology = ideology:ideology_autocratic
+			has_ideology = ideology:ideology_power_hungry
+			has_ideology = ideology:ideology_elitist
+			
+			has_ideology = ideology:ideology_agitator_anti_human_rights
 		}
 	}
 	character_support_weight = {
 		value = 100
 		if = {
 			limit = {
-				has_ideology = ideology:ideology_ethno_nationalist
+				has_ideology = ideology:ideology_autocratic
 			}
 			multiply = {
 				value = 5
@@ -34,10 +37,15 @@
 		}
 		else_if = {
 			limit = {
-				OR = {
-					has_ideology = ideology:ideology_fascist
-					has_ideology = ideology:ideology_jingoist_leader
-				}
+				has_ideology = ideology:ideology_power_hungry
+			}
+			multiply = {
+				value = 3
+			}
+		}
+		else_if = {
+			limit = {
+				has_ideology = ideology:ideology_elitist
 			}
 			multiply = {
 				value = 2
@@ -45,10 +53,7 @@
 		}
 		else_if = {
 			limit = {
-				OR = {
-					has_progressive_ideology = yes
-					has_socialist_ideology = yes
-				}
+				has_ideology = ideology:ideology_liberal
 			}
 			multiply = 0.05
 		}
@@ -184,35 +189,12 @@
 			max = 1 # Caps out below ideological movements.
 		}
 
-		if = {
-			limit = {
-				owner ?= {
-					has_technology_researched = nationalism
-				}
-			}
-			multiply = {
-				value = 1.25
-				desc = "NATIONALISM_TECH"
-			}
-		}
-		if = {
-			limit = {
-				owner ?= {
-					has_technology_researched = pan-nationalism
-				}
-			}
-			multiply = {
-				value = 1.5
-				desc = "PAN_NATIONALISM_TECH"
-			}
-		}
-
 		if = { # If a more radical movement exists, it'll poach radicals from this one.
 			limit = {
 				owner ?= {
 					any_political_movement = {
 						OR = {
-							is_political_movement_type = movement_reactionary
+							is_political_movement_type = movement_traditionalist
 							is_political_movement_type = movement_fascist
 						}
 					}
@@ -297,73 +279,18 @@
 movement_cultural_minority = {
 	category = movement_category_cultural
 		
-	ideology = ideology_pluralist_movement_1
+	ideology = ideology_pluralist_movement
 	character_ideologies = {
-		ideology_reformer
+		ideology_democratic
+		ideology_liberal
 	}
 	
 	creation_trigger = {}
 	creation_weight = {
 		value = 50
-		if = {
-			limit = {
-				owner ?= {
-					has_technology_researched = nationalism
-				}
-			}
-			multiply = {
-				value = 2
-			}
-		}
-		if = {
-			limit = {
-				owner ?= {
-					has_variable = failed_tanzimat
-				}
-			}
-			multiply = {
-				value = 2
-			}
-		}
-		if = {
-			limit = {
-				owner ?= {
-					has_journal_entry = je_springtime_of_the_peoples
-				}
-			}
-			multiply = {
-				value = 2
-			}
-		}
 	}
 	on_created = {
-		if = {
-			limit = {
-				culture = {
-					shares_heritage_and_other_trait_with_any_primary_culture = root.owner
-				}
-			}
-			set_core_ideology = ideology_pluralist_movement_1
-		}
-		else_if = {
-			limit = {
-				culture = {
-					shares_heritage_trait_with_any_primary_culture = root.owner
-				}
-			}
-			set_core_ideology = ideology_pluralist_movement_2
-		}
-		else_if = {
-			limit = {
-				culture = {
-					shares_non_heritage_trait_with_any_primary_culture = root.owner
-				}
-			}
-			set_core_ideology = ideology_pluralist_movement_3
-		}
-		else = {
-			set_core_ideology = ideology_pluralist_movement_4
-		}
+		
 	}
 
 	disband_trigger = {
@@ -393,17 +320,18 @@ movement_cultural_minority = {
 	character_support_trigger = {	
 		culture = scope:culture
 		OR = {
-			has_ideology = ideology:ideology_humanitarian		
-			has_ideology = ideology:ideology_humanitarian_royalist	
-			has_ideology = ideology:ideology_sovereignist_leader			
-			has_ideology = ideology:ideology_reformer		
-		}		
+			has_ideology = ideology:ideology_liberal
+			has_ideology = ideology:ideology_democratic
+			interest_group ?= { has_ideology = ideology:ideology_progressive }
+			
+			has_ideology = ideology:ideology_agitator_pro_human_rights
+		}
 	}
 	character_support_weight = {
 		value = 200
 		if = {
 			limit = {
-				has_ideology = ideology:ideology_sovereignist_leader
+				has_ideology = ideology:ideology_liberal
 			}
 			multiply = {
 				value = 5
@@ -411,10 +339,7 @@ movement_cultural_minority = {
 		}
 		else_if = {
 			limit = {
-				OR = {
-					has_ideology = ideology:ideology_humanitarian
-					has_ideology = ideology:ideology_reformer
-				}
+				has_ideology = ideology:ideology_progressive
 			}
 			multiply = {
 				value = 2
@@ -450,39 +375,8 @@ movement_cultural_minority = {
 			limit = {
 				strata = upper
 			}
-			if = {
-				limit = {
-					culture = cu:polish
-					is_pop_type = aristocrats
-					state ?= {
-						OR = {
-							has_variable = lingering_plc_resistance
-							has_variable = christ_of_nations_target
-						}
-					}
-				}
-				add = {
-					value = 100
-					desc = "POP_POLISH_ARISTOCRATS"
-				}
-			}
-			else_if = {
-				limit = {
-					culture = cu:hungarian
-					is_pop_type = aristocrats
-					owner ?= {
-						has_journal_entry = je_dual_monarchy
-					}
-				}
-				add = {
-					value = 100
-					desc = "je_dual_monarchy"
-				}
-			}
-			else = {
-				value = 6
-				desc = "UPPER_NO_ICON"
-			}
+			value = 6
+			desc = "UPPER_NO_ICON"
 		}
 		else_if = {
 			limit = {
@@ -580,108 +474,13 @@ movement_cultural_minority = {
 			}			
 		}
 		
-		if = {
-			limit = {
-				culture = cu:polish
-				state ?= {
-					OR = {
-						has_variable = lingering_plc_resistance
-						has_variable = christ_of_nations_target
-					}
-				}
-			}
-			multiply = { # Illiterate pops participate at 1/3 the rate of fully literate pops
-				desc = "POP_LITERACY"
-				value = literacy_rate
-				add = 0.33
-			}
-		}
-		else = {
-			multiply = { # Illiterate pops participate at 1/8 the rate of fully literate pops
-				desc = "POP_LITERACY"
-				value = literacy_rate
-				add = 0.15
-			}
-		}
-
-		if = {
-			limit = {
-				owner ?= {
-					has_technology_researched = nationalism
-				}
-			}
-			multiply = {
-				value = 2.0
-				desc = "NATIONALISM_TECH"
-			}
-		}
-		if = {
-			limit = {
-				owner ?= {
-					has_technology_researched = pan-nationalism
-				}
-			}
-			multiply = {
-				value = 1.5
-				desc = "PAN_NATIONALISM_TECH"
-			}
-		}
-
-		if = { # Funnel people into Indias unique movements
-			limit = {
-				owner ?= {
-					c:BIC ?= this
-				}
-				culture = { has_discrimination_trait = south_asian_heritage }
-			}
-			multiply = 0.5
-
-			if = {
-				limit = {
-					owner ?= {
-						has_technology_researched = pan-nationalism
-					}
-				}
-				multiply = 0.1
-			}
+		
+		multiply = { # Illiterate pops participate at 1/8 the rate of fully literate pops
+			desc = "POP_LITERACY"
+			value = literacy_rate
+			add = 0.15
 		}
 		
-		if = {
-			limit = {
-				owner ?= {
-					has_variable = failed_tanzimat
-				}
-				culture = { has_discrimination_trait = european_heritage }
-			}
-			multiply = {
-				value = 2.0
-				desc = "FAILED_TANZIMAT_REFORMS"
-			}
-		}
-
-		if = {
-			limit = {
-				owner ?= {
-					has_journal_entry = je_dual_monarchy
-				}
-				culture = cu:hungarian
-			}
-			multiply = {
-				value = 2.0
-				desc = "je_dual_monarchy"
-			}
-		}
-
-		if = {
-			limit = { 
-				owner ?= { has_journal_entry = je_springtime_of_the_peoples } 
-				culture = { has_discrimination_trait = european_heritage }
-			}
-			multiply = {
-				value = 2.0
-				desc = "SPRINGTIME_OF_THE_PEOPLES_UNDERWAY"
-			}
-		}
 	}	
 	
 	secession = {
@@ -757,17 +556,6 @@ movement_cultural_minority = {
 	}
 	
 	additional_radicalism_factors = {
-		if = {
-			limit = { 
-				owner = { has_journal_entry = je_springtime_of_the_peoples } 
-				scope:culture = { has_discrimination_trait = european_heritage }
-			}
-			add = {
-				value = 0.25
-				desc = "SPRINGTIME_OF_THE_PEOPLES_UNDERWAY"
-			}
-		}	
-	
 		add = {
 			value = "owner.average_sol"
 			subtract = "owner.average_sol_for_culture(scope:culture)"
