@@ -40,10 +40,6 @@ discrimination_events.1 = {
 			is_incorporated = yes
 			any_scope_pop = {
 				pop_acceptance < acceptance_status_4
-				OR = {
-					state = { state_cultural_acceptance = { target = PREV.culture value < acceptance_status_4 } }
-					state = { state_religious_acceptance = { target = PREV.religion value < religious_acceptance_medium } }
-				}
 				wealth > 20
 			}
 		}
@@ -55,28 +51,34 @@ discrimination_events.1 = {
 				is_incorporated = yes
 				any_scope_pop = {
 					pop_acceptance < acceptance_status_4
-					OR = {
-						state = { state_cultural_acceptance = { target = PREV.culture value < acceptance_status_4 } }
-						state = { state_religious_acceptance = { target = PREV.religion value < religious_acceptance_medium } }
-					}
 					wealth > 20
 				}
 			}
 			random_scope_pop = {
 				limit = { 
 					pop_acceptance < acceptance_status_4
-					OR = {
-						state = { state_cultural_acceptance = { target = PREV.culture value < acceptance_status_4 } }
-						state = { state_religious_acceptance = { target = PREV.religion value < religious_acceptance_medium } }
-					}
 					wealth > 20
 				}
 				if = {
-					limit = { state = { state_cultural_acceptance = { target = PREV.culture value < acceptance_status_4 } } }
+					limit = { 
+						state = {
+							state_cultural_acceptance = {  
+								target = PREV.culture
+							    value < acceptance_status_4 
+						   	}
+						}
+					}
 					save_scope_as = discriminated_culture_pop
 				}
 				else_if = {
-					limit = { state = { state_religious_acceptance = { target = PREV.religion value < religious_acceptance_medium } } }
+					limit = { 
+						state = {
+							state_religious_acceptance = {  
+								target = PREV.religion
+							    value < religious_acceptance_medium 
+						   	}
+						}
+					}
 					save_scope_as = discriminated_religion_pop
 				}
 			}
@@ -105,7 +107,7 @@ discrimination_events.1 = {
 				culture = scope:discriminated_culture_pop.culture
 			}
 		}
-
+		
 		if = {
 			limit = {
 				exists = scope:discriminated_religion_pop
@@ -161,7 +163,7 @@ discrimination_events.1 = {
 				culture = scope:discriminated_culture_pop.culture
 			}
 		}
-
+		
 		if = {
 			limit = {
 				exists = scope:discriminated_religion_pop
@@ -220,11 +222,25 @@ discrimination_events.2 = {
 		random_scope_pop = {
 			limit = { pop_acceptance < acceptance_status_4 }
 			if = {
-				limit = { state = { state_cultural_acceptance = { target = PREV.culture value < acceptance_status_4 } } }
+				limit = { 
+					state = {
+						state_cultural_acceptance = {  
+							target = PREV.culture
+							value < acceptance_status_4 
+						}
+					} 
+				}
 				save_scope_as = discriminated_culture_pop
 			}
 			else_if = {
-				limit = { state = { state_religious_acceptance = { target = PREV.religion value < religious_acceptance_medium } } }
+				limit = { 
+					state = {
+						state_religious_acceptance = {  
+							target = PREV.religion
+							value < religious_acceptance_medium
+						}
+					} 
+				}
 				save_scope_as = discriminated_religion_pop
 			}
 		}
@@ -326,16 +342,24 @@ discrimination_events.3 = {
 			value > 0
 		}
 		any_scope_pop = {
-			state = { state_cultural_acceptance = { target = PREV.culture value < acceptance_status_4 } }
-			language_accepted = no
+			state = {
+				state_cultural_acceptance = {  
+					target = PREV.culture
+					value < acceptance_status_4 
+				}
+			}
 		}
 	}
 
 	immediate = {
 		random_scope_pop = {
 			limit = {
-				state = { state_cultural_acceptance = { target = PREV.culture value < acceptance_status_4 } }
-				language_accepted = no
+				state = {
+					state_cultural_acceptance = {  
+						target = PREV.culture
+						value < acceptance_status_4 
+					}
+				}
 			}
 			save_scope_as = discriminated_culture_pop
 			culture = { save_scope_as = discriminated_culture }
@@ -414,7 +438,12 @@ discrimination_events.4 = {
 	trigger = {
 		any_scope_state = {
 			any_scope_culture = {
-				culture_is_discriminated_in = root
+				prev = {
+					state_cultural_acceptance = {  
+						target = prev
+						value < acceptance_status_4 
+					}
+				}
 				save_temporary_scope_as = discrim_culture
 			}
 			culture_percent_state = {
@@ -422,10 +451,7 @@ discrimination_events.4 = {
 			    value >= 0.1
 			}
 			any_scope_building = {
-				OR = {
-					is_building_group = bg_light_industry
-					is_building_group = bg_heavy_industry
-				}
+				is_building_group = bg_manufacturing
 				occupancy >= 0.25
 			}
 			any_scope_pop = {
@@ -451,7 +477,12 @@ discrimination_events.4 = {
 		ordered_scope_state = {
 			limit = {
 				any_scope_culture = {
-					culture_is_discriminated_in = root
+					PREV = {
+						state_cultural_acceptance = {  
+							target = PREV
+							value < acceptance_status_4 
+						}
+					}
 					save_temporary_scope_as = discrim_culture
 				}
 				culture_percent_state = {
@@ -459,10 +490,7 @@ discrimination_events.4 = {
 				    value >= 0.1
 				}
 				any_scope_building = {
-					OR = {
-						is_building_group = bg_light_industry
-						is_building_group = bg_heavy_industry
-					}
+					is_building_group = bg_manufacturing
 					occupancy >= 0.25
 				}
 				any_scope_pop = {
@@ -476,11 +504,23 @@ discrimination_events.4 = {
 			save_scope_as = discrimination_state
 			random_scope_pop = {
 				limit = { 
-					state = { state_cultural_acceptance = { target = PREV.culture value < acceptance_status_4 } } 
+					PREV = {
+						state_cultural_acceptance = {  
+							target = PREV.culture
+							value < acceptance_status_4 
+						}
+					}
 					pop_employment_building_group = bg_manufacturing
 				}
 				culture = { save_scope_as = discriminated_culture_pop }
 			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOR = {
+			exists = scope:discriminated_culture_pop
+			exists = scope:discrimination_state 
 		}
 	}
 
@@ -547,7 +587,7 @@ discrimination_events.4 = {
 				}
 			}
 		}
-		scope:discrimination_state = {
+		scope:discrimination_state ?= {
 			add_radicals_in_state = {
 				value = medium_radicals
 				culture = scope:discriminated_culture_pop

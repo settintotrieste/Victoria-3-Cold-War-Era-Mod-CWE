@@ -1,0 +1,162 @@
+﻿namespace = paralegal_discrimination
+
+paralegal_discrimination.1 = { # newly arrived minority group faces resentment by local elites
+	type = state_event
+	placement = root
+	cooldown = { months = normal_modifier_time } # this only imposes a cooldown for this particular state, cooldown for the country is handled with the paralegal_discrimination_event_cooldown variable
+	
+	duration = 3
+	
+	title = paralegal_discrimination.1.t
+	desc = paralegal_discrimination.1.d
+	flavor = paralegal_discrimination.1.f
+
+	event_image = {
+		video = "votp_realist_household"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_map.dds"
+
+	trigger = {
+		owner = {
+			NOT = { has_variable = paralegal_discrimination_event_cooldown }
+		}
+		is_mass_migration_target = yes
+		any_scope_culture = {
+			root = {
+				is_mass_migration_target_for_culture = prev
+				"cultural_acceptance_delta(prev)" < -10
+			}
+		}
+		owner = {
+			any_primary_culture = {
+				root = {
+					"population_by_culture(prev)" > 0
+				}
+			}
+		}
+	}
+
+	immediate = {
+		ordered_scope_culture = {
+			limit = {
+				root = {
+					is_mass_migration_target_for_culture = prev
+				}
+			}
+			order_by = {
+				root = {
+					value =	{
+						add = "cultural_acceptance_delta(prev)"
+						multiply = -1 # revert sort order so the highest penalty delta goes first
+					}
+				}
+			}
+			save_scope_as = newcomer_culture
+		}
+		owner = {
+			random_primary_culture = { # Ordering this by size causes an engine-related error, so a random primary culture will have to do instead.
+				limit = {
+					root = {
+						"population_by_culture(prev)" > 0
+					}
+				}
+				save_scope_as = biggest_primary_culture
+			}
+			set_variable = {
+				name = paralegal_discrimination_event_cooldown
+				months = short_modifier_time
+			}
+		}
+	}
+	
+	option = {
+        name = "paralegal_discrimination.1.a"
+		default_option = yes
+		owner = {
+			every_primary_culture = {
+				root = {
+					add_loyalists_in_state = {
+						value = 0.2
+						culture = prev
+						strata = upper
+					}
+				}
+			}
+		}
+		add_radicals_in_state = {
+			value = 0.25
+			culture = scope:newcomer_culture
+		}
+		add_acceptance = {
+			target = scope:newcomer_culture
+			value = -5
+		}
+    }
+
+    option = {
+        name = "paralegal_discrimination.1.b"
+		add_radicals_in_state = {
+			value = 0.05
+		}
+		random_list = {
+			1 = {
+				add_acceptance = {
+					target = scope:newcomer_culture
+					value = -5
+				}
+			}
+			2 = {
+				add_acceptance = {
+					target = scope:newcomer_culture
+					value = {
+						add = 5
+						max = {
+							add = "cultural_acceptance_delta(scope:newcomer_culture)"
+							multiply = -1 # cannot add more delta than what gets you to 0
+						}
+					}
+				}
+			}
+			1 = {
+				add_acceptance = {
+					target = scope:newcomer_culture
+					value = {
+						add = 15
+						max = {
+							add = "cultural_acceptance_delta(scope:newcomer_culture)"
+							multiply = -1 # cannot add more delta than what gets you to 0
+						}
+					}
+				}
+			}
+		}
+    }
+
+    option = {
+        name = "paralegal_discrimination.1.c"
+		owner = {
+			every_primary_culture = {
+				root = {
+					add_radicals_in_state = {
+						value = 0.2
+						culture = prev
+						strata = upper
+					}
+				}
+			}
+		}
+		add_acceptance = {
+			target = scope:newcomer_culture
+			value = {
+				add = 20
+				max = {
+					add = "cultural_acceptance_delta(scope:newcomer_culture)"
+					multiply = -1 # cannot add more delta than what gets you to 0
+				}
+			}
+		}
+    }
+}
