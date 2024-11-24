@@ -73,9 +73,6 @@ exiles_events.1 = {
 		any_scope_character = {
 			has_role = agitator
 			character_supports_political_movement = no
-			this.interest_group = {
-				interest_group_supports_political_movement = no
-			}
 		}
 	}
 
@@ -95,9 +92,6 @@ exiles_events.1 = {
 			limit = {
 				has_role = agitator
 				character_supports_political_movement = no
-				this.interest_group = {
-					interest_group_supports_political_movement = no
-				}
 			}
 			this.interest_group = {
 				save_scope_as = agitator_ig
@@ -115,6 +109,8 @@ exiles_events.1 = {
 		scope:agitator_ig = {
 			add_modifier = {
 				name = modifier_agitator_left
+				months = normal_modifier_time
+				is_decaying = yes
 			}
 		}
 	}
@@ -173,8 +169,8 @@ exiles_events.2 = {
 		}
 		any_character_in_exile_pool = {
 			this.culture = {
-				NOT = {
-					culture_is_discriminated_in = root
+				root = {
+					cultural_acceptance_base = { target = prev value >= acceptance_status_4 }
 				}
 			}
 			this.interest_group_type = {
@@ -220,8 +216,8 @@ exiles_events.2 = {
 		random_character_in_exile_pool = {
 			limit = {
 				this.culture = {
-					NOT = {
-						culture_is_discriminated_in = root
+					root = {
+						cultural_acceptance_base = { target = prev value >= acceptance_status_4 }
 					}
 				}
 				this.interest_group_type = {
@@ -286,26 +282,14 @@ exiles_events.3 = {
 
 	cooldown = { months = normal_modifier_time }
 
-	trigger = { #If an interest group has a character in the exile pool and supports a movement, this fires.
+	trigger = {
 		empty_agitator_slots >= 1
 		any_political_movement = {
-			any_supporting_interest_group = {
-				interest_group_supports_political_movement = yes
-				type = {
-					save_temporary_scope_as = ex_ig_type
-				}
-			}
-			this.desired_law = {
-				save_temporary_scope_as = movement_law
-			}
+			save_temporary_scope_as = movement_scope
 		}
 		any_character_in_exile_pool = {
 			root = this.home_country
-			this.interest_group_type = scope:ex_ig_type
-			law_stance = {
-				law = scope:movement_law
-				value > neutral
-			}
+			could_support_political_movement = scope:movement_scope
 		}
 	}
 
@@ -324,37 +308,19 @@ exiles_events.3 = {
 	}
 	
 	immediate = {
-		random_interest_group = {
-			limit = {
-				interest_group_supports_political_movement = yes
-				any_character_in_exile_pool = {
-					this.interest_group_type = prev.type
-				}
-			}
-			type = {
-				save_temporary_scope_as = ex_ig_type
-			}
-			save_scope_as = exile_ig
-		}
 		random_political_movement = {
 			limit = {
-				any_supporting_interest_group = {
-					is_same_interest_group_type = scope:exile_ig
+				any_character_in_exile_pool = {
+					root = this.home_country
+					could_support_political_movement = prev
 				}
-			}
-			this.desired_law = {
-				save_scope_as = movement_law
 			}
 			save_scope_as = movement_scope
 		}
 		random_character_in_exile_pool = {
 			limit = {
 				root = this.home_country
-				this.interest_group_type = scope:ex_ig_type
-				law_stance = {
-					law = scope:movement_law
-					value > neutral
-				}
+				could_support_political_movement = scope:movement_scope
 			}
 			save_scope_as = exile_scope
 		}
@@ -609,15 +575,11 @@ exiles_events.6 = {
 
 	trigger = {
 		empty_agitator_slots >= 1
-		any_interest_group = { #Must have a political movement supported by this IG and one not supported by it, necessitating at least two.
-			interest_group_supports_political_movement = yes
-			save_temporary_scope_as = movement_ig
-		}
-		any_political_movement = { count >= 2 }
+		any_political_movement = { count >= 5 }
 		any_character_in_exile_pool = {
 			this.culture = {
-				NOT = {
-					culture_is_discriminated_in = root
+				root = {
+					cultural_acceptance_base = { target = prev value >= acceptance_status_4 }
 				}
 			}
 		}
@@ -641,8 +603,8 @@ exiles_events.6 = {
 		random_character_in_exile_pool = {
 			limit = {
 				this.culture = {
-					NOT = {
-						culture_is_discriminated_in = root
+					root = {
+						cultural_acceptance_base = { target = prev value >= acceptance_status_4 }
 					}
 				}
 			}
@@ -705,8 +667,8 @@ exiles_events.7 = {
 		}
 		any_character_in_exile_pool = {
 			this.culture = {
-				NOT = {
-					culture_is_discriminated_in = root
+				root = {
+					cultural_acceptance_base = { target = prev value >= acceptance_status_4 }
 				}
 			}
 		}
@@ -730,8 +692,8 @@ exiles_events.7 = {
 		random_character_in_exile_pool = {
 			limit = {
 				this.culture = {
-					NOT = {
-						culture_is_discriminated_in = root
+					root = {
+						cultural_acceptance_base = { target = prev value >= acceptance_status_4 }
 					}
 				}
 			}
@@ -789,14 +751,8 @@ exiles_events.8 = {
 
 	trigger = {
 		any_political_movement = {
-			this.desired_law = {
-				save_temporary_scope_as = movement_law
-			}
-		}
-		any_character_in_exile_pool = {
-			law_stance = {
-				law = scope:movement_law
-				value > neutral
+			any_character_in_exile_pool = {
+				could_support_political_movement = prev
 			}
 		}
 	}
@@ -818,26 +774,17 @@ exiles_events.8 = {
 	immediate = {
 		random_political_movement = {
 			limit = {
-				this.desired_law = {
-					save_temporary_scope_as = movement_law
-				}	
 				any_character_in_exile_pool = {
-					law_stance = {
-						law = scope:movement_law
-						value > neutral
-					}
+					could_support_political_movement = prev
 				}
 			}
 			save_scope_as = movement_scope
-		}
-		random_character_in_exile_pool = {
-			limit = {
-				law_stance = {
-					law = scope:movement_law
-					value > neutral
-				}	
-			}
-			save_scope_as = exile_scope
+			random_character_in_exile_pool = {
+				limit = {
+					could_support_political_movement = prev
+				}
+				save_scope_as = exile_scope
+			}			
 		}
 	}
 	
@@ -859,7 +806,7 @@ exiles_events.8 = {
 				name = modifier_censored_foreign_manifesto
 				months = normal_modifier_time
 			}
-			random_supporting_interest_group = {
+			random_influenced_interest_group = {
 				add_modifier = {
 					name = modifier_supporters_of_foreigners
 					months = normal_modifier_time
