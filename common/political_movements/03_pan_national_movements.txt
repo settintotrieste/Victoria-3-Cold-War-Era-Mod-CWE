@@ -1,1 +1,180 @@
-﻿
+﻿movement_pan_national = {
+	category = movement_category_pan_national
+
+	ideology = ideology_pan_nationalist
+	character_ideologies = {
+		ideology_autocratic
+		ideology_power_hungry
+		ideology_elitist
+		ideology_democratic
+		ideology_liberal
+	}
+	
+	disband_trigger = {
+		NOT = { has_journal_entry = je_superstate_system }
+	}
+	
+	creation_trigger = {
+		has_journal_entry = je_superstate_system
+	}	
+	creation_weight = {
+		value = 100
+	}
+	on_created = {
+		add_movement_enthusiasm_modifier = yes
+	}
+
+	character_support_trigger = {
+		interest_group ?= { 
+			OR = {
+				has_ideology = ideology:ideology_regionalist
+				has_ideology = ideology:ideology_globalist
+			}
+		}
+		culture = {
+			is_primary_culture_of = root.owner
+		}
+	}
+	character_support_weight = {
+		value = 250
+		if = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_autocratic
+					has_ideology = ideology:ideology_power_hungry
+				}
+			}
+			multiply = {
+				value = 5
+			}
+		}
+	}
+	
+	pop_support_trigger = {
+		culture = {
+			is_primary_culture_of = root.owner
+		}
+	}
+
+	pop_support_factors = {
+		movement_support_high_urbanization
+		movement_support_high_literacy
+		movement_support_below_expected_sol
+		movement_support_radicalization
+		movement_support_cultural_discrimination
+	}
+
+	pop_support_weight = {
+		if = {
+			limit = {
+				culture = {
+					is_primary_culture_of = root.owner
+				}
+			}
+
+			multiply = {
+				desc = "URBAN_STATE"
+				value = 1
+				add = state.state_urbanization_rate
+			}
+
+			if = {
+				limit = {
+					standard_of_living < state.average_expected_sol
+				}
+				add = { # Increases likelihood of support if impoverished
+					desc = "IS_BELOW_EXPECTED_SOL"
+					value = state.average_expected_sol
+					subtract = standard_of_living
+					multiply = 3
+				}
+			}
+
+			if = {
+				limit = {
+					state = {
+						state_cultural_acceptance = {  
+							target = PREV.culture
+							value < acceptance_status_5
+						}	
+					}
+				}
+				multiply = {
+					desc = "POP_DISCRIMINATED"	
+					value = 100
+					subtract = pop_acceptance			
+					divide = 25	
+				}
+			}
+			else = { # Non-discriminated pops are less likely to form separatist movements
+				multiply = {
+					desc = "POP_ACCEPTANCE"	
+					value = 0.10
+				}			
+			}
+
+			multiply = { # Illiterate pops participate at 1/10 the rate of fully literate pops
+				desc = "POP_LITERACY"
+				value = literacy_rate
+				add = 0.10
+			}
+			
+			multiply = { # Multiplied by 2x max
+				desc = "POP_RADICALS"
+				value = pop_radical_fraction
+				add = 1
+			}
+		}
+	}
+	
+	revolution = {
+		possible = {
+			political_movement_support >= 0.05
+		}	
+	
+		weight = {
+			value = 100
+		}
+	
+		state_weight = {
+			add = {
+				value = state_urbanization_rate
+				multiply = 5	
+			}
+		}
+
+		forced_tags = {
+			
+		}
+	}
+
+	secession = {
+		possible = {
+			political_movement_support >= 0.05
+			scope:clout <= 0
+		}
+		
+		weight = {
+			value = 1000
+		}	
+		
+		forced_tags = {
+			
+		}	
+	}
+	
+	additional_radicalism_factors = {	
+		if = {
+			limit = {
+				owner ?= {
+					is_subject = yes
+				}
+			}
+			add = {
+				desc = "LIBERTY_DESIRE"
+				value = owner.liberty_desire
+				divide = 500
+			}
+		}	
+	}
+}
