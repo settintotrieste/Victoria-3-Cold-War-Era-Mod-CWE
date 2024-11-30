@@ -815,11 +815,15 @@ movement_imperialist = {
 	}
 	
 	disband_trigger = {
-		NOT = { has_journal_entry = je_generic_decolonisation_system }
+		OR = { 
+			NOT = { has_journal_entry = je_generic_decolonisation_system }
+			NOT = { is_sufficiently_independent = yes }
+		}
 	}
 	
 	creation_trigger = {
 		has_journal_entry = je_generic_decolonisation_system
+		is_sufficiently_independent = yes
 	}	
 	creation_weight = {
 		value = 100
@@ -977,4 +981,397 @@ movement_imperialist = {
 		}
 	}
 	
+}
+
+movement_anti_corruption = {
+	category = movement_category_ideological
+	
+	ideology = ideology_anti_corruption_movement
+	character_ideologies = {
+		ideology_elitist
+		ideology_democratic
+		ideology_liberal
+	}
+	
+	disband_trigger = {
+		has_law = law_type:law_very_high_anti_corruption
+	}
+	
+	creation_trigger = {
+		NOT = { has_law = law_type:law_very_high_anti_corruption }
+	}	
+	creation_weight = {
+		value = 100
+	}	
+	on_created = {
+		add_movement_enthusiasm_modifier = yes
+	}
+	
+	character_support_trigger = {
+		OR = {
+			has_ideology = ideology:ideology_liberal
+			has_ideology = ideology:ideology_democratic
+			has_ideology = ideology:ideology_elitist
+			has_ideology = ideology:ideology_agitator_pro_human_rights
+		}
+		interest_group ?= { is_in_government = no }
+	}
+	character_support_weight = {
+		value = 200
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_liberal
+			}
+			multiply = {
+				value = 5
+			}
+		}
+		else_if = {
+			limit = {
+				has_ideology = ideology:ideology_democratic
+			}
+			multiply = {
+				value = 2
+			}
+		}
+	}
+
+	pop_support_trigger = {
+		NOT = {
+			is_pop_type = slaves
+		}
+	}
+
+	pop_support_factors = {
+		movement_support_high_literacy
+		movement_support_below_expected_sol
+	}
+	
+	pop_support_weight = {	
+		if = {
+			limit = {
+				standard_of_living < state.average_expected_sol
+			}
+			add = { # Increases likelihood of support if impoverished
+				desc = "IS_BELOW_EXPECTED_SOL"
+				value = state.average_expected_sol
+				subtract = standard_of_living
+				max = 10
+			}
+		}
+		else_if = {
+			limit = {
+				standard_of_living > state.average_expected_sol
+			}
+			add = { # Decreases likelihood of support if well-off
+				desc = "IS_ABOVE_EXPECTED_SOL"
+				value = state.average_expected_sol
+				subtract = standard_of_living
+				min = -5
+			}
+		}
+
+		multiply = { # Illiterate pops participate at 1/4 the rate of fully literate pops
+			desc = "POP_LITERACY"
+			value = literacy_rate
+			add = 0.25
+			max = 1.1 # Needs a less high literacy rate to get started, but caps out the same as other movements
+		}
+
+		multiply = { # Multiplied by 1.25x max
+			desc = "POP_RADICALS"
+			value = pop_radical_fraction
+			divide = 4
+			add = 1
+		}
+	}
+	
+	revolution = {
+		possible = {
+			political_movement_support >= 0.05
+		}
+		
+		weight = {
+			value = 100
+		}	
+	
+		state_weight = {
+			value = 1		
+		}
+	}
+	
+	secession = {
+		possible = {
+			always = no
+		}
+		
+		weight = {
+			value = 1
+		}
+	}	
+}
+
+#Pro-Overlord
+movement_collaborationist = {
+	category = movement_category_ideological
+	
+	ideology = ideology_collaborationist_movement
+	character_ideologies = {
+		ideology_autocratic
+		ideology_power_hungry
+		ideology_elitist
+		ideology_democratic
+		ideology_liberal
+	}
+	
+	disband_trigger = {
+		OR = { 
+			is_sufficiently_independent = yes
+			NOT = { exists = scope:overlord_scope }
+		}
+	}
+	
+	creation_trigger = {
+		NOT = { is_sufficiently_independent = yes }
+	}
+	creation_weight = {
+		value = 100
+	}	
+	on_created = {
+		add_movement_enthusiasm_modifier = yes
+		owner = { 
+			overlord = { 
+				save_scope_as = overlord_scope
+			}
+		}
+	}
+	
+	character_support_trigger = {
+		culture = {
+			is_primary_culture_of = scope:overlord_scope
+		}
+	}
+	character_support_weight = {
+		value = 200
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_autocratic
+			}
+			multiply = {
+				value = 5
+			}
+		}
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_power_hungry
+			}
+			multiply = {
+				value = 3
+			}
+		}
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_elitist
+			}
+			multiply = {
+				value = 1
+			}
+		}
+	}
+
+	pop_support_trigger = {
+		culture = {
+			is_primary_culture_of = scope:overlord_scope
+		}
+		NOT = { is_pop_type = slaves }
+	}
+
+	pop_support_factors = {
+		movement_support_colonial_rule
+		movement_support_high_acceptance
+		movement_support_bureaucrats
+		movement_support_academics
+		movement_support_officers
+		movement_support_clerks
+	}
+	
+	pop_support_weight = {
+		value = 1
+		
+		if = {
+			limit = {
+				culture = {
+					is_primary_culture_of = scope:overlord_scope
+				}
+			}
+			add = {
+				desc = "colonial_rule"
+				value = 15
+				if = {
+					limit = {
+						is_pop_type = bureaucrats
+					}
+					multiply = 1.5
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				is_pop_type = bureaucrats
+			}
+			add = {
+				desc = "POP_BUREAUCRATS"
+				value = 9
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = academics
+			}
+			add = {
+				desc = "POP_ACADEMICS"
+				value = 6
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = capitalists
+			}
+			add = {
+				desc = "POP_CAPITALISTS"
+				value = 3
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = officers
+			}
+			add = {
+				desc = "POP_OFFICERS"
+				value = 3
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = clerks
+			}
+			add = {
+				desc = "POP_CLERKS"
+				value = 3
+			}
+		}
+
+		multiply = { # Illiterate pops participate at 1/10 the rate of fully literate pops
+			desc = "POP_LITERACY"
+			value = literacy_rate
+			add = 0.10
+		}
+
+		multiply = {
+			desc = "POP_ACCEPTANCE"
+			value = pop_acceptance
+			divide = 75
+		}
+	}
+
+	revolution = {
+		possible = {
+			political_movement_support >= 0.05
+		}	
+	
+		weight = {
+			value = 100
+		}
+	
+		state_weight = {
+			value = 1
+			if = {
+				limit = { 
+					OR = {
+					    any_scope_building = {
+							is_building_group = bg_bureaucracy
+							level >= 10
+					    }		
+					}
+				}
+				multiply = 10
+			}
+			else_if = {
+				limit = { 
+					OR = {
+					    any_scope_building = {
+							is_building_group = bg_bureaucracy
+							level >= 5
+					    }		
+					}
+				}
+				multiply = 5
+			}
+			else = {
+				multiply = 0
+			}
+		}
+	}
+	
+	secession = {
+		possible = {
+			political_movement_support >= 0.05
+			scope:clout <= 0
+		}
+		
+		weight = {
+			value = 1000
+		}		
+		
+		state_weight = {
+			value = 1
+			if = {
+				limit = { 
+					OR = {
+					    any_scope_building = {
+							is_building_group = bg_bureaucracy
+							level >= 10
+					    }		
+					}
+				}
+				multiply = 10
+			}
+			else_if = {
+				limit = { 
+					OR = {
+					    any_scope_building = {
+							is_building_group = bg_bureaucracy
+							level >= 5
+					    }		
+					}
+				}
+				multiply = 5
+			}
+			else = {
+				multiply = 0
+			}
+		}		
+	}	
+	
+	additional_radicalism_factors = {
+		owner = {
+			if = {
+				limit = { has_institution = institution_schools }
+				
+				add = {
+					value = 3
+					subtract = "institution_investment_level(institution_schools)"
+					multiply = 0.05
+					desc = "INSTITUTION_FUNDING_LEVEL_schools"
+				}
+			}
+			else = {
+				add = {
+					value = 0.1
+					desc = "NO_INSTITUTION_schools"
+				}		
+			}				
+		}
+	}
 }
