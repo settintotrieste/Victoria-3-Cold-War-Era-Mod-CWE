@@ -1,6 +1,5 @@
 ﻿demand_change_puppet_government = {
 	groups= { 
-		general
 		overlord 
 	}
 	
@@ -9,14 +8,7 @@
 	can_use_obligations = no
 	
 	selectable = {
-	
-		#Power bloc uses different system
-		scope:target_country = { 
-			OR = {
-				is_in_power_bloc = no
-				is_subject_of = scope:actor
-			}
-		}
+		
 		
 	}
 	
@@ -36,7 +28,7 @@
 		#TARGET is a subject of THIS OR THIS has military bases in TARGET
 		OR = { 
 			scope:target_country = { 
-				is_subject_of = scope:actor 
+				is_subject_of = scope:actor
 				is_not_sufficiently_independent = yes
 			}
 			has_diplomatic_pact = { who = scope:target_country type = satellite is_initiator = yes }
@@ -84,6 +76,12 @@
 		OR = { 
 			has_interventionist_fp = yes
 			is_a_dictatorship = yes
+			scope:target_country = { 
+				OR = { 
+					is_a_colonial_subject_gov = yes 
+					is_subject_type = subject_type_special_administrative_region
+				}
+			}
 		}
 		
 	}
@@ -92,42 +90,24 @@
 		
 		scope:target_country = { save_scope_as = target_country_indy_scope }
 		
-		custom_tooltip = {
-			text = demand_change_puppet_government_2.tt
-			#Legislature laws
-			if = { 
-				limit = { has_law = law_type:law_appointed_legislature scope:target_country = { NOT = { has_law = law_type:law_appointed_legislature } } }
-				scope:target_country = { activate_law = law_type:law_appointed_legislature }
+		#Infamy
+		change_infamy = 5
+	
+		#Replace laws
+		scope:target_country = { copy_laws = scope:actor }
+		scope:target_country = {
+			add_modifier = {
+				name = installed_regime
+				months = normal_modifier_time
+				multiplier = 0.2
 			}
-			if = { 
-				limit = { has_law = law_type:law_technocratic_legislature scope:target_country = { NOT = { has_law = law_type:law_technocratic_legislature } } }
-				scope:target_country = { activate_law = law_type:law_technocratic_legislature }
-			}
-			if = { 
-				limit = { has_law = law_type:law_democratic_legislature scope:target_country = { NOT = { has_law = law_type:law_democratic_legislature } } }
-				scope:target_country = { activate_law = law_type:law_democratic_legislature }
-			}
-			
-			#Head of State laws
-			if = { 
-				limit = { has_law = law_type:law_HOS_monarch scope:target_country = { NOR = { has_law = law_type:law_HOS_monarch has_law = law_type:law_HOS_president } } }
-				scope:target_country = { activate_law = law_type:law_HOS_monarch }
-			}
-			if = { 
-				limit = { has_law = law_type:law_HOS_president scope:target_country = { NOR = { has_law = law_type:law_HOS_monarch has_law = law_type:law_HOS_president } } }
-				scope:target_country = { activate_law = law_type:law_HOS_president }
-			}
-			if = { 
-				limit = { has_law = law_type:law_HOS_religious_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_religious_leader } } }
-				scope:target_country = { activate_law = law_type:law_HOS_religious_leader }
-			}
-			if = { 
-				limit = { has_law = law_type:law_HOS_nationalist_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_nationalist_leader } } }
-				scope:target_country = { activate_law = law_type:law_HOS_nationalist_leader }
-			}
-			if = { 
-				limit = { has_law = law_type:law_HOS_communist_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_communist_leader } } }
-				scope:target_country = { activate_law = law_type:law_HOS_communist_leader }
+		}
+		
+		#Impact Power Bloc
+		if = {
+			limit = { is_power_bloc_leader = yes }
+			power_bloc = {
+				add_cohesion_percent = scaled_cohesion_cost
 			}
 		}
 		
@@ -191,6 +171,10 @@
 	}
 
 	ai = {
+	
+		evaluation_chance = {
+			value = 0.25
+		}
 	
 		propose_score = {
 			value = 10
