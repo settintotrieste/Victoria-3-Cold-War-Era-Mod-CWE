@@ -1,0 +1,312 @@
+﻿demand_change_puppet_government = {
+	groups= { 
+		general
+		overlord 
+	}
+	
+	requires_approval = yes
+	
+	can_use_obligations = no
+	
+	selectable = {
+	
+		#Power bloc uses different system
+		scope:target_country = { 
+			OR = {
+				is_in_power_bloc = no
+				is_subject_of = scope:actor
+			}
+		}
+		
+	}
+	
+	potential = {
+		
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#THIS and Target are not revolutionary
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no } 
+		
+		#THIS is not a subject
+		is_sufficiently_independent = yes
+		
+		#TARGET is a subject of THIS OR THIS has military bases in TARGET
+		OR = { 
+			scope:target_country = { 
+				is_subject_of = scope:actor 
+				is_not_sufficiently_independent = yes
+			}
+			has_diplomatic_pact = { who = scope:target_country type = satellite is_initiator = yes }
+			has_diplomatic_pact = { who = scope:target_country type = military_cooperation_agreement is_initiator = yes }
+		}
+		
+		#THIS does not share the same government type as TARGET
+		custom_tooltip = {
+			text = "FORCE_REGIME_CHANGE_GOV_PRINCIPLES_DIST_POWER_PROGRESSIVENESS_DIFFERENCE"
+			OR = {
+			
+				#Legislature laws
+				AND = { has_law = law_type:law_appointed_legislature scope:target_country = { NOT = { has_law = law_type:law_appointed_legislature } } }
+				AND = { has_law = law_type:law_technocratic_legislature scope:target_country = { NOT = { has_law = law_type:law_technocratic_legislature } } }
+				AND = { has_law = law_type:law_democratic_legislature scope:target_country = { NOT = { has_law = law_type:law_democratic_legislature } } }
+				
+				#Head of State laws
+				AND = { has_law = law_type:law_HOS_monarch scope:target_country = { NOR = { has_law = law_type:law_HOS_monarch has_law = law_type:law_HOS_president } } }
+				AND = { has_law = law_type:law_HOS_president scope:target_country = { NOR = { has_law = law_type:law_HOS_president has_law = law_type:law_HOS_monarch } } }
+				AND = { has_law = law_type:law_HOS_religious_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_religious_leader } } }
+				AND = { has_law = law_type:law_HOS_nationalist_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_nationalist_leader } } }
+				AND = { has_law = law_type:law_HOS_communist_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_communist_leader } } }
+				
+			}
+		}
+		
+		#THIS and TARGET are not enemies in a DP
+		hidden_trigger = { NOT = { is_diplomatic_play_enemy_of = scope:target_country } }
+		
+	}
+	
+	possible = {
+		
+		#THIS is not at war with TARGET
+		NOT = { has_war_with = scope:target_country }
+		OR = { 
+			AND = {
+				has_truce_with = scope:target_country
+				scope:target_country = { is_subject_of = scope:actor }
+			}
+			NOT = { has_truce_with = scope:target_country }
+		}
+		
+		#THIS is legally and politically capable of intervention
+		OR = { 
+			has_interventionist_fp = yes
+			is_a_dictatorship = yes
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		scope:target_country = { save_scope_as = target_country_indy_scope }
+		
+		custom_tooltip = {
+			text = demand_change_puppet_government_2.tt
+			#Legislature laws
+			if = { 
+				limit = { has_law = law_type:law_appointed_legislature scope:target_country = { NOT = { has_law = law_type:law_appointed_legislature } } }
+				scope:target_country = { activate_law = law_type:law_appointed_legislature }
+			}
+			if = { 
+				limit = { has_law = law_type:law_technocratic_legislature scope:target_country = { NOT = { has_law = law_type:law_technocratic_legislature } } }
+				scope:target_country = { activate_law = law_type:law_technocratic_legislature }
+			}
+			if = { 
+				limit = { has_law = law_type:law_democratic_legislature scope:target_country = { NOT = { has_law = law_type:law_democratic_legislature } } }
+				scope:target_country = { activate_law = law_type:law_democratic_legislature }
+			}
+			
+			#Head of State laws
+			if = { 
+				limit = { has_law = law_type:law_HOS_monarch scope:target_country = { NOR = { has_law = law_type:law_HOS_monarch has_law = law_type:law_HOS_president } } }
+				scope:target_country = { activate_law = law_type:law_HOS_monarch }
+			}
+			if = { 
+				limit = { has_law = law_type:law_HOS_president scope:target_country = { NOR = { has_law = law_type:law_HOS_monarch has_law = law_type:law_HOS_president } } }
+				scope:target_country = { activate_law = law_type:law_HOS_president }
+			}
+			if = { 
+				limit = { has_law = law_type:law_HOS_religious_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_religious_leader } } }
+				scope:target_country = { activate_law = law_type:law_HOS_religious_leader }
+			}
+			if = { 
+				limit = { has_law = law_type:law_HOS_nationalist_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_nationalist_leader } } }
+				scope:target_country = { activate_law = law_type:law_HOS_nationalist_leader }
+			}
+			if = { 
+				limit = { has_law = law_type:law_HOS_communist_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_communist_leader } } }
+				scope:target_country = { activate_law = law_type:law_HOS_communist_leader }
+			}
+		}
+		
+		#Ruler of TARGET is removed from office, if ruler is not the same interest group
+		scope:target_country = {
+			if = {
+				limit = {
+					ruler ?= { interest_group = { NOT = { is_same_interest_group_type = scope:actor.ruler.interest_group } } }
+				}
+				random_list = { 
+					1 = { 
+						random_scope_character = { limit = { is_ruler = yes } kill_character = yes }
+					}
+					1 = { 
+						random_scope_character = { limit = { is_ruler = yes } convert_IG_ideology_to_agitator_ideology = yes exile_character_with_martyrdom = yes } 
+						get_ruler_for:presidential_elective = {
+							set_character_as_ruler = yes
+						}
+					}
+				}
+			}
+		}
+		
+		scope:target_country = {
+			#Lobby
+			add_lobby_appeasement_from_diplomacy_unidirectional = { 
+				FIRST = scope:target_country
+				SECOND = scope:actor
+				PRO_AMOUNT = -10
+				ANTI_AMOUNT = 10
+				FACTOR = appeasement_embargo_declared
+			}
+		}
+		
+	}
+	
+	decline_effect = {
+		
+		#TARGET domestic effects
+		scope:target_country = { 
+			
+			#Country loses relations with overlord
+			change_relations = { country = scope:actor value = -100 }
+			
+			#Country ruler becomes a hero
+			random_scope_character = { 
+				limit = { is_ruler = yes } 
+				add_modifier = { name = the_man_of_the_hour years = 5 is_decaying = yes } 
+			}
+			
+			save_scope_as = target_country_indy_scope
+		}
+		
+		#Start war of independence against TARGET
+		custom_tooltip = {
+			text = demand_change_puppet_government_1.tt
+			set_variable = { name = demand_puppet_gov_change_overlord months = 1 }
+			scope:target_country = { trigger_event = { id = revolution_system.2 } }
+		}
+		
+	}
+
+	ai = {
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = {
+			
+			#THIS is autocratic
+			exists = ruler
+			ruler = {
+				OR = {
+					has_ideology = ideology:ideology_autocratic
+					has_ideology = ideology:ideology_power_hungry
+				}
+			}
+			
+		}
+	
+		accept_score = {
+			value = 0
+			
+			if = {
+				limit = { NOT = { has_variable = recently_lost_war } }
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -100
+				}
+			}
+			
+			if = {
+				limit = { has_variable = recently_lost_war }
+				add = {
+					desc = "DIPLOMATIC_RECENTLY_LOST_WAR"
+					value = 1000
+				}
+			}
+			
+			#Liberal leaders will refuse acceptance
+			if = {
+				limit = {
+					exists = ruler
+					ruler = {
+						NOR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+							has_ideology = ideology:ideology_elitist
+						}
+					}
+					NOT = { has_variable = recently_lost_war }
+				}
+				add = {
+					desc = "RULER_IS_DEMOCRATIC"
+					value = -100
+				}
+			}
+			
+			#TARGET is fearful of strong army of THIS
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ARMY_STRENGTH"
+				value = "scope:actor.ai_army_comparison(root)"
+				add = 0.5
+				min = -25
+				max = 50
+			}
+
+			#TARGET is ideologically aligned with THIS
+			if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" > 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					max = 50
+				}
+			}
+			else_if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" < 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.5
+					min = -50
+				}					
+			}
+			
+			#THIS must have low infamy
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:infamous
+						"scope:actor.infamy" < infamy_threshold:notorious
+					}
+					value = -25
+				}	
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:notorious
+						"scope:actor.infamy" < infamy_threshold:pariah
+					}
+					value = -50
+				}
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:pariah
+					}
+					value = -100
+				}					
+			}
+			
+		}
+		
+	}
+	
+}
