@@ -1165,6 +1165,135 @@ movement_anti_corruption = {
 	}	
 }
 
+movement_pro_corruption = {
+	category = movement_category_ideological
+	
+	ideology = ideology_pro_corruption_movement
+	character_ideologies = {
+		ideology_autocratic
+		ideology_power_hungry
+	}
+	
+	disband_trigger = {
+		has_law = law_type:law_very_low_anti_corruption
+	}
+	
+	creation_trigger = {
+		NOT = { has_law = law_type:law_very_low_anti_corruption }
+	}	
+	creation_weight = {
+		value = 100
+	}	
+	on_created = {
+		#add_movement_enthusiasm_modifier = yes
+	}
+	
+	can_pressure_interest_group = {
+		is_in_government = yes
+		OR = {
+			has_ideology = ideology:ideology_autocratic
+			has_ideology = ideology:ideology_power_hungry
+		}
+	}
+	
+	character_support_trigger = {
+		OR = {
+			has_ideology = ideology:ideology_autocratic
+			has_ideology = ideology:ideology_power_hungry
+		}
+		interest_group ?= { is_in_government = yes }
+	}
+	character_support_weight = {
+		value = 200
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_autocratic
+			}
+			multiply = {
+				value = 5
+			}
+		}
+	}
+
+	pop_support_trigger = {
+		OR = {
+			is_pop_type = officers
+			is_pop_type = soldiers
+			is_pop_type = bureaucrats
+			is_pop_type = aristocrats
+			is_pop_type = capitalists
+		}
+	}
+
+	pop_support_factors = {
+		movement_support_high_literacy
+		movement_support_below_expected_sol
+	}
+	
+	pop_support_weight = {	
+		if = {
+			limit = {
+				standard_of_living < state.average_expected_sol
+			}
+			add = { # Increases likelihood of support if impoverished
+				desc = "IS_BELOW_EXPECTED_SOL"
+				value = state.average_expected_sol
+				subtract = standard_of_living
+				max = 10
+			}
+		}
+		else_if = {
+			limit = {
+				standard_of_living > state.average_expected_sol
+			}
+			add = { # Decreases likelihood of support if well-off
+				desc = "IS_ABOVE_EXPECTED_SOL"
+				value = state.average_expected_sol
+				subtract = standard_of_living
+				min = -5
+			}
+		}
+
+		multiply = { # Illiterate pops participate at 1/4 the rate of fully literate pops
+			desc = "POP_LITERACY"
+			value = literacy_rate
+			add = 0.25
+			max = 1.1 # Needs a less high literacy rate to get started, but caps out the same as other movements
+		}
+
+		multiply = { # Multiplied by 1.25x max
+			desc = "POP_RADICALS"
+			value = pop_radical_fraction
+			divide = 4
+			add = 1
+		}
+	}
+	
+	revolution = {
+		possible = {
+			political_movement_support >= 0.05
+		}
+		
+		weight = {
+			value = 100
+		}	
+	
+		state_weight = {
+			value = 1		
+		}
+	}
+	
+	secession = {
+		possible = {
+			always = no
+		}
+		
+		weight = {
+			value = 1
+		}
+	}
+}
+
 #Pro-Overlord
 movement_collaborationist = {
 	category = movement_category_ideological
