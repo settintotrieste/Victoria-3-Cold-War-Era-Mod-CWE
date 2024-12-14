@@ -1918,7 +1918,6 @@ historical_diplomatic_incidents.20 = {
 		}
 		
 		#Become Client State of USA
-		set_relations = { country = c:USA value = 100 }
 		c:USA = { trigger_event = { id = historical_diplomatic_incidents.21 } }
 		
 		#Domestic Reaction
@@ -1981,6 +1980,7 @@ historical_diplomatic_incidents.21 = {
         highlighted_option = yes
 		
 		#UK becomes Client State of USA
+		set_relations = { country = c:USA value = 100 }
 		create_diplomatic_pact = {
 			country = c:GBR
 			type = special_relationship
@@ -2079,6 +2079,202 @@ historical_diplomatic_incidents.22 = {
 	option = {
         name = historical_diplomatic_incidents.option.2				# No
 		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The 1958 Lebanon crisis - LEB
+historical_diplomatic_incidents.23 = {
+    type = country_event
+
+    title = LEB_Crisis_1958.t 									# Title of the event; ADD LOCALISATION
+    desc = LEB_Crisis_1958.d 									# Description of the event; ADD LOCALISATION
+    #flavor = LEB_Crisis_1958.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_capitalists_meeting.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/democracy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:LEB ?= this											# Change TAG of the overlord ****
+		game_date >= 1958.7.15									# START DATE: Date colony became self governing ****
+		game_date < 1968.7.15									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		ruler ?= { 
+			has_variable = Camille_Chamoun
+		}
+		
+		#Cause
+		exists = c:UAR
+		c:UAR = {
+			is_sufficiently_independent = yes
+			is_adjacent_to_country = ROOT
+		}
+		exists = c:USA
+		c:USA = {
+			is_a_democracy = yes								# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			country_rank = rank_value:super_power
+			NOT = { is_subject_of = ROOT }
+		}
+		exists = c:SOV
+		c:SOV = {
+			is_a_communist_government = yes						# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			country_rank = rank_value:super_power
+			NOT = { is_subject_of = ROOT }
+		}
+		
+		#Not already having a special relationship
+		NOT = { 
+			has_diplomatic_pact = { 
+				who = c:USA
+				type = special_relationship 
+			} 
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = LEB_Crisis_1958_hdi }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = LEB_Crisis_1958_hdi						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Become Client State of USA
+		c:USA = { trigger_event = { id = historical_diplomatic_incidents.24 } }
+		
+		#Domestic Reaction
+		add_loyalists = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_loyalists = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_radicals = {
+			value = large_radicals
+			religion = rel:sunni
+		}
+		add_radicals = {
+			value = large_radicals
+			religion = rel:shiite
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		#New Ruler
+		ruler = { kill_character = yes }
+		
+		#Gain relations with UAR
+		set_relations = { country = c:UAR value = 100 }
+		
+		#Domestic unrest
+		add_radicals = {
+			value = large_radicals
+			religion = rel:catholic
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The 1958 Lebanon crisis - USA
+historical_diplomatic_incidents.24 = {
+    type = country_event
+	placement = c:LEB
+
+    title = LEB_Crisis_1958.t 									# Title of the event; ADD LOCALISATION
+    desc = LEB_Crisis_1958.d 									# Description of the event; ADD LOCALISATION
+    #flavor = LEB_Crisis_1958.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_capitalists_meeting.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/democracy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#LEB becomes Client State of USA
+		if = { 
+			limit = { is_subject = yes } 
+			make_independent = yes 
+		}
+		set_relations = { country = c:USA value = 100 }
+		create_diplomatic_pact = {
+			country = c:LEB
+			type = protectorate
+		}
+		
+		#Antagonise Russia
+		create_incident = {
+			country = c:SOV
+			value = 10
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		change_relations = { country = c:LEB value = -50 }
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
