@@ -689,12 +689,11 @@ united_nations.9 = {
 		save_scope_as = un_peacekeeping_applicant
 		
 		#UN sends out ultimatum to aggressors to end diplo play or face a containment war
-		random_country = {
+		every_country = {
 			limit = {
-				#exists = yes
 				is_diplomatic_play_enemy_of = ROOT
 				is_diplomatic_play_initiator = yes
-				is_at_war = yes
+				has_war_with = ROOT
 				any_scope_war = { is_warleader = root }
 			}
 			trigger_event = { id = united_nations.10 }
@@ -734,6 +733,10 @@ united_nations.10 = {
 
 	duration = 1
 
+	cancellation_trigger = {
+		is_at_war = no
+	}
+
 	immediate = {
 	
 		random_country = {
@@ -755,8 +758,9 @@ united_nations.10 = {
 		#End diplomatic play
 		every_diplomatic_play = {
 			limit = {
+				is_war = yes
 				initiator_is = scope:un_peacekeeping_aggressor
-				target_is = scope:un_peacekeeping_applicant
+				is_diplomatic_play_participant = scope:un_peacekeeping_applicant
 			}
 			end_play = yes
 		}
@@ -768,23 +772,11 @@ united_nations.10 = {
 		#Create UN Mandates
 		trigger_event = { id = united_nations.13 }
 		
-		#International community is very happy
-		change_infamy = -50
-		
-		#Domestic reaction
-		add_radicals = {
-			value = large_radicals
-		}
-		
-		#National humiliation
-		add_modifier = { 
-			name = national_humiliation 
-			months = 60 
-			is_decaying = yes 
-		} 
+		#International community is very unhappy
+		change_infamy = -50 
 		
 		#Clean up
-		trigger_event = { id = united_nations.12 }
+		hidden_effect = { trigger_event = { id = united_nations.12 } }
 		
 		ai_chance = { 
 			base = 0
@@ -820,8 +812,19 @@ united_nations.10 = {
 					}
 					NOT = { is_in_war_together = scope:un_peacekeeping_aggressor }
 					NOT = { has_war_with = ROOT }
-					has_variable = un_peacekeeping_unsc_supporter_var
+					#has_variable = un_peacekeeping_unsc_supporter_var
 					is_not_neutral = yes
+					
+					NOR = { 
+						is_subject_of = ROOT
+						has_diplomatic_pact = { who = ROOT type = alliance }
+						has_diplomatic_pact = { who = ROOT type = defensive_pact }
+						has_diplomatic_pact = { who = ROOT type = guarantee_independence }
+						has_diplomatic_pact = { who = ROOT type = non_aggression_pact }
+						has_diplomatic_pact = { who = ROOT type = support_independence }
+						has_diplomatic_pact = { who = ROOT type = special_relationship }
+					}
+					
 				}
 				trigger_event = { id = united_nations.101 }
 			}
@@ -848,6 +851,7 @@ united_nations.10 = {
 #UN Peacekeeping ultimatum - Option to join war
 united_nations.101 = {
 	type = country_event
+	placement = scope:un_peacekeeping_aggressor
 
 	title = UN_peacekeeping_join_war.t
 	desc = UN_peacekeeping_join_war.d
@@ -863,6 +867,13 @@ united_nations.101 = {
 	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
 
 	duration = 1
+
+	cancellation_trigger = {
+		OR = { 
+			NOT = { exists = scope:un_peacekeeping_aggressor }
+			NOT = { exists = scope:un_peacekeeping_applicant }
+		}
+	}
 
 	immediate = {
 	
@@ -891,10 +902,20 @@ united_nations.101 = {
 		highlighted_option = yes
 		
 		#THIS joins the TARGET's war
-		every_scope_war = {
-			join_war = {
-				target = scope:un_peacekeeping_aggressor
-				side = scope:un_peacekeeping_applicant
+		every_diplomatic_play = {
+			limit = {
+				is_war = yes
+				is_diplomatic_play_participant = scope:un_peacekeeping_aggressor
+				is_diplomatic_play_participant = scope:un_peacekeeping_applicant
+				NOT = { is_diplomatic_play_participant = ROOT }
+			}
+			if = {
+				limit = {
+					initiator_is = scope:un_peacekeeping_aggressor
+				}
+				add_target_backers = {
+					ROOT
+				}
 			}
 		}
 		
@@ -1184,6 +1205,19 @@ united_nations.13 = {
 	option = {
 		name = UN_peacekeeping_resolution_mandate.option
 		default_option = yes
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			months = 60 
+			is_decaying = yes 
+		}
+		
 	}
 	
 }
