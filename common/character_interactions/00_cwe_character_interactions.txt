@@ -813,6 +813,7 @@ ban_character_political_party = {
 		has_role = politician
 		is_ruler = no
 		interest_group = {
+			is_in_government = no
 			NOT = { has_variable = IG_party_banned }
 			has_party = yes
 		}
@@ -829,7 +830,6 @@ ban_character_political_party = {
 		}
 		
 		interest_group ?= {
-			is_in_government = no
 			save_temporary_scope_as = IG_banned_from_parties
 			custom_tooltip = {
 				text = party_not_banned.tt
@@ -944,6 +944,180 @@ unban_character_political_party = {
 			}
 			add = 10
 		}
+	}
+	
+}
+
+expel_character_political_party = {
+	icon = "gfx/interface/icons/generic_icons/missing_dlc.dds"
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+
+	potential = {
+		owner ?= scope:actor
+		has_role = politician
+		interest_group = {
+			is_in_government = yes
+			has_party = yes
+			NOR = {
+				AND = { 
+					party ?= { is_party_type = centrist_party }
+					has_modifier = IG_expelled_centrist_party
+				}
+				AND = { 
+					party ?= { is_party_type = communist_party }
+					has_modifier = IG_expelled_communist_party
+				}
+				AND = { 
+					party ?= { is_party_type = conservative_party }
+					has_modifier = IG_expelled_conservative_party
+				}
+				AND = { 
+					party ?= { is_party_type = fascist_party }
+					has_modifier = IG_expelled_fascist_party
+				}
+				AND = { 
+					party ?= { is_party_type = liberal_party }
+					has_modifier = IG_expelled_liberal_party
+				}
+				AND = { 
+					party ?= { is_party_type = libertarian_party }
+					has_modifier = IG_expelled_libertarian_party
+				}
+				AND = { 
+					party ?= { is_party_type = progressive_party }
+					has_modifier = IG_expelled_progressive_party
+				}
+				AND = { 
+					party ?= { is_party_type = socialist_party }
+					has_modifier = IG_expelled_socialist_party
+				}
+				AND = { 
+					party ?= { is_party_type = traditionalist_party }
+					has_modifier = IG_expelled_traditionalist_party
+				}
+			}
+		}
+	}
+
+	possible = {
+		
+		is_ruler = no
+		
+		owner ?= { 
+			in_election_campaign = no
+		}
+		
+		interest_group ?= {
+			is_strongest_ig_in_government = no
+		}
+		
+	}
+
+	effect = {
+		if = {
+			limit = { has_modifier = cabinet_minister }
+			remove_modifier = cabinet_minister
+		}
+		this.interest_group = {
+			if = {
+				limit = { has_modifier = cabinet_minister_ig }
+				remove_modifier = cabinet_minister_ig
+			}
+			if = { 
+				limit = { party ?= { is_party_type = centrist_party } }
+				add_modifier = { 
+					name = IG_expelled_centrist_party
+					years = 10
+					is_decaying = yes
+				}
+			}
+			if = { 
+				limit = { party ?= { is_party_type = communist_party } }
+				add_modifier = { 
+					name = IG_expelled_communist_party
+					years = 10
+					is_decaying = yes
+				}
+			}
+			if = { 
+				limit = { party ?= { is_party_type = conservative_party } }
+				add_modifier = { 
+					name = IG_expelled_conservative_party
+					years = 10
+					is_decaying = yes
+				}
+			}
+			if = { 
+				limit = { party ?= { is_party_type = fascist_party } }
+				add_modifier = { 
+					name = IG_expelled_fascist_party
+					years = 10
+					is_decaying = yes
+				}
+			}
+			if = { 
+				limit = { party ?= { is_party_type = liberal_party } }
+				add_modifier = { 
+					name = IG_expelled_liberal_party
+					years = 10
+					is_decaying = yes
+				}
+			}
+			if = { 
+				limit = { party ?= { is_party_type = libertarian_party } }
+				add_modifier = { 
+					name = IG_expelled_libertarian_party
+					years = 10
+					is_decaying = yes
+				}
+			}
+			if = { 
+				limit = { party ?= { is_party_type = progressive_party } }
+				add_modifier = { 
+					name = IG_expelled_progressive_party
+					years = 10
+					is_decaying = yes
+				}
+			}
+			if = { 
+				limit = { party ?= { is_party_type = socialist_party } }
+				add_modifier = { 
+					name = IG_expelled_socialist_party
+					years = 10
+					is_decaying = yes
+				}
+			}
+			if = { 
+				limit = { party ?= { is_party_type = traditionalist_party } }
+				add_modifier = { 
+					name = IG_expelled_traditionalist_party
+					years = 10
+					is_decaying = yes
+				}
+			}
+			save_scope_as = IG_expelled_from_party
+			custom_tooltip = {
+				text = party_expelled.tt
+				this.party ?= { 
+					save_scope_as = party_affected_by_expulsion_IG
+					remove_ig_from_party = scope:IG_expelled_from_party
+				}
+				remove_ruling_interest_group = yes
+			}
+		}
+		owner ?= {
+			add_radicals = {
+				value = very_large_radicals
+				interest_group = scope:IG_expelled_from_party
+			}
+			recalculate_pop_ig_support = yes
+		}
+	}
+
+	cooldown = { months = 6 }
+
+	ai_chance = {
+		value = 0
 	}
 	
 }
