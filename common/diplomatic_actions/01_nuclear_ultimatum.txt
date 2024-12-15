@@ -155,24 +155,56 @@
 
 	decline_effect = {
 		
-		#THIS gains infamy for unprovoked nuclear attack
-		create_incident = {
-			country = scope:target_country
-			value = 100
-		}
+		#Fail safe in case parties peaced out before timer expired
+		if = {
+			limit = {
+				OR = {
+					AND = {
+						any_scope_war = {
+							is_warleader = scope:actor
+							is_warleader = scope:target_country
+							is_war_participant = scope:actor
+							is_war_participant = scope:target_country
+						}
+						scope:target_country = { is_diplomatic_play_enemy_of = scope:actor }
+						has_war_with = scope:target_country
+						NOT = { is_in_war_together = scope:target_country }
+					}
+					AND = {
+						NOT = { is_in_war_together = scope:target_country }
+						any_country = {
+							has_diplomatic_pact = { who = scope:actor type = station_nuclear_weapons is_initiator = no }
+							has_war_with = scope:target_country
+							any_scope_war = {
+								is_warleader = this
+								is_warleader = scope:target_country
+							}
+							is_diplomatic_play_enemy_of = scope:target_country
+						}
+					}
+				}
+			}
 		
-		#Notice
-		scope:actor = { save_scope_as = nuclear_war_actor }
-		scope:target_country = { save_scope_as = nuclear_war_target }
-		custom_tooltip = {
-			text = launch_nuclear_weapons.1.tt
-		}
+			#THIS gains infamy for unprovoked nuclear attack
+			create_incident = {
+				country = scope:target_country
+				value = 100
+			}
+			
+			#Notice
+			scope:actor = { save_scope_as = nuclear_war_actor }
+			scope:target_country = { save_scope_as = nuclear_war_target }
+			custom_tooltip = {
+				text = launch_nuclear_weapons.1.tt
+			}
+			
+			#Start nuclear war
+			effect_launch_nuclear_weapons_to_target = yes
+			effect_launch_nuclear_weapons_to_all_enemy_countries = yes
+			effect_launch_nuclear_weapons_to_all_allied_countries = yes
+			effect_cleanup_nuclear_damage = yes
 		
-		#Start nuclear war
-		effect_launch_nuclear_weapons_to_target = yes
-		effect_launch_nuclear_weapons_to_all_enemy_countries = yes
-		effect_launch_nuclear_weapons_to_all_allied_countries = yes
-		effect_cleanup_nuclear_damage = yes
+		}
 		
 	}
 	
