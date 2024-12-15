@@ -305,22 +305,12 @@ arrange_accident = {
 			has_modifier = THIS_is_ruler 
 		}
 		
-		NOR = {
-			has_modifier = indicted_character
-			has_modifier = convicted_character
-			has_modifier = unjustly_convicted_character
-		}
-		
-		NOR = {
-			is_interest_group_type = ig_armed_forces
-			is_interest_group_type = ig_intelligentsia
-		}
-		
-		#Country can arrest dissidents at will
-		owner ?= {
-			has_law = law_type:law_outlawed_dissent
-			has_law = law_type:law_secret_police
-			hidden_trigger = { has_journal_entry = je_secret_police_system }
+		interest_group = {
+			is_in_government = no
+			NOR = {
+				is_interest_group_type = ig_armed_forces
+				is_interest_group_type = ig_intelligentsia
+			}
 		}
 		
 		#Not already targeted for assassination
@@ -334,14 +324,19 @@ arrange_accident = {
 		is_in_battle = no
 	
 		interest_group = {
-			is_in_government = no
 			is_insurrectionary = no
 			is_marginal = no
 		}
 		
 		owner ?= {
 		
+			#Ruler is willing to kill
 			has_dictatorial_ruler = yes
+			
+			#Country can arrest dissidents at will
+			has_law = law_type:law_outlawed_dissent
+			has_law = law_type:law_secret_police
+			hidden_trigger = { has_journal_entry = je_secret_police_system }
 			
 			#Has enough loyalty
 			custom_tooltip = {
@@ -454,6 +449,7 @@ arrange_accident = {
 							value = very_large_radicals
 							interest_group = scope:relevant_ig
 						}
+						change_infamy = 10
 					}
 					if = {
 						limit = {
@@ -508,6 +504,7 @@ arrange_accident = {
 							value = very_large_radicals
 							interest_group = scope:relevant_ig
 						}
+						change_infamy = 10
 					}
 					if = {
 						limit = {
@@ -1118,6 +1115,280 @@ expel_character_political_party = {
 
 	ai_chance = {
 		value = 0
+	}
+	
+}
+
+sabotage_interest_group = {
+	icon = "gfx/interface/icons/event_icons/population_radical.dds"
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+
+	potential = {
+	
+		owner ?= scope:actor
+		
+		#Not Ruler
+		is_ruler = no
+		is_heir = no
+		
+		#Leader of IG
+		has_role = politician
+		
+		#Not in Government
+		interest_group = {
+			is_in_government = no
+		}
+		NOR = { 
+			has_modifier = cabinet_minister
+			has_modifier = THIS_is_ruler 
+		}
+		
+		#Not already sabotaged
+		interest_group = { 
+			NOT = { has_modifier = ig_clout_sabotaged } 
+		}
+		
+	}
+
+	possible = {
+	
+		owner ?= {
+		
+			#Ruler is willing to sabotage IG
+			has_dictatorial_ruler = yes
+			
+			#Country has a secret service
+			has_law = law_type:law_secret_police
+			hidden_trigger = { has_journal_entry = je_secret_police_system }
+			
+			#Has enough loyalty
+			custom_tooltip = {
+				text = secret_police_is_loyal.character.tt
+				has_variable = secret_police_loyalty
+				var:secret_police_loyalty > 50
+			}
+			
+			#Has enough action points
+			custom_tooltip = {
+				text = secret_police_action_25_points.tt
+				has_variable = secret_police_action_points 
+				var:secret_police_action_points > 25
+			}
+			
+		}
+		
+	}
+
+	effect = {
+	
+		#Subtract action points
+		custom_tooltip = {
+			text = secret_police_action_subtract_25_points.tt
+			if = {
+				limit = { has_variable = secret_police_action_points }
+				change_variable = { 
+					name = secret_police_action_points
+					add = -25
+				}
+			}
+		}
+		
+		#Add effects
+		random_list = {
+			40 = {
+				modifier = {
+					if = {
+						limit = {
+							exists = institution:institution_home_affairs
+							owner.institution:institution_home_affairs.investment >= 2
+						}
+						add = 25
+					}
+					if = {
+						limit = {
+							exists = institution:institution_home_affairs
+							owner.institution:institution_home_affairs.investment >= 3
+						}
+						add = 25
+					}
+					if = {
+						limit = {
+							exists = institution:institution_home_affairs
+							owner.institution:institution_home_affairs.investment >= 4
+						}
+						add = 25
+					}
+					if = {
+						limit = {
+							exists = institution:institution_home_affairs
+							owner.institution:institution_home_affairs.investment >= 5
+						}
+						add = 25
+					}
+				}
+				this.interest_group = {
+					add_modifier = { 
+						name = ig_clout_sabotaged
+						years = 5
+						is_decaying = yes
+					} 
+				}
+			}
+			40 = {
+				
+			}
+			20 = {
+				modifier = {
+					if = {
+						limit = {
+							exists = institution:institution_home_affairs
+							owner.institution:institution_home_affairs.investment >= 2
+						}
+						subtract = 5
+					}
+					if = {
+						limit = {
+							exists = institution:institution_home_affairs
+							owner.institution:institution_home_affairs.investment >= 3
+						}
+						subtract = 5
+					}
+					if = {
+						limit = {
+							exists = institution:institution_home_affairs
+							owner.institution:institution_home_affairs.investment >= 4
+						}
+						subtract = 5
+					}
+					if = {
+						limit = {
+							exists = institution:institution_home_affairs
+							owner.institution:institution_home_affairs.investment >= 5
+						}
+						subtract = 5
+					}
+				}
+				this.interest_group = {
+					add_modifier = { 
+						name = ig_clout_sabotaged
+						years = 5
+						is_decaying = yes
+					} 
+					save_scope_as = relevant_ig
+				}
+				owner ?= {
+					add_radicals = {
+						value = large_radicals
+						interest_group = scope:relevant_ig
+					}
+					change_infamy = 5
+				}
+			}
+		}
+		
+	}
+
+	cooldown = { months = normal_modifier_time }
+	show_confirmation_box = yes
+
+	ai_chance = {
+		value = -50
+		if = {
+			limit = {
+				is_historical = yes		
+			}
+			add = -100
+		}
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -5
+				}		
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -10
+				}		
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					NOT = { is_a_dictatorship = yes }
+				}			
+			}
+			add = -25
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_outlawed_dissent
+				}			
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_censorship
+				}			
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_limited_free_speech
+				}			
+			}
+			add = -10
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_full_free_speech
+				}			
+			}
+			add = -20
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					any_interest_group = {
+						is_insurrectionary = yes
+					}
+				}			
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					ruler = {
+						OR = {
+							has_trait = cruel
+						}
+					}
+				}			
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					ruler = {
+						OR = {
+							has_trait = imperious
+						}
+					}
+				}			
+			}
+			add = 10
+		}
 	}
 	
 }
