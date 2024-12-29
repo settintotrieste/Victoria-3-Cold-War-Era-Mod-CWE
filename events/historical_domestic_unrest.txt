@@ -6508,3 +6508,104 @@ historical_domestic_unrest.68 = {
     }
 
 }
+
+#1979 Statute of Gernika
+historical_domestic_unrest.69 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = SPA_BSQ_devolution.t 								# Title of the event; ADD LOCALISATION
+    desc = SPA_BSQ_devolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = SPA_BSQ_devolution.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SPA ?= this
+		game_date >= 1979.12.12
+		game_date < 1989.12.12
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:BSQ										# Change TAG of the colony ****
+		}
+		any_scope_state = { 
+			state_region = { is_homeland = cu:basque } 
+			is_incorporated = yes
+		}
+		
+		#No devolution
+		NOT = { has_law = law_type:law_federal_state }
+		
+		# Event has not been fired before
+		NOT = { has_variable = SPA_BSQ_devolution_hdu }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH ROOT SECTION
+		random_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:basque }		# Change homeland identity to match colony to be released ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = SPA_BSQ_devolution_hdu					# Change variable ****
+	
+	}
+    
+	option = {
+        name = historical_domestic_unrest.option.1				# Yes
+		
+		#Devolution
+		activate_law = law_type:law_federal_state
+		effect_increase_multiculturalism = yes
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2				# No
+		default_option = yes
+		highlighted_option = yes
+		
+		# Internal unrest
+		add_radicals = {
+			culture = cu:basque
+			value = large_radicals
+		}
+		every_scope_state = {
+			limit = { state_region = { is_homeland = cu:basque } }
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		#International reaction
+		create_incident = {
+			country = ROOT
+			value = 10
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}

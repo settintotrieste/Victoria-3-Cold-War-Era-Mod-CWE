@@ -3460,3 +3460,172 @@ historical_economy.38 = {
     }
 
 }
+
+# General Agreement on Tariffs and Trade
+historical_economy.39 = {
+    type = country_event
+	placement = scope:UN_HQ_state
+
+    title = GATT_Reforms.t 										# Title of the event; ADD LOCALISATION
+    desc = GATT_Reforms.d 										# Description of the event; ADD LOCALISATION
+    flavor = GATT_Reforms.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Start date
+		game_date >= 1948.1.1									# START DATE: Date colony became self governing ****
+		
+		# 5 year pulses
+		NOT = { has_modifier = GATT_member }					# CHANGE ****
+		
+		#THIS is not part of a CU
+		is_junior_in_customs_union = no
+		
+		#Not in WTO or not has no tariffs
+		NOT = { has_modifier = WTO_member }
+		NOT = { has_law = law_type:law_free_trade }
+		
+    }
+	
+	immediate = {
+		
+		random_state = {
+			limit = { has_modifier = un_headquarters }
+			save_scope_as = UN_HQ_state
+		}
+		
+		remove_modifier = GATT_member
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		# Add GATT effects - Random tariff reductions
+		random_list = {
+			1 = {
+				modifier = {
+					if = {
+						limit = {
+							has_modifier = economic_cycle_1
+						}
+					}
+					add = 1
+				}
+				add_modifier = {
+					name = GATT_member
+					years = 5
+					multiplier = 0.2
+				}
+			}
+			1 = {
+				modifier = {
+					if = {
+						limit = {
+							has_modifier = economic_cycle_2
+						}
+					}
+					add = 1
+				}
+				add_modifier = {
+					name = GATT_member
+					years = 5
+					multiplier = 0.4
+				}
+			}
+			1 = {
+				modifier = {
+					if = {
+						limit = {
+							has_modifier = economic_cycle_3
+						}
+					}
+					add = 1
+				}
+				add_modifier = {
+					name = GATT_member
+					years = 5
+					multiplier = 0.6
+				}
+			}
+			1 = {
+				modifier = {
+					if = {
+						limit = {
+							has_modifier = economic_cycle_4
+						}
+					}
+					add = 1
+				}
+				add_modifier = {
+					name = GATT_member
+					years = 5
+					multiplier = 0.8
+				}
+			}
+			1 = {
+				modifier = {
+					if = {
+						limit = {
+							has_modifier = economic_cycle_5
+						}
+					}
+					add = 1
+				}
+				add_modifier = {
+					name = GATT_member
+					years = 5
+					#multiplier = 1.0
+				}
+			}
+		}
+		
+		#Gain relations with free trade loving nations
+		every_country = {
+			limit = { 
+				country_rank >= rank_value:major_power
+				has_law = law_type:law_free_trade
+				is_sufficiently_independent = yes
+			}
+			change_relations = { country = ROOT value = 5 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+			modifier = { trigger = { has_law = law_type:law_nationalist_fp } add = -100 }
+			modifier = { trigger = { has_law = law_type:law_isolationism } add = -100 }
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		remove_modifier = GATT_member
+		
+		#Gain relations with free trade loving nations
+		every_country = {
+			limit = { 
+				country_rank >= rank_value:major_power
+				has_law = law_type:law_free_trade
+				is_sufficiently_independent = yes
+			}
+			change_relations = { country = ROOT value = -10 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
