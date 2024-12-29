@@ -314,6 +314,26 @@ add_wargoal_regime_change = {
 
 	possible = {
 		
+		#THIS does not share the same government type as TARGET
+		custom_tooltip = {
+			text = "FORCE_REGIME_CHANGE_GOV_PRINCIPLES_DIST_POWER_PROGRESSIVENESS_DIFFERENCE"
+			OR = {
+			
+				#Legislature laws
+				AND = { has_law = law_type:law_appointed_legislature scope:target_country = { NOT = { has_law = law_type:law_appointed_legislature } } }
+				AND = { has_law = law_type:law_technocratic_legislature scope:target_country = { NOT = { has_law = law_type:law_technocratic_legislature } } }
+				AND = { has_law = law_type:law_democratic_legislature scope:target_country = { NOT = { has_law = law_type:law_democratic_legislature } } }
+				
+				#Head of State laws
+				AND = { has_law = law_type:law_HOS_monarch scope:target_country = { NOR = { has_law = law_type:law_HOS_monarch has_law = law_type:law_HOS_president } } }
+				AND = { has_law = law_type:law_HOS_president scope:target_country = { NOR = { has_law = law_type:law_HOS_president has_law = law_type:law_HOS_monarch } } }
+				AND = { has_law = law_type:law_HOS_religious_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_religious_leader } } }
+				AND = { has_law = law_type:law_HOS_nationalist_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_nationalist_leader } } }
+				AND = { has_law = law_type:law_HOS_communist_leader scope:target_country = { NOT = { has_law = law_type:law_HOS_communist_leader } } }
+				
+			}
+		}
+		
 		#Only 1 wargoal added per 6 months
 		NOT = { has_modifier = recently_added_wargoal }
 		
@@ -1207,6 +1227,127 @@ add_wargoal_contain_threat = {
 				holder = scope:actor
 				target_country = scope:target_country
 				type = contain_threat
+				primary_demand = yes
+			}
+		}
+		
+		#Add timer
+		add_modifier = {
+			name = recently_added_wargoal
+			months = 6
+			is_decaying = yes
+		}
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0.25
+		}
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			
+			#THIS has a strong army or navy
+			OR = { 
+				navy_size > scope:target_country.navy_size
+				army_size > scope:target_country.army_size
+			}
+			
+		}
+		
+	}
+	
+}
+
+add_wargoal_revoke_all_claims = {
+	groups= { general }
+	should_notify_third_parties = yes
+	show_in_lens = no
+	
+	texture = "gfx/interface/icons/war_goals/revoke_claim.dds"
+
+	potential = {
+		
+		#Parties are not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#Not a civil war country
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#THIS has independent foreign affairs
+		is_sufficiently_independent = yes
+		
+		#TARGET is at war, is the war leader and not at war with THIS
+		is_at_war = yes
+		has_war_with = scope:target_country
+		any_diplomatic_play = {
+			OR = {
+				initiator_is = scope:actor
+				target_is = scope:actor
+			}
+			is_war = yes
+			is_diplomatic_play_participant = scope:target_country
+			is_diplomatic_play_participant = scope:actor
+		}
+		
+		#THIS can add wargoals against TARGET
+		can_add_wargoal_against = scope:target_country
+		
+		#TARGET has claims in THIS
+		any_scope_state = {
+			has_claim_by = scope:target_country
+		}
+		
+		#THIS does not already have the wargoal against TARGET
+		NOT = {
+			war_side_has_war_goal_of_type_against = {
+				type = revoke_all_claims
+				target = scope:target_country
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#Only 1 wargoal added per 6 months
+		NOT = { has_modifier = recently_added_wargoal }
+		
+	}
+	
+	accept_effect = {
+		
+		#Lobby
+		add_lobby_appeasement_from_diplomacy_bidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country 
+			PRO_AMOUNT = -5
+			ANTI_AMOUNT = 5
+			FACTOR = appeasement_embargo_declared
+		}
+		
+		#Add wargoal
+		every_diplomatic_play = {
+			limit = {
+				OR = {
+					initiator_is = scope:actor
+					target_is = scope:actor
+				}
+				is_war = yes
+				is_diplomatic_play_participant = scope:target_country
+				is_diplomatic_play_participant = scope:actor
+			}
+			add_war_goal = {
+				holder = scope:actor
+				target_country = scope:target_country
+				type = revoke_all_claims
 				primary_demand = yes
 			}
 		}
