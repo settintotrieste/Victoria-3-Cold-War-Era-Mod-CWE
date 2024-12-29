@@ -87,7 +87,7 @@ add_wargoal_annex_country = {
 		#Add infamy for add wargoals mid war
 		create_incident = {
 			value = 10
-			country = root
+			country = scope:target_country
 		}
 		
 		#Add timer
@@ -221,7 +221,7 @@ add_wargoal_make_protectorate = {
 		#Add infamy for add wargoals mid war
 		create_incident = {
 			value = 10
-			country = root
+			country = scope:target_country
 		}
 		
 		#Add timer
@@ -355,7 +355,7 @@ add_wargoal_regime_change = {
 		#Add infamy for add wargoals mid war
 		create_incident = {
 			value = 10
-			country = root
+			country = scope:target_country
 		}
 		
 		#Add timer
@@ -472,7 +472,7 @@ add_wargoal_conquer_state = {
 		is_capital = no
 		is_under_colonization = no
 		NOT = { is_target_of_wargoal = scope:target_country }
-		NOT = { is_homeland_of_country_cultures = scope:actor }
+		NOT = { has_claim_by = scope:actor }
 	}
 	
 	accept_effect = {
@@ -499,9 +499,22 @@ add_wargoal_conquer_state = {
 			}
 			
 			#Add infamy for add wargoals mid war
-			create_incident = {
-				value = 4
-				country = root
+			if = {
+				limit = {
+					scope:second_state ?= {
+						is_homeland_of_country_cultures = scope:actor
+					}
+				}
+				create_incident = {
+					value = 4
+					country = scope:target_country
+				}
+			}
+			else = {
+				create_incident = {
+					value = 8
+					country = scope:target_country
+				}
 			}
 			
 			#Add timer
@@ -612,7 +625,7 @@ add_wargoal_return_state = {
 		is_capital = no
 		is_under_colonization = no
 		NOT = { is_target_of_wargoal = scope:target_country }
-		is_homeland_of_country_cultures = scope:actor
+		has_claim_by = scope:actor
 	}
 	
 	accept_effect = {
@@ -639,9 +652,22 @@ add_wargoal_return_state = {
 			}
 			
 			#Add infamy for add wargoals mid war
-			create_incident = {
-				value = 2
-				country = root
+			if = {
+				limit = {
+					scope:second_state ?= {
+						is_homeland_of_country_cultures = scope:actor
+					}
+				}
+				create_incident = {
+					value = 2
+					country = scope:target_country
+				}
+			}
+			else = {
+				create_incident = {
+					value = 4
+					country = scope:target_country
+				}
 			}
 			
 			#Add timer
@@ -671,6 +697,547 @@ add_wargoal_return_state = {
 	
 		propose_score = {
 			value = 0
+		}
+		
+	}
+	
+}
+
+add_wargoal_take_treaty_port = {
+	groups= { general }
+	should_notify_third_parties = yes
+	show_in_lens = no
+	requires_approval = no
+	
+	texture = "gfx/interface/icons/war_goals/take_treaty_port.dds"
+	
+	# Either country should have an available state. Trade State is used as a
+	# catch all possibilities Diplomatic Action because Grant/Take State are currently
+	# limited to Overlords/Subjects.
+	state_selection = second_required
+	
+	second_state_list = second_country
+
+	potential = {
+	
+		#Parties are not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#Not a civil war country
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#THIS has independent foreign affairs
+		is_sufficiently_independent = yes
+		
+		#TARGET is independent
+		#scope:target_country = { is_subject = no }
+		
+		#TARGET is at war, is the war leader and not at war with THIS
+		is_at_war = yes
+		has_war_with = scope:target_country
+		any_diplomatic_play = {
+			OR = {
+				initiator_is = scope:actor
+				target_is = scope:actor
+			}
+			is_war = yes
+			is_diplomatic_play_participant = scope:target_country
+			is_diplomatic_play_participant = scope:actor
+		}
+		
+		#THIS can add wargoals against TARGET
+		can_add_wargoal_against = scope:target_country
+		
+		#THIS does not already have the wargoal against TARGET
+		NOT = {
+			war_participant_has_war_goal_of_type_against = {
+				type = regime_change
+				target = scope:target_country
+			}
+		}
+		
+	}
+	
+	possible = {
+		
+		#Player only to avoid border gore
+		is_player = yes
+		
+		#Only 1 wargoal added per 6 months
+		NOT = { has_modifier = recently_added_wargoal }
+		
+		#General war goal restrictions
+		diplo_play_war_check_cwe = yes
+		
+	}
+	
+	second_state_trigger = {
+		owner = scope:target_country
+		is_capital = no
+		is_under_colonization = no
+		is_coastal = yes
+		NOT = { is_target_of_wargoal = scope:target_country }
+	}
+	
+	accept_effect = {
+		if = {
+			limit = { exists = scope:second_state }
+			
+			#Add wargoal
+			every_diplomatic_play = {
+				limit = {
+					OR = {
+						initiator_is = scope:actor
+						target_is = scope:actor
+					}
+					is_war = yes
+					is_diplomatic_play_participant = scope:target_country
+					is_diplomatic_play_participant = scope:actor
+				}
+				add_war_goal = {
+					holder = scope:actor
+					target_state = scope:second_state
+					type = take_treaty_port
+					#primary_demand = yes
+				}
+			}
+			
+			#Add infamy for add wargoals mid war
+			if = {
+				limit = {
+					scope:second_state ?= {
+						is_homeland_of_country_cultures = scope:actor
+					}
+				}
+				create_incident = {
+					value = 2
+					country = scope:target_country
+				}
+			}
+			else = {
+				create_incident = {
+					value = 5
+					country = scope:target_country
+				}
+			}
+			
+			#Add timer
+			add_modifier = {
+				name = recently_added_wargoal
+				months = 6
+				is_decaying = yes
+			}
+			
+			#Lobby
+			add_lobby_appeasement_from_diplomacy_bidirectional = { 
+				FIRST = root
+				SECOND = scope:target_country 
+				PRO_AMOUNT = -3
+				ANTI_AMOUNT = 3
+				FACTOR = appeasement_embargo_declared
+			}
+			
+		}
+	}
+	
+	ai = {
+		
+		evaluation_chance = {
+			value = 0
+		}
+	
+		propose_score = {
+			value = 0
+		}
+		
+	}
+	
+}
+
+add_wargoal_war_reparations = {
+	groups= { general }
+	should_notify_third_parties = yes
+	show_in_lens = no
+	
+	texture = "gfx/interface/icons/war_goals/war_reparations.dds"
+
+	potential = {
+		
+		#Parties are not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#Not a civil war country
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#THIS has independent foreign affairs
+		is_sufficiently_independent = yes
+		
+		#TARGET is at war, is the war leader and not at war with THIS
+		is_at_war = yes
+		has_war_with = scope:target_country
+		any_diplomatic_play = {
+			OR = {
+				initiator_is = scope:actor
+				target_is = scope:actor
+			}
+			is_war = yes
+			is_diplomatic_play_participant = scope:target_country
+			is_diplomatic_play_participant = scope:actor
+		}
+		
+		#THIS can add wargoals against TARGET
+		can_add_wargoal_against = scope:target_country
+		
+		#THIS does not already have the wargoal against TARGET
+		NOT = {
+			war_participant_has_war_goal_of_type_against = {
+				type = war_reparations
+				target = scope:target_country
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#Only 1 wargoal added per 6 months
+		NOT = { has_modifier = recently_added_wargoal }
+		
+		#General war goal restrictions
+		diplo_play_war_check_cwe = yes
+		
+	}
+	
+	accept_effect = {
+		
+		#Lobby
+		add_lobby_appeasement_from_diplomacy_bidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country 
+			PRO_AMOUNT = -5
+			ANTI_AMOUNT = 5
+			FACTOR = appeasement_embargo_declared
+		}
+		
+		#Add wargoal
+		every_diplomatic_play = {
+			limit = {
+				OR = {
+					initiator_is = scope:actor
+					target_is = scope:actor
+				}
+				is_war = yes
+				is_diplomatic_play_participant = scope:target_country
+				is_diplomatic_play_participant = scope:actor
+			}
+			add_war_goal = {
+				holder = scope:actor
+				target_country = scope:target_country
+				type = war_reparations
+				#primary_demand = yes
+			}
+		}
+		
+		#Add infamy for add wargoals mid war
+		create_incident = {
+			value = 2
+			country = scope:target_country
+		}
+		
+		#Add timer
+		add_modifier = {
+			name = recently_added_wargoal
+			months = 6
+			is_decaying = yes
+		}
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0		
+		}
+	
+		propose_score = {
+			value = 0
+		}
+		
+		will_propose = {
+			
+			#Not if will cause AI to exceed infamy limit
+			infamy < infamy_threshold:pariah
+			
+			#THIS has a strong army or navy
+			OR = { 
+				navy_size > scope:target_country.navy_size
+				army_size > scope:target_country.army_size
+			}
+			
+			#War is going well for THIS
+			scope:target_country = { enemy_occupation > 0.25 }
+			
+		}
+		
+	}
+	
+}
+
+add_wargoal_humiliation = {
+	groups= { general }
+	should_notify_third_parties = yes
+	show_in_lens = no
+	
+	texture = "gfx/interface/icons/war_goals/humiliation.dds"
+
+	potential = {
+		
+		#Parties are not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#Not a civil war country
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#THIS has independent foreign affairs
+		is_sufficiently_independent = yes
+		
+		#TARGET is at war, is the war leader and not at war with THIS
+		is_at_war = yes
+		has_war_with = scope:target_country
+		any_diplomatic_play = {
+			OR = {
+				initiator_is = scope:actor
+				target_is = scope:actor
+			}
+			is_war = yes
+			is_diplomatic_play_participant = scope:target_country
+			is_diplomatic_play_participant = scope:actor
+		}
+		
+		#THIS can add wargoals against TARGET
+		can_add_wargoal_against = scope:target_country
+		
+		#THIS does not already have the wargoal against TARGET
+		NOT = {
+			war_participant_has_war_goal_of_type_against = {
+				type = humiliation
+				target = scope:target_country
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#Only 1 wargoal added per 6 months
+		NOT = { has_modifier = recently_added_wargoal }
+		
+		#General war goal restrictions
+		diplo_play_war_check_cwe = yes
+		
+	}
+	
+	accept_effect = {
+		
+		#Lobby
+		add_lobby_appeasement_from_diplomacy_bidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country 
+			PRO_AMOUNT = -5
+			ANTI_AMOUNT = 5
+			FACTOR = appeasement_embargo_declared
+		}
+		
+		#Add wargoal
+		every_diplomatic_play = {
+			limit = {
+				OR = {
+					initiator_is = scope:actor
+					target_is = scope:actor
+				}
+				is_war = yes
+				is_diplomatic_play_participant = scope:target_country
+				is_diplomatic_play_participant = scope:actor
+			}
+			add_war_goal = {
+				holder = scope:actor
+				target_country = scope:target_country
+				type = humiliation
+				#primary_demand = yes
+			}
+		}
+		
+		#Add infamy for add wargoals mid war
+		create_incident = {
+			value = 2
+			country = scope:target_country
+		}
+		
+		#Add timer
+		add_modifier = {
+			name = recently_added_wargoal
+			months = 6
+			is_decaying = yes
+		}
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0		
+		}
+	
+		propose_score = {
+			value = 0
+		}
+		
+		will_propose = {
+			
+			#Not if will cause AI to exceed infamy limit
+			infamy < infamy_threshold:pariah
+			
+			#THIS has a strong army or navy
+			OR = { 
+				navy_size > scope:target_country.navy_size
+				army_size > scope:target_country.army_size
+			}
+			
+			#War is going well for THIS
+			scope:target_country = { enemy_occupation > 0.25 }
+			
+		}
+		
+	}
+	
+}
+
+add_wargoal_contain_threat = {
+	groups= { general }
+	should_notify_third_parties = yes
+	show_in_lens = no
+	
+	texture = "gfx/interface/icons/war_goals/contain_threat.dds"
+
+	potential = {
+		
+		#Parties are not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#Not a civil war country
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#Only TARGET is a pariah
+		infamy < infamy_threshold:pariah
+		infamy >= infamy_threshold:pariah
+		
+		#THIS has independent foreign affairs
+		is_sufficiently_independent = yes
+		
+		#TARGET is at war, is the war leader and not at war with THIS
+		is_at_war = yes
+		has_war_with = scope:target_country
+		any_diplomatic_play = {
+			OR = {
+				initiator_is = scope:actor
+				target_is = scope:actor
+			}
+			is_war = yes
+			is_diplomatic_play_participant = scope:target_country
+			is_diplomatic_play_participant = scope:actor
+		}
+		
+		#THIS can add wargoals against TARGET
+		can_add_wargoal_against = scope:target_country
+		
+		#THIS does not already have the wargoal against TARGET
+		NOT = {
+			war_side_has_war_goal_of_type_against = {
+				type = contain_threat
+				target = scope:target_country
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#Only 1 wargoal added per 6 months
+		NOT = { has_modifier = recently_added_wargoal }
+		
+		#THIS does not have restricted war rights
+		NOT = { has_law = law_type:law_no_war }
+		
+		#THIS has some army
+		NOT = { has_law = law_type:law_peasant_levies }
+		
+	}
+	
+	accept_effect = {
+		
+		#Lobby
+		add_lobby_appeasement_from_diplomacy_bidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country 
+			PRO_AMOUNT = -5
+			ANTI_AMOUNT = 5
+			FACTOR = appeasement_embargo_declared
+		}
+		
+		#Add wargoal
+		every_diplomatic_play = {
+			limit = {
+				OR = {
+					initiator_is = scope:actor
+					target_is = scope:actor
+				}
+				is_war = yes
+				is_diplomatic_play_participant = scope:target_country
+				is_diplomatic_play_participant = scope:actor
+			}
+			add_war_goal = {
+				holder = scope:actor
+				target_country = scope:target_country
+				type = contain_threat
+				primary_demand = yes
+			}
+		}
+		
+		#Add timer
+		add_modifier = {
+			name = recently_added_wargoal
+			months = 6
+			is_decaying = yes
+		}
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0.25
+		}
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			
+			#THIS has a strong army or navy
+			OR = { 
+				navy_size > scope:target_country.navy_size
+				army_size > scope:target_country.army_size
+			}
+			
 		}
 		
 	}
