@@ -1,0 +1,147 @@
+join_GATT_decision = {
+
+	is_shown = {
+		NOT = { has_modifier = GATT_member }
+		
+		#Date of establishment
+		game_date >= 1948.1.1
+		
+		is_revolutionary = no is_secessionist = no
+	}
+
+	possible = {
+		
+		#NOT a WTO member
+		NOT = { has_modifier = WTO_member }
+		
+		#NOT isolationist
+		NOT = { has_law = law_type:law_isolationism }
+		
+		#THIS is not part of a CU
+		is_junior_in_customs_union = no
+		
+		#Standard checks
+		is_sufficiently_independent = yes
+		is_at_war = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:notorious
+		
+		#AI will only join the GATT if it wants to have Free Trade
+		exists = ruler
+		ruler ?= { 
+			interest_group = {
+				law_stance = {
+					law = law_type:law_free_trade
+					value > neutral
+				}
+			}
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS joins the GATT
+		add_modifier = { name = GATT_member }
+		
+		#Add JE
+		add_journal_entry = { type = je_gatt_system }
+		
+		#Gain relations with free trade loving nations
+		every_country = {
+			limit = { 
+				country_rank >= rank_value:major_power
+				has_law = law_type:law_free_trade
+				is_sufficiently_independent = yes
+			}
+			change_relations = { country = ROOT value = 10 }
+		}
+		
+	}
+
+	ai_chance = {
+		base = 0	
+		
+		modifier = {
+		
+			trigger = {
+				
+				#AI will only join the GATT if it wants to have Free Trade
+				ruler ?= { 
+					interest_group = {
+						law_stance = {
+							law = law_type:law_free_trade
+							value > neutral
+						}
+					}
+				}
+				
+			}
+			
+			add = 100
+			
+		}
+		
+	}
+	
+}
+
+leave_GATT_decision = {
+
+	is_shown = {
+		has_modifier = GATT_member
+	}
+
+	possible = {
+		
+		#Standard checks
+		is_sufficiently_independent = yes
+		is_at_war = no
+		
+		#Have a ruler who hates free trade
+		exists = ruler
+		ruler ?= { 
+			interest_group = {
+				law_stance = {
+					law = law_type:law_free_trade
+					value < neutral
+				}
+			}
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS joins the GATT
+		remove_modifier = GATT_member
+		
+	}
+
+	ai_chance = {
+		base = 0	
+		
+		modifier = {
+		
+			trigger = {
+				
+				#AI will only leave the GATT if it hates Free Trade
+				ruler ?= {
+					interest_group = {
+						law_stance = {
+							law = law_type:law_free_trade
+							value < disapprove
+						}
+					}
+				}
+				
+			}
+			
+			add = 100
+			
+		}
+		
+	}
+	
+}
