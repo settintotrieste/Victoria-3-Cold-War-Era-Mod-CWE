@@ -1141,6 +1141,125 @@ add_wargoal_humiliation = {
 	
 }
 
+add_wargoal_liberate_subject = {
+	groups= { general }
+	should_notify_third_parties = yes
+	show_in_lens = no
+	
+	texture = "gfx/interface/icons/war_goals/liberate_subject.dds"
+
+	potential = {
+		
+		#Parties are not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#Not a civil war country
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#THIS has independent foreign affairs
+		is_sufficiently_independent = yes
+		
+		#TARGET is a subject
+		scope:target_country = { 
+			is_subject = yes 
+			NOT = { is_subject_of = scope:actor }
+		}
+		
+		#TARGET is at war, is the war leader and not at war with THIS
+		is_at_war = yes
+		has_war_with = scope:target_country
+		any_diplomatic_play = {
+			OR = {
+				initiator_is = scope:actor
+				target_is = scope:actor
+			}
+			is_war = yes
+			is_diplomatic_play_participant = scope:target_country
+			is_diplomatic_play_participant = scope:actor
+		}
+		
+		#THIS can add wargoals against TARGET
+		can_add_wargoal_against = scope:target_country
+		
+		#THIS does not already have the wargoal against TARGET
+		NOT = {
+			war_participant_has_war_goal_of_type_against = {
+				type = liberate_subject
+				target = scope:target_country
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#Only 1 wargoal added per 6 months
+		NOT = { has_modifier = recently_added_wargoal }
+		
+		#General war goal restrictions
+		diplo_play_war_check_cwe = yes
+		
+	}
+	
+	accept_effect = {
+		
+		#Lobby
+		add_lobby_appeasement_from_diplomacy_unidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country 
+			PRO_AMOUNT = -5
+			ANTI_AMOUNT = 5
+			FACTOR = appeasement_embargo_declared
+		}
+		
+		#Add wargoal
+		create_diplomatic_play = {
+			target_country = scope:target_country
+			type = dp_liberate_subject
+			war = yes
+		}
+		
+		#Add timer
+		add_modifier = {
+			name = recently_added_wargoal
+			months = 6
+			is_decaying = yes
+		}
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0		
+		}
+	
+		propose_score = {
+			value = 0
+		}
+		
+		will_propose = {
+			
+			#Not if will cause AI to exceed infamy limit
+			infamy < infamy_threshold:pariah
+			
+			#THIS has a strong army or navy
+			OR = { 
+				navy_size > scope:target_country.navy_size
+				army_size > scope:target_country.army_size
+			}
+			
+			#War is going well for THIS
+			scope:target_country = { enemy_occupation > 0.25 }
+			
+		}
+		
+	}
+	
+}
+
 add_wargoal_contain_threat = {
 	groups= { general }
 	should_notify_third_parties = yes
