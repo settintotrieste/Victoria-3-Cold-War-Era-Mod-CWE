@@ -26,7 +26,7 @@ def translate(rawtext) -> str:
 
 
 dstLang = "japanese"
-fileCommonName = "0_buildings_l"
+fileCommonName = "0_countries_l"
 filepathIn = f"english\\{fileCommonName}_english.yml"
 filepathOut = f"{dstLang}\\{fileCommonName}_{dstLang}.yml"
 
