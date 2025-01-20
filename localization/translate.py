@@ -70,8 +70,8 @@ if __name__ == "__main__":
     # print(list(LANGUAGES.values())) # Supported Languages
 
     # All you need to do is set these three variables below.
-    fileCommonName = "0_general_l"
-    srcLang = "english"
-    dstLang = "japanese"
+    fileCommonName = "0_general_l"  # If you want to translate 0_events_je_l_english.yml, set "0_events_je_l"
+    srcLang = "english"  # Source Language
+    dstLang = "japanese"  # Target Language
 
     translateCWE(fileCommonName, dstLang, srcLang)
