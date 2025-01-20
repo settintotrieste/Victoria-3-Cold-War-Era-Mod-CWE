@@ -41,7 +41,6 @@ def translateText(rawtext, dstLang, srcLang="english") -> str:
 def translateCWE(fileCommonName, dstLang, srcLang="english", overwriteFlag=False):
     inPath = os.path.join(srcLang, f"{fileCommonName}_{srcLang}.yml")
     outPath = os.path.join(dstLang, f"{fileCommonName}_{dstLang}.yml")
-
     if not overwriteFlag and os.path.exists(outPath):
         print(f"{outPath} exists. Skipping...")
         return
@@ -68,21 +67,11 @@ def translateCWE(fileCommonName, dstLang, srcLang="english", overwriteFlag=False
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Translator for Cold War Era Mod")
-    parser.add_argument("commonName", help="", default="0_general_l")
-    parser.add_argument(
-        "dstLang", help="Target language", choices=list(LANGUAGES.values())
-    )
-    parser.add_argument(
-        "--srcLang",
-        help="Source language",
-        default="english",
-        choices=list(LANGUAGES.values()),
-    )
-    args = parser.parse_args()
+    # print(list(LANGUAGES.values())) # Supported Languages
+
     # All you need to do is set these three variables below.
     fileCommonName = "0_general_l"
     srcLang = "english"
     dstLang = "japanese"
 
-    translateCWE(args.commonName, args.dstLang, args.srcLang)
+    translateCWE(fileCommonName, dstLang, srcLang)
