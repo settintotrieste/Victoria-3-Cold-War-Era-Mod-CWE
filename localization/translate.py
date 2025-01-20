@@ -29,42 +29,21 @@ def getLineN(filepath):
     return count
 
 
-def separateTextAndCommands(rawText) -> tuple[str, str]:
-    # $foo$ and [var] are commands which should not be translated
-    texts = [""]
-    commands = [""]
-    isCommand = False
+def hasCommand(rawText) -> tuple[str, str]:
+    # $foo$, [var], #foobar#! are commands which should not be translated
+    isInCommand = False
     commandBrackets = {"$": "$", "[": "]", "#": "!"}
     commandPrefix = None
     for ch in rawText:
-        if not isCommand and ch in commandBrackets:
+        if not isInCommand and ch in commandBrackets:
             # start of command
-            isCommand = True
+            isInCommand = True
             commandPrefix = ch
-            texts.append("")
-            commands[-1] += ch
             continue
-        elif isCommand and ch == commandBrackets[commandPrefix]:
+        elif isInCommand and ch == commandBrackets[commandPrefix]:
             # end of command
-            isCommand = False
-            commands[-1] += ch
-            commands.append("")
-            continue
-        if isCommand:
-            commands[-1] += ch
-        else:
-            texts[-1] += ch
-    return texts, commands
-
-
-def mergeTextsAndCommands(texts, commands):
-    result = ""
-    while len(texts) > 0 or len(commands) > 0:
-        if len(texts) > 0:
-            result += texts.pop(0)
-        if len(commands) > 0:
-            result += commands.pop(0)
-    return result
+            return True
+    return False
 
 
 def translate(rawText, dstLang, srcLang="english") -> str:
@@ -76,23 +55,17 @@ def translate(rawText, dstLang, srcLang="english") -> str:
         return translate(rawText, dstLang, srcLang) + " " + str(x)
     except:
         pass
-    while True:
-        try:
-            texts, commands = separateTextAndCommands(rawText)
-            translatedTexts = []
-            for text in texts:
-                if not hasAlphabets(text):
-                    translatedText = text
-                else:
-                    print(text)
-                    translatedText = translator.translate(text, dstLang, srcLang).text
-                translatedTexts.append(translatedText)
-            newline = mergeTextsAndCommands(translatedTexts, commands)
-            translatorCache[rawText] = newline
-            return newline
-        except:
-            print("Error occured. Waiting for 5 secs...")
-            time.sleep(5)
+    translatedText = rawText
+    if hasAlphabets(rawText) and not hasCommand(rawText):
+        while True:
+            try:
+                translatedText = translator.translate(rawText, dstLang, srcLang).text
+                break
+            except:
+                print("Error occured. Waiting for 5 secs...")
+                time.sleep(5)
+    translatorCache[rawText] = translatedText
+    return translatedText
 
 
 def translateCWE(fileCommonName, dstLang, srcLang="english", overwriteFlag=False):
@@ -108,15 +81,19 @@ def translateCWE(fileCommonName, dstLang, srcLang="english", overwriteFlag=False
 
     pbar = tqdm(total=getLineN(inPath))
     for line in inFile:
+        pbar.update(1)
+        if not hasAlphabets(line) or line.removeprefix(" ")[0] == "#":
+            outFile.write(line)
+            continue
         fields = line.split('"')
         if len(fields) == 3:
             rawtext = fields[1]
-            if len(rawtext.removeprefix(" ")) > 0:
-                translated = translate(rawtext, dstLang, srcLang)
-                fields[1] = translated
+            translated = translate(rawtext, dstLang, srcLang)
+            fields[1] = translated
+        elif len(fields) == 1:
+            fields[0] = fields[0].replace(f"l_{srcLang}", f"l_{dstLang}")
         newline = '"'.join(fields)
         outFile.write(newline)
-        pbar.update(1)
     pbar.close()
 
     outFile.close()
