@@ -97,6 +97,20 @@ def translate(rawText, dstLang, srcLang="english") -> str:
 def translateCWE(
     fileCommonName, dstLang, srcLang="english", overwriteFlag=False, position=0
 ):
+    argostranslate.package.update_package_index()
+    available_packages = argostranslate.package.get_available_packages()
+    try:
+        package_to_install = next(
+            filter(
+                lambda x: x.from_name.lower() == srcLang.lower()
+                and x.to_name.lower() == dstLang,
+                available_packages,
+            )
+        )
+    except:
+        raise ModuleNotFoundError(f"{srcLang} -> {dstLang} not supported.")
+    argostranslate.package.install_from_path(package_to_install.download())
+
     inPath = os.path.join(srcLang, f"{fileCommonName}_{srcLang}.yml")
     outPath = os.path.join(dstLang, f"{fileCommonName}_{dstLang}.yml")
     if not overwriteFlag and os.path.exists(outPath):
@@ -128,7 +142,7 @@ def translateCWE(
     inFile.close()
 
 
-def f(input):
+def translateCWETask(input):
     position, fileCommonName, dstLang, srcLang = input
     translateCWE(fileCommonName, dstLang, srcLang, position=position)
 
@@ -139,7 +153,7 @@ def translateCWEParalell(fileCommonNames, dstLang, srcLang):
         for position in range(len(fileCommonNames))
     ]
     with Pool(initializer=tqdm.set_lock, initargs=(RLock(),)) as p:
-        p.map(f, input)
+        p.map(translateCWETask, input)
 
 
 if __name__ == "__main__":
@@ -161,19 +175,4 @@ if __name__ == "__main__":
     ]
     srcLang = "english"  # Source Language
     dstLang = "japanese"  # Target Language
-
-    argostranslate.package.update_package_index()
-    available_packages = argostranslate.package.get_available_packages()
-    try:
-        package_to_install = next(
-            filter(
-                lambda x: x.from_name.lower() == srcLang.lower()
-                and x.to_name.lower() == dstLang,
-                available_packages,
-            )
-        )
-    except:
-        raise ModuleNotFoundError(f"{srcLang} -> {dstLang} not supported.")
-    argostranslate.package.install_from_path(package_to_install.download())
-
     translateCWEParalell(fileCommonNames, dstLang, srcLang)
