@@ -32,24 +32,24 @@ def separateTextAndSymbols(rawText) -> tuple[str, str]:
     # $foo$, [var] and #foobar#! are symbols which should not be translated
     texts = [""]
     symbols = [""]
-    isCommand = False
-    commandBrackets = {"$": "$", "[": "]", "#": "!"}
-    commandPrefix = None
+    isSymbol = False
+    symbolBrackets = {"$": "$", "[": "]", "#": "!", "@": "!"}
+    symbolPrefix = None
     for ch in rawText:
-        if not isCommand and ch in commandBrackets:
+        if not isSymbol and ch in symbolBrackets:
             # start of command
-            isCommand = True
-            commandPrefix = ch
+            isSymbol = True
+            symbolPrefix = ch
             texts.append("")
             symbols[-1] += ch
             continue
-        elif isCommand and ch == commandBrackets[commandPrefix]:
+        elif isSymbol and ch == symbolBrackets[symbolPrefix]:
             # end of command
-            isCommand = False
+            isSymbol = False
             symbols[-1] += ch
             symbols.append("")
             continue
-        if isCommand:
+        if isSymbol:
             symbols[-1] += ch
         else:
             texts[-1] += ch
