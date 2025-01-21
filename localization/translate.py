@@ -31,21 +31,42 @@ def getLineN(filepath):
     return count
 
 
-def hasCommand(rawText) -> tuple[str, str]:
-    # $foo$, [var], #foobar#! are commands which should not be translated
-    isInCommand = False
+def separateTextAndSymbols(rawText) -> tuple[str, str]:
+    # $foo$, [var] and #foobar#! are symbols which should not be translated
+    texts = [""]
+    symbols = [""]
+    isCommand = False
     commandBrackets = {"$": "$", "[": "]", "#": "!"}
     commandPrefix = None
     for ch in rawText:
-        if not isInCommand and ch in commandBrackets:
+        if not isCommand and ch in commandBrackets:
             # start of command
-            isInCommand = True
+            isCommand = True
             commandPrefix = ch
+            texts.append("")
+            symbols[-1] += ch
             continue
-        elif isInCommand and ch == commandBrackets[commandPrefix]:
+        elif isCommand and ch == commandBrackets[commandPrefix]:
             # end of command
-            return True
-    return False
+            isCommand = False
+            symbols[-1] += ch
+            symbols.append("")
+            continue
+        if isCommand:
+            symbols[-1] += ch
+        else:
+            texts[-1] += ch
+    return texts, symbols
+
+
+def mergeTextsAndSymbols(texts, symbols):
+    result = ""
+    while len(texts) > 0 or len(symbols) > 0:
+        if len(texts) > 0:
+            result += texts.pop(0)
+        if len(symbols) > 0:
+            result += symbols.pop(0)
+    return result
 
 
 def translate(rawText, dstLang, srcLang="english") -> str:
@@ -58,18 +79,19 @@ def translate(rawText, dstLang, srcLang="english") -> str:
     except:
         pass
     translatedText = rawText
-    if hasAlphabets(rawText) and not hasCommand(rawText):
+    if hasAlphabets(rawText):
+        texts, symbols = separateTextAndSymbols(rawText)
         while True:
             try:
                 translatedText = argostranslate.translate.translate(
-                    rawText, from_code, to_code
+                    " XXX ".join(texts), from_code, to_code
                 )
-                # translatedText = translator.translate(rawText, dstLang, srcLang).text
+                newTexts = translatedText.replace("xxx", "XXX").split("XXX")
                 break
             except:
                 time.sleep(5)
-    translatorCache[rawText] = translatedText
-    return translatedText
+    translatorCache[rawText] = mergeTextsAndSymbols(newTexts, symbols)
+    return translatorCache[rawText]
 
 
 def translateCWE(
