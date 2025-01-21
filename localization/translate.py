@@ -1,14 +1,16 @@
 import os
 import time
 from tqdm import tqdm
-from googletrans import Translator, LANGUAGES
 from multiprocessing import Pool, freeze_support, RLock
+import argostranslate.package
+import argostranslate.translate
 
-# Please install "tqdm" and "googletrans" in advance.
-# pip install tqdm googletrans
+# Please install "tqdm" and "argostranslate" in advance.
+# pip install tqdm argostranslate
 
-translator = Translator()
 translatorCache = {}
+from_code = "en"
+to_code = "ja"
 
 
 def hasAlphabets(string):
@@ -57,9 +59,12 @@ def translate(rawText, dstLang, srcLang="english") -> str:
         pass
     translatedText = rawText
     if hasAlphabets(rawText) and not hasCommand(rawText):
-        for _ in range(10):
+        while True:
             try:
-                translatedText = translator.translate(rawText, dstLang, srcLang).text
+                translatedText = argostranslate.translate.translate(
+                    rawText, from_code, to_code
+                )
+                # translatedText = translator.translate(rawText, dstLang, srcLang).text
                 break
             except:
                 time.sleep(5)
@@ -134,5 +139,19 @@ if __name__ == "__main__":
     ]
     srcLang = "english"  # Source Language
     dstLang = "japanese"  # Target Language
+
+    argostranslate.package.update_package_index()
+    available_packages = argostranslate.package.get_available_packages()
+    try:
+        package_to_install = next(
+            filter(
+                lambda x: x.from_name.lower() == srcLang.lower()
+                and x.to_name.lower() == dstLang,
+                available_packages,
+            )
+        )
+    except:
+        raise ModuleNotFoundError(f"{srcLang} -> {dstLang} not supported.")
+    argostranslate.package.install_from_path(package_to_install.download())
 
     translateCWEParalell(fileCommonNames, dstLang, srcLang)
