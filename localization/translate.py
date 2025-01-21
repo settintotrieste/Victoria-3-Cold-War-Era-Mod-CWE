@@ -1,8 +1,8 @@
 import os
 import time
-import argparse
 from tqdm import tqdm
 from googletrans import Translator, LANGUAGES
+from multiprocessing import Pool, freeze_support, RLock
 
 # Please install "tqdm" and "googletrans" in advance.
 # pip install tqdm googletrans
@@ -57,18 +57,19 @@ def translate(rawText, dstLang, srcLang="english") -> str:
         pass
     translatedText = rawText
     if hasAlphabets(rawText) and not hasCommand(rawText):
-        while True:
+        for _ in range(10):
             try:
                 translatedText = translator.translate(rawText, dstLang, srcLang).text
                 break
             except:
-                print("Error occured. Waiting for 5 secs...")
                 time.sleep(5)
     translatorCache[rawText] = translatedText
     return translatedText
 
 
-def translateCWE(fileCommonName, dstLang, srcLang="english", overwriteFlag=False):
+def translateCWE(
+    fileCommonName, dstLang, srcLang="english", overwriteFlag=False, position=0
+):
     inPath = os.path.join(srcLang, f"{fileCommonName}_{srcLang}.yml")
     outPath = os.path.join(dstLang, f"{fileCommonName}_{dstLang}.yml")
     if not overwriteFlag and os.path.exists(outPath):
@@ -79,7 +80,7 @@ def translateCWE(fileCommonName, dstLang, srcLang="english", overwriteFlag=False
     inFile = open(inPath, "r", encoding="utf-8")
     outFile = open(outPath, "w", encoding="utf-8")
 
-    pbar = tqdm(total=getLineN(inPath))
+    pbar = tqdm(desc=fileCommonName, total=getLineN(inPath), position=position)
     for line in inFile:
         pbar.update(1)
         if not hasAlphabets(line) or line.removeprefix(" ")[0] == "#":
@@ -100,12 +101,38 @@ def translateCWE(fileCommonName, dstLang, srcLang="english", overwriteFlag=False
     inFile.close()
 
 
+def f(input):
+    position, fileCommonName, dstLang, srcLang = input
+    translateCWE(fileCommonName, dstLang, srcLang, position=position)
+
+
+def translateCWEParalell(fileCommonNames, dstLang, srcLang):
+    input = [
+        (position, fileCommonNames[position], dstLang, srcLang)
+        for position in range(len(fileCommonNames))
+    ]
+    with Pool(initializer=tqdm.set_lock, initargs=(RLock(),)) as p:
+        p.map(f, input)
+
+
 if __name__ == "__main__":
+    freeze_support()  # Windows のみ必要
     # print(list(LANGUAGES.values())) # Supported Languages
 
-    # All you need to do is set these three variables below.
-    fileCommonName = "0_general_l"  # If you want to translate 0_events_je_l_english.yml, set "0_events_je_l"
+    # All you need to do is set three variables below.
+    # If you want to translate 0_events_je_l_english.yml, set "0_events_je_l"
+    fileCommonNames = [
+        "0_buildings_l",
+        "0_countries_l",
+        "0_events_je_l",
+        "0_general_l",
+        "0_hub_names_l",
+        "0_laws_l",
+        "0_leaders_l",
+        "0_states_l",
+        "0_techs_l",
+    ]
     srcLang = "english"  # Source Language
     dstLang = "japanese"  # Target Language
 
-    translateCWE(fileCommonName, dstLang, srcLang)
+    translateCWEParalell(fileCommonNames, dstLang, srcLang)
