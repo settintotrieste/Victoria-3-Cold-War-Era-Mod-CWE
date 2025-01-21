@@ -79,6 +79,9 @@ def translate(rawText, dstLang, srcLang="english") -> str:
     if hasAlphabets(rawText):
         texts, symbols = separateTextAndSymbols(rawText)
         if len(texts) > texts.count(""):
+            langs = argostranslate.translate.get_installed_languages()
+            from_code = [x.code for x in langs if x.name.lower() == srcLang][0]
+            to_code = [x.code for x in langs if x.name.lower() == dstLang][0]
             newTexts = (
                 argostranslate.translate.translate(
                     " XXX ".join(texts), from_code, to_code
