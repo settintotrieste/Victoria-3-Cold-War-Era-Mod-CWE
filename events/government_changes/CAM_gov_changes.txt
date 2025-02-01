@@ -18,8 +18,7 @@ CAM_gov_changes.1 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:CAM
-		this = c:CAM											# Change TAG of the overlord ****
+		c:CAM ?= this
 		game_date >= 1970.3.18									# START DATE: Date colony became self governing ****
 		game_date < 1980.3.18									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -83,13 +82,9 @@ CAM_gov_changes.1 = {
 		default_option = yes
 		
 		#Major discontent
-		custom_tooltip = {
-			text = everyone_is_angry_custom_tooltip
-			every_scope_state = {
-				add_radicals_in_state = {
-					value = large_radicals
-				}
-			}
+		add_radicals = {
+			value = large_radicals
+			strata = lower
 		}
 		add_modifier = { 
 			name = stirrings_of_revolution
@@ -123,8 +118,7 @@ CAM_gov_changes.2 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:CAM
-		this = c:CAM											# Change TAG of the overlord ****
+		c:CAM ?= this
 		game_date >= 1975.4.17									# START DATE: Date colony became self governing ****
 		game_date < 1985.4.17									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -154,7 +148,7 @@ CAM_gov_changes.2 = {
 		make_independent = yes
 		
 		#Leader flees
-		ruler = { exile_character = yes }
+		ruler ?= { exile_character = yes }
 		
 		#Enact new regime
 		effect_starting_politics_communist_republic = yes
@@ -176,6 +170,7 @@ CAM_gov_changes.2 = {
 				cruel
 				reserved
 			}
+			on_created = { set_variable = Pol_Pot }
 		}
 		
 		ai_chance = { 
@@ -189,13 +184,9 @@ CAM_gov_changes.2 = {
 		default_option = yes
 		
 		#Major discontent
-		custom_tooltip = {
-			text = everyone_is_angry_custom_tooltip
-			every_scope_state = {
-				add_radicals_in_state = {
-					value = large_radicals
-				}
-			}
+		add_radicals = {
+			value = large_radicals
+			strata = lower
 		}
 		add_modifier = { 
 			name = stirrings_of_revolution
@@ -211,8 +202,287 @@ CAM_gov_changes.2 = {
 
 }
 
-# Cambodian Return to democracy
+# Fall of Pol Pot - Decided by Vietnam
 CAM_gov_changes.3 = {
+    type = country_event
+	placement = c:CAM
+
+    title = CAM_1979_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = CAM_1979_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = CAM_1979_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		country_has_primary_culture = cu:vietnamese
+		game_date >= 1979.1.7									# START DATE: Date colony became self governing ****
+		game_date < 1989.1.7									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes
+		is_sufficiently_independent = yes						# is_vassal = no
+		is_at_war = no											# war = no
+		
+		exists = c:CAM
+		c:CAM ?= { 
+			is_a_communist_government = yes
+			is_direct_subject_of = ROOT
+			is_at_war = no
+			ruler ?= { has_variable = Pol_Pot }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = CAM_1979_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = CAM_1979_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Subject effect
+		c:CAM ?= { 
+		
+			#Leader flees
+			ruler ?= { 
+				exile_character = yes 
+				if = {
+					limit = { NOT = { has_trait = war_criminal } }
+					add_trait = war_criminal
+				}
+			}
+			
+			#Pen Sovan
+			create_character = {
+				first_name = "Pen_Sovan_first_name"
+				last_name = "Pen_Sovan_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1936.4.15
+				interest_group = ig_trade_unions
+				ideology = ideology_elitist
+				religion = rel:atheist
+				traits = {
+					brave
+					reckless
+					reserved
+				}
+				on_created = { set_variable = Pen_Sovan }
+			}
+			
+		}
+		
+		# Overlord loses infamy
+		change_infamy = -10
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Subject effect
+		c:CAM ?= { 
+		
+			add_liberty_desire = 50
+			
+			#Major discontent
+			add_radicals = {
+				value = large_radicals
+				strata = lower
+			}
+			add_modifier = { 
+				name = stirrings_of_revolution
+				months = 60 
+				is_decaying = yes 
+			}
+			
+		}
+		
+		#Gain relations with Communist China
+		every_country = {
+			limit = { 
+				country_has_primary_culture = cu:chinese 
+				is_a_communist_government = yes
+			}
+			change_relations = { country = ROOT value = 50 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# State of Cambodia - Decided by Vietnam or independent Cambodia
+CAM_gov_changes.4 = {
+    type = country_event
+	placement = c:CAM
+
+    title = CAM_1989_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = CAM_1989_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = CAM_1989_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		exists = c:CAM
+		game_date >= 1989.5.1									# START DATE: Date colony became self governing ****
+		game_date < 1999.5.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		OR = {
+		
+			#Internal source
+			AND = { 
+				c:CAM ?= this
+				is_a_communist_government = yes							# Correct gov types
+				is_subject = no
+				is_at_war = no											# war = no
+			}
+			
+			#External source
+			AND = { 
+				country_has_primary_culture = cu:vietnamese
+				is_sufficiently_independent = yes						# is_vassal = no
+				is_at_war = no											# war = no
+				c:CAM ?= { 
+					is_subject_of = ROOT
+					is_a_communist_government = yes
+					is_at_war = no
+				}
+			}
+			
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = CAM_1989_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = CAM_1989_hgc								# Change variable ****
+		c:CAM = { set_variable = CAM_1989_hgc }
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Subject effects
+		c:CAM = {
+		
+			#Becomes independent
+			if = {
+				limit = { is_subject = yes }
+				make_independent = yes
+			}
+			
+			#Enact new regime
+			if = {
+				limit = { has_government_type = gov_soviet_dictatorship }
+				effect_starting_politics_regime = yes
+			}
+			
+			#Create new leader
+			create_character = {
+				first_name = "Hun_Sen_first_name"
+				last_name = "Hun_Sen_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1952.8.5
+				interest_group = ig_rural_folk
+				ideology = ideology_autocratic
+				traits = {
+					grifter
+					cautious
+					reserved
+				}
+				on_created = { set_variable = Hun_Sen }
+			}
+			
+		}
+		
+		# Overlord loses infamy
+		if = {
+			limit = { NOT = { c:CAM ?= this } }
+			change_infamy = -10
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		# Overlord gains infamy
+		if = {
+			limit = { NOT = { c:CAM ?= this } }
+			create_incident = {
+				country = c:CAM
+				value = 20
+			}
+		}
+		
+		#Subject effects
+		c:CAM = {
+		
+			#Increase liberty desire
+			if = {
+				limit = { is_subject = yes }
+				add_liberty_desire = 50
+			}
+			
+			#Major discontent
+			add_radicals = {
+				value = large_radicals
+				strata = lower
+			}
+			add_modifier = { 
+				name = stirrings_of_revolution
+				months = 60 
+				is_decaying = yes 
+			}
+			
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Cambodian Return to democracy
+CAM_gov_changes.5 = {
     type = country_event
 
     title = CAM_1993_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -229,8 +499,7 @@ CAM_gov_changes.3 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:CAM
-		this = c:CAM											# Change TAG of the overlord ****
+		c:CAM ?= this
 		game_date >= 1993.9.24									# START DATE: Date colony became self governing ****
 		game_date < 2003.9.24									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -254,26 +523,49 @@ CAM_gov_changes.3 = {
         name = historical_gov_changes.option.1					# Accept
         highlighted_option = yes
 		
-		#Becomes independent
-		make_independent = yes
-		
 		#Enact new regime
 		effect_starting_politics_constitutional_monarchy = yes
-		effect_starting_politics_regime = yes
+		effect_starting_politics_democratic = yes
 		
 		#Create new leader
-		create_character = {
-			first_name = "Hun_Sen_first_name"
-			last_name = "Hun_Sen_last_name"
-			ruler = yes ig_leader = yes historical = yes
-			birth_date = 1952.8.5
-			interest_group = ig_landowners
-			ideology = ideology_autocratic
-			traits = {
-				grifter
-				cautious
-				reserved
+		if = {
+			limit = { any_scope_character = { has_variable = Hun_Sen } }
+			random_scope_character = {
+				limit = { has_variable = Hun_Sen }
+				set_character_as_ruler = yes
 			}
+		}
+		else = {
+			create_character = {
+				first_name = "Hun_Sen_first_name"
+				last_name = "Hun_Sen_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1952.8.5
+				interest_group = ig_rural_folk
+				ideology = ideology_autocratic
+				traits = {
+					grifter
+					cautious
+					reserved
+				}
+				on_created = { set_variable = Hun_Sen }
+			}
+		}
+		
+		#Opposition
+		create_character = {
+			first_name = "Norodom_Ranariddh_first_name"
+			last_name = "Norodom_Ranariddh_last_name"
+			ig_leader = yes historical = yes
+			birth_date = 1944.1.2
+			interest_group = ig_landowners
+			ideology = ideology_democratic
+			traits = {
+				persistent
+				ambitious
+				erudite
+			}
+			on_created = { set_variable = Norodom_Ranariddh }
 		}
 		
 		ai_chance = { 
@@ -289,6 +581,131 @@ CAM_gov_changes.3 = {
 		#Major discontent
 		add_radicals = {
 			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Cambodian coup d'état, 1997
+CAM_gov_changes.6 = {
+    type = country_event
+
+    title = CAM_1997_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = CAM_1997_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = CAM_1997_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:CAM ?= this
+		game_date >= 1997.7.5									# START DATE: Date colony became self governing ****
+		game_date < 2007.7.5									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		has_government_type = gov_constitutional_monarchy		# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = CAM_1997_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = CAM_1997_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_constitutional_monarchy = yes
+		effect_starting_politics_regime = yes
+		
+		#Create new leader
+		if = {
+			limit = { any_scope_character = { has_variable = Hun_Sen } }
+			random_scope_character = {
+				limit = { has_variable = Hun_Sen }
+				set_character_as_ruler = yes
+			}
+		}
+		else = {
+			create_character = {
+				first_name = "Hun_Sen_first_name"
+				last_name = "Hun_Sen_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1952.8.5
+				interest_group = ig_rural_folk
+				ideology = ideology_autocratic
+				traits = {
+					grifter
+					cautious
+					reserved
+				}
+				on_created = { set_variable = Hun_Sen }
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Create new leader
+		if = {
+			limit = { any_scope_character = { has_variable = Norodom_Ranariddh } }
+			random_scope_character = {
+				limit = { has_variable = Norodom_Ranariddh }
+				set_character_as_ruler = yes
+			}
+		}
+		else = {
+			create_character = {
+				first_name = "Norodom_Ranariddh_first_name"
+				last_name = "Norodom_Ranariddh_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1944.1.2
+				interest_group = ig_landowners
+				ideology = ideology_democratic
+				traits = {
+					persistent
+					ambitious
+					erudite
+				}
+				on_created = { set_variable = Norodom_Ranariddh }
+			}
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = lower
 		}
 		add_modifier = { 
 			name = stirrings_of_revolution
