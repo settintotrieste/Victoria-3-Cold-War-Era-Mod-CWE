@@ -4,17 +4,16 @@
 	}
 	requires_approval = yes
 	#should_notify_third_parties = yes
+	can_use_obligations = yes
 	confirmation_sound = "event:/SFX/UI/MapInteraction/diplomatic_action_foreign_investment_rights_request"
 
 	unlocking_technologies = {
-		stock_exchange
+		
 	}
 
 	selectable = {
-		
 		NOT = { is_country_type = decentralized }
 		is_revolutionary = no is_secessionist = no
-		
 	}
 	
 	potential = {
@@ -65,11 +64,63 @@
 		requirement_to_maintain = {
 			trigger = {
 				custom_tooltip = {
-					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
-					scope:target_country.relations:root > relations_threshold:poor
+					text = "DIPLOMATIC_PACT_REQUIREMENT_NO_SUBJECT_RELATION"
+					NOR = {
+						is_subject_of = scope:target_country
+						scope:target_country = { is_subject_of = root }
+					}
 				}
 			}
+		}
+		
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_DIPLOMATIC_AUTONOMY"
+					is_sufficiently_independent = yes
+					scope:target_country = { 
+						OR = {
+							is_sufficiently_independent = yes
+							is_a_devolved_gov = yes
+						}
+					}
+				}
+			}
+		}
 
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_NOT_DECENTRALIZED"
+					NOT = { is_country_type = decentralized }
+					scope:target_country = {
+						NOT = { is_country_type = decentralized }
+					}
+				}
+			}
+		}
+		
+		requirement_to_maintain = {
+			trigger = {
+				OR = { 
+					custom_tooltip = {
+						text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
+						scope:target_country.relations:root > relations_threshold:poor
+					}
+					scope:target_country.ruler.interest_group ?= {
+						OR = { 
+							law_stance = {
+								law = law_type:law_nationalist_foreign_investment_policy
+								value >= approve
+							}
+							law_stance = {
+								law = law_type:law_full_foreign_investment_policy
+								value >= approve
+							}
+						}
+					}
+				}
+			}
 			show_about_to_break_warning = {
 				scope:target_country.relations:root <= -17 # this is: poor + 3
 				scope:target_country.relations_change_rate:root < 0
@@ -97,40 +148,6 @@
 			}
 		}
 
-		requirement_to_maintain = {
-			trigger = {
-				custom_tooltip = {
-					text = "DIPLOMATIC_PACT_REQUIREMENT_NOT_DECENTRALIZED"
-					NOT = { is_country_type = decentralized }
-					scope:target_country = {
-						NOT = { is_country_type = decentralized }
-					}
-				}
-			}
-		}
-
-		requirement_to_maintain = {
-			trigger = {
-				custom_tooltip = {
-					text = "DIPLOMATIC_PACT_REQUIREMENT_NO_SUBJECT_RELATION"
-					NOT = {
-						is_subject_of = scope:target_country
-						scope:target_country = { is_subject_of = root }
-					}
-				}
-			}
-		}
-		
-		requirement_to_maintain = {
-			trigger = {
-				custom_tooltip = {
-					text = "DIPLOMATIC_PACT_REQUIREMENT_DIPLOMATIC_AUTONOMY"
-					aggressive_diplomatic_plays_permitted = yes
-					scope:target_country = { aggressive_diplomatic_plays_permitted = yes }					
-				}
-			}
-		}
-
 		manual_break_effect = {
 			change_relations = { country = scope:target_country value = -10 }
 		}
@@ -155,9 +172,90 @@
 		accept_score = {
 			value = 0
 
-			add = {
-				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
-				value = -100
+			if = {
+				limit = { 
+					scope:target_country.ruler.interest_group ?= {
+						law_stance = {
+							law = law_type:law_free_trade
+							value = strongly_approve
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = { 
+					scope:target_country.ruler.interest_group ?= {
+						law_stance = {
+							law = law_type:law_protectionism 
+							value = strongly_approve
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -50
+				}
+			}
+			else = {
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -100
+				}
+			}
+			
+			if = {
+				limit = { 
+					OR = { 
+					
+						#Socialism with X characteristics
+						scope:target_country = { 
+							is_a_communist_government = yes
+							NOT = { is_a_command_economy = yes }
+						}
+						
+						#General
+						scope:target_country.ruler.interest_group ?= {
+							OR = { 
+								law_stance = {
+									law = law_type:law_nationalist_foreign_investment_policy
+									value >= approve
+								}
+								law_stance = {
+									law = law_type:law_full_foreign_investment_policy
+									value >= approve
+								}
+							}
+						}
+						
+					}
+				}
+				if = {
+					limit = { scope:target_country = { average_sol < 5 } }
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 200
+					}
+				}
+				else_if = {
+					limit = { scope:target_country = { average_sol < 10 } }
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 150
+					}
+				}
+				else_if = {
+					limit = { scope:target_country = { average_sol < 15 } }
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 100
+					}
+				}
+				else = {
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 50
+					}
+				}
 			}
 
 			if = {
@@ -192,7 +290,17 @@
 				}
 				add = {
 					desc = "catalyst_declared_bankruptcy"
-					add = 50
+					add = 100
+				}
+			}
+			
+			if = {
+				limit = {
+					scope:target_country = { has_healthy_economy = no }
+				}
+				add = {
+					desc = "alert_unhealthy_economy_alert_name"
+					add = -100
 				}
 			}
 
@@ -200,7 +308,7 @@
 				desc = "DIPLOMATIC_ACCEPTANCE_MUTUAL_TRADE_ROUTES"
 				value = "scope:actor.num_mutual_trade_route_levels_with_country(root)"
 				multiply = 0.5
-				max = 25
+				max = 100
 			}
 
 			if = {
@@ -293,7 +401,7 @@
 							}
 						}
 					}
-					value = -1000
+					value = -100
 				}
 			}
 
@@ -363,9 +471,92 @@
 		junior_accept_score = {
 			value = 0
 
-			add = {
-				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
-				value = -100
+			if = {
+				limit = { 
+					ruler.interest_group ?= {
+						law_stance = {
+							law = law_type:law_free_trade
+							value = strongly_approve
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = { 
+					scope:target_country = {
+						scope:target_country.ruler.interest_group ?= {
+							law_stance = {
+								law = law_type:law_protectionism 
+								value = strongly_approve
+							}
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -50
+				}
+			}
+			else = {
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -100
+				}
+			}
+			
+			if = {
+				limit = { 
+					OR = { 
+					
+						#Socialism with X characteristics
+						AND = { 
+							is_a_communist_government = yes
+							NOT = { is_a_command_economy = yes }
+						}
+						
+						#General
+						ruler.interest_group ?= {
+							OR = { 
+								law_stance = {
+									law = law_type:law_nationalist_foreign_investment_policy
+									value >= approve
+								}
+								law_stance = {
+									law = law_type:law_full_foreign_investment_policy
+									value >= approve
+								}
+							}
+						}
+						
+					}
+				}
+				if = {
+					limit = { average_sol < 5 }
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 200
+					}
+				}
+				else_if = {
+					limit = { average_sol < 10 }
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 150
+					}
+				}
+				else_if = {
+					limit = { average_sol < 15 }
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 100
+					}
+				}
+				else = {
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 50
+					}
+				}
 			}
 
 			add = {
@@ -401,7 +592,17 @@
 				}
 				add = {
 					desc = "catalyst_declared_bankruptcy"
-					add = 50
+					add = 100
+				}
+			}
+			
+			if = {
+				limit = {
+					has_healthy_economy = no
+				}
+				add = {
+					desc = "alert_unhealthy_economy_alert_name"
+					add = 100
 				}
 			}
 			
@@ -409,7 +610,7 @@
 				desc = "DIPLOMATIC_ACCEPTANCE_MUTUAL_TRADE_ROUTES"
 				value = "scope:actor.num_mutual_trade_route_levels_with_country(root)"
 				multiply = 0.5
-				max = 25
+				max = 100
 			}
 
 			if = {
@@ -495,7 +696,7 @@
 							}
 						}
 					}
-					value = -1000
+					value = -100
 				}
 			}
 
@@ -728,10 +929,10 @@ grant_foreign_investment_rights = {
 
 		has_diplomatic_relevance = scope:target_country
 
-		custom_tooltip = {
-			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
-			scope:target_country.relations:root > relations_threshold:poor
-		}
+		#custom_tooltip = {
+		#	text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
+		#	scope:target_country.relations:root > relations_threshold:poor
+		#}
 		
 	}
 
