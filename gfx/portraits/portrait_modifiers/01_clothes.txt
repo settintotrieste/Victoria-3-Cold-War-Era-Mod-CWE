@@ -213,7 +213,10 @@
 			modifier = {
 				add = 5000
 				scope:character ?= {
-					is_ruler = yes
+					OR = { 
+						is_ruler = yes
+						is_heir = yes
+					}
 					home_country = {
 						is_a_regime_monarchy = yes
 					}
@@ -486,9 +489,38 @@
 
 ## HISTORICAL CHARACTER SCRIPTED CLOTHING ###
 
-    reza_pahlavi_clothes = { # And late European Military uniforms
+	reza_pahlavi_clothes = { # And late European Military uniforms
         dna_modifiers = {
-           accessory = {
+            accessory = {
+                mode = add
+                gene = coats
+                template = european_coats
+                range = { 0 0.27 } # limiting the set to single-breasted coats, so aiguillettes work
+            }
+            accessory = {
+                mode = add
+                gene = legwear
+                template = european_legwear
+                range = { 0 1 } # For the randomness to work correctly
+            }
+        }
+        weight = {
+            base = 0
+            modifier = {
+                add = 90000
+				monarchy_clothes_trigger = yes
+                scope:character ?= {
+					home_country ?= { 
+						c:PER ?= this
+					}
+                }
+            }
+        }
+    }
+	
+	modern_AFG_monarchy_clothes = { # And late European Military uniforms
+        dna_modifiers = {
+			accessory = {
                mode = add
                gene = coats
                template = reza_shah_pahlavi_coat
@@ -517,44 +549,140 @@
             base = 0
             modifier = {
                 add = 90000
+				monarchy_clothes_trigger = yes
                 scope:character ?= {
-                    has_variable = mohammad_reza_pahlavi
-                    # he will wear this regardless of whether he's a ruler, agitator, ig leader, general, admiral, or township clerk of dexter township in michigan
+					home_country ?= { 
+						c:AFG ?= this
+					}
                 }
             }
+        }
+    }
+
+	historical_mohandas_karamchand_gandhi_clothes = {
+        dna_modifiers = {
+            # glasses defined in accessories entry
+
+            accessory = {
+               mode = add
+               gene = top_layer
+               template = gandhi_top_layer
+               accessory = male_top_layers_gandhi_stole_01
+            }
+
+            accessory = {
+               mode = add
+               gene = belts
+               template = gandhi_watch
+               accessory = male_belts_gandhi_watch_01
+            }
+
+            accessory = {
+               mode = add
+               gene = legwear
+               template = gandhi_legwear
+               accessory = male_legwear_peasants_02_gandhi
+            }
+        }
+
+        weight = {
+            base = 0
             modifier = {
-                add = 10000
-                OR = {
-                    AND = {
-                        scope:pop ?= {
-                            exists = c:PER
-                            owner ?= c:PER
-                        }
-                        OR = {
-                            soldier_clothes_pop_trigger = yes
-                            officers_clothes_pop_trigger = yes
-                        }
-                    }
-                    AND = {
-                        scope:character ?= {
-                            home_country ?= { 
-                                c:PER ?= this
-                            }
-                            OR = {
-                                has_role = general
-                                AND = {
-                                    has_role = politician
-                                    is_interest_group_type = ig_armed_forces
-                                }
-                                AND = {
-                                    is_ruler = yes
-                                    home_country ?= { # Junta leaders get to wear the late uniform
-                                        is_a_nationalist_government = yes
-                                    }
-                                }
-                            }
-                        }
-                    }
+                add = 90000
+                scope:character ?= {
+					home_country ?= { NOT = { is_a_regime_monarchy = yes } }
+					is_female = no
+                    OR = { 
+						has_variable = Mohandas_Karamchand_Gandhi
+						AND = { 
+							culture = { has_discrimination_trait = south_asian_heritage }
+							is_interest_group_type = ig_devout
+							has_role = agitator
+							religion = rel:hindu
+						}
+					}
+                }
+            }
+        }
+    }
+
+    historical_jawaharlal_nehru_clothes = {
+        dna_modifiers = {
+            # hat defined in 01_headgear
+
+            accessory = {
+               mode = add
+               gene = coats
+               template = indian_coat
+               accessory = male_coat_indian_01
+            }
+
+            accessory = {
+               mode = add
+               gene = legwear
+               template = brazilian_white_legwear
+               accessory = male_legwear_european_01_white
+            }
+        }
+
+        weight = {
+            base = 0
+            modifier = {
+                add = 90000
+                scope:character ?= {
+					home_country ?= { NOT = { is_a_regime_monarchy = yes } }
+					is_female = no
+                    OR = { 
+						has_variable = jawaharlal_nehru
+						AND = { 
+							culture = { has_discrimination_trait = south_asian_heritage }
+							NOT = { is_interest_group_type = ig_devout }
+							religion = rel:hindu
+						}
+					}
+                }
+            }
+        }
+    }   
+
+	historical_muhammad_ali_jinnah_clothes = {
+        dna_modifiers = {
+            accessory = {
+               mode = add
+               gene = outfits
+               template = egyptian_outfits_white
+               accessory = male_civilian_coat_arabic_white_01
+            }
+
+            accessory = {
+               mode = add
+               gene = legwear
+               template = brazilian_white_legwear
+               accessory = male_legwear_european_01_white
+            }
+
+            # has headgear defined in headgear 
+        }
+
+        weight = {
+            base = 0
+            modifier = {
+                add = 90000
+                scope:character ?= {
+					home_country ?= { NOT = { is_a_regime_monarchy = yes } }
+					is_female = no
+                    OR = { 
+						has_variable = liaquat_ali_khan
+						AND = { 
+							culture = { 
+								OR = { 
+									has_discrimination_trait = south_asian_heritage
+									has_discrimination_trait = central_asian_heritage
+								}
+							}
+							religion = rel:sunni
+						}
+					}
                 }
             }
         }
@@ -860,17 +988,17 @@
                 british_empire_clothes_trigger = no
                 french_empire_clothes_trigger = no
                 russian_empire_clothes_trigger = no
-                OR = {
-                    european_clothes_trigger = yes
-                    scope:character ?= {
-                        OR = {
-                            culture = cu:malagasy
-                            culture = cu:cherokee
-                            culture = cu:muskogean
-                        }
-                    }
-                    african_diaspora_clothes_trigger = yes
-                }
+                #OR = {
+                #    european_clothes_trigger = yes
+                #    scope:character ?= {
+                #        OR = {
+                #            culture = cu:malagasy
+                #            culture = cu:cherokee
+                #            culture = cu:muskogean
+                #        }
+                #    }
+                #    african_diaspora_clothes_trigger = yes
+                #}
                 AND = {
                     monarchy_clothes_trigger = yes
                     scope:character ?= {
@@ -1113,16 +1241,7 @@
                 arabic_clothes_trigger = no
                 british_empire_clothes_trigger = no
                 french_empire_clothes_trigger = no
-                OR = {
-                    european_clothes_trigger = yes
-					scope:character ?= {
-                        OR = {
-                            culture = cu:cherokee
-                            culture = cu:muskogean
-                        }
-                    }
-                    african_diaspora_clothes_trigger = yes
-                }
+				monarchy_clothes_trigger = no
                 OR = {
                     scope:character ?= {
                         has_role = general
@@ -1149,20 +1268,13 @@
 			modifier = {
                 add = 2000
 				scope:character ?= {
+					is_female = no
+					is_ruler = yes
 					owner ?= {
-						is_a_communist_government = yes
-					}
-				}
-			}
-			modifier = {
-                add = 2000
-				scope:pop ?= {
-					OR = {
-						is_pop_type = officers
-						is_pop_type = soldiers
-					}
-					home_country = {
-						is_a_communist_government = yes
+						OR = { 
+							is_a_communist_government = yes
+							is_a_nationalist_government = yes
+						}
 					}
 				}
 			}
@@ -1206,14 +1318,6 @@
 
         weight = {
             base = 0
-			modifier = {
-                add = 1000
-				scope:character ?= {
-					owner ?= {
-						is_a_communist_government = yes
-					}
-				}
-			}
             modifier = {
                 add = 10000
                 OR = {
@@ -1281,37 +1385,19 @@
 			modifier = {
                 add = 2000
 				scope:character ?= {
+					is_female = yes
+					is_ruler = yes
 					owner ?= {
-						is_a_communist_government = yes
-					}
-				}
-			}
-			modifier = {
-                add = 2000
-				scope:pop ?= {
-					OR = {
-						is_pop_type = officers
-						is_pop_type = soldiers
-					}
-					home_country = {
-						is_a_communist_government = yes
+						OR = { 
+							is_a_communist_government = yes
+							is_a_nationalist_government = yes
+						}
 					}
 				}
 			}
             modifier = {
                 add = 10000
-
-                OR = {
-                    european_clothes_trigger = yes
-                    scope:character ?= {
-                        OR = {
-                            culture = cu:cherokee
-                            culture = cu:muskogean
-                        }
-                    }
-                    african_diaspora_clothes_trigger = yes
-                }
-                scope:character = {
+                scope:character ?= {
                     is_female = yes
                     exists = owner
                     OR = {
@@ -2106,17 +2192,6 @@
                             culture = {
                                 has_discrimination_trait = east_slavic
                             }
-                            state = {
-                                OR = {
-                                    state_region = s:STATE_KUBAN
-                                    state_region = s:STATE_STAVROPOL
-                                    state_region = s:STATE_DAGESTAN
-                                    state_region = s:STATE_NORTH_CAUCASUS
-                                    state_region = s:STATE_ROSTOV
-                                    state_region = s:STATE_KALMYKIA
-                                    state_region = s:STATE_ASTRAKHAN
-                                }
-                            }
                             OR = {
                                 is_pop_type = soldiers
                                 is_pop_type = officers
@@ -2647,14 +2722,14 @@
                             has_discrimination_trait = middle_eastern_heritage
                         }
                     }
-                    scope:character ?= {
-                        is_ruler = yes
-                        age >= define:NCharacters|ADULT_AGE
-                        culture = {
-                            has_discrimination_trait = iranian_turanian_culture_group
-                            has_discrimination_trait = central_asian_heritage
-                        }
-                    }
+                    #scope:character ?= {
+                    #    is_ruler = yes
+                    #    age >= define:NCharacters|ADULT_AGE
+                    #    culture = {
+                    #        has_discrimination_trait = iranian_turanian_culture_group
+                    #        has_discrimination_trait = central_asian_heritage
+                    #    }
+                    #}
                 }
             }
         }
@@ -3019,7 +3094,7 @@
         }
     }
 
-     ethiopian_clothes = {
+    ethiopian_clothes = {
         dna_modifiers = {
             accessory = {
                 mode = add
@@ -3056,7 +3131,7 @@
                 template = ethiopian_top_layer
                 range = { 0 1 } # For the randomness to work correctly
             }
-                        accessory = {
+            accessory = {
                 mode = add
                 gene = legwear
                 template = european_legwear
@@ -3072,7 +3147,7 @@
                 scope:character = {
                     is_female = no
                     monarchy_clothes_trigger = yes
-                }                
+                }
            }
         }
     }
@@ -3096,10 +3171,16 @@
         weight = {
             base = 0
             modifier = {
-                add = 100
+                add = 500
+				exists = scope:character
+				scope:character ?= {
+					is_female = yes
+				}
                 siamese_clothes_trigger = yes
-                
-           }
+				military_clothes_trigger = no
+				armed_forces_clothes_trigger = no
+				monarchy_clothes_trigger = no
+			}
         }
     }
 
@@ -3111,7 +3192,7 @@
                 template = siamese_royal_outfits
                 range = { 0 1 } # For the randomness to work correctly
             }
-                        accessory = {
+            accessory = {
                 mode = add
                 gene = legwear
                 template = european_legwear
@@ -3766,7 +3847,7 @@ indigenous_oceanic_pop_clothes = {
         weight = {
             base = 0
             modifier = {
-                add = 200
+                add = 2000
                 scope:character ?= {
                     age >= define:NCharacters|ADULT_AGE
                 }
@@ -4251,7 +4332,14 @@ indigenous_oceanic_pop_clothes = {
                     }
                     upper_clothes_pop_trigger = yes
                 }
-           }
+			}
+			modifier = {
+                add = 500
+                siamese_clothes = yes
+				scope:character ?= {
+					is_female = no
+				}
+			}
         }
     }
 
@@ -5910,7 +5998,11 @@ indigenous_oceanic_pop_clothes = {
             base = 0
             modifier = {
                 add = 10000
-
+				scope:character ?= {
+					culture = {
+						has_discrimination_trait = european_heritage
+					}
+				}
                 OR = {
                     european_clothes_trigger = yes
                     AND = {
