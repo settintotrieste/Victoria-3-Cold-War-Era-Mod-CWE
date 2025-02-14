@@ -21,9 +21,6 @@
 			NOT = { is_country_type = decentralized }
 			is_revolutionary = no is_secessionist = no
 		}
-		
-		#NOT isolationist
-		NOT = { has_law = law_type:law_isolationism }
 	}
 	
 	possible = {
@@ -117,7 +114,7 @@
 			trigger = {
 				custom_tooltip = {
 					text = "DIPLOMATIC_PACT_REQUIREMENT_NO_SUBJECT_RELATION"
-					NOT = {
+					NOR = {
 						is_subject_of = scope:target_country
 						scope:target_country = { is_subject_of = root }
 					}
@@ -129,8 +126,13 @@
 			trigger = {
 				custom_tooltip = {
 					text = "DIPLOMATIC_PACT_REQUIREMENT_DIPLOMATIC_AUTONOMY"
-					aggressive_diplomatic_plays_permitted = yes
-					scope:target_country = { aggressive_diplomatic_plays_permitted = yes }					
+					is_sufficiently_independent = yes
+					scope:target_country = { 
+						OR = {
+							is_sufficiently_independent = yes
+							is_a_devolved_gov = yes
+						}
+					}
 				}
 			}
 		}
@@ -154,10 +156,15 @@
 						text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
 						scope:target_country.relations:root > relations_threshold:poor
 					}
+					scope:target_country.ruler.interest_group ?= {
+						law_stance = {
+							law = law_type:law_full_foreign_investment_policy
+							value >= approve
+						}
+					}
 					in_superstate_customs_union = yes
 				}
 			}
-
 			show_about_to_break_warning = {
 				scope:target_country.relations:root <= -17 # this is: poor + 3
 				scope:target_country.relations_change_rate:root < 0
@@ -182,14 +189,6 @@
 		requirement_to_maintain = {
 			trigger = {
 				NOT = { scope:target_country = { has_law = law_type:law_isolationism } }
-			}
-		}
-
-		requirement_to_maintain = {
-			trigger = {
-				NOT = {
-					has_war_with = scope:target_country
-				}
 			}
 		}
 
@@ -220,7 +219,6 @@
 						scope:target_country = { is_subject_of = root }
 					}
 				}
-				
 				add_lobby_appeasement_from_diplomacy_unidirectional = { 
 					FIRST = root
 					SECOND = scope:target_country 
@@ -249,16 +247,82 @@
 			value = 0
 
 			if = {
-				limit = { scope:target_country = { has_law = law_type:law_free_trade } }
+				limit = { 
+					scope:target_country.ruler.interest_group ?= {
+						law_stance = {
+							law = law_type:law_free_trade
+							value = strongly_approve
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = { 
+					scope:target_country.ruler.interest_group ?= {
+						law_stance = {
+							law = law_type:law_protectionism 
+							value = strongly_approve
+						}
+					}
+				}
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
-					value = -25
+					value = -50
 				}
 			}
 			else = {
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
 					value = -100
+				}
+			}
+			
+			if = {
+				limit = { 
+					OR = { 
+					
+						#Socialism with X characteristics
+						scope:target_country = { 
+							is_a_communist_government = yes
+							NOT = { is_a_command_economy = yes }
+						}
+						
+						#General
+						scope:target_country.ruler.interest_group ?= {
+							law_stance = {
+								law = law_type:law_full_foreign_investment_policy
+								value >= approve
+							}
+						}
+						
+					}
+				}
+				if = {
+					limit = { scope:target_country = { average_sol < 5 } }
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 200
+					}
+				}
+				else_if = {
+					limit = { scope:target_country = { average_sol < 10 } }
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 100
+					}
+				}
+				else_if = {
+					limit = { scope:target_country = { average_sol < 15 } }
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 50
+					}
+				}
+				else = {
+					add = {
+						desc = "DIPLOMATIC_MARKET_OPENING_UP"
+						value = 25
+					}
 				}
 			}
 			
@@ -431,8 +495,9 @@
 							}
 						}
 					}
-					value = -1000
+					value = -100
 				}
+				
 			}
 
 			add = {
@@ -478,7 +543,6 @@
 			
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_PRINCIPLE_SACRED_CIVICS"
-
 				if = {
 					limit = {
 						AND = {
@@ -552,6 +616,14 @@
 		}
 		
 		will_break = { 	
+			NOT = {
+				ruler.interest_group ?= {
+					law_stance = {
+						law = law_type:law_full_foreign_investment_policy
+						value >= approve
+					}
+				}
+			}
 			OR = {
 				has_attitude = {
 					who = scope:target_country
