@@ -1,0 +1,114 @@
+namespace = special_economic_zone_system
+
+#Generic Special Economic Zone
+special_economic_zone_system.1 = {
+	type = country_event
+	placement = scope:state_to_release
+
+	title = special_economic_zone_system_1.t
+    desc = special_economic_zone_system_1.d 					# Description of the event; ADD LOCALISATION
+    flavor = special_economic_zone_system_1.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_newspaper.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#At peace
+		is_at_war = no
+		
+		#Not bankrupt
+		in_default = no
+		
+		#Any scope state has create SEZ
+		any_scope_state = {
+			has_decree = decree_create_sez
+		}
+		
+    }
+	
+	immediate = {
+		
+		#Mark SEZ state
+		random_scope_state = {
+			limit = { 
+				has_decree = decree_create_sez
+			}
+			save_scope_as = state_to_release
+		}
+		
+	}
+	
+	cancellation_trigger = {
+		OR = { 
+			NOT = { exists = scope:state_to_release }
+			scope:state_to_release ?= { 
+				NOT = { has_decree = decree_create_sez } 
+			}
+		}
+	}
+    
+    option = {
+        name = special_economic_zone_system_1.option						# OK
+		default_option = yes
+		
+		#Release 1 SAR
+		custom_tooltip = {
+			text = special_administrative_region.tt
+			
+			if = {
+				limit = {
+					exists = scope:state_to_release
+				}
+				scope:state_to_release ?= {
+					set_variable = { name = state_to_cede months = 3 }
+				}
+				create_dynamic_country = {
+					origin = ROOT
+					country_type = unrecognized
+					tier = city_state
+					capital = scope:state_to_release
+					cede_state_trigger = {
+						has_variable = state_to_cede
+					}
+					on_created = { 
+					
+						every_scope_state = {
+							remove_variable = state_to_cede
+						}
+						
+						#Enact business friendly laws
+						effect_starting_politics_economic_policy_laissez_faire = yes
+						effect_starting_politics_trade_policy_free_trade = yes
+						
+						#Mark tag as a SEZ
+						set_variable = SEZ_country_var
+						
+						save_scope_as = SEZ_country_scope
+						
+					}
+				}
+				if = {
+					limit = { 
+						exists = scope:state_to_release
+					}
+					create_diplomatic_pact = {
+						country = scope:state_to_release.owner
+						type = special_administrative_region
+					}
+					create_diplomatic_pact = {
+						country = scope:state_to_release.owner
+						type = legal_union
+					}
+				}
+			}
+			
+		}
+		
+    }
+	
+}

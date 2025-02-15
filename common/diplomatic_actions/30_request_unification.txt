@@ -101,10 +101,16 @@ request_unification = {
 				scope:target_country = { is_some_kind_of_democracy = yes }
 			}
 			
+			#Is a Special Economic Zone
+			custom_tooltip = {
+				text = SPECIAL_ECONOMIC_ZONE_STATUS
+				scope:target_country = { has_variable = SEZ_country_var }
+			}
+			
 		}
 		
-		#Ideological similarity
 		OR = {
+			#Ideological similarity
 			custom_tooltip = {
 				text = has_same_gov_type_tt
 				OR = {
@@ -128,6 +134,11 @@ request_unification = {
 					}
 				}
 			}
+			#Is a Special Economic Zone
+			custom_tooltip = {
+				text = SPECIAL_ECONOMIC_ZONE_STATUS
+				scope:target_country = { has_variable = SEZ_country_var }
+			}
 		}
 		
 	}
@@ -137,8 +148,11 @@ request_unification = {
 		#OVERLORD unites with TARGET
 		annex = scope:target_country
 		
-		#Unified state is always a Federation
-		effect_starting_politics_constitutional_federal_state = yes
+		#Unified state is always a Federation (if TARGET is not an SEZ)
+		if = {
+			limit = { scope:target_country = { NOT = { has_variable = SEZ_country_var } } }
+			effect_starting_politics_constitutional_federal_state = yes
+		}
 		
 	}
 	
@@ -164,9 +178,24 @@ request_unification = {
 		will_propose = {
 		
 			#Does not have historical railroading
-			NAND = { 
-				has_global_variable = historical_railroading_active 
+			NAND = {
+				has_global_variable = historical_railroading_active
 				game_date < 2000.1.1
+			}
+			
+			#TARGET is not an SEZ
+			OR = {
+				scope:target_country = {
+					NOT = { has_variable = SEZ_country_var } 
+				}
+				AND = { 
+					scope:target_country = {
+						has_variable = SEZ_country_var
+					}
+					scope:actor = {
+						NOT = { is_a_socialist_economy = yes }
+					}
+				}
 			}
 			
 		}
