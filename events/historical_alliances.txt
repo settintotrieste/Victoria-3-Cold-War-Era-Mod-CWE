@@ -2253,3 +2253,165 @@ historical_alliances_system.24 = {
     }
 
 }
+
+# UN Intervention in the Congo Crisis
+historical_alliances_system.25 = {
+    type = country_event
+
+    title = USA_CNG_form.t 							# Title of the event; ADD LOCALISATION
+    desc = USA_CNG_form.d 							# Description of the event; ADD LOCALISATION
+    #flavor = USA_CNG_form.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 1960.7.14									# START DATE: Date colony became self governing ****
+		game_date < 1970.7.14									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_not_neutral = yes
+		
+		#Cold War conditions
+		cold_war_ongoing = yes
+		country_rank = rank_value:super_power
+		
+		#Congolese conditions
+		exists = c:CNG
+		exists = c:KAT
+		c:CNG ?= {
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			has_war_with = c:KAT
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_CNG_form_hae }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_CNG_form_hae								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#UN intervention in separatist wars
+		c:CNG = {
+			change_relations = {
+				country = ROOT
+				value = 50
+			}
+			trigger_event = { id = historical_alliances_system.26 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The UN Intervention in the Congo Crisis - CNG
+historical_alliances_system.26 = {
+    type = country_event
+
+    title = USA_CNG_form.t 							# Title of the event; ADD LOCALISATION
+    desc = USA_CNG_form.d 							# Description of the event; ADD LOCALISATION
+    #flavor = USA_CNG_form.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		random_country = {
+			limit = { has_variable = USA_CNG_form_hae }
+			save_scope_as = USA_CNG_leader
+		}
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#UN intervention in separatist wars
+		scope:USA_CNG_leader ?= {
+			change_relations = {
+				country = ROOT
+				value = 50
+			}
+			every_diplomatic_play = {
+				limit = {
+					is_war = yes
+					initiator_is = c:CNG
+					OR = {
+						target_is = c:KAT
+						target_is = c:SKA
+					}
+				}
+				add_initiator_backers = { 
+					scope:USA_CNG_leader 
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		change_relations = {
+			country = scope:USA_CNG_leader
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
