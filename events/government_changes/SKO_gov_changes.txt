@@ -667,6 +667,9 @@ SKO_gov_changes.7 = {
 			strata = upper
 		}
 		
+		#Mark as having initiated the martial law
+		set_variable = SKO_2024_martial_law
+		
 		ai_chance = { 
 			base = 90 
 		}
@@ -693,6 +696,114 @@ SKO_gov_changes.7 = {
 			name = stirrings_of_revolution
 			months = 60 
 			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The Impeachment of Yoon Suk Yeol
+SKO_gov_changes.8 = {
+    type = country_event
+
+    title = SKO_2024_1_revolution.t 						# Title of the event; ADD LOCALISATION
+    desc = SKO_2024_1_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SKO_2024_1_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SKO ?= this
+		game_date >= 2024.12.14									# START DATE: Date colony became self governing ****
+		game_date < 2034.12.14									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Yoon Suk Yeol
+		ruler ?= { has_variable = Yoon_Suk_Yeol }
+		has_variable = SKO_2024_martial_law
+		
+		# Event has not been fired before
+		NOT = { has_variable = SKO_2024_1_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SKO_2024_1_hgc							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Remove Yoon Suk Yeol
+		random_scope_character = { 
+			limit = { has_variable = Yoon_Suk_Yeol }
+			kill_character = {
+				hidden = yes
+				value = yes
+			} 
+		}
+		
+		#Choi Sang-mok
+		create_character = {
+			first_name = "Choi_Sang-mok_first_name"
+			last_name = "Choi_Sang-mok_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1963.6.7
+			interest_group = ig_petty_bourgeoisie
+			ideology = ideology_democratic
+			culture = cu:korean
+			religion = rel:catholic
+			traits = {
+				cautious
+				erudite
+				tactful
+			}
+		}
+		
+		set_variable = Yoon_Suk_Yeol_was_impeached
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Survived impeachment
+		ruler ?= {
+			hidden_effect = { remove_modifier = survived_impeachment }
+			add_modifier = { name = survived_impeachment years = 4 is_decaying = yes } 
+		}
+		
+		#Minor discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_trade_unions
 		}
 		
 		ai_chance = { 
