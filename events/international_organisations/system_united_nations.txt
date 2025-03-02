@@ -1143,10 +1143,17 @@ united_nations.13 = {
 
 	immediate = {
 		
+		#Always set state religion and primary culture as overlord first
+		random_primary_culture = { 
+			limit = { 
+				is_primary_culture_of = ROOT
+			}
+			save_scope_as = overlords_culture
+		}
+		
 		#Dismantle THIS
 		every_scope_state = {
 			limit = {
-				is_split_state = no
 				NOT = { is_homeland_of_country_cultures = ROOT }
 			}
 			set_variable = { name = state_to_cede months = 1 }
@@ -1163,6 +1170,7 @@ united_nations.13 = {
 				country_type = unrecognized
 				tier = city_state
 				cede_state_trigger = {
+					is_split_state = no
 					has_variable = state_to_cede
 				}
 				on_created = { 
@@ -1179,34 +1187,6 @@ united_nations.13 = {
 					
 					save_scope_as = UNT_country
 					
-				}
-			}
-			#Find some country to give UNT to, if any
-			if = {
-				limit = { 
-					exists = scope:UNT_country
-					scope:UNT_country ?= {
-						is_subject = no
-					}
-				}
-				random_country = { 
-					limit = { 
-						OR = { 
-							has_modifier = unsc_permanent_member 
-							has_modifier = unsc_non_permanent_member 
-						} 
-						is_sufficiently_independent = yes
-						is_at_war = no
-						infamy < infamy_threshold:pariah
-					}
-					create_diplomatic_pact = {
-						country = scope:UNT_country
-						type = mandate
-					}
-					trigger_event = { id = united_nations.14 }
-				}
-				scope:UNT_country ?= {
-					set_variable = { name = newly_created_UNT years = 10 }
 				}
 			}
 		}
@@ -1227,6 +1207,106 @@ united_nations.13 = {
 			name = national_humiliation 
 			months = 60 
 			is_decaying = yes 
+		}
+		
+		#Set mandate's primary culture
+		hidden_effect = {
+			random_country = {
+				limit = { has_variable = UNT_country }
+				
+				#Forcefully remove all overlord primary cultures from the primary culture of THIS (up to 500)
+				remove_primary_culture = scope:overlords_culture
+				clear_all_overlord_primary_cultures = yes
+				if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+				if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+				if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+				if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+				if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+				if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+				if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+				if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+				if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+				
+				#Set primary culture of colony
+				capital ?= { save_scope_as = capital_scope }
+				scope:capital_scope ?= {
+					random_scope_culture = {
+						limit = { 
+							has_homeland = scope:capital_scope
+							NOT = { is_primary_culture_of = ROOT }
+						}
+						save_scope_as = culture_to_release
+					}
+				}
+				if = {
+					limit = { exists = scope:culture_to_release }
+					add_primary_culture = scope:culture_to_release
+				}
+				
+				#Set state religion of colony
+				capital_scope ?= {
+					random_scope_pop = {
+						limit = { 
+							NOT = { is_primary_culture_of = ROOT } 
+						}
+						religion = { save_scope_as = religion_to_release }
+					}
+				}
+				if = {
+					limit = { exists = scope:religion_to_release }
+					set_state_religion = scope:religion_to_release
+				}
+				
+				#Generate Ruler
+				every_scope_character = { kill_character = yes }
+				
+			}
+		}
+		
+		#Set borders
+		hidden_effect = {
+			random_country = {
+				limit = { has_variable = UNT_country }
+				save_scope_as = UNT_state_transfer_target
+			}
+			every_scope_state = {
+				limit = { 
+					has_variable = state_to_cede 
+					is_split_state = yes
+				}
+				set_state_owner = scope:UNT_state_transfer_target
+			}
+		}
+		
+		#Find some country to give UNT to, if any
+		hidden_effect = {
+			random_country = {
+				limit = { 
+					has_variable = UNT_country
+					is_subject = no
+				}
+				save_scope_as = UNT_country_subject
+				set_variable = { name = newly_created_UNT years = 10 }
+				set_variable = { name = newly_created_UNT_marker months = 1 }
+			}
+			random_country = {
+				limit = { 
+					exists = scope:UNT_country_subject
+					OR = { 
+						has_modifier = unsc_permanent_member 
+						has_modifier = unsc_non_permanent_member 
+					} 
+					country_rank >= rank_value:major_power
+					is_sufficiently_independent = yes
+					is_at_war = no
+					infamy < infamy_threshold:pariah
+				}
+				create_diplomatic_pact = {
+					country = scope:UNT_country_subject
+					type = mandate
+				}
+				trigger_event = { id = united_nations.14 }
+			}
 		}
 		
 	}
@@ -1263,9 +1343,11 @@ united_nations.14 = {
 		
 		random_country = { 
 			limit = { 
-				has_variable = newly_created_UNT
+				has_variable = newly_created_UNT_marker
 				is_subject_of = ROOT
+				is_subject_type = subject_type_mandate
 			}
+			remove_variable = newly_created_UNT_marker
 			save_scope_as = UNT_mandate_country
 		}
 		
@@ -1281,6 +1363,7 @@ united_nations.14 = {
 			
 			#5 year timer to independence
 			scope:UNT_mandate_country ?= {
+				copy_laws = ROOT
 				add_modifier = { name = un_potential_mandate_timer months = 60 }
 			}
 			
@@ -1308,7 +1391,6 @@ united_nations.14 = {
 		if = {
 			limit = { exists = scope:UNT_mandate_country }
 			scope:UNT_mandate_country ?= {
-				copy_laws = ROOT
 				make_independent = yes
 				change_relations = {
 					country = ROOT
