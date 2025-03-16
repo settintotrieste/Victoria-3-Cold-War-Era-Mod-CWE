@@ -76,11 +76,8 @@ ig_devout = {
 		OR = { 
 			is_pop_type = clergymen
 			AND = { 
-				is_pop_type = shopkeepers
-				OR = { 
-					pop_employment_building_group = bg_subsistence_agriculture
-					pop_employment_building_group = bg_subsistence_ranching
-				}
+				has_state_religion = yes
+				has_pop_religion = atheist
 			}
 		}
 		NOT = { is_pop_type = aristocrats }
@@ -88,24 +85,102 @@ ig_devout = {
 	}
 	
 	pop_weight = {
-		value = 1
-		
-		if = {
-			limit = { exists = scope:interest_group exists = leader }
-			multiply = {
-				desc = "LEADER_POPULARITY"
-				scope:interest_group = {
-					leader ?= {
-						value = popularity
-						multiply = 0.0025
-						add = 1
-						max = 1.25
-						min = 0.75
-					}
+		add = {
+			desc = "POP_BASE_ATTRACTION"
+			value = 25
+		}
+
+		add = {
+			desc = "POP_CLERGYMEN"
+			if = {
+				limit = {
+					is_pop_type = clergymen
 				}
+				value = 250
+			}
+		}
+
+		add = {
+			desc = "POP_PEASANTS"
+			if = {
+				limit = {
+					is_pop_type = peasants
+				}
+				value = 100
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_state_atheism
+				}
+			}
+			multiply = {
+				desc = "STATE_ATHEISM_LAW"
+				value = 0.1
 			}
 		}
 		
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_state_religion
+				}
+			}
+			multiply = {
+				desc = "STATE_RELIGION_LAW"
+				value = 1.5
+			}
+		}
+		
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_freedom_of_conscience
+				}
+			}
+			multiply = {
+				desc = "FREEDOM_OF_CONSCIENCE_LAW"
+				value = 1.25
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_religious_schools
+				}
+			}
+			multiply = {
+				desc = "RELIGIOUS_SCHOOLS_LAW"
+				value = owner.institution:institution_schools.investment
+				divide = 5
+				add = 1
+			}
+		}
+
+		add = {
+			desc = "POP_LITERACY"
+			this = {
+				value = literacy_rate
+				multiply = -20
+			}
+		}
+
+		multiply = {
+			desc = "LEADER_POPULARITY"
+			scope:interest_group = {
+				leader ?= {
+					value = popularity
+					multiply = 0.0025
+					add = 1
+					max = 1.25
+					min = 0.75
+				}
+			}
+		}
+
 		if = {
 			limit = {
 				scope:interest_group = {
@@ -119,19 +194,7 @@ ig_devout = {
 				min = 0
 			}
 		}
-		
-		if = {
-			limit = {
-				owner = {
-					has_law = law_type:law_state_atheism
-				}
-			}
-			multiply = {
-				desc = "STATE_ATHEISM_LAW"
-				value = 0.1
-			}
-		}
-		
+
 		if = {
 			limit = {
 				scope:interest_group = {

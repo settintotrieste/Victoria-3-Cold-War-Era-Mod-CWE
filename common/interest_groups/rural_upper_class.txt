@@ -58,7 +58,11 @@
 		#pop_acceptance >= acceptance_status_3
 		
 		#Only Landowners
-		is_pop_type = aristocrats
+		OR = {
+			is_pop_type = aristocrats
+			is_pop_type = officers
+			is_pop_type = farmers
+		}
 		
 		#Private Sector Only
 		NOT = { pop_employment_building_group = bg_government }
@@ -66,24 +70,65 @@
 	}
 	
 	pop_weight = {
-		value = 1
-		
-		if = {
-			limit = { exists = scope:interest_group exists = leader }
-			multiply = {
-				desc = "LEADER_POPULARITY"
-				scope:interest_group = {
-					leader ?= {
-						value = popularity
-						multiply = 0.0025
-						add = 1
-						max = 1.25
-						min = 0.75
+		value = 0
+
+		add = {
+			desc = "POP_ARISTOCRATS"
+			if = {
+				limit = {
+					is_pop_type = aristocrats
+				}
+				value = 250
+			}
+		}
+
+		add = {
+			desc = "POP_OFFICERS"
+			if = {
+				limit = {
+					is_pop_type = officers
+				}
+				value = 25
+			}
+		}
+
+		add = {
+			desc = "POP_FARMERS"
+			if = {
+				limit = {
+					is_pop_type = farmers
+				}
+				value = 25
+				add = this.standard_of_living
+				
+				if = {
+					limit = { owner = { has_law = law_type:law_full_private_land_ownership } }
+					multiply = 1.25
+				}
+
+				if = {
+					limit = {
+						state = {
+							is_slave_state = yes
+						}
 					}
+					multiply = 4
 				}
 			}
 		}
-		
+
+		multiply = {
+			desc = "LEADER_POPULARITY"
+			scope:interest_group = {
+				leader ?= {
+					value = popularity
+					multiply = 0.0025
+					add = 1
+					max = 1.25
+					min = 0.75
+				}
+			}
+		}
 		if = {
 			limit = {
 				scope:interest_group = {
