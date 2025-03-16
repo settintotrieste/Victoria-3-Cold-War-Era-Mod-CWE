@@ -5411,3 +5411,129 @@ historical_civil_wars.31 = {
     }
 
 }
+
+#The Tajikistani Civil War
+historical_civil_wars.32 = {
+    type = country_event
+	placement = scope:rebel_state_scope
+
+    title = tajikistani_war.TAJ.t 											# Title of the event; ADD LOCALISATION
+    desc = tajikistani_war.TAJ.d 											# Description of the event; ADD LOCALISATION
+    #flavor = tajikistani_war.TAJ.f 										# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:TAJ ?= this
+		game_date >= 1992.5.5
+		game_date < 2002.5.5
+		
+		is_a_republican_regime = yes									# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		is_at_war = no													# war = no
+		
+		#Owns country to release
+		has_state_in_state_region = STATE_UZBEKIA
+		
+		# Event has not been fired before
+		NOT = { has_variable = tajikistani_war_TAJ_hccw }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = s:STATE_UZBEKIA }
+			save_scope_as = rebel_state_scope
+		}
+	
+		# Fire only once
+		set_variable = tajikistani_war_TAJ_hccw							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1							# Declare war!
+        highlighted_option = yes
+		
+		#Release UTO
+		create_dynamic_country = {
+			origin = ROOT
+			country_type = unrecognized
+			tier = city_state
+			capital = scope:rebel_state_scope
+			cede_state_trigger = {
+				state_region = scope:rebel_state_scope
+			}
+			on_created = { 
+			
+				set_variable = dynamic_decolonisation_country
+				
+				# Laws
+				effect_starting_politics_theocratic_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_jingoism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+				
+				effect_starting_politics_semi_gold_system = yes
+				
+				set_variable = UTO_tag
+				
+			}
+		}
+		
+		random_country = {
+			limit = { has_variable = UTO_tag }
+			create_diplomatic_play = {
+				name = Zapatista_war
+				type = dp_annex_war_historical
+				target_country = ROOT
+				
+				war = yes
+				
+				add_war_goal = {
+					holder = ROOT
+					type = annex_country
+					target_country = THIS
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_theocratic_republic = yes
+		effect_starting_politics_democratic = yes
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
