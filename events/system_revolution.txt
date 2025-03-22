@@ -808,3 +808,81 @@ revolution_system.9 = {
     }
 
 }
+
+# Enforce Regime Change
+revolution_system.10 = {
+    type = country_event
+	placement = var:most_recent_war_opponent
+
+    title = regime_change_failsafe.t 								# Title of the event; ADD LOCALISATION
+    desc = regime_change_failsafe.d 								# Description of the event; ADD LOCALISATION
+    flavor = regime_change_failsafe.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Recently had regime change
+		has_modifier = forced_regime_change
+		
+		#Locate victor
+		has_variable = most_recent_war_opponent
+		
+    }
+	
+	immediate = {
+		
+		random_country = {
+			limit = { root.var:most_recent_war_opponent ?= this }
+			save_scope_as = foreign_power_regime_change
+		}
+		
+	}
+    
+	option = {
+        name = regime_change_failsafe.option						# Great
+		default_option = yes
+		
+		#Make independent
+		if = {
+			limit = { 
+				is_subject = yes 
+				NOT = { is_subject_of = var:most_recent_war_opponent }
+			}
+			make_independent = yes
+		}
+		
+		#Impose regime change
+		copy_laws = var:most_recent_war_opponent
+		
+		#Install ruler
+		random_country = {
+			limit = { root.var:most_recent_war_opponent ?= this }
+			ruler ?= { interest_group = { save_scope_as = foreign_interest_group } }
+		}
+		random_scope_character = {
+			limit = { 
+				is_ruler = no 
+				has_role = politician
+				interest_group = { is_same_interest_group_type = scope:foreign_interest_group }
+			}
+			set_character_as_ruler = yes
+		}
+		
+		#Gain relations with installer
+		set_relations = {
+			country = var:most_recent_war_opponent
+			value = 100
+		}
+		
+		#Remove recent regime change
+		remove_variable = most_recent_war_opponent
+		
+    }
+
+}
