@@ -1801,10 +1801,67 @@ diplo_play_additional_involvement_check_cwe = {
 	#Bad relations with TARGET or INITIATOR
 	custom_tooltip = {
 		text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
-		OR = { 
-			scope:target_country.relations:root < relations_threshold:poor
-			scope:initiator.relations:root < relations_threshold:poor
+		scope:target_country.relations:root <= relations_threshold:poor
+	}
+
+}
+
+diplo_play_additional_involvement_check_cwe_ideology_bypass = {
+
+	#THIS does not have restricted war rights
+	NOR = { 
+		has_law = law_type:law_no_war
+		has_law = law_type:law_defensive_war
+	}
+	
+	#THIS has some army
+	NOT = { has_law = law_type:law_peasant_levies }
+	
+	#Ruler is jingoistic OR is a dictatorship and has a war mongering IG
+	OR = { 
+	
+		AND = { 
+			exists = ruler
+			ruler ?= {
+				OR = {
+					has_ideology = ideology:ideology_autocratic
+					has_ideology = ideology:ideology_power_hungry
+				}
+			}
 		}
+		
+		AND = {
+			is_a_dictatorship = yes
+			hidden_trigger = { is_player = yes }
+			any_interest_group = {
+				is_in_government = yes
+				is_powerful = yes
+				leader ?= { 
+					OR = {
+						has_ideology = ideology:ideology_autocratic
+						has_ideology = ideology:ideology_power_hungry
+					}
+				}
+			}
+		}
+		
+		AND = {
+			scope:initiator = { NOT = { is_a_dictatorship = yes } }
+			scope:target_country = { is_a_dictatorship = yes }
+		}
+	
+	}
+	
+	#Parliament and Cabinet approves
+	government_has_legislative_simple_majority = yes
+	
+	#No non-aggression_pact with TARGET
+	#has_no_non_aggression_pact_with_target = yes
+	
+	#Bad relations with TARGET or INITIATOR
+	custom_tooltip = {
+		text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+		scope:target_country.relations:root <= relations_threshold:poor
 	}
 
 }
