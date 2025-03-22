@@ -2,18 +2,39 @@
 	is_shown = {
 		exists = market
 		market.owner = root
-		NOT = { is_banning_goods = g:wine }
+		NAND = { 
+			is_banning_goods = g:wine 
+			is_banning_goods = g:liquor
+		}
 	}
 
 	possible = {
-		NOT = { has_law = law_type:law_free_trade }
+		
 		exists = market
 		
-		is_a_theocratic_government = yes
+		OR = { 
+		
+			is_a_theocratic_government = yes
+			
+			AND = {
+				ruler ?= { 
+					interest_group = {
+						law_stance = {
+							law = law_type:law_HOS_religious_leader
+							value >= approve
+						}
+					}
+				}
+				government_has_legislative_super_majority = yes
+			}
+			
+		}
+		
 	}
 
 	when_taken = {
 		add_banned_goods = g:wine
+		add_banned_goods = g:liquor
 		add_modifier = {
 			name = liqour_ban_authority
 		}
@@ -36,7 +57,10 @@
 
 remove_liquor_ban = {
 	is_shown = {
-		is_banning_goods = g:wine
+		OR = { 
+			is_banning_goods = g:wine
+			is_banning_goods = g:liquor
+		}
 		exists = market
 		market.owner = root
 	}
@@ -45,20 +69,34 @@ remove_liquor_ban = {
 		
 		NOT = { is_a_theocratic_government = yes }
 		
+		NOT = {
+			ruler ?= {
+				interest_group = {
+					law_stance = {
+						law = law_type:law_HOS_religious_leader
+						value >= approve
+					}
+				}
+			}
+		}
+		
+		government_has_legislative_super_majority = yes
+		
 	}
 
 	when_taken = {
 		remove_banned_goods = g:wine
+		remove_banned_goods = g:liquor
 		remove_modifier = liqour_ban_authority
 	}
 	
-   ai_chance = {
-      base = 0
+	ai_chance = {
+		base = 0
 		modifier = {
 			trigger = {
 				has_strategy = ai_strategy_progressive_agenda
 			}
 			add = 10
 		}		 
-   }	
+	}	
 }
