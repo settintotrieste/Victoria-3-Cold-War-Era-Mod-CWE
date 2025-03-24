@@ -303,3 +303,120 @@ je_commence_democratic_reform_button = {
 	}
 	
 }
+
+je_controlled_elections_enabled_button = {
+	name = "je_controlled_elections_enabled_button"
+	desc = "je_controlled_elections_enabled_button_desc"
+
+	visible = { 
+		
+		can_have_controlled_elections = yes
+		has_modifier = controlled_election_disabled
+		
+	}
+
+	possible = {
+		
+		is_at_war = no
+		has_revolution = no
+		
+		#Timer
+		custom_tooltip = {
+			text = controlled_elections_toggle_timer.tt
+			NOT = { has_variable = controlled_elections_toggle_timer }
+		}
+		
+	}
+
+	effect = {
+	
+		#Disable controlled elections
+		remove_modifier = controlled_election_disabled
+		
+		#Timer
+		set_variable = {
+			name = controlled_elections_toggle_timer
+			months = 6
+		}
+		
+		#Hold immediate elections
+		trigger_event = { id = controlled_elections_system.1 }
+		
+	}
+	
+	ai_chance = {
+		base = 10
+	}
+	
+}
+
+je_controlled_elections_disabled_button = {
+	name = "je_controlled_elections_disabled_button"
+	desc = "je_controlled_elections_disabled_button_desc"
+
+	visible = { 
+		
+		can_have_controlled_elections = yes
+		NOT = { has_modifier = controlled_election_disabled }
+		
+	}
+
+	possible = {
+		
+		#Ruler is against controlled elections
+		ruler ?= {
+			character_is_autocratic = yes
+		}
+		
+		#Timer
+		custom_tooltip = {
+			text = controlled_elections_toggle_timer.tt
+			NOT = { has_variable = controlled_elections_toggle_timer }
+		}
+		
+	}
+
+	effect = {
+	
+		#Enable controlled elections
+		add_modifier = {
+			name = controlled_election_disabled
+		}
+		
+		#Clear the effects of any existing election results
+		if = {
+			limit = { has_modifier = controlled_election_results }
+			
+			remove_modifier = controlled_election_results
+			
+			#Domestic reaction
+			add_radicals = {
+				value = large_radicals
+			}
+		}
+		
+		#Timer
+		set_variable = {
+			name = controlled_elections_toggle_timer
+			months = 6
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if country is at war
+		modifier = { 
+			trigger = { 
+				OR = {
+					is_at_war = yes
+					has_revolution = yes
+				}
+			}
+			add = 10 
+		}
+		
+	}
+	
+}

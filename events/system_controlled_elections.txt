@@ -1,0 +1,187 @@
+namespace = controlled_elections_system
+
+#Hold Controlled Election
+controlled_elections_system.1 = {
+	type = country_event
+
+	title = controlled_election.t
+	desc = controlled_election.d
+	flavor = controlled_election.f
+
+	event_image = {
+		video = "gfx/event_pictures/southamerica_election.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		#Can have Controlled Elections
+		can_have_controlled_elections = yes
+		
+		#THIS holds Controlled Elections
+		NOT = { has_modifier = controlled_election_disabled }
+		
+		#Not at war
+		is_at_war = no
+		
+		#No recent election
+		NOT = { has_modifier = controlled_election_results }
+		NOT = { has_variable = controlled_elections_system_fired }
+		
+	}
+
+	immediate = {
+		
+		#Reset results
+		remove_modifier = controlled_election_results
+		remove_modifier = controlled_election_disabled
+		
+		#Timer
+		set_variable = {
+			name = controlled_elections_system_fired
+			months = 2
+		}
+		
+		#Compute result
+		set_variable = {
+			name = controlled_elections_system_radical_votes
+			value = radical_fraction
+		}
+		change_variable = {
+			name = controlled_elections_system_radical_votes
+			multiply = total_population
+		}
+		
+		set_variable = {
+			name = controlled_elections_system_loyalist_voters
+			value = loyalist_fraction
+		}
+		change_variable = {
+			name = controlled_elections_system_loyalist_voters
+			multiply = total_population
+		}
+		
+		set_variable = {
+			name = controlled_elections_system_total_voters
+			value = var:controlled_elections_system_radical_votes
+		}
+		change_variable = {
+			name = controlled_elections_system_total_voters
+			add = var:controlled_elections_system_loyalist_voters
+		}
+		
+		change_variable = {
+			name = controlled_elections_system_radical_votes
+			divide = var:controlled_elections_system_total_voters
+		}
+		change_variable = {
+			name = controlled_elections_system_radical_votes
+			multiply = 100
+		}
+		
+		#Rig vote
+		set_variable = {
+			name = controlled_elections_system_radical_votes_rigged
+			value = var:controlled_elections_system_radical_votes
+		}
+		change_variable = {
+			name = controlled_elections_system_radical_votes_rigged
+			divide = 2
+		}
+		
+	}
+
+	option = {
+		name = controlled_elections_system_option.1 #Accept the result
+		highlighted_option = yes
+		
+		#Add election result
+		add_modifier = {
+			name = controlled_election_results
+			multiplier = var:controlled_elections_system_radical_votes
+			years = 5
+		}
+		
+		#Clear variable
+		remove_variable = controlled_elections_system_fired
+		remove_variable = controlled_elections_system_radical_votes
+		remove_variable = controlled_elections_system_loyalist_voters
+		remove_variable = controlled_elections_system_total_voters
+		remove_variable = controlled_elections_system_radical_votes_rigged
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+	}
+	
+	option = {
+		name = controlled_elections_system_option.2 #Modify the result
+		default_option = yes
+		
+		trigger = {
+			var:controlled_elections_system_radical_votes_rigged >= 1
+		}
+		
+		#Add election result
+		add_modifier = {
+			name = controlled_election_results
+			multiplier = var:controlled_elections_system_radical_votes_rigged
+			years = 5
+		}
+		
+		#Clear variable
+		remove_variable = controlled_elections_system_fired
+		remove_variable = controlled_elections_system_radical_votes
+		remove_variable = controlled_elections_system_loyalist_voters
+		remove_variable = controlled_elections_system_total_voters
+		remove_variable = controlled_elections_system_radical_votes_rigged
+		
+		#Domestic reaction
+		add_radicals = {
+			value = medium_radicals
+		}
+		
+		ai_chance = { 
+			base = 10
+		}
+		
+	}
+	
+}
+
+#Clean up
+controlled_elections_system.2 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		OR = { 
+			has_modifier = controlled_election_results
+			has_modifier = controlled_election_disabled
+		}
+		NOT = { can_have_controlled_elections = yes }
+	}
+
+	immediate = {
+	
+		#Clear modifier
+		remove_modifier = controlled_election_results
+		remove_modifier = controlled_election_disabled
+		
+		#Clear variable
+		remove_variable = controlled_elections_system_fired
+		remove_variable = controlled_elections_system_radical_votes
+		remove_variable = controlled_elections_system_loyalist_voters
+		remove_variable = controlled_elections_system_total_voters
+		remove_variable = controlled_elections_system_radical_votes_rigged
+		
+	}
+
+}
