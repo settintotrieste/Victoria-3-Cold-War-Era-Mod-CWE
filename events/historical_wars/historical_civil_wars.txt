@@ -5537,3 +5537,389 @@ historical_civil_wars.32 = {
     }
 
 }
+
+#The Angolan Civil War
+historical_civil_wars.33 = {
+    type = country_event
+	placement = scope:rebel_state_scope
+
+    title = angolan_war.ANG.t 											# Title of the event; ADD LOCALISATION
+    desc = angolan_war.ANG.d 											# Description of the event; ADD LOCALISATION
+    #flavor = angolan_war.ANG.f 										# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:ANG ?= this
+		game_date >= 1975.11.11
+		game_date < 1985.11.11
+		
+		is_a_communist_dictatorship = yes								# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		is_at_war = no													# war = no
+		
+		#Owns country to release
+		has_state_in_state_region = STATE_EAST_ANGOLA
+		
+		# Event has not been fired before
+		NOT = { has_variable = angolan_war_ANG_hccw }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = s:STATE_EAST_ANGOLA }
+			save_scope_as = rebel_state_scope
+		}
+	
+		# Fire only once
+		set_variable = angolan_war_ANG_hccw								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1							# Declare war!
+        highlighted_option = yes
+		
+		#Release UNITA
+		create_dynamic_country = {
+			origin = ROOT
+			country_type = unrecognized
+			tier = city_state
+			capital = scope:rebel_state_scope
+			cede_state_trigger = {
+				state_region = scope:rebel_state_scope
+			}
+			on_created = { 
+			
+				set_variable = dynamic_decolonisation_country
+				
+				# Laws
+				effect_starting_politics_communist_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_jingoism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+				
+				effect_starting_politics_semi_gold_system = yes
+				
+				set_variable = UNITA_tag
+				
+			}
+		}
+		
+		random_country = {
+			limit = { has_variable = UNITA_tag }
+			create_diplomatic_play = {
+				name = Zapatista_war
+				type = dp_annex_war_historical
+				target_country = ROOT
+				
+				war = yes
+				
+				add_war_goal = {
+					holder = ROOT
+					type = annex_country
+					target_country = THIS
+				}
+			}
+			save_scope_as = UNITA_tag
+		}
+		
+		if = {
+			limit = { 
+				exists = c:PRC 
+				exists = c:SOV
+				exists = scope:UNITA_tag
+			}
+			random_country = {
+				limit = { 
+					c:PRC ?= this 
+					is_a_communist_dictatorship = yes
+					is_sufficiently_independent = yes
+					has_global_variable = sino_soviet_split_global_var
+				}
+				power_bloc ?= { 
+					add_leverage = { target = c:ANG value = -1000 }
+					add_leverage = { target = scope:UNITA_tag value = 1000 } 
+				}
+				change_relations = { country = c:ANG value = -100 }
+				change_relations = { country = scope:UNITA_tag value = 100 }
+			}
+			random_country = {
+				limit = { 
+					c:SOV ?= this 
+					is_a_communist_dictatorship = yes
+					is_sufficiently_independent = yes
+					has_global_variable = sino_soviet_split_global_var
+				}
+				power_bloc ?= { 
+					add_leverage = { target = c:ANG value = 1000 }
+					add_leverage = { target = scope:UNITA_tag value = -1000 } 
+				}
+				change_relations = { country = c:ANG value = 100 }
+				change_relations = { country = scope:UNITA_tag value = -100 }
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Become independent
+		if = {
+			limit = { is_subject = yes }
+			make_independent = yes
+		}
+		
+		#Enact new regime
+		effect_starting_politics_democratic = yes
+		
+		random_country = {
+			limit = { 
+				c:PRC ?= this 
+				is_a_communist_dictatorship = yes
+				is_sufficiently_independent = yes
+				has_global_variable = sino_soviet_split_global_var
+			}
+			power_bloc ?= { 
+				add_leverage = { target = c:ANG value = 1000 }
+			}
+			change_relations = { country = c:ANG value = 100 }
+		}
+		random_country = {
+			limit = { 
+				c:SOV ?= this 
+				is_a_communist_dictatorship = yes
+				is_sufficiently_independent = yes
+				has_global_variable = sino_soviet_split_global_var
+			}
+			power_bloc ?= { 
+				add_leverage = { target = c:ANG value = -1000 }
+			}
+			change_relations = { country = c:ANG value = -100 }
+		}
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#The Mozambican Civil War
+historical_civil_wars.34 = {
+    type = country_event
+	placement = scope:rebel_state_scope
+
+    title = mozambican_war.MOZ.t 										# Title of the event; ADD LOCALISATION
+    desc = mozambican_war.MOZ.d 										# Description of the event; ADD LOCALISATION
+    #flavor = mozambican_war.MOZ.f 										# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:MOZ ?= this
+		game_date >= 1977.5.30
+		game_date < 1987.5.30
+		
+		is_a_communist_government = yes									# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		is_at_war = no													# war = no
+		
+		#Owns country to release
+		has_state_in_state_region = STATE_ZAMBEZIA
+		
+		# Event has not been fired before
+		NOT = { has_variable = mozambican_war_MOZ_hccw }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = s:STATE_ZAMBEZIA }
+			save_scope_as = rebel_state_scope
+		}
+	
+		# Fire only once
+		set_variable = mozambican_war_MOZ_hccw							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1							# Declare war!
+        highlighted_option = yes
+		
+		#Release UNITA
+		create_dynamic_country = {
+			origin = ROOT
+			country_type = unrecognized
+			tier = city_state
+			capital = scope:rebel_state_scope
+			cede_state_trigger = {
+				state_region = scope:rebel_state_scope
+			}
+			on_created = { 
+			
+				set_variable = dynamic_decolonisation_country
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_jingoism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+				
+				effect_starting_politics_semi_gold_system = yes
+				
+				set_variable = RENAMO_tag
+				
+			}
+		}
+		
+		random_country = {
+			limit = { has_variable = RENAMO_tag }
+			create_diplomatic_play = {
+				name = Zapatista_war
+				type = dp_annex_war_historical
+				target_country = ROOT
+				
+				war = yes
+				
+				add_war_goal = {
+					holder = ROOT
+					type = annex_country
+					target_country = THIS
+				}
+			}
+			save_scope_as = RENAMO_tag
+		}
+		
+		if = {
+			limit = { 
+				exists = c:USA
+				exists = c:SOV
+				exists = scope:RENAMO_tag
+			}
+			random_country = {
+				limit = { 
+					c:USA ?= this 
+					is_a_democracy = yes
+					is_sufficiently_independent = yes
+					country_rank = rank_value:super_power
+				}
+				power_bloc ?= { 
+					add_leverage = { target = c:MOZ value = -1000 }
+					add_leverage = { target = scope:RENAMO_tag value = 1000 } 
+				}
+				change_relations = { country = c:MOZ value = -100 }
+				change_relations = { country = scope:RENAMO_tag value = 100 }
+			}
+			random_country = {
+				limit = { 
+					c:SOV ?= this 
+					is_a_communist_dictatorship = yes
+					is_sufficiently_independent = yes
+					country_rank = rank_value:super_power
+				}
+				power_bloc ?= { 
+					add_leverage = { target = c:MOZ value = 1000 }
+					add_leverage = { target = scope:RENAMO_tag value = -1000 } 
+				}
+				change_relations = { country = c:MOZ value = 100 }
+				change_relations = { country = scope:RENAMO_tag value = -100 }
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Become independent
+		if = {
+			limit = { is_subject = yes }
+			make_independent = yes
+		}
+		
+		#Enact new regime
+		effect_starting_politics_democratic = yes
+		
+		random_country = {
+			limit = { 
+				c:USA ?= this 
+				is_a_democracy = yes
+				is_sufficiently_independent = yes
+				country_rank = rank_value:super_power
+			}
+			power_bloc ?= { 
+				add_leverage = { target = c:MOZ value = 1000 }
+			}
+			change_relations = { country = c:MOZ value = 100 }
+		}
+		random_country = {
+			limit = { 
+				c:SOV ?= this 
+				is_a_communist_dictatorship = yes
+				is_sufficiently_independent = yes
+				country_rank = rank_value:super_power
+			}
+			power_bloc ?= { 
+				add_leverage = { target = c:MOZ value = -1000 }
+			}
+			change_relations = { country = c:MOZ value = -100 }
+		}
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

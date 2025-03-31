@@ -31,7 +31,10 @@ controlled_elections_system.1 = {
 		is_at_war = no
 		
 		#No recent election
-		NOT = { has_modifier = controlled_election_results }
+		NOR = { 
+			has_modifier = controlled_election_results_positive
+			has_modifier = controlled_election_results_negative
+		}
 		NOT = { has_variable = controlled_elections_system_fired }
 		
 	}
@@ -39,7 +42,8 @@ controlled_elections_system.1 = {
 	immediate = {
 		
 		#Reset results
-		remove_modifier = controlled_election_results
+		remove_modifier = controlled_election_results_positive
+		remove_modifier = controlled_election_results_negative
 		remove_modifier = controlled_election_disabled
 		
 		#Timer
@@ -96,7 +100,7 @@ controlled_elections_system.1 = {
 		}
 		change_variable = {
 			name = controlled_elections_system_radical_votes_rigged
-			divide = 2
+			divide = 5
 		}
 		
 	}
@@ -109,15 +113,15 @@ controlled_elections_system.1 = {
 		if = {
 			limit = { var:controlled_elections_system_loyalist_voters >= var:controlled_elections_system_radical_voters }
 			add_modifier = {
-				name = controlled_election_results
-				multiplier = 0
+				name = controlled_election_results_positive
+				multiplier = var:controlled_elections_system_radical_votes
 				years = 5
 			}
 			change_infamy = -5
 		}
 		else = {
 			add_modifier = {
-				name = controlled_election_results
+				name = controlled_election_results_negative
 				multiplier = var:controlled_elections_system_radical_votes
 				years = 5
 			}
@@ -150,21 +154,12 @@ controlled_elections_system.1 = {
 		}
 		
 		#Add election result
-		if = {
-			limit = { var:controlled_elections_system_loyalist_voters >= var:controlled_elections_system_radical_voters }
-			add_modifier = {
-				name = controlled_election_results
-				multiplier = 0
-				years = 5
-			}
+		add_modifier = {
+			name = controlled_election_results_negative
+			multiplier = var:controlled_elections_system_radical_votes_rigged
+			years = 5
 		}
-		else = {
-			add_modifier = {
-				name = controlled_election_results
-				multiplier = var:controlled_elections_system_radical_votes_rigged
-				years = 5
-			}
-		}
+		change_infamy = 5
 		
 		#Clear variable
 		remove_variable = controlled_elections_system_fired
@@ -194,7 +189,8 @@ controlled_elections_system.2 = {
 
 	trigger = {
 		OR = { 
-			has_modifier = controlled_election_results
+			has_modifier = controlled_election_results_positive
+			has_modifier = controlled_election_results_negative
 			has_modifier = controlled_election_disabled
 		}
 		NOT = { can_have_controlled_elections = yes }
@@ -203,7 +199,8 @@ controlled_elections_system.2 = {
 	immediate = {
 	
 		#Clear modifier
-		remove_modifier = controlled_election_results
+		remove_modifier = controlled_election_results_positive
+		remove_modifier = controlled_election_results_negative
 		remove_modifier = controlled_election_disabled
 		
 		#Clear variable
