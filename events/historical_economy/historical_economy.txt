@@ -3460,3 +3460,79 @@ historical_economy.38 = {
     }
 
 }
+
+# US Trade War, 2025
+historical_economy.39 = {
+    type = country_event
+
+    title = USA_Trade_War_2025.t 								# Title of the event; ADD LOCALISATION
+    desc = USA_Trade_War_2025.d 								# Description of the event; ADD LOCALISATION
+    #flavor = USA_Trade_War_2025.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this
+		game_date >= 2025.4.2									# START DATE: Date colony became self governing ****
+		game_date < 2035.4.2									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Conditions
+		ruler ?= { has_variable = character_is_Trump }
+		NOT = { has_law = law_type:law_isolationism }
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_Trade_War_2025_hee }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_Trade_War_2025_hee					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		activate_law = law_type:law_closed_borders
+		activate_law = law_type:law_isolationism
+		activate_law = law_type:law_nationalist_fp
+		activate_law = law_type:law_nationalist_foreign_investment_policy
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			strata = lower
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
