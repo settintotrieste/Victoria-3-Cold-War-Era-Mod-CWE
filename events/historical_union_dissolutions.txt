@@ -3241,3 +3241,143 @@ historical_union_dissolution.18 = {
     }
 
 }
+
+#1991 Sahrawi Arab Democratic Republic
+historical_union_dissolution.19 = {
+    type = country_event
+
+    title = MOR_WSA_dissolution.t 								# Title of the event; ADD LOCALISATION
+    desc = MOR_WSA_dissolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = MOR_WSA_dissolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:MOR ?= this
+		game_date >= 1991.9.6
+		game_date < 2001.9.6
+		
+		is_a_democratic_monarchy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Release country
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:WSA										# Change TAG of the colony ****
+		}
+		owns_entire_state_region = STATE_WEST_SAHARA
+		
+		# Event has not been fired before
+		NOT = { has_variable = MOR_WSA_dissolution_hud }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = MOR_WSA_dissolution_hud					# Change variable ****
+	
+	}
+    
+	option = {
+        name = italian_decolonisation_indy.option.1			# Grant autonomy
+		highlighted_option = yes
+		
+		#Subject becomes independent
+		create_country = {
+			tag = WSA										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			province = p:x93E37A 
+			province = p:xB533D3 
+			province = p:xF1FF9E 
+			province = p:x82A9C3 
+			province = p:xAB9DE9 
+			province = p:x7E5A63 
+			province = p:x96009F 
+			province = p:x53DC1A 
+			province = p:x19094B 
+			province = p:x4A82A1 
+			province = p:x3F400E 
+			province = p:x7E1555 
+			province = p:xA98D71 
+			province = p:x87BB99 
+			province = p:x4D7B2F 
+			province = p:xEB7C20 
+			province = p:xA0EF00
+			province = p:x85BAAD
+			province = p:x2B6F2B
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_semi_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_anti_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+				
+				#Mohamed Abdelaziz
+				create_character = {
+					first_name = "Mohamed_Abdelaziz_first_name"
+					last_name = "Mohamed_Abdelaziz_last_name"
+					ruler = yes ig_leader = yes historical = yes
+					birth_date = 1947.8.17
+					interest_group = ig_rural_folk
+					ideology = ideology_democratic
+					culture = cu:saharan
+					religion = rel:sunni
+					traits = {
+						brave
+						persistent
+						ambitious
+					}
+					on_created = { set_variable = Mohamed_Abdelaziz }
+				}
+				
+			}
+			
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+    option = {
+        name = historical_union_dissolution.option.2		# Refuse Autonomy
+		default_option = yes
+		
+		# Natives are angry!
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:saharan }	# Change homeland identity to match colony to be released ****
+		 	}
+			add_radicals_in_state = {
+				culture = cu:saharan						# Change culture ****
+				value = large_radicals
+			}
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}
