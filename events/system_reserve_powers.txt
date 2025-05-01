@@ -88,11 +88,11 @@ reserve_powers_system.1 = {
 				AND = { 
 					has_journal_entry = je_upper_house
 					has_variable = upper_house_has_super_majority
-					government_legitimacy > 66
+					government_legitimacy > 50
 				}
 				AND = { 
 					NOT = { has_journal_entry = je_upper_house }
-					government_legitimacy > 66
+					government_legitimacy > 50
 				}
 			}
 		}
@@ -838,6 +838,158 @@ reserve_powers_system.7 = {
 				trigger = { 
 					has_global_variable = historical_railroading_active 
 				} 
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
+
+#Prime Minister's Veto
+reserve_powers_system.8 = {
+	type = country_event
+
+	title = reserve_powers_pm_veto.t
+	desc = reserve_powers_pm_veto.d
+	flavor = reserve_powers_pm_veto.f
+
+	event_image = {
+		video = "gfx/event_pictures/asia_politician_parliament_motion.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		enacting_any_law = yes
+		
+		NOT = { has_variable = pm_veto_overruled }
+		
+		any_interest_group = {
+			leader = { has_modifier = prime_minister }
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value < neutral
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		random_scope_character = {
+			limit = { 
+				has_modifier = prime_minister
+			}
+			save_scope_as = ceremonial_head_of_state
+		}
+		random_interest_group = {
+			limit = { leader = { has_modifier = prime_minister } }
+			save_scope_as = ceremonial_head_of_state_ig
+		}
+		
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		
+	}
+
+	option = {
+		name = reserve_powers_system_accept_option 		#Accept the PM veto
+		default_option = yes
+		
+		if = {
+			limit = { enacting_any_law = yes }
+			add_enactment_setback = 3
+		}
+		
+		#Domestic reaction
+		ruler ?= {
+			interest_group = { save_scope_as = ruler_IG_scope }
+		}
+		add_radicals = {
+			value = small_radicals
+			interest_group = scope:ruler_IG_scope
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = reserve_powers_system_reject_option 		#Reject the PM veto
+		trigger = {
+			government_legitimacy > 50
+		}
+		
+		set_variable = pm_veto_overruled
+		
+		if = {
+			limit = { 
+				enacting_any_law = yes
+				enactment_setback_count < 2 
+			}
+			add_enactment_setback = 1
+		}
+		else_if = {
+			limit = { 
+				enacting_any_law = yes
+			}
+			hidden_effect = {
+				remove_modifier = ruler_restrained
+			}
+			add_enactment_modifier = {
+				name = ruler_restrained
+			}
+		}
+		
+		#PM IG is angry
+		every_interest_group = {
+			limit = { 
+				leader = { has_modifier = prime_minister }
+			}
+			hidden_effect = {
+				remove_modifier = ig_angry_with_government
+			}
+			add_modifier = { name = ig_angry_with_government years = 1 is_decaying = yes }
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = scope:ceremonial_head_of_state_ig
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
 				add = -100 
 			}
 		}
