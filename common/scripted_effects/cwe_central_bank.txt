@@ -2,8 +2,11 @@ determine_core_interest_rate = {
 
 	#Memorise previous core_interest_rate
 	if = {
-		limit = { has_variable = core_interest_rate }
-		set_variable = { name = core_interest_rate_prev value = root.var:core_interest_rate }
+		limit = { has_variable = core_interest_rate_now }
+		set_variable = { name = core_interest_rate_prev value = root.var:core_interest_rate_now }
+	}
+	else = {
+		set_variable = { name = core_interest_rate_prev value = 0 }
 	}
 
 	#Set variables
@@ -433,18 +436,103 @@ determine_core_interest_rate = {
 			divide = root.var:core_interest_rate_total_factors
 		}
 	}
+	else = {
+		change_variable = {
+			name = core_interest_rate_raw
+			divide = 5
+		}
+	}
+	
+	#Save current Core Inflation Rate
 	if = {
 		limit = { has_variable = core_interest_rate_raw }
 		set_variable = {
-			name = core_interest_rate
+			name = core_interest_rate_now
 			value = root.var:core_interest_rate_raw
 		}
 	}
+	
+	#Calculate Month on Month change in Core Inflation Rate
 	if = {
-		limit = { has_variable = core_interest_rate_prev }
-		change_variable = {
-			name = core_interest_rate_raw
-			subtract = root.var:core_interest_rate_prev
+		limit = { has_variable = core_interest_rate_now }
+		set_variable = {
+			name = core_interest_rate
+			value = root.var:core_interest_rate_now
+		}
+	}
+	if = {
+		limit = { 
+			has_variable = core_interest_rate_prev
+			has_variable = core_interest_rate
+		}
+		set_variable = {
+			name = core_interest_rate_prev_calc
+			value = root.var:core_interest_rate_prev
+		}
+		if = {
+			limit = { 
+				root.var:core_interest_rate < 0 
+				root.var:core_interest_rate_prev_calc < 0
+			}
+			change_variable = {
+				name = core_interest_rate_prev_calc
+				multiply = -1
+			}
+			change_variable = {
+				name = core_interest_rate
+				multiply = -1
+			}
+			change_variable = {
+				name = core_interest_rate
+				subtract = root.var:core_interest_rate_prev_calc
+			}
+			change_variable = {
+				name = core_interest_rate
+				multiply = -1
+			}
+		}
+		else_if = {
+			limit = { 
+				root.var:core_interest_rate < 0 
+				root.var:core_interest_rate_prev_calc >= 0
+			}
+			change_variable = {
+				name = core_interest_rate_prev_calc
+				multiply = -1
+			}
+			change_variable = {
+				name = core_interest_rate
+				add = root.var:core_interest_rate_prev_calc
+			}
+		}
+		else_if = {
+			limit = { 
+				root.var:core_interest_rate >= 0 
+				root.var:core_interest_rate_prev_calc < 0
+			}
+			change_variable = {
+				name = core_interest_rate_prev_calc
+				multiply = -1
+			}
+			change_variable = {
+				name = core_interest_rate
+				add = root.var:core_interest_rate_prev_calc
+			}
+		}
+		else_if = {
+			limit = { 
+				root.var:core_interest_rate = root.var:core_interest_rate_prev_calc
+			}
+			set_variable = {
+				name = core_interest_rate
+				value = 0
+			}
+		}
+		else = {
+			change_variable = {
+				name = core_interest_rate
+				subtract = root.var:core_interest_rate_prev_calc
+			}
 		}
 	}
 	
