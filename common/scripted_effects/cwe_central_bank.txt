@@ -647,3 +647,200 @@ determine_core_interest_rate = {
 	}
 
 }
+
+set_central_bank_interest_rate = {
+
+	#Independent Central Bank sets Monetary Policy
+	if = {
+		limit = { 
+			
+			#Independent Central Bank OR has a foreign Central Bank
+			OR = { 
+				has_variable = independent_central_bank 
+				has_journal_entry = je_foreign_central_bank
+			}
+			
+			#Not part of bretton woods system
+			#NOT = { has_journal_entry = je_bretton_woods_system_member }
+			
+		}
+		
+		if = {
+			limit = { 
+				has_variable = very_high_core_inflation
+				NOT = { has_modifier = very_high_cb_interest_rate }
+			}
+			add_modifier = { name = very_high_cb_interest_rate }
+			remove_modifier = high_cb_interest_rate
+			remove_modifier = medium_cb_interest_rate
+			remove_modifier = low_cb_interest_rate
+			remove_modifier = very_low_cb_interest_rate
+		}
+		if = {
+			limit = { 
+				has_variable = high_core_inflation 
+				NOT = { has_modifier = high_cb_interest_rate }
+			}
+			remove_modifier = very_high_cb_interest_rate
+			add_modifier = { name = high_cb_interest_rate }
+			remove_modifier = medium_cb_interest_rate
+			remove_modifier = low_cb_interest_rate
+			remove_modifier = very_low_cb_interest_rate
+		}
+		if = {
+			limit = { 
+				has_variable = moderate_core_inflation 
+				NOT = { has_modifier = medium_cb_interest_rate }
+			}
+			remove_modifier = very_high_cb_interest_rate
+			remove_modifier = high_cb_interest_rate
+			add_modifier = { name = medium_cb_interest_rate }
+			remove_modifier = low_cb_interest_rate
+			remove_modifier = very_low_cb_interest_rate
+		}
+		if = {
+			limit = { 
+				has_variable = low_core_inflation 
+				NOT = { has_modifier = low_cb_interest_rate }
+			}
+			remove_modifier = very_high_cb_interest_rate
+			remove_modifier = high_cb_interest_rate
+			remove_modifier = medium_cb_interest_rate
+			add_modifier = { name = low_cb_interest_rate }
+			remove_modifier = very_low_cb_interest_rate
+		}
+		if = {
+			limit = { 
+				has_variable = very_low_core_inflation 
+				NOT = { has_modifier = very_low_cb_interest_rate }
+			}
+			remove_modifier = very_high_cb_interest_rate
+			remove_modifier = high_cb_interest_rate
+			remove_modifier = medium_cb_interest_rate
+			remove_modifier = low_cb_interest_rate
+			add_modifier = { name = very_low_cb_interest_rate }
+		}
+	}
+
+}
+
+set_foreign_central_bank_interest_rate = {
+
+	#Independent Central Bank sets Monetary Policy
+	if = {
+		limit = { 
+			
+			exists = scope:foreign_central_bank
+			
+		}
+		
+		if = {
+			limit = { 
+				scope:foreign_central_bank ?= { has_modifier = very_high_cb_interest_rate }
+				NOT = { has_modifier = very_high_cb_interest_rate }
+			}
+			add_modifier = { name = very_high_cb_interest_rate }
+			remove_modifier = high_cb_interest_rate
+			remove_modifier = medium_cb_interest_rate
+			remove_modifier = low_cb_interest_rate
+			remove_modifier = very_low_cb_interest_rate
+		}
+		if = {
+			limit = { 
+				scope:foreign_central_bank ?= { has_modifier = high_cb_interest_rate }
+				NOT = { has_modifier = high_cb_interest_rate }
+			}
+			remove_modifier = very_high_cb_interest_rate
+			add_modifier = { name = high_cb_interest_rate }
+			remove_modifier = medium_cb_interest_rate
+			remove_modifier = low_cb_interest_rate
+			remove_modifier = very_low_cb_interest_rate
+		}
+		if = {
+			limit = { 
+				scope:foreign_central_bank ?= { has_modifier = medium_cb_interest_rate }
+				NOT = { has_modifier = medium_cb_interest_rate }
+			}
+			remove_modifier = very_high_cb_interest_rate
+			remove_modifier = high_cb_interest_rate
+			add_modifier = { name = medium_cb_interest_rate }
+			remove_modifier = low_cb_interest_rate
+			remove_modifier = very_low_cb_interest_rate
+		}
+		if = {
+			limit = { 
+				scope:foreign_central_bank ?= { has_modifier = low_cb_interest_rate }
+				NOT = { has_modifier = low_cb_interest_rate }
+			}
+			remove_modifier = very_high_cb_interest_rate
+			remove_modifier = high_cb_interest_rate
+			remove_modifier = medium_cb_interest_rate
+			add_modifier = { name = low_cb_interest_rate }
+			remove_modifier = very_low_cb_interest_rate
+		}
+		if = {
+			limit = { 
+				scope:foreign_central_bank ?= { has_modifier = very_low_cb_interest_rate }
+				NOT = { has_modifier = very_low_cb_interest_rate }
+			}
+			remove_modifier = very_high_cb_interest_rate
+			remove_modifier = high_cb_interest_rate
+			remove_modifier = medium_cb_interest_rate
+			remove_modifier = low_cb_interest_rate
+			add_modifier = { name = very_low_cb_interest_rate }
+		}
+	}
+
+}
+
+set_domestic_reaction_to_interest_rate = {
+	
+	#Domestic reaction to inappropriate monetary policy
+	if = {
+		limit = { NOT = { has_variable = independent_central_bank } }
+		if = {
+			limit = { 
+				has_variable = very_high_core_inflation
+				NOT = { has_modifier = very_high_cb_interest_rate }
+			}
+			every_interest_group = { limit = { is_in_government = no NOT = { has_modifier = ig_angry_with_inappropriate_monetary_policy } } add_modifier = { name = ig_angry_with_inappropriate_monetary_policy } }
+			every_interest_group = { limit = { is_in_government = yes has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
+		}
+		else_if = {
+			limit = { 
+				has_variable = high_core_inflation 
+				NOT = { has_modifier = high_cb_interest_rate }
+			}
+			every_interest_group = { limit = { is_in_government = no NOT = { has_modifier = ig_angry_with_inappropriate_monetary_policy } } add_modifier = { name = ig_angry_with_inappropriate_monetary_policy } }
+			every_interest_group = { limit = { is_in_government = yes has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
+		}
+		else_if = {
+			limit = { 
+				has_variable = moderate_core_inflation 
+				NOT = { has_modifier = medium_cb_interest_rate }
+			}
+			every_interest_group = { limit = { is_in_government = no NOT = { has_modifier = ig_angry_with_inappropriate_monetary_policy } } add_modifier = { name = ig_angry_with_inappropriate_monetary_policy } }
+			every_interest_group = { limit = { is_in_government = yes has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
+		}
+		else_if = {
+			limit = { 
+				has_variable = low_core_inflation 
+				NOT = { has_modifier = low_cb_interest_rate }
+			}
+			every_interest_group = { limit = { is_in_government = no NOT = { has_modifier = ig_angry_with_inappropriate_monetary_policy } } add_modifier = { name = ig_angry_with_inappropriate_monetary_policy } }
+			every_interest_group = { limit = { is_in_government = yes has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
+		}
+		else_if = {
+			limit = { 
+				has_variable = very_low_core_inflation 
+				NOT = { has_modifier = very_low_cb_interest_rate }
+			}
+			every_interest_group = { limit = { is_in_government = no NOT = { has_modifier = ig_angry_with_inappropriate_monetary_policy } } add_modifier = { name = ig_angry_with_inappropriate_monetary_policy } }
+			every_interest_group = { limit = { is_in_government = yes has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
+		}
+		else = {
+			every_interest_group = { limit = { has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
+		}
+	}
+
+}

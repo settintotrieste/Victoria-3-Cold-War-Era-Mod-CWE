@@ -5,6 +5,11 @@
 
 	scripted_button = je_central_bank_give_independence_button
 	scripted_button = je_central_bank_remove_independence_button
+	
+	scripted_button = je_central_bank_increase_CBIR_button
+	scripted_button = je_central_bank_decrease_CBIR_button
+	
+	scripted_button = je_central_bank_quantitative_easing_button
 
 	possible = {
 		
@@ -20,6 +25,13 @@
 		
 		#Calculate Core interest Rate
 		determine_core_interest_rate = yes
+		
+		#Default is medium CBIR
+		remove_modifier = very_high_cb_interest_rate
+		remove_modifier = high_cb_interest_rate
+		add_modifier = { name = medium_cb_interest_rate }
+		remove_modifier = low_cb_interest_rate
+		remove_modifier = very_low_cb_interest_rate
 		
 	}
 	
@@ -47,6 +59,12 @@
 		remove_variable = low_core_inflation
 		remove_variable = very_low_core_inflation
 		
+		remove_modifier = very_high_cb_interest_rate
+		remove_modifier = high_cb_interest_rate
+		remove_modifier = medium_cb_interest_rate
+		remove_modifier = low_cb_interest_rate
+		remove_modifier = very_low_cb_interest_rate
+		
 	}
 
 	on_monthly_pulse = {
@@ -55,101 +73,24 @@
 			
 			determine_core_interest_rate = yes
 			
-			#Independent Central Bank sets Monetary Policy
-			if = {
-				limit = { 
-					
-					#Independent Central Bank
-					has_variable = independent_central_bank 
-					
-					#Not part of bretton woods system
-					NOT = { has_journal_entry = je_bretton_woods_system_member }
-					
-				}
-				
-				if = {
-					limit = { 
-						has_variable = very_high_core_inflation
-						NOT = { has_law = law_type:law_very_deflationary_monetary_policy } 
-					}
-					activate_law = law_type:law_very_deflationary_monetary_policy
-				}
-				if = {
-					limit = { 
-						has_variable = high_core_inflation 
-						NOT = { has_law = law_type:law_deflationary_monetary_policy } 
-					}
-					activate_law = law_type:law_deflationary_monetary_policy
-				}
-				if = {
-					limit = { 
-						has_variable = moderate_core_inflation 
-						NOT = { has_law = law_type:law_neutral_monetary_policy } 
-					}
-					activate_law = law_type:law_neutral_monetary_policy
-				}
-				if = {
-					limit = { 
-						has_variable = low_core_inflation 
-						NOT = { has_law = law_type:law_expansionary_monetary_policy } 
-					}
-					activate_law = law_type:law_expansionary_monetary_policy
-				}
-				if = {
-					limit = { 
-						has_variable = very_low_core_inflation 
-						NOT = { has_law = law_type:law_very_expansionary_monetary_policy }
-					}
-					activate_law = law_type:law_very_expansionary_monetary_policy
-				}
+			random_list = {
+				1 = { set_central_bank_interest_rate = yes }
+				5 = { }
 			}
 			
-			#Domestic reaction to inappropriate monetary policy
+			set_domestic_reaction_to_interest_rate = yes
+			
 			if = {
-				limit = { NOT = { has_variable = independent_central_bank } }
-				if = {
-					limit = { 
-						has_variable = very_high_core_inflation
-						NOT = { has_law = law_type:law_very_deflationary_monetary_policy } 
+				limit = {
+					NOR = {
+						has_modifier = very_high_cb_interest_rate
+						has_modifier = high_cb_interest_rate
+						has_modifier = medium_cb_interest_rate
+						has_modifier = low_cb_interest_rate
+						has_modifier = very_low_cb_interest_rate
 					}
-					every_interest_group = { limit = { is_in_government = no NOT = { has_modifier = ig_angry_with_inappropriate_monetary_policy } } add_modifier = { name = ig_angry_with_inappropriate_monetary_policy } }
-					every_interest_group = { limit = { is_in_government = yes has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
 				}
-				else_if = {
-					limit = { 
-						has_variable = high_core_inflation 
-						NOT = { has_law = law_type:law_deflationary_monetary_policy } 
-					}
-					every_interest_group = { limit = { is_in_government = no NOT = { has_modifier = ig_angry_with_inappropriate_monetary_policy } } add_modifier = { name = ig_angry_with_inappropriate_monetary_policy } }
-					every_interest_group = { limit = { is_in_government = yes has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
-				}
-				else_if = {
-					limit = { 
-						has_variable = moderate_core_inflation 
-						NOT = { has_law = law_type:law_neutral_monetary_policy } 
-					}
-					every_interest_group = { limit = { is_in_government = no NOT = { has_modifier = ig_angry_with_inappropriate_monetary_policy } } add_modifier = { name = ig_angry_with_inappropriate_monetary_policy } }
-					every_interest_group = { limit = { is_in_government = yes has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
-				}
-				else_if = {
-					limit = { 
-						has_variable = low_core_inflation 
-						NOT = { has_law = law_type:law_expansionary_monetary_policy } 
-					}
-					every_interest_group = { limit = { is_in_government = no NOT = { has_modifier = ig_angry_with_inappropriate_monetary_policy } } add_modifier = { name = ig_angry_with_inappropriate_monetary_policy } }
-					every_interest_group = { limit = { is_in_government = yes has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
-				}
-				else_if = {
-					limit = { 
-						has_variable = very_low_core_inflation 
-						NOT = { has_law = law_type:law_very_expansionary_monetary_policy }
-					}
-					every_interest_group = { limit = { is_in_government = no NOT = { has_modifier = ig_angry_with_inappropriate_monetary_policy } } add_modifier = { name = ig_angry_with_inappropriate_monetary_policy } }
-					every_interest_group = { limit = { is_in_government = yes has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
-				}
-				else = {
-					every_interest_group = { limit = { has_modifier = ig_angry_with_inappropriate_monetary_policy } remove_modifier = ig_angry_with_inappropriate_monetary_policy }
-				}
+				add_modifier = { name = medium_cb_interest_rate }
 			}
 			
 		}
@@ -191,6 +132,13 @@ je_foreign_central_bank = {
 		#Calculate Core interest Rate
 		determine_core_interest_rate = yes
 		
+		#Default is medium CBIR
+		remove_modifier = very_high_cb_interest_rate
+		remove_modifier = high_cb_interest_rate
+		add_modifier = { name = medium_cb_interest_rate }
+		remove_modifier = low_cb_interest_rate
+		remove_modifier = very_low_cb_interest_rate
+		
 	}
 	
 	invalid = {
@@ -217,6 +165,12 @@ je_foreign_central_bank = {
 		remove_variable = low_core_inflation
 		remove_variable = very_low_core_inflation
 		
+		remove_modifier = very_high_cb_interest_rate
+		remove_modifier = high_cb_interest_rate
+		remove_modifier = medium_cb_interest_rate
+		remove_modifier = low_cb_interest_rate
+		remove_modifier = very_low_cb_interest_rate
+		
 	}
 
 	on_monthly_pulse = {
@@ -225,7 +179,9 @@ je_foreign_central_bank = {
 			
 			determine_core_interest_rate = yes
 			
-			#Monetary Policy laws are added by foreign central bank
+			set_foreign_central_bank_interest_rate = yes
+			
+			set_domestic_reaction_to_interest_rate = yes
 			
 		}
 		
