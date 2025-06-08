@@ -2286,3 +2286,341 @@ historical_diplomatic_incidents.24 = {
     }
 
 }
+
+# The Fatti di Rovereta
+historical_diplomatic_incidents.25 = {
+    type = country_event
+	placement = scope:san_marino_location
+
+    title = ITA_SAN_1957.t 										# Title of the event; ADD LOCALISATION
+    desc = ITA_SAN_1957.d 										# Description of the event; ADD LOCALISATION
+    #flavor = ITA_SAN_1957.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_protest.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:ITA ?= this											# Change TAG of the overlord ****
+		game_date >= 1957.9.19									# START DATE: Date colony became self governing ****
+		game_date < 1967.9.19									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		owns_entire_state_region = STATE_ROMAGNA
+		
+		#Cause
+		exists = c:USA
+		c:USA = {
+			is_a_democracy = yes								# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			country_rank = rank_value:super_power
+			NOT = { is_subject_of = ROOT }
+			right_wing_ruling_coalition = yes
+		}
+		exists = c:SOV
+		c:SOV = {
+			is_a_communist_government = yes						# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			country_rank = rank_value:super_power
+			NOT = { is_subject_of = ROOT }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = ITA_SAN_1957_hdi }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+		
+		random_scope_state = {
+			limit = { state_region = s:STATE_ROMAGNA }
+			save_scope_as = san_marino_location
+		}
+	
+		# Fire only once
+		set_variable = ITA_SAN_1957_hdi							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Diplomatic impact
+		every_country = {
+			limit = { 
+				OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader }
+				is_sufficiently_independent = yes
+			}
+			change_relations = { country = ROOT value = -100 }
+		}
+		every_country = {
+			limit = { 
+				OR = { has_modifier = nato_member has_modifier = nato_leader }
+				is_sufficiently_independent = yes
+				country_rank >= rank_value:major_power
+			}
+			change_relations = { country = ROOT value = 50 }
+		}
+		
+		change_infamy = 5
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2				# No
+		default_option = yes
+		
+		#Diplomatic impact
+		every_country = {
+			limit = { 
+				OR = { has_modifier = nato_member has_modifier = nato_leader }
+				is_sufficiently_independent = yes
+				country_rank >= rank_value:major_power
+			}
+			change_relations = { country = ROOT value = -50 }
+		}
+		every_country = {
+			limit = { 
+				OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader }
+				is_sufficiently_independent = yes
+			}
+			change_relations = { country = ROOT value = 50 }
+		}
+		
+		#Domestic reaction
+		if = {
+			limit = { NOT = { any_political_movement = { is_political_movement_type = movement_communist } } }
+			create_political_movement = { type = movement_communist }
+		}
+		add_modifier = { 
+			name = modifier_communist_peasant_agitation 
+			years = 5 
+			is_decaying = yes
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The Kargil War, 1999
+historical_diplomatic_incidents.26 = {
+    type = country_event
+	placement = scope:san_marino_location
+
+    title = HND_PAK_KAS_1999.t 									# Title of the event; ADD LOCALISATION
+    desc = HND_PAK_KAS_1999.d 									# Description of the event; ADD LOCALISATION
+    #flavor = HND_PAK_KAS_1999.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_battlefield_trenches.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_protest.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:PAK ?= this											# Change TAG of the overlord ****
+		game_date >= 1999.5.3									# START DATE: Date colony became self governing ****
+		game_date < 2009.5.3									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		has_state_in_state_region = STATE_KASHMIR
+		
+		is_not_neutral = yes
+		
+		#Cause
+		exists = c:HND
+		c:HND = {
+			is_a_democracy = yes								# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			NOT = { is_subject_of = ROOT }
+			has_state_in_state_region = STATE_KASHMIR
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = HND_PAK_KAS_1999_hdi }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+		
+		random_scope_state = {
+			limit = { state_region = s:STATE_KASHMIR }
+			save_scope_as = san_marino_location
+		}
+	
+		# Fire only once
+		set_variable = HND_PAK_KAS_1999_hdi						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Diplomatic impact
+		change_relations = { country = c:HND value = -100 }
+		create_incident = {
+			country = c:PAK
+			value = 25
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2				# No
+		default_option = yes
+		
+		# War
+		create_diplomatic_play = {
+			name = second_indo_pakistan_war
+			type = dp_return_state_historical
+			target_state = s:STATE_KASHMIR.region_state:HND
+			
+			#war = yes
+
+			add_war_goal = {
+				holder = c:HND
+				type = return_state
+				target_state = s:STATE_KASHMIR.region_state:PAK
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# India–Pakistan Crisis, 2025
+historical_diplomatic_incidents.27 = {
+    type = country_event
+	placement = scope:san_marino_location
+
+    title = HND_PAK_KAS_2025.t 									# Title of the event; ADD LOCALISATION
+    desc = HND_PAK_KAS_2025.d 									# Description of the event; ADD LOCALISATION
+    #flavor = HND_PAK_KAS_2025.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_battlefield_trenches.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_protest.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:HND ?= this											# Change TAG of the overlord ****
+		game_date >= 2025.4.23									# START DATE: Date colony became self governing ****
+		game_date < 2035.4.23									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		has_state_in_state_region = STATE_KASHMIR
+		
+		is_not_neutral = yes
+		
+		#Cause
+		exists = c:PAK
+		c:PAK = {
+			is_a_democracy = yes								# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			NOT = { is_subject_of = ROOT }
+			has_state_in_state_region = STATE_KASHMIR
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = HND_PAK_KAS_2025_hdi }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+		
+		random_scope_state = {
+			limit = { state_region = s:STATE_KASHMIR }
+			save_scope_as = san_marino_location
+		}
+	
+		# Fire only once
+		set_variable = HND_PAK_KAS_2025_hdi						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Diplomatic impact
+		change_relations = { country = c:PAK value = -100 }
+		create_incident = {
+			country = c:HND
+			value = 25
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2				# No
+		default_option = yes
+		
+		# War
+		create_diplomatic_play = {
+			name = second_indo_pakistan_war
+			type = dp_return_state_historical
+			target_state = s:STATE_KASHMIR.region_state:PAK
+			
+			#war = yes
+
+			add_war_goal = {
+				holder = c:PAK
+				type = return_state
+				target_state = s:STATE_KASHMIR.region_state:HND
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
