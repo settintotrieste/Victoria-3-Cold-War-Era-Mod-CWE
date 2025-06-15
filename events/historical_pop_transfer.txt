@@ -1,0 +1,383 @@
+namespace = historical_pop_transfer
+
+# German deportation - GENERAL
+historical_pop_transfer.1 = {
+    type = country_event
+
+    title = GER_post_war_deportations.t 						# Title of the event; ADD LOCALISATION
+    desc = GER_post_war_deportations.d 							# Description of the event; ADD LOCALISATION
+    #flavor = GER_post_war_deportations.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_poor_people_moving.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/identification_documents.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		OR = { 
+			c:HUN ?= this
+			c:POL ?= this
+			c:ROM ?= this
+			c:SOV ?= this
+			c:CZH ?= this
+		}
+		game_date >= 1946.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1956.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		NOT = { is_a_democracy = yes }							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		OR = { 
+			exists = c:WGR
+			exists = c:EGR
+			exists = c:GER
+			exists = c:WAU
+			exists = c:EAU
+			exists = c:AUS
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = GER_post_war_deportations_hpt }	# CHANGE ****
+		
+		#Has significant German population
+		any_scope_state = {
+			OR = { 
+				culture_percent_state = {
+					target = cu:german
+					value >= 0.01
+				}
+				culture_percent_state = {
+					target = cu:austrian
+					value >= 0.01
+				}
+			}
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = GER_post_war_deportations_hpt			# Change variable ****
+		
+	}
+    
+    option = {
+        name = GER_post_war_deportations.option.1					# Yes
+        highlighted_option = yes
+		
+		#Move pops
+		every_scope_state = {
+			limit = { 
+				culture_percent_state = {
+					target = cu:german
+					value >= 0.01
+				}
+			}
+			
+			custom_tooltip = {
+				text = deport_germans_ww2.tt
+				
+				kill_population_percent_in_state = {
+					culture = cu:german
+					percent = 0.01
+				}
+			
+				save_scope_as = pop_transfer_source_state
+				owner = {
+					random_country = {
+						limit = {
+							OR = { 
+								c:WGR ?= this
+								c:EGR ?= this
+								c:GER ?= this
+							}
+						}
+						random_primary_culture = {
+							save_scope_as = german_culture
+						}
+						random_scope_state = {
+							limit = { 
+								OR = { 
+									any_neighbouring_state = { owner = ROOT }
+									is_coastal = yes
+									is_capital = yes
+								}
+								is_incorporated = yes
+							}
+							save_scope_as = pop_transfer_target_state
+						}
+					}
+					scope:pop_transfer_source_state ?= {
+						every_scope_pop = {
+							limit = {
+								culture = cu:german
+							}
+							move_partial_pop = {
+								state = scope:pop_transfer_target_state
+								population_ratio = 0.9
+							}
+						}
+					}
+				}
+				
+			}
+			
+		}
+		every_scope_state = {
+			limit = { 
+				culture_percent_state = {
+					target = cu:austrian
+					value >= 0.01
+				}
+			}
+			
+			custom_tooltip = {
+				text = deport_austrian_ww2.tt
+				
+				kill_population_percent_in_state = {
+					culture = cu:austrian
+					percent = 0.01
+				}
+			
+				save_scope_as = pop_transfer_source_state
+				owner = {
+					random_country = {
+						limit = {
+							OR = { 
+								c:WAU ?= this
+								c:EAU ?= this
+								c:AUS ?= this
+							}
+						}
+						random_primary_culture = {
+							save_scope_as = austrian_culture
+						}
+						random_scope_state = {
+							limit = { 
+								OR = { 
+									any_neighbouring_state = { owner = ROOT }
+									is_coastal = yes
+									is_capital = yes
+								}
+								is_incorporated = yes
+							}
+							save_scope_as = pop_transfer_target_state
+						}
+					}
+					scope:pop_transfer_source_state ?= {
+						every_scope_pop = {
+							limit = {
+								culture = cu:austrian
+							}
+							move_partial_pop = {
+								state = scope:pop_transfer_target_state
+								population_ratio = 0.9
+							}
+						}
+					}
+				}
+				
+			}
+			
+		}
+		
+		#Domestic reaction
+		random_primary_culture = {
+			save_scope_as = THIS_primary_culture
+		}
+		add_loyalists = {
+			culture = scope:THIS_primary_culture
+			value = large_radicals
+		}
+		
+		#International relations
+		change_infamy = 10
+		every_country = {
+			limit = { country_has_primary_culture = cu:german }
+			change_relations = { country = ROOT value = -200 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = GER_post_war_deportations.option.2					# No
+		default_option = yes
+		
+		#Major discontent
+		random_primary_culture = {
+			save_scope_as = THIS_primary_culture
+		}
+		add_radicals = {
+			culture = scope:THIS_primary_culture
+			value = very_large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = very_large_radicals
+			culture = cu:german
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Jewish Migration - GENERAL
+historical_pop_transfer.2 = {
+    type = country_event
+
+    title = ISR_post_war_migration.t 							# Title of the event; ADD LOCALISATION
+    desc = ISR_post_war_migration.d 							# Description of the event; ADD LOCALISATION
+    #flavor = ISR_post_war_migration.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_poor_people_moving.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/identification_documents.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		OR = {
+			country_is_in_europe = yes
+			country_is_in_middle_east = yes 
+			country_is_in_africa = yes 
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = ISR_post_war_migration_hpt }	# CHANGE ****
+		
+		game_date >= 1946.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1956.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Not closed borders
+		NOT = { has_law = law_type:law_no_migration_controls }
+		
+		#Israel exists
+		exists = c:ISR
+		c:ISR ?= {
+			is_a_democracy = yes
+			is_sufficiently_independent = yes						# is_vassal = no		
+			is_at_war = no											# war = no
+		}
+		
+		#Has jews in THIS
+		religion_percent_country = {  
+			target = rel:jewish
+			value >= 0.01
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = ISR_post_war_migration_hpt				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_pop_transfer.option.1					# Yes
+        highlighted_option = yes
+		
+		#Move pops
+		every_scope_state = {
+			limit = { 
+				religion_percent_state = {
+					target = rel:jewish
+					value >= 0.01
+				}
+			}
+			
+			custom_tooltip = {
+				text = move_jews_ww2.tt
+				
+				save_scope_as = pop_transfer_source_state
+				owner = {
+					random_country = {
+						limit = {
+							c:ISR ?= this
+						}
+						rel:jewish = { save_scope_as = jewish_religion }
+						random_scope_state = {
+							limit = { 
+								OR = { 
+									any_neighbouring_state = { owner = ROOT }
+									is_coastal = yes
+									is_capital = yes
+								}
+								is_incorporated = yes
+							}
+							save_scope_as = pop_transfer_target_state
+						}
+					}
+					scope:pop_transfer_source_state ?= {
+						every_scope_pop = {
+							limit = {
+								religion = rel:jewish
+							}
+							move_partial_pop = {
+								state = scope:pop_transfer_target_state
+								population_ratio = 0.75
+							}
+						}
+					}
+				}
+				
+			}
+			
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_pop_transfer.option.2					# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			religion = rel:jewish
+			value = very_large_radicals
+		}
+		
+		#International relations
+		every_country = {
+			limit = { c:ISR ?= this }
+			change_relations = { country = ROOT value = -100 }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
