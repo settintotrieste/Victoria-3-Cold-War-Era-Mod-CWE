@@ -22,7 +22,7 @@
 	}
 
 	unlocked_by_technologies = {
-		international_relations
+		
 	}
 
 	mutual_modifier = {
@@ -30,15 +30,38 @@
 	}
 
 	visible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
+		scope:first_country = { 
+			is_not_revolutionary_or_decentralised = yes
+		}
+		scope:second_country = {
+			is_not_revolutionary_or_decentralised = yes
+		}
 	}
 
 	possible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
-		aggressive_diplomatic_plays_permitted = yes
-		NOT = { is_subject_of = scope:other_country }
+		
+		#Both parties are sufficiently independent
+		scope:first_country = { is_sufficiently_independent_excluding_satellites = yes }
+		scope:second_country = { is_sufficiently_independent_excluding_satellites = yes }
+		
+		#Neither party is neutral
+		NOR = {
+			scope:first_country = { is_neutral = yes }
+			scope:second_country = { is_neutral = yes }
+		}
+		
+		#Not at war
+		scope:first_country = { NOT = { has_war_with = scope:second_country } }
+		scope:first_country = { has_diplomatic_relevance = scope:second_country }
+		
+		#Good relations
+		scope:first_country = { 
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+				scope:second_country.relations:root >= relations_threshold:cordial
+			}
+		}
+		
 	}
 
     non_fulfillment = {
@@ -49,10 +72,10 @@
                 scope:article = {
 					OR = {
 						first_country = {
-							aggressive_diplomatic_plays_permitted = no # Checks if they have diplomatic autonomy
+							NOT = { is_sufficiently_independent_excluding_satellites = yes }
 						}
 						second_country = {
-							aggressive_diplomatic_plays_permitted = no # Checks if they have diplomatic autonomy
+							NOT = { is_sufficiently_independent_excluding_satellites = yes }
 						}
 					}
                 }
@@ -61,24 +84,20 @@
     }
 
 	can_ratify = {
-		OR = {
+	
+		NOT = {
 			scope:first_country = {
-				has_technology_researched = multilateral_alliances
-			}
-			NOT = {
-				scope:first_country = {
-					any_scope_treaty = {
-						hidden_trigger = {
-							OR = {
-								scope:treaty = {
-									is_renegotiation = no
-								}
-								scope:treaty.amended_treaty != this
+				any_scope_treaty = {
+					hidden_trigger = {
+						OR = {
+							scope:treaty = {
+								is_renegotiation = no
 							}
+							scope:treaty.amended_treaty != this
 						}
-						any_scope_article = {
-							has_type = alliance
-						}
+					}
+					any_scope_article = {
+						has_type = alliance
 					}
 				}
 			}
@@ -164,6 +183,40 @@
 				}
 			}
 		}
+	}
+	
+	can_withdraw = {  
+		
+		#General
+		NOR = { 
+			scope:first_country = { is_diplomatic_play_ally_of = scope:second_country }
+			scope:second_country = { is_diplomatic_play_ally_of = scope:first_country }
+		}
+		
+		#NATO
+		NAND = { 
+			scope:first_country = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+			scope:second_country = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
+		}
+		
+		#Rio Pact
+		NAND = { 
+			scope:first_country = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
+			scope:second_country = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
+		}
+		
+		#Warsaw Pact
+		NAND = { 
+			scope:first_country = { OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader } }
+			scope:second_country = { OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader } }
+		}
+		
+		#CSTO
+		NAND = { 
+			scope:first_country = { OR = { has_modifier = csto_member has_modifier = csto_leader } }
+			scope:second_country = { OR = { has_modifier = csto_member has_modifier = csto_leader } }
+		}
+		
 	}
 
 	on_entry_into_force = {
@@ -275,7 +328,7 @@
 
 			# We are doing this to be able to reuse loc across treaties and diplomatic actions
 			scope:first_country = {
-				save_temporary_scope_as = actor
+				save_temporary_scope_as = first_country
 			}
 			scope:second_country = {
 				save_temporary_scope_as = target
