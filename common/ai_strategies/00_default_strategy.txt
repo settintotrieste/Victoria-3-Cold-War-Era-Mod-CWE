@@ -553,9 +553,9 @@ ai_strategy_default = {
 		if = {
 			limit = {	
 				scope:target_state = { 
-					is_treaty_port = yes 
 					state_region = { 
 						any_scope_state = { 
+							is_treaty_port = yes 
 							OR = {
 								owner = { is_subject_of = ROOT }
 								owner = ROOT
@@ -579,7 +579,7 @@ ai_strategy_default = {
 					}	
 					AND = {
 						has_strategy = ai_strategy_economic_imperialism
-						"num_mutual_trade_route_levels_with_country(root)" >= 10
+						"mutual_trade_value_with_country(root)" >= 1000
 						OR = {
 							has_attitude = {
 								who = scope:target_country
@@ -1356,18 +1356,24 @@ ai_strategy_default = {
 		
 		max = 200 # No more than 200 from population & rank
 
-		add = {
-			value = income
-			multiply = {
-				value = 1
-				subtract = { # Coastal population reduces spending on army as that spending is needed for navy too
-					value = cached_ai_incorporated_coastal_population
-					divide = cached_ai_incorporated_population
-					divide = 2
-				}		
+		if = {
+			limit = {
+				cached_ai_incorporated_population > 0
+				cached_ai_incorporated_coastal_population > 0
 			}
-			divide = 25000 # 1 level of barracks per 25k income					
-		}	
+			add = {
+				value = income
+				multiply = {
+					value = 1
+					subtract = { # Coastal population reduces spending on army as that spending is needed for navy too
+						value = cached_ai_incorporated_coastal_population
+						divide = cached_ai_incorporated_population
+						divide = 2
+					}		
+				}
+				divide = 25000 # 1 level of barracks per 25k income					
+			}	
+		}
 		
 		# More advanced standing armies are expensive and should be smaller relative to population
 		if = {
@@ -1448,12 +1454,18 @@ ai_strategy_default = {
 		max = 100 # No more than 100 from population		
 
 		# 1 level of naval base per 5k income, multiplied by relative incorporated coastal population to total incorporated population
-		add = {
-			value = income
-			divide = cached_ai_incorporated_population
-			multiply = cached_ai_incorporated_coastal_population
-			divide = 5000
-		}	
+		if = {
+			limit = {
+				cached_ai_incorporated_population > 0
+				cached_ai_incorporated_coastal_population > 0
+			}
+			add = {
+				value = income
+				divide = cached_ai_incorporated_population
+				multiply = cached_ai_incorporated_coastal_population
+				divide = 5000
+			}	
+		}
 	
 		# GPs and MPs should want to maintain a bit of a navy
 		if = {
@@ -2974,6 +2986,44 @@ ai_strategy_default = {
 		}			
 	}
 	
+	treaty_category_scores = {
+		economy = {
+			value = 4
+		}
+
+		trade = {
+			value = 5
+		}
+
+		military = {
+			value = 3
+		}
+
+		military_defense = {
+			value = 3
+		}
+
+		ideology = {
+			value = 0
+		}
+
+		expansion = {
+			value = 4
+		}
+
+		power_bloc = {
+			value = 1
+		}
+
+		other = {
+			value = 1
+		}
+
+		none = {
+			value = 0
+		}
+	}
+	
 	# How much should the AI value a wargoal against another country/state
 	# Using this value in other strategies will function additively
 	# scope:target_country = wargoal target country
@@ -3028,11 +3078,6 @@ ai_strategy_default = {
 				min = 0
 				max = 200				
 			}			
-		}	
-		
-		take_treaty_port = {
-			add = scope:target_state.ai_treaty_port_value:root	
-			
 		}
 		
 		transfer_subject = {
@@ -3101,33 +3146,7 @@ ai_strategy_default = {
 
 			min = 0
 			max = 100
-		}		
-
-		war_reparations = {
-			value = 0
-			
-			add = {
-				value = "scope:target_country.ai_gdp_comparison(root)"
-				add = 1
-				multiply = 5
-				min = 0
-				max = 15
-
-				if = {
-					limit = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = rivalry
-						}						
-					}
-					
-					multiply = 1.5
-				}
-			}
-
-			min = 0
-			max = 100			
-		}	
+		}
 
 		humiliation = {
 			value = 25
@@ -3293,76 +3312,7 @@ ai_strategy_default = {
 				}
 				multiply = 0
 			}
-		}	
-		
-		foreign_investment_rights = {
-			value = 0
-
-			if = {
-				limit = {
-					scope:target_country = {
-						has_diplomatic_pact = {
-							who = root
-							type = embargo
-						}	
-					}
-					can_reach_target_country = yes
-				}
-				add = 50
-			}			
-
-			# Not worth doing against very small countries
-			if = {
-				limit = {
-					scope:target_country = {
-						gdp < 500000
-					}
-				}
-				multiply = 0
-			}				
 		}
-
-		ban_slavery = {
-			value = 0
-			
-			if = {
-				limit = {
-					country_rank >= rank_value:major_power
-					OR = {
-						has_strategy = ai_strategy_progressive_agenda
-						has_strategy = ai_strategy_egalitarian_agenda
-					}					
-				}
-
-				add = {
-					value = scope:target_country.gdp
-					divide = 100000
-					max = 25						
-				}
-
-				
-				# Relations with target
-				multiply = {
-					value = "scope:target_country.relations:root"
-					multiply = -0.01
-					add = 1
-					min = 0.5
-					max = 2.0				
-				}
-				
-				# Ideological opinion of target
-				multiply = {
-					value = "ai_ideological_opinion(scope:target_country)"
-					multiply = -0.05
-					add = 1
-					min = 0.5
-					max = 2.0
-				}				
-			}
-
-			min = 0
-			max = 100
-		}		
 
 		revoke_claim = {
 			if = {
@@ -3408,12 +3358,44 @@ ai_strategy_default = {
 		}	
 
 		annex_country = {
-			value = 100
-		
-			add = {
-				value = scope:target_country.gdp
-				divide = 100000
-				max = 100						
+			value = 0
+
+			if = {
+				limit = {
+					OR = {
+						has_secret_goal = {
+							who = scope:target_country
+							secret_goal = conquer
+						}
+						has_attitude = {
+							who = scope:target_country
+							attitude = antagonistic
+						}
+					}
+				}
+				if = {
+					limit = {
+						root.gdp > 0
+					}
+					add = {
+						value = scope:target_country.gdp
+						divide = root.gdp
+						multiply = 10
+						max = 100
+					}
+				}
+			}
+
+			if = {
+				limit = {
+					scope:target_country = {
+						num_states > 1
+					}
+				}
+				add = {
+					value = scope:target_country.num_states
+					multiply = 10
+				}
 			}
 
 			if = {
