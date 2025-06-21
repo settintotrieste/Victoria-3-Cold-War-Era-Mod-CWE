@@ -1,0 +1,311 @@
+﻿acquire_monopoly_for_company = {
+    kind = directed
+    cost = 50
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/acquire_monopoly_for_company_treaties.dds"
+
+	flags = {
+		can_be_enforced
+		can_be_renegotiated
+		is_monopoly_for_company
+		recipient_pays_maintenance
+	}
+
+	usage_limit = once_per_side_with_same_inputs
+
+	maintenance_paid_by = target_country
+
+    required_inputs = {
+		company
+        building_type
+    }
+
+    unlocked_by_technologies = {
+        corporate_charters
+    }
+
+	visible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+        has_dlc_feature = mp1_treaties
+	}
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+		scope:other_country = {
+			any_company = {
+				owner = prev
+			}
+		}
+	}
+
+    can_ratify = {
+		OR = {
+			scope:source_country = {
+				any_scope_treaty = {
+					binds = scope:target_country
+					any_scope_article = {
+						has_type = foreign_investment_rights
+						source_country = scope:source_country
+					}
+				}
+			}
+			scope:treaty ?= {
+				any_scope_article_option = {
+					has_type = foreign_investment_rights
+					source_country = scope:source_country
+				}
+			}
+			scope:source_country = {
+				is_subject_of = scope:target_country
+			}
+		}
+        custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS
+			trigger_if = {
+				limit = {
+					exists = root.input_building_type
+				}
+				NOT = {
+					scope:source_country = {
+						any_scope_treaty = {
+							hidden_trigger = {
+								OR = {
+									scope:treaty = {
+										is_renegotiation = no
+									}
+									scope:treaty.amended_treaty != this
+								}
+							}
+							any_scope_article = {
+								has_type = acquire_monopoly_for_company
+								input_building_type = root.input_building_type
+								source_country = scope:source_country
+							}
+						}
+					}
+				}
+			}
+            scope:treaty ?= {
+                NOT = {
+                    any_scope_article_option = {
+                        count > 1
+                        has_type = acquire_monopoly_for_company
+                        source_country = scope:source_country
+                        input_building_type = root.input_building_type
+                    }
+                }
+            }
+        }
+    }
+
+    on_entry_into_force = {}
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_infamy = {
+				value = {
+					add = 1
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = 20
+					min = 5
+				}
+			}
+		}
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -10 }
+		}
+	}
+
+    company_valid_trigger = {
+		always = yes
+    }
+
+	building_type_valid_trigger = {
+		always = yes
+	}
+
+	ai = {
+        treaty_categories = {
+			economy
+		}
+
+		evaluation_chance = {
+			value = 0
+
+			if = {
+				limit = { country_rank >= rank_value:major_power }
+				add = {
+					value = country_rank
+					multiply = 0.05
+				}
+			}
+		}
+
+		article_ai_usage = {
+            request
+        }
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					exists = scope:article.input_building_type
+					scope:source_country ?= this
+				}
+
+				# We are doing this to be able to reuse loc across treaties and diplomatic actions
+				scope:source_country = {
+					save_temporary_scope_as = target
+				}
+				scope:target_country = {
+					save_temporary_scope_as = actor
+				}
+
+				if = {
+					limit = {
+						country_rank >= rank_value:great_power
+					}
+					add = {
+						desc = "great_power"
+						value = -300
+					}
+				}
+				else_if = {
+					limit = {
+						country_rank >= rank_value:unrecognized_major_power
+					}
+					add = {
+						desc = "major_power"
+						value = -200
+					}
+				}
+
+				if = {
+					limit = {
+						country_rank >= scope:target_country.country_rank
+					}
+					### Relative rank
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_RANK"
+						value = scope:target_country.country_rank
+						subtract = 2
+						subtract = country_rank
+						multiply = 10
+					}
+				}
+
+				subtract = {
+					desc = "DIPLOMATIC_ACCEPTANCE_VALUE_OF_BUILDING_TYPE"
+
+					if = {
+						limit = {
+							any_scope_building = {
+								type = scope:article.input_building_type
+								weekly_profit > 5
+							}
+						}
+						every_scope_building = {
+							limit = {
+								type = scope:article.input_building_type
+								weekly_profit > 5
+							}
+							add = level
+							multiply = {
+								value = weekly_profit
+								divide = 250
+								add = 1
+								max = 2
+							}
+						}
+					}
+					max = 100
+					min = 20
+				}
+			}
+			else_if = {
+				limit = {
+					exists = scope:article.input_building_type
+					scope:target_country ?= this
+				}
+
+				# We are doing this to be able to reuse loc across treaties and diplomatic actions
+				scope:target_country = {
+					save_temporary_scope_as = target
+				}
+				scope:source_country = {
+					save_temporary_scope_as = actor
+				}
+
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_VALUE_OF_BUILDING_TYPE"
+
+					scope:source_country ?= {
+						if = {
+							limit = {
+								any_scope_building = {
+									type = scope:article.input_building_type
+									weekly_profit > 5
+								}
+							}
+							every_scope_building = {
+								limit = {
+									type = scope:article.input_building_type
+									weekly_profit > 5
+								}
+								add = level
+								multiply = {
+									value = weekly_profit
+									divide = 250
+									add = 1
+									max = 2
+								}
+							}
+						}
+					}
+					max = 20
+					min = -100
+				}
+			}
+		}
+	}
+
+	wargoal = {
+		execution_priority = 60
+		contestion_type = control_target_country_capital
+
+		maneuvers = {
+			value = 2.5
+
+			scope:target_country = {
+				multiply = {
+					value = total_population
+					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+
+		infamy = {
+			value = 0.5
+
+			scope:target_country = {
+				multiply = {
+					value = total_population
+					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+	}
+}

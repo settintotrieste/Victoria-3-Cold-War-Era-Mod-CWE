@@ -1,0 +1,207 @@
+﻿transit_rights = {
+    kind = directed
+    cost = 50
+
+    relations_progress_per_day = 0.5
+    relations_improvement_max = 20
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/transit_rights_treaties.dds"
+
+	flags = {
+		is_transit_rights
+		can_be_enforced
+		can_be_renegotiated
+				recipient_pays_maintenance
+	}
+
+    usage_limit = once_per_side
+
+    unlocked_by_technologies = {
+        international_relations
+    }
+
+	visible = {
+		NOT = { is_country_type = decentralized }
+		is_junior_in_customs_union = no
+	}
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		is_junior_in_customs_union = no
+		scope:other_country ?= {
+			is_junior_in_customs_union = no
+		}
+	}
+
+    can_ratify = {
+		scope:target_country = {
+			OR = {
+				has_strategic_land_adjacency = scope:source_country
+				any_scope_treaty = {
+					any_scope_article = {
+						has_type = transit_rights
+						source_country ?= { has_strategic_land_adjacency = scope:source_country }
+					}
+				}
+			}
+		}
+    }
+
+    on_entry_into_force = {}
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -10 }
+		}
+	}
+
+	ai = {
+
+        treaty_categories = {
+			trade
+		}
+
+		evaluation_chance = {
+			value = 0
+
+			if = {
+				limit = { capital.world_market_access <= 0 }
+				add = 1.0
+			}
+		}
+
+        article_ai_usage = {
+            request
+        }
+
+        inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:source_country ?= this
+				}
+
+				# We are doing this to be able to reuse loc across treaties and diplomatic actions
+				scope:source_country = {
+					save_temporary_scope_as = target
+				}
+				scope:target_country = {
+					save_temporary_scope_as = actor
+				}
+
+
+				# Generally permissive
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -10
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+
+					if = {
+						limit = {
+							OR = {
+								has_attitude = {
+									who = scope:target_country
+									attitude = antagonistic
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = domineering
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = belligerent
+								}
+							}
+						}
+						add = -200
+					}
+				}
+			}
+			else_if = {
+				limit = {
+					scope:target_country ?= this
+					"ai_transit_rights_value(scope:source_country)" > 0
+				}
+				scope:source_country = {
+					save_temporary_scope_as = actor
+				}
+				scope:target_country = {
+					save_temporary_scope_as = target
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_TRANSIT_RIGHTS_VALUE"
+					value = "ai_transit_rights_value(scope:source_country)"
+				}
+			}
+            else_if = {
+                limit = { NOT = { exists = scope:is_treaty_active } }
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
+					value = -300
+				}
+			}
+		}
+
+		contextual_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:target_country ?= this
+					scope:treaty ?= {
+						NOT = {
+							any_scope_article_option = {
+								OR = {
+									source_country ?= scope:target_country
+									is_giftable_treaty_article = no
+								}
+							}
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_GIFT"
+					value = 200
+				}
+			}
+		}
+	}
+
+	wargoal = {
+		execution_priority = 60
+
+		contestion_type = control_any_target_country_state
+
+		maneuvers = {
+			value = 1
+
+			scope:target_country = {
+				multiply = {
+					value = total_population
+					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+
+		infamy = {
+			value = 0.1
+
+			scope:target_country = {
+				multiply = {
+					value = total_population
+					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+	}
+}

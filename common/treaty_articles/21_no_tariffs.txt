@@ -1,0 +1,251 @@
+﻿no_tariffs = {
+    kind = directed
+    cost = 25
+
+    relations_progress_per_day = -0.25
+    relations_improvement_min = 0
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/no_trade_tariffs_treaties.dds"
+
+    flags = {
+        is_no_tariffs
+        can_be_enforced
+        can_be_renegotiated
+		recipient_pays_maintenance
+    }
+
+	usage_limit = once_per_side_with_same_inputs
+
+	maintenance_paid_by = target_country
+
+    required_inputs = {
+        goods
+    }
+
+    unlocked_by_technologies = {
+        international_trade
+    }
+
+	visible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+        has_dlc_feature = mp1_treaties
+        is_junior_in_customs_union = no
+	}
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+        is_junior_in_customs_union = no
+		NOT = { has_law = law_type:law_isolationism }
+        scope:other_country = {
+            NOT = { is_country_type = decentralized }
+		    is_revolutionary = no
+            is_junior_in_customs_union = no
+			NOT = { has_law = law_type:law_isolationism }
+		}
+	}
+
+    can_ratify = {
+        scope:source_country = {
+            NOR = {
+                has_law = law_type:law_free_trade
+				has_law = law_type:law_isolationism
+            }
+        }
+
+        custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            NOT = {
+                scope:source_country = {
+                    any_scope_treaty = {
+                        hidden_trigger = {
+							OR = {
+								scope:treaty = {
+									is_renegotiation = no
+								}
+								scope:treaty.amended_treaty != this
+							}
+						}
+                        any_scope_article = {
+                            has_type = no_tariffs
+                            input_goods = root.input_goods
+                            source_country = scope:source_country
+                        }
+                    }
+                }
+            }
+            scope:treaty ?= {
+                NOT = {
+                    any_scope_article_option = {
+                        count > 1
+                        has_type = no_tariffs
+                        source_country = scope:source_country
+                        input_goods = root.input_goods
+                    }
+                }
+            }
+        }
+    }
+
+    on_entry_into_force = {
+		scope:article_options.source_country = {
+			if = {
+				limit = { has_any_tariffs_on = scope:article_options.input_goods }
+
+				set_export_tariff_level = {
+					goods = scope:article_options.input_goods
+					level = no_tariffs_or_subventions
+				}
+
+				set_import_tariff_level = {
+					goods = scope:article_options.input_goods
+					level = no_tariffs_or_subventions
+				}
+			}
+		}
+	}
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -10 }
+		}
+	}
+
+    goods_valid_trigger = {
+        root.market = {
+            scope:market_goods = {
+                market_goods_sell_orders >= 10
+            }
+        }
+        scope:input = {
+            is_tradeable = yes
+        }
+    }
+
+	ai = {
+
+        treaty_categories = {
+			trade
+		}
+
+		article_ai_usage = {
+            request
+        }
+
+		combined_acceptance_cap_max = 20
+		combined_acceptance_cap_min = -500
+
+        goods_input_filter = {
+            scope:input = {
+                is_tradeable = yes
+            }
+            scope:market_goods = {
+                ai_treaty_export_value:root > 0
+                "ai_treaty_import_value(scope:other_country)" > 0
+            }
+        }
+
+		evaluation_chance = {
+			value = 0.1
+
+			add = {
+				value = country_rank
+				multiply = 0.05
+			}
+		}
+
+		inherent_accept_score = {
+			value = 0
+
+            if = {
+                limit = {
+                    scope:source_country ?= this
+                }
+
+                add = {
+                    desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+                    value = -25
+                }
+
+				if = {
+					limit = {
+						"goods_production_rank(scope:article.input_goods)" <= 10
+					}
+
+					subtract = {
+						desc = "DIPLOMATIC_ACCEPTANCE_DOMESTIC_PRODUCTION"
+						value = 11
+						subtract = "goods_production_rank(scope:article.input_goods)"
+						multiply = 25
+					}
+				}
+            }
+            else_if = {
+                limit = {
+                    scope:target_country ?= this
+					"scope:source_country.goods_production_rank(scope:article.input_goods)" <= 10
+					"goods_production_rank(scope:article.input_goods)" <= 10
+                    "scope:article.input_market_goods(root)" ?= {
+                        market_goods_exports >= 100
+                    }
+                }
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_DOMESTIC_PRODUCTION"
+					value = 20
+					subtract = "goods_production_rank(scope:article.input_goods)"
+					subtract = "scope:source_country.goods_production_rank(scope:article.input_goods)"
+					multiply = 0.75
+
+					min = 2
+					max = 10
+				}
+            }
+            else_if = {
+                add = {
+                    desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
+                    value = -300
+                }
+            }
+            else = {
+                add = {
+                    desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
+                    value = -30
+                }
+            }
+		}
+	}
+
+	wargoal = {
+		execution_priority = 60
+		contestion_type = control_target_country_capital
+
+		maneuvers = {
+			value = 2.5
+
+			scope:target_country = {
+				multiply = {
+					value = total_population
+					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+
+		infamy = {
+			value = 0.25
+
+			scope:target_country = {
+				multiply = {
+					value = total_population
+					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+	}
+}

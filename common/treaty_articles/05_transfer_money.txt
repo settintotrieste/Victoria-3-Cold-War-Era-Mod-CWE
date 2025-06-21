@@ -1,0 +1,474 @@
+﻿money_transfer = {
+	kind = directed
+	cost = 25
+
+	relations_progress_per_day = 0.5
+	relations_improvement_max = 20
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/bankroll_treaties.dds"
+
+	flags = {
+		is_money_transfer
+		can_be_enforced
+		can_be_renegotiated
+		recipient_pays_maintenance
+	}
+
+	usage_limit = once_per_treaty
+
+    required_inputs = {
+		quantity
+    }
+
+	unlocked_by_technologies = {
+		central_banking
+	}
+
+	visible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+
+    non_fulfillment = {
+        consequences = freeze
+
+        conditions = {
+            weekly = {
+				scope:article = { source_country = { in_default = yes } }
+            }
+        }
+    }
+
+	can_ratify = {
+		NOT = {
+			scope:treaty ?= {
+				any_scope_article_option = {
+					has_type = take_on_debt
+					hidden_trigger = {
+						source_country = scope:target_country
+					}
+				}
+			}
+		}
+	}
+
+	on_entry_into_force = {}
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_infamy = {
+				value = {
+					add = 1
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = 20
+					min = 5
+				}
+			}
+		}
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -10 }
+		}
+	}
+
+	quantity_min_value = {
+        value = 100
+		max = income
+		min = 0
+    }
+
+    quantity_max_value = {
+        value = income
+		divide = 4
+    }
+
+	ai = {
+
+		treaty_categories = {
+			none
+		}
+
+        quantity_input_value = {
+            value = 0
+
+			add = {
+				value = country_rank
+				divide = 1000
+				multiply = gdp
+			}
+
+			max = {
+				value = weekly_net_fixed_income
+				multiply = 0.25
+			}
+			min = 1000
+        }
+
+		evaluation_chance = {
+			value = 0.0
+
+			if = {
+				limit = { country_rank >= rank_value:major_power }
+				add = {
+					value = country_rank
+					multiply = 0.05
+				}
+			}
+		}
+
+		article_ai_usage = {
+            request
+        }
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:source_country ?= this
+				}
+
+				# We are doing this to be able to reuse loc across treaties and diplomatic actions
+				scope:source_country = {
+					save_temporary_scope_as = target
+				}
+				scope:target_country = {
+					save_temporary_scope_as = actor
+				}
+
+				if = {
+					limit = { exists = scope:article.input_quantity }
+
+					subtract = {
+						desc = "DIPLOMATIC_ACCEPTANCE_INPUT_QUANTITY"
+						value = scope:article.input_quantity
+						divide = 50
+					}
+				}
+
+				multiply = {
+					desc = "DIPLOMATIC_ACCEPTANCE_GDP"
+					value = 1
+
+					add = {
+						value = "scope:source_country.ai_gdp_comparison(root)"
+						max = 50
+						min = -50
+						multiply = 0.01
+					}
+				}
+
+				if = {
+					limit = { in_default = yes }
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_DEBT"
+						value = -1000
+					}
+				}
+				else_if = {
+					limit = { scaled_debt >= 0.05 }
+
+					multiply = {
+						desc = "DIPLOMATIC_ACCEPTANCE_DEBT"
+						value = 1
+
+						subtract = {
+							value = scaled_debt
+							max = 0.2
+						}
+					}
+				}
+				else_if = {
+					limit = { scaled_gold_reserves >= 0.05 }
+
+					multiply = {
+						desc = "DIPLOMATIC_ACCEPTANCE_GOLD_RESERVES"
+						value = 1
+
+						add = {
+							value = scaled_gold_reserves
+							max = 0.2
+						}
+					}
+				}
+
+				if = {
+					limit = { exists = scope:article.input_quantity }
+
+					if = {
+						limit = { weekly_net_fixed_income < 0 }
+
+						multiply = {
+							desc = "DIPLOMATIC_ACCEPTANCE_BUDGET_DEFICIT"
+							value = 1
+
+							subtract = {
+								value = weekly_net_fixed_income
+								divide = scope:article.input_quantity
+								multiply = -1
+								max = 0.2
+							}
+						}
+					}
+					else_if = {
+						limit = { weekly_net_fixed_income > 0 }
+
+						multiply = {
+							desc = "DIPLOMATIC_ACCEPTANCE_BUDGET_SURPLUS"
+							value = 1
+
+							add = {
+								value = weekly_net_fixed_income
+								divide = scope:article.input_quantity
+								max = 0.2
+							}
+						}
+					}
+				}
+
+				if = {
+					limit = {
+						income_transfer_relative_expenses >= 0.2
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_MONEY_TRANSFER_CAP"
+						value = -200
+					}
+				}
+			}
+			else = {
+				scope:source_country = {
+					save_temporary_scope_as = actor
+				}
+				scope:target_country = {
+					save_temporary_scope_as = target
+				}
+
+				if = {
+					limit = { exists = scope:article.input_quantity }
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_INPUT_QUANTITY"
+						value = scope:article.input_quantity
+						divide = 100
+						max = 75
+					}
+				}
+
+				multiply = {
+					desc = "DIPLOMATIC_ACCEPTANCE_GDP"
+					value = 1
+
+					add = {
+						value = "scope:source_country.ai_gdp_comparison(root)"
+						max = 20
+						min = -20
+						multiply = 0.01
+					}
+				}
+
+				if = {
+					limit = { scaled_debt >= 0.05 }
+
+					multiply = {
+						desc = "DIPLOMATIC_ACCEPTANCE_DEBT"
+						value = 1
+
+						add = {
+							value = scaled_debt
+							max = 0.2
+						}
+					}
+				}
+				else_if = {
+					limit = { scaled_gold_reserves >= 0.05 }
+
+					multiply = {
+						desc = "DIPLOMATIC_ACCEPTANCE_GOLD_RESERVES"
+						value = 1
+
+						subtract = {
+							value = scaled_gold_reserves
+							max = 0.2
+						}
+					}
+				}
+
+				if = {
+					limit = { exists = scope:article.input_quantity }
+
+					if = {
+						limit = { weekly_net_fixed_income < 0 }
+
+						multiply = {
+							desc = "DIPLOMATIC_ACCEPTANCE_BUDGET_DEFICIT"
+							value = 1
+
+							add = {
+								value = weekly_net_fixed_income
+								divide = scope:article.input_quantity
+								multiply = -1
+								max = 0.2
+							}
+						}
+					}
+					else_if = {
+						limit = { weekly_net_fixed_income > 0 }
+
+						multiply = {
+							desc = "DIPLOMATIC_ACCEPTANCE_BUDGET_SURPLUS"
+							value = 1
+
+							subtract = {
+								value = weekly_net_fixed_income
+								divide = scope:article.input_quantity
+								max = 0.2
+							}
+						}
+					}
+				}
+			}
+
+			if = {
+				limit = {
+					NOT = { exists = scope:is_treaty_active }
+					exists = scope:treaty
+					scope:treaty.binding_period >= 1825
+				}
+				multiply = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BINDING_PERIOD"
+					value = 1
+					add = {
+						value = scope:treaty.binding_period
+						min = 365
+						divide = 3650
+					}
+					max = 2
+				}
+			}
+		}
+
+		contextual_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:target_country ?= this
+					scope:treaty ?= {
+						NOT = {
+							any_scope_article_option = {
+								OR = {
+									source_country ?= scope:target_country
+									is_giftable_treaty_article = no
+								}
+							}
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_GIFT"
+					value = 200
+				}
+			}
+		}
+	}
+
+	wargoal = {
+		execution_priority = 1
+
+		contestion_type = control_any_target_country_state
+
+		maneuvers = {
+			value = 2.5
+
+			if = {
+				limit = {
+					exists = scope:quantity
+				}
+				add = {
+					value = scope:quantity
+					divide = 1000
+					min = 0
+					max = 50
+				}
+			}
+		}
+
+		infamy = {
+			value = 0
+
+			if = {
+				limit = {
+					exists = scope:quantity
+				}
+				add = {
+					value = scope:quantity
+					divide = 1000
+					min = 5
+					max = 50
+				}
+			}
+
+			if = {
+				limit = {
+					any_scope_treaty = {
+						any_scope_article = {
+							has_type = money_transfer
+							target_country = root
+						}
+					}
+				}
+				add = {
+					value = 0
+
+					every_scope_treaty = {
+						limit = {
+							any_scope_article = {
+								has_type = money_transfer
+								target_country = root
+							}
+						}
+						every_scope_article = {
+							limit = {
+								has_type = money_transfer
+								target_country = root
+							}
+							add = input_quantity
+							divide = 2000
+						}
+					}
+					max = 50
+				}
+			}
+
+			if = {
+				limit = {
+					any_diplomatic_play = {
+						initiator = scope:target_country
+						target = root
+					}
+					exists = scope:quantity
+				}
+				subtract = {
+					add = scope:quantity
+					value = {
+						add = scope:target_country.income
+						multiply = 0.1
+					}
+					divide = 1000
+				}
+				min = 0
+			}
+		}
+	}
+}

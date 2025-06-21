@@ -1,0 +1,255 @@
+﻿state_transfer = {
+	kind = directed
+	cost = 0
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/transfer_state.dds"
+
+	flags = {
+		causes_state_transfer
+	}
+
+    required_inputs = {
+		state
+    }
+
+	visible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+
+	can_ratify = {
+		scope:source_country = {
+			num_states >= 2
+		}
+
+		custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            scope:treaty ?= {
+                NOT = {
+                    any_scope_article_option = {
+                        count > 1
+                        has_type = state_transfer
+                        source_country = scope:source_country
+                        input_state = root.input_state
+                    }
+                }
+            }
+        }
+	}
+
+	state_valid_trigger = {
+		scope:input = {
+			owner = root
+			is_capital = no
+			is_under_colonization = no
+			OR = {
+				scope:other_country = { is_adjacent_to_state = prev }
+				AND = {
+					is_coastal = yes
+					scope:other_country = { has_port = yes }
+				}
+			}
+		}
+	}
+
+	on_entry_into_force = {
+		scope:article_options = {
+			target_country = {
+				save_scope_as = state_taker
+			}
+			source_country = {
+				save_scope_as = state_giver
+			}
+
+			if = {
+				limit = { exists = input_state }
+				input_state = { set_state_owner = scope:state_taker }
+			}
+
+			scope:state_taker ?= {
+				if = {
+					limit = {
+						has_variable = recently_traded_states_counter
+					}
+					change_variable = {
+						name = recently_traded_states_counter
+						add = 1
+					}
+				}
+				else_if = {
+					limit = {
+						NOT = { has_variable = recently_traded_states_counter }
+					}
+					set_variable = {
+						name = recently_traded_states_counter
+						value = 1
+					}
+				}
+			}
+
+
+			scope:state_giver ?= {
+				if = {
+					limit = {
+						has_variable = recently_traded_states_counter
+					}
+					if = {
+						limit = {
+							var:recently_traded_states_counter > 1
+						}
+						change_variable = {
+							name = recently_traded_states_counter
+							subtract = 1
+						}
+					}
+					else = {
+						remove_variable = recently_traded_states_counter
+					}
+				}
+			}
+		}
+	}
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = {
+				country = scope:non_withdrawing_country
+				value = {
+					add = -10
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = -10
+					min = -50
+				}
+			}
+			change_infamy = {
+				value = {
+					add = 3
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = 50
+					min = 10
+				}
+			}
+		}
+	}
+
+	ai = {
+
+		treaty_categories = {
+			expansion
+		}
+
+		evaluation_chance = {
+			value = 0.1
+		}
+
+		article_ai_usage = {
+            request
+        }
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					exists = scope:article.input_state
+					scope:source_country ?= this
+					scope:article.input_state.ai_state_value:root > 0
+				}
+				subtract = {
+					value = scope:article.input_state.ai_state_value:root
+					min = 100
+					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_SOURCE"
+
+					if = {
+						limit = {
+							scope:source_country.country_rank > scope:target_country.country_rank
+						}
+						multiply = {
+							add = scope:source_country.country_rank
+							subtract = scope:target_country.country_rank
+							divide = 10
+							add = 1
+						}
+					}
+				}
+
+				if = {
+					limit = {
+						exists =  scope:target_country.var:recently_traded_states_counter
+						scope:target_country.var:recently_traded_states_counter > 0
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_RECENTLY_TRADED_STATES"
+
+						value = -50
+						multiply = scope:target_country.var:recently_traded_states_counter
+					}
+				}
+			}
+			else_if = {
+				limit = {
+					exists = scope:article.input_state
+					scope:target_country ?= this
+					scope:article.input_state.ai_state_value:root > 0
+				}
+				add = {
+					value = scope:article.input_state.ai_state_value:root
+					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_TARGET"
+				}
+			}
+			else = {
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_REJECT"
+					value = -300
+				}
+			}
+		}
+
+		contextual_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					exists = scope:article.input_state
+					scope:target_country ?= this
+				}
+				if = {
+					limit = { scope:article.input_state.ai_state_value:root > 0 }
+					if = {
+						limit = {
+							scope:target_country ?= this
+							scope:treaty ?= {
+								NOT = {
+									any_scope_article_option = {
+										OR = {
+											source_country ?= scope:target_country
+											is_giftable_treaty_article = no
+										}
+									}
+								}
+							}
+						}
+						add = {
+							desc = "DIPLOMATIC_ACCEPTANCE_GIFT"
+							value = 200
+						}
+					}
+				}
+			}
+		}
+	}
+}

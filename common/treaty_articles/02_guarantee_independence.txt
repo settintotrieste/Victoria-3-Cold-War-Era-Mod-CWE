@@ -1,0 +1,369 @@
+﻿guarantee_independence = {
+	kind = directed
+	cost = 75
+
+	relations_progress_per_day = 1
+	relations_improvement_max = 80
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/guarantee_independence_treaties.dds"
+
+	flags = {
+		is_guarantee_independence
+		can_be_renegotiated
+	}
+
+	usage_limit = once_per_side
+
+	mutual_exclusions = {
+		alliance
+		defensive_pact
+	}
+
+	unlocked_by_technologies = {
+		international_relations
+	}
+
+	target_modifier = {
+		country_treaty_leverage_generation_add = 300
+	}
+
+	visible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+		is_subject = no
+	}
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+		is_subject = no
+		country_rank > scope:other_country.country_rank
+		scope:other_country = {
+			is_subject = no
+		}
+
+		save_temporary_scope_as = actor
+		scope:other_country = {
+			save_temporary_scope_as = target_country
+		}
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
+			scope:other_country.relations:root > relations_threshold:poor
+		}
+	}
+
+	requirement_to_maintain = {
+		trigger = {
+			scope:source_country.country_rank >= scope:target_country.country_rank
+		}
+	}
+
+	requirement_to_maintain = {
+		trigger = {
+			scope:source_country = {
+				is_subject = no
+			}
+		}
+	}
+
+	requirement_to_maintain = {
+		trigger = {
+			scope:target_country = {
+				is_subject = no
+			}
+		}
+	}
+
+	can_ratify = {
+		scope:source_country = {
+			NOR = {
+				custom_tooltip = {
+					text = DUPLICATE_ARTICLE_SAME_INPUTS
+					any_scope_treaty = {
+						binds = scope:target_country
+						hidden_trigger = {
+							OR = {
+								scope:treaty = {
+									is_renegotiation = no
+								}
+								scope:treaty.amended_treaty != this
+							}
+						}
+						any_scope_article = {
+							has_type = guarantee_independence
+							source_country = scope:source_country
+						}
+					}
+				}
+				custom_description = {
+					text = has_treaty_alliance_with_trigger
+					subject = this
+					object = scope:target_country
+
+					any_scope_treaty = {
+						binds = scope:target_country
+						hidden_trigger = {
+							OR = {
+								scope:treaty = {
+									is_renegotiation = no
+								}
+								scope:treaty.amended_treaty != this
+							}
+						}
+						any_scope_article = {
+							has_type = alliance
+						}
+					}
+				}
+
+				custom_description = {
+					text = has_treaty_defensive_pact_with_trigger
+					subject = this # Country
+					object = scope:target_country # Country
+
+					any_scope_treaty = {
+						binds = scope:target_country
+						hidden_trigger = {
+							OR = {
+								scope:treaty = {
+									is_renegotiation = no
+								}
+								scope:treaty.amended_treaty != this
+							}
+						}
+						any_scope_article = {
+							has_type = defensive_pact
+						}
+					}
+				}
+			}
+		}
+	}
+
+	on_entry_into_force = {}
+
+	on_withdrawal = {
+		scope:withdrawing_country = {
+			create_bidirectional_truce = { country = scope:non_withdrawing_country months = 12 }
+		}
+	}
+	on_break = {
+		scope:withdrawing_country = {
+			change_infamy = {
+				value = {
+					add = 1
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = 20
+					min = 5
+				}
+			}
+		}
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -10 }
+		}
+	}
+
+	ai = {
+
+		treaty_categories = {
+			military_defense
+		}
+
+		evaluation_chance = {
+			value = 0.0
+
+			if = {
+				limit = { country_rank >= rank_value:major_power }
+				add = {
+					value = country_rank
+					multiply = 0.025
+				}
+			}
+		}
+
+		article_ai_usage = {
+			offer
+			request
+		}
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:source_country ?= this
+				}
+
+				# We are doing this to be able to reuse loc across treaties and diplomatic actions
+				scope:source_country = {
+					save_temporary_scope_as = target
+				}
+				scope:target_country = {
+					save_temporary_scope_as = actor
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = -10
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ARMY_STRENGTH"
+					value = "ai_army_comparison(scope:target_country)"
+					multiply = -3
+					min = -50
+					max = 0
+				}
+
+				if = {
+					limit = {
+						NOT = { is_country_type = unrecognized }
+						scope:target_country ?= { is_country_type = unrecognized }
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_UNRECOGNIZED"
+						value = -25
+					}
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+					if = {
+						limit = {
+							has_attitude = {
+								who = scope:target_country
+								attitude = protective
+							}
+						}
+						value = 25
+					}
+					else_if = {
+						limit = {
+							OR = {
+								has_attitude = {
+									who = scope:target_country
+									attitude = antagonistic
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = belligerent
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = rebellious
+								}
+							}
+						}
+						value = -1000
+					}
+					else_if = {
+						limit = {
+							OR = {
+								has_attitude = {
+									who = scope:target_country
+									attitude = wary
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = disinterested
+								}
+							}
+						}
+						value = -50
+					}
+					else_if = {
+						limit = {
+							has_attitude = {
+								who = scope:target_country
+								attitude = cautious
+							}
+						}
+						value = -25
+					}
+				}
+			}
+			else = {
+				scope:source_country = {
+					save_temporary_scope_as = actor
+				}
+				scope:target_country = {
+					save_temporary_scope_as = target
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = 5
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ARMY_STRENGTH"
+					value = "ai_army_comparison(scope:source_country)"
+					multiply = -3
+					min = 0
+					max = 50
+				}
+
+				if = {
+					limit = {
+						scope:target_country.power_bloc ?= {
+							NOT = { has_identity = identity:identity_sovereign_empire }
+						}
+						has_powerful_protectors = {
+							ACTOR_SCOPE = scope:source_country
+						}
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_POWERFUL_PROTECTORS_THEM"
+						value = -25
+					}
+				}
+			}
+
+			if = {
+				limit = {
+					NOT = { exists = scope:is_treaty_active }
+					exists = scope:treaty
+					scope:treaty.binding_period >= 1825
+				}
+				multiply = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BINDING_PERIOD"
+					value = 1
+					add = {
+						value = scope:treaty.binding_period
+						min = 365
+						divide = 3650
+					}
+					max = 2
+				}
+			}
+		}
+
+		contextual_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:target_country ?= this
+					scope:treaty ?= {
+						NOT = {
+							any_scope_article_option = {
+								OR = {
+									source_country ?= scope:target_country
+									is_giftable_treaty_article = no
+								}
+							}
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_GIFT"
+					value = 200
+				}
+			}
+		}
+	}
+}

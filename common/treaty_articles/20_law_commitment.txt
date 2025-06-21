@@ -1,0 +1,586 @@
+﻿law_commitment = {
+    kind = directed
+    cost = 25
+
+    relations_progress_per_day = 0.5
+    relations_improvement_max = 25
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/law_commitment_treaties.dds"
+
+	flags = {
+        is_law_commitment
+		can_be_renegotiated
+        can_be_enforced
+		recipient_pays_maintenance
+	}
+
+	usage_limit = once_per_side_with_same_inputs
+
+	maintenance_paid_by = target_country
+
+    required_inputs = {
+        law_type
+    }
+
+    unlocked_by_technologies = {
+        international_relations
+    }
+
+	visible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+        NOT = { is_subject_of = scope:other_country }
+        save_temporary_scope_as = target_country
+        scope:other_country = {
+            save_temporary_scope_as = actor
+        }
+        custom_tooltip = {
+            text = "EQUAL_OR_BETTER_RANK_THAN_TARGET"
+            country_rank <= scope:other_country.country_rank
+        }
+	}
+
+    non_fulfillment = {
+        consequences = freeze
+
+        max_consecutive_contraventions = 6
+        conditions = {
+            monthly = {
+                scope:article = {
+                    source_country = {
+                        NOR = {
+							has_law = scope:article.input_law
+							is_enacting_law = scope:article.input_law
+						}
+                    }
+                }
+            }
+        }
+    }
+
+    can_ratify = {
+        scope:source_country = {
+            OR = {
+                is_subject = no
+                NOT = { is_subject_of = scope:target_country }
+            }
+        }
+        custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            trigger_if = {
+                limit = {
+                    exists = root.input_law
+                }
+				NOT = {
+					scope:source_country = {
+						any_scope_treaty = {
+                            hidden_trigger = {
+							    OR = {
+								    scope:treaty = {
+								    	is_renegotiation = no
+								    }
+								    scope:treaty.amended_treaty != this
+							    }
+						    }
+							any_scope_article = {
+								has_type = law_commitment
+								input_law = root.input_law
+                                source_country = scope:source_country
+							}
+						}
+					}
+				}
+            }
+            scope:treaty ?= {
+                NOT = {
+                    any_scope_article_option = {
+                        count > 1
+                        has_type = law_commitment
+                        source_country = scope:source_country
+                        input_law = root.input_law
+                    }
+                }
+            }
+        }
+    }
+
+    law_type_valid_trigger = {
+        any_law = {
+            law_is_available = yes
+            type = scope:input
+        }
+        scope:other_country = {
+            OR = {
+                has_law = scope:input
+                any_interest_group = {
+                    is_in_government = yes
+                    law_stance = {
+                        law = scope:input
+                        value > neutral
+                    }
+                }
+            }
+        }
+    }
+
+    on_entry_into_force = {
+        scope:article_options.source_country = {
+            every_interest_group = {
+                limit = {
+                    law_enactment_stance = {
+                        law = scope:article_options.input_law
+                        value < neutral
+                    }
+                    NOT = {
+                        has_modifier = modifier_opposes_committed_law_ig
+                    }
+                }
+                if = {
+                    limit = {
+                        scope:treaty_options.binding_period >= 5
+                        scope:treaty_options.binding_period < 10
+                    }
+                    add_modifier = {
+                        name = modifier_opposes_committed_law_ig
+                        days = normal_modifier_time
+                        is_decaying = yes
+                    }
+                }
+                else_if = {
+                    limit = {
+                        scope:treaty_options.binding_period >= 10
+                        scope:treaty_options.binding_period < 20
+                    }
+                    add_modifier = {
+                        name = modifier_opposes_committed_law_ig
+                        days = long_modifier_time
+                        is_decaying = yes
+                    }
+                }
+                else_if = {
+                    limit = {
+                        scope:treaty_options.binding_period >= 20
+                    }
+                    add_modifier = {
+                        name = modifier_opposes_committed_law_ig
+                        days = very_long_modifier_time
+                        is_decaying = yes
+                    }
+                }
+            }
+        }
+    }
+    on_enforced = {
+        scope:article_options.source_country = {
+            every_interest_group = {
+                limit = {
+                    law_enactment_stance = {
+                        law = scope:article_options.input_law
+                        value < neutral
+                    }
+                    NOT = {
+                        has_modifier = modifier_opposes_enforced_law_ig
+                    }
+                }
+                if = {
+                    limit = {
+                        has_modifier = modifier_opposes_committed_law_ig
+                    }
+                    remove_modifier = modifier_opposes_committed_law_ig
+                }
+                if = {
+                    limit = {
+                        scope:treaty_options.binding_period >= 5
+                        scope:treaty_options.binding_period < 10
+                    }
+                    add_modifier = {
+                        name = modifier_opposes_enforced_law_ig
+                        days = normal_modifier_time
+                        is_decaying = yes
+                    }
+                }
+                else_if = {
+                    limit = {
+                        scope:treaty_options.binding_period >= 10
+                        scope:treaty_options.binding_period < 20
+                    }
+                    add_modifier = {
+                        name = modifier_opposes_enforced_law_ig
+                        days = long_modifier_time
+                        is_decaying = yes
+                    }
+                }
+                else_if = {
+                    limit = {
+                        scope:treaty_options.binding_period >= 20
+                    }
+                    add_modifier = {
+                        name = modifier_opposes_enforced_law_ig
+                        days = very_long_modifier_time
+                        is_decaying = yes
+                    }
+                }
+            }
+        }
+    }
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = {
+				country = scope:non_withdrawing_country
+					value = {
+						add = -10
+						multiply = {
+							value = scope:treaty_options.remaining_binding_period
+							min = 365
+							divide = 365
+						}
+						max = -10
+						min = -50
+					}
+			}
+			change_infamy = {
+				value = {
+					add = 2
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = 20
+					min = 5
+				}
+			}
+		}
+	}
+
+	ai = {
+
+        treaty_categories = {
+            ideology
+		}
+
+        law_type_input_filter = {
+            has_law = scope:input
+        }
+
+		evaluation_chance = {
+			value = 0
+
+			if = {
+				limit = {
+					country_rank >= rank_value:major_power
+				}
+				add = 0.1
+
+                if = {
+                    limit = {
+                        OR = {
+                            has_strategy = ai_strategy_economic_imperialism
+                            has_strategy = ai_strategy_egalitarian_agenda
+                            has_strategy = ai_strategy_progressive_agenda
+                        }
+                    }
+                    add = 0.1
+                }
+
+                if = {
+                    limit = {
+                        has_strategy = ai_strategy_world_revolution
+                    }
+                    add = 0.2
+                }
+			}
+		}
+
+        article_ai_usage = {
+            request
+        }
+
+		inherent_accept_score = {
+			value = 0
+
+            if = {
+                limit = {
+                    scope:source_country ?= this
+                    any_interest_group = {
+                        is_in_government = yes
+                        law_stance = {
+                            law = scope:article.input_law
+                            value >= neutral
+                        }
+                    }
+                }
+
+                add = {
+                    desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+                    value = -25
+                }
+
+                add = {
+                    desc = "DIPLOMATIC_ACCEPTANCE_LIKES_LAW"
+
+                    if = {
+                        limit = {
+                            has_law = scope:article.input_law
+                        }
+                        add = 5
+                    }
+                }
+
+                if = {
+                    limit = {
+                        scope:article.input_law = law_type:law_slavery_banned
+                        OR = {
+                            has_strategy = ai_strategy_egalitarian_agenda
+                            has_strategy = ai_strategy_progressive_agenda
+                        }
+                    }
+                    add = {
+                        desc = "DIPLOMATIC_ACCEPTANCE_ANTI_SLAVERY"
+                        value = 15
+                    }
+                }
+
+                if = {
+                    limit = {
+                        scope:article.input_law = law_type:law_council_republic
+                        has_law = law_type:law_council_republic
+                    }
+                    add = {
+                        desc = "communist_solidarity"
+                        value = 15
+                    }
+                }
+            }
+            else_if = {
+                limit = {
+                    scope:target_country ?= this
+                    any_interest_group = {
+                        is_in_government = yes
+                        law_stance = {
+                            law = scope:article.input_law
+                            value >= neutral
+                        }
+                    }
+                }
+
+                add = {
+                    desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+                    value = -25
+                }
+
+                add = {
+                    desc = "DIPLOMATIC_ACCEPTANCE_LIKES_LAW"
+
+                    if = {
+                        limit = {
+                            has_law = scope:article.input_law
+                        }
+                        add = 5
+                    }
+                }
+
+                if = {
+                    limit = {
+                        scope:article.input_law = law_type:law_slavery_banned
+                        OR = {
+                            has_strategy = ai_strategy_egalitarian_agenda
+                            has_strategy = ai_strategy_progressive_agenda
+							AND = {
+								has_journal_entry = je_aberdeen_act
+								scope:source_country = {
+									c:BRZ ?= this
+								}
+							}
+                        }
+                    }
+                    add = {
+                        desc = "DIPLOMATIC_ACCEPTANCE_ANTI_SLAVERY"
+                        value = 15
+                    }
+                }
+
+                if = {
+                    limit = {
+                        scope:article.input_law = law_type:law_free_trade
+                        has_strategy = ai_strategy_economic_imperialism
+                    }
+                    add = {
+                        desc = "DIPLOMATIC_ACCEPTANCE_ECONOMIC_IMPERIALISM"
+                        value = 15
+                    }
+                }
+
+                if = {
+                    limit = {
+                        scope:article.input_law = law_type:law_council_republic
+                        has_law = law_type:law_council_republic
+                    }
+                    add = {
+                        desc = "communist_solidarity"
+                        value = 15
+                    }
+                }
+
+                if = {
+                    limit = {
+                        scope:article.input_law = law_type:law_monarchy
+                        has_law = law_type:law_monarchy
+                        country_rank >= rank_value:great_power
+                        OR = {
+                            has_strategy = ai_strategy_reactionary_agenda
+                            has_strategy = ai_strategy_conservative_agenda
+                        }
+                    }
+                    add = {
+                        desc = "ai_strategy_conservative_agenda"
+                        value = 15
+                    }
+                }
+
+                if = {
+                    limit = {
+                        # We want to support them irrespective of which law we have and they wish to enact
+                        OR = {
+                            scope:article.input_law = law_type:law_presidential_republic
+                            scope:article.input_law = law_type:law_parliamentary_republic
+                        }
+                        OR = {
+                            has_law = law_type:law_presidential_republic
+                            has_law = law_type:law_parliamentary_republic
+                        }
+                        OR = {
+                            has_strategy = ai_strategy_progressive_agenda
+                            ruler ?= {
+                                has_ideology = ideology:ideology_radical
+                            }
+                            any_interest_group = {
+                                is_in_government = yes
+                                leader ?= { has_ideology = ideology:ideology_radical }
+                            }
+                        }
+                    }
+                    add = {
+                        desc = "from_republic"
+                        value = 15
+                    }
+                }
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+					if = {
+						limit = {
+                            OR = {
+                                has_attitude = {
+                                    who = scope:source_country
+                                    attitude = disinterested
+                                }
+                                has_attitude = {
+                                    who = scope:source_country
+                                    attitude = wary
+                                }
+                            }
+						}
+						value = -300
+					}
+                }
+            }
+            else = {
+                add = {
+                    desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
+                    value = -300
+                }
+            }
+
+			if = {
+				limit = {
+					NOT = { exists = scope:is_treaty_active }
+					exists = scope:treaty
+					scope:treaty.binding_period >= 1825
+				}
+				multiply = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BINDING_PERIOD"
+					value = 1
+					add = {
+						value = scope:treaty.binding_period
+						min = 365
+						divide = 3650
+					}
+					max = 2
+				}
+			}
+		}
+
+		wargoal_score_multiplier = {
+			value = 1
+
+			if = {
+				limit = {
+					scope:article.input_law ?= law_type:law_slavery_banned
+				}
+
+				# Britain will prioritize ending slavery in Brazil if they have the Aberdeen Act JE
+				if = {
+					limit = {
+						has_journal_entry = je_aberdeen_act
+						scope:source_country = {
+							c:BRZ ?= this
+						}
+					}
+					add = 0.5
+				}
+				# Great Powers with slavery banned will prioritize ending slavery in Brazil if that country failed its slavery JE
+				if = {
+					limit = {
+						has_law = law_type:law_slavery_banned
+						country_rank >= rank_value:great_power
+						scope:source_country = {
+							c:BRZ ?= this
+							has_modifier = brazil_slaving_pariah_modifier
+							has_law = law_type:law_slave_trade
+						}
+					}
+					add = 0.25
+				}
+			}
+		}
+	}
+
+	wargoal = {
+		execution_priority = 60
+		contestion_type = control_target_country_capital
+
+		maneuvers = {
+			value = 2.5
+
+			scope:target_country = {
+				multiply = {
+					value = total_population
+					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+
+		infamy = {
+			value = 0.5
+
+			scope:target_country = {
+				multiply = {
+					value = total_population
+					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+	}
+}

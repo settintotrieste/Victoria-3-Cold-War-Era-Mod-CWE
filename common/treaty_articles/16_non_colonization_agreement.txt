@@ -1,0 +1,395 @@
+﻿non_colonization_agreement = {
+    kind = directed
+    cost = 25
+
+    relations_progress_per_day = 0.5
+    relations_improvement_max = 25
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/non_colonization_agreement_treaties.dds"
+
+	flags = {
+		is_non_colonization_agreement
+		can_be_enforced
+		can_be_renegotiated
+		recipient_pays_maintenance
+	}
+
+	usage_limit = once_per_side_with_same_inputs
+
+	maintenance_paid_by = target_country
+
+    required_inputs = {
+        strategic_region
+    }
+
+    unlocked_by_technologies = {
+        civilizing_mission
+    }
+
+	visible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+        has_dlc_feature = mp1_treaties
+	}
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+		custom_tooltip = {
+			text = has_colonial_growth_tt
+			has_colonial_growth = yes
+		}
+	}
+
+	can_ratify = {
+		custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            NOT = {
+                scope:source_country = {
+                    any_scope_treaty = {
+						hidden_trigger = {
+							OR = {
+								scope:treaty = {
+									is_renegotiation = no
+								}
+								scope:treaty.amended_treaty != this
+							}
+						}
+                        any_scope_article = {
+                            has_type = non_colonization_agreement
+                            input_strategic_region = root.input_strategic_region
+							source_country = scope:source_country
+                        }
+                    }
+                }
+            }
+            scope:treaty ?= {
+                NOT = {
+                    any_scope_article_option = {
+                        count > 1
+                        has_type = non_colonization_agreement
+                        source_country = scope:source_country
+                        input_strategic_region = root.input_strategic_region
+                    }
+                }
+            }
+        }
+	}
+
+    on_entry_into_force = {}
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -10 }
+		}
+	}
+
+	strategic_region_valid_trigger = {
+		scope:other_country = {
+			has_interest_marker_in_region = scope:input
+		}
+		scope:input = {
+			any_scope_country = {
+				is_country_type = decentralized
+			}
+		}
+	}
+
+	ai = {
+
+		treaty_categories = {
+			expansion
+		}
+
+		evaluation_chance = {
+			value = 0
+
+			if = {
+				limit = {
+					country_rank >= rank_value:major_power
+				}
+				add = 0.25
+			}
+		}
+
+        article_ai_usage = {
+            request
+        }
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					exists = scope:article.input_strategic_region
+				}
+
+				if = {
+					limit = {
+						scope:source_country ?= this
+					}
+
+					scope:source_country = {
+						save_temporary_scope_as = target
+					}
+					scope:target_country = {
+						save_temporary_scope_as = actor
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+						value = -25
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_RANK"
+
+						if = {
+							limit = {
+								country_rank >= rank_value:great_power
+							}
+							value = -25
+						}
+						else_if = {
+							limit = {
+								country_rank >= rank_value:major_power
+							}
+							value = -10
+						}
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_UNRECOGNIZED"
+
+						if = {
+							limit = {
+								scope:target_country ?= {
+									is_country_type = unrecognized
+								}
+							}
+							value = -25
+						}
+					}
+
+					subtract = {
+						desc = "DIPLOMATIC_ACCEPTANCE_VALUE_OF_STATES_IN_REGION"
+
+						if = {
+							limit = {
+								scope:article.input_strategic_region = {
+									any_scope_state = {
+										owner = scope:source_country
+									}
+								}
+							}
+							scope:article.input_strategic_region = {
+								every_scope_state = {
+									limit = {
+										owner = scope:source_country
+									}
+									add = "this.ai_state_value(scope:source_country)"
+									multiply = 0.5
+									max = 100
+								}
+							}
+						}
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_COLONIAL_EXPANSION"
+
+						if = {
+							limit = {
+								has_strategy = ai_strategy_colonial_expansion
+							}
+							add = -25
+						}
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+						if = {
+							limit = {
+								OR = {
+									has_attitude = {
+										who = scope:source_country
+										attitude = disinterested
+									}
+									has_attitude = {
+										who = scope:source_country
+										attitude = wary
+									}
+								}
+							}
+							value = -300
+						}
+					}
+
+					add = {
+						desc = "concept_claims"
+						if = {
+							limit = {
+								scope:article.input_strategic_region = {
+									any_scope_state = {
+										has_claim_by = scope:source_country
+									}
+								}
+							}
+							value = -1000
+						}
+					}
+				}
+				else_if = {
+					limit = {
+						scope:target_country ?= this
+						OR = {
+							has_colonial_growth = yes
+							scope:target_country.capital.region = {
+								this = scope:article.input_strategic_region
+							}
+						}
+					}
+
+					scope:source_country = {
+						save_temporary_scope_as = target
+					}
+					scope:target_country = {
+						save_temporary_scope_as = actor
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_VALUE_OF_STATES_IN_REGION"
+
+						if = {
+							limit = {
+								scope:article.input_strategic_region = {
+									any_scope_state = {
+										owner = scope:target_country
+									}
+								}
+							}
+							scope:article.input_strategic_region = {
+								every_scope_state = {
+									limit = {
+										owner = scope:target_country
+									}
+									add = "this.ai_state_value(scope:target_country)"
+									multiply = 0.5
+									max = 25
+								}
+							}
+						}
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_COLONIAL_EXPANSION"
+
+						if = {
+							limit = {
+								NOT = { exists = scope:is_treaty_active }
+								has_strategy = ai_strategy_colonial_expansion
+							}
+							add = 10
+						}
+					}
+
+					add = {
+						desc = "concept_claims"
+						if = {
+							limit = {
+								scope:article.input_strategic_region = {
+									any_scope_state = {
+										has_claim_by = scope:target_country
+									}
+								}
+							}
+							value = 10
+						}
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+
+						if = {
+							limit = {
+								NOT = { exists = scope:is_treaty_active }
+								OR = {
+									has_attitude = {
+										who = scope:source_country
+										attitude = disinterested
+									}
+									has_attitude = {
+										who = scope:source_country
+										attitude = wary
+									}
+								}
+							}
+							value = -300
+						}
+					}
+				}
+				else_if = {
+					limit = { NOT = { exists = scope:is_treaty_active } }
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
+						value = -300
+					}
+				}
+			}
+		}
+	}
+
+	wargoal = {
+		execution_priority = 60
+		contestion_type = control_target_country_capital
+
+		maneuvers = {
+			value = 2.5
+
+			scope:target_country = {
+				multiply = {
+					value = total_population
+					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+
+		infamy = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:region ?= {
+						any_scope_state = {
+							has_claim_by = scope:target_country
+						}
+					}
+				}
+				add = 15
+			}
+
+			if = {
+				limit = {
+					scope:region ?= {
+						any_scope_state = {
+							owner = scope:target_country
+						}
+					}
+				}
+				scope:region = {
+					every_scope_state = {
+						add = {
+							value = "this.ai_state_value(scope:target_country)"
+							multiply = 0.25
+						}
+					}
+				}
+			}
+			max = 25
+		}
+	}
+}
+

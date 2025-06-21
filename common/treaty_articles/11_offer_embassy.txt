@@ -1,0 +1,252 @@
+﻿offer_embassy = {
+	kind = directed
+	cost = 0
+
+	relations_progress_per_day = 0.5
+	relations_improvement_max = 25
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/offer_embassy.dds"
+
+	flags = {
+		is_offer_embassy
+	}
+
+	usage_limit = once_per_treaty
+
+	visible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+
+	can_ratify = {
+		scope:source_country = {
+			is_country_type = recognized
+			country_rank >= rank_value:great_power
+			save_temporary_scope_as = actor
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
+				scope:target_country.relations:source_country > relations_threshold:poor
+			}
+		}
+		scope:target_country = {
+			is_country_type = unrecognized
+			has_journal_entry = je_earn_recognition
+			NOT = {
+				any_diplomatic_catalyst = {
+					is_diplomatic_catalyst_type = catalyst_recognition_requested
+					target ?= scope:source_country
+				}
+			}
+		}
+	}
+
+	on_entry_into_force = {
+		scope:article_options = {
+			target_country = {
+				custom_tooltip = {
+					text = request_recognition_tt
+					if = {
+						limit = {
+							has_journal_entry = je_earn_recognition
+						}
+						je:je_earn_recognition ?= {
+							add_progress = { value = 20 name = earn_recognition_progress_bar }
+						}
+					}
+				}
+				hidden_effect = {
+					create_diplomatic_catalyst = {
+						type = catalyst_recognition_requested
+						target = scope:source_country
+					}
+				}
+			}
+		}
+	}
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -10 }
+		}
+	}
+
+	ai = {
+		treaty_categories = {
+			other
+		}
+
+		evaluation_chance = {
+			value = 0.25
+		}
+
+		article_ai_usage = {
+			request
+		}
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:source_country ?= this
+				}
+
+				# We are doing this to be able to reuse loc across treaties and diplomatic actions
+				scope:source_country = {
+					save_temporary_scope_as = target
+				}
+				scope:target_country = {
+					save_temporary_scope_as = actor
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = -10
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+					if = {
+						limit = {
+							OR = {
+								has_attitude = {
+									who = scope:target_country
+									attitude = antagonistic
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = domineering
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = belligerent
+								}
+							}
+						}
+						value = -1000
+					}
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+					if = {
+						limit = {
+							"scope:target_country.infamy" >= infamy_threshold:pariah
+						}
+						value = -1000
+					}
+				}
+
+				if = {
+					limit = {
+						any_scope_treaty = {
+							binds = scope:target_country
+							any_scope_article = {
+								has_type = trade_privilege
+							}
+						}
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_TRADE_PRIVILEGES"
+						value = 15
+					}
+				}
+
+				if = {
+					limit = {
+						any_scope_treaty = {
+							binds = scope:target_country
+							any_scope_article = {
+								has_type = foreign_investment_rights
+							}
+						}
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_FOREIGN_INVESTMENT_RIGHTS"
+						value = 25
+					}
+				}
+
+				if = {
+					limit = {
+						any_scope_treaty = {
+							binds = scope:target_country
+							any_scope_article = {
+								has_type = alliance
+							}
+						}
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_ALLIANCE"
+						value = 50
+					}
+				}
+				else_if = {
+					limit = {
+						any_scope_treaty = {
+							binds = scope:target_country
+							any_scope_article = {
+								has_type = defensive_pact
+							}
+						}
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_DEFENSIVE_PACT"
+						value = 35
+					}
+				}
+
+				if = {
+					limit = {
+						"num_alliances_and_defensive_pacts_with_rivals(scope:target_country)" > 0
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_ALLIED_TO_RIVALS"
+						value = -1000
+					}
+				}
+
+				if = {
+					limit = {
+						exists = power_bloc
+						exists = scope:target_country.power_bloc
+					}
+					if = {
+						limit = {
+							power_bloc = scope:target_country.power_bloc
+						}
+						add = {
+							desc = "DIPLOMATIC_ACCEPTANCE_SAME_POWER_BLOC"
+							value = 25
+						}
+					}
+					else = {
+						add = {
+							desc = "DIPLOMATIC_ACCEPTANCE_DIFFERENT_POWER_BLOC"
+							value = -25
+						}
+					}
+				}
+			}
+			else = {
+				scope:source_country = {
+					save_temporary_scope_as = actor
+				}
+				scope:target_country = {
+					save_temporary_scope_as = target
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = 50
+				}
+			}
+		}
+	}
+}

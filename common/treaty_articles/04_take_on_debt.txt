@@ -1,0 +1,347 @@
+﻿take_on_debt = {
+	kind = directed
+	cost = 0
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/take_on_debt_treaties.dds"
+
+	flags = {
+		is_take_on_debt
+	}
+
+	usage_limit = once_per_treaty
+
+	unlocked_by_technologies = {
+		central_banking
+	}
+
+	visible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+
+	possible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+
+	can_ratify = {
+		scope:target_country = {
+			scaled_debt > 0
+		}
+		scope:source_country = {
+			can_take_on_scaled_debt = {
+				who = scope:target_country
+				value = scope:target_country.scaled_debt
+			}
+		}
+		NOT = {
+			scope:treaty ?= {
+				any_scope_article_option = {
+					has_type = transfer_money
+					hidden_trigger = {
+						source_country = scope:target_country
+					}
+				}
+			}
+		}
+	}
+
+	on_entry_into_force = {
+		scope:article_options = {
+			source_country = {
+				save_scope_as = debt_taker
+			}
+			target_country = {
+				save_scope_as = debt_giver
+			}
+
+			source_country = {
+				take_on_scaled_debt = {
+					who = scope:debt_giver
+					value = scope:debt_giver.scaled_debt
+				}
+				change_relations = { country = scope:debt_giver value = 30 }
+
+				#hidden_effect = {
+				#	scope:debt_giver = {
+				#		set_variable = {
+				#			name = debt_bought_out_recently
+				#			value = yes
+				#			days = 7300
+				#		}
+				#	}
+				#}
+			}
+		}
+	}
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_infamy = {
+				value = {
+					add = 1
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = 20
+					min = 5
+				}
+			}
+		}
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -10 }
+		}
+	}
+
+	ai = {
+
+		treaty_categories = {
+			none
+		}
+
+		evaluation_chance = {
+			value = 0.25
+		}
+
+		article_ai_usage = {
+            request
+        }
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:source_country ?= this
+				}
+				scope:source_country = {
+					save_temporary_scope_as = target
+				}
+				scope:target_country = {
+					save_temporary_scope_as = actor
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = -25
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_DEBT"
+
+					if = {
+						limit = {
+							scope:target_country.scaled_debt < 0.4
+						}
+						value = -40
+					}
+					if = {
+						limit = {
+							scope:target_country.scaled_debt >= 0.4
+							scope:target_country.scaled_debt < 0.6
+						}
+						value = -50
+					}
+					if = {
+						limit = {
+							scope:target_country.scaled_debt >= 0.6
+							scope:target_country.scaled_debt < 0.8
+						}
+						value = -75
+					}
+					if = {
+						limit = {
+							scope:target_country.scaled_debt >= 0.8
+							scope:target_country.scaled_debt < 0.9
+						}
+						value = -100
+					}
+					if = {
+						limit = {
+							scope:target_country.scaled_debt >= 0.9
+							scope:target_country = {
+								in_default = no
+							}
+						}
+						value = -150
+					}
+					if = {
+						limit = {
+							scope:target_country = {
+								in_default = yes
+							}
+						}
+						value = -200
+					}
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+					if = {
+						limit = {
+							OR = {
+								has_attitude = {
+									who = scope:target_country
+									attitude = antagonistic
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = domineering
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = belligerent
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = rebellious
+								}
+							}
+						}
+						value = -1000
+					}
+				}
+			}
+			else = {
+				scope:source_country = {
+					save_temporary_scope_as = actor
+				}
+				scope:target_country = {
+					save_temporary_scope_as = target
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = -10
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+					if = {
+						limit = {
+							OR = {
+								has_attitude = {
+									who = scope:target_country
+									attitude = antagonistic
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = domineering
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = belligerent
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = rebellious
+								}
+							}
+						}
+						value = -1000
+					}
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_DEBT"
+
+					if = {
+						limit = {
+							scaled_debt < 0.1
+						}
+						value = -100
+					}
+					if = {
+						limit = {
+							scaled_debt >= 0.1
+							scaled_debt < 0.2
+						}
+						value = -50
+					}
+					if = {
+						limit = {
+							scaled_debt >= 0.2
+							scaled_debt < 0.3
+						}
+						value = -25
+					}
+					if = {
+						limit = {
+							scaled_debt >= 0.3
+							scaled_debt < 0.4
+						}
+						value = -10
+					}
+					if = {
+						limit = {
+							scaled_debt >= 0.5
+							scaled_debt < 0.6
+						}
+						value = 10
+					}
+					if = {
+						limit = {
+							scaled_debt >= 0.6
+							scaled_debt < 0.7
+						}
+						value = 15
+					}
+					if = {
+						limit = {
+							scaled_debt >= 0.7
+							scaled_debt < 0.8
+						}
+						value = 20
+					}
+					if = {
+						limit = {
+							scaled_debt >= 0.8
+							scaled_debt < 0.9
+						}
+						value = 25
+					}
+					if = {
+						limit = {
+							scaled_debt >= 0.9
+							in_default = no
+						}
+						value = 30
+					}
+					if = {
+						limit = {
+							in_default = yes
+						}
+						value = 50
+					}
+				}
+			}
+		}
+
+		contextual_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:target_country ?= this
+					scope:treaty ?= {
+						NOT = {
+							any_scope_article_option = {
+								OR = {
+									source_country ?= scope:target_country
+									is_giftable_treaty_article = no
+								}
+							}
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_GIFT"
+					value = 200
+				}
+			}
+		}
+	}
+}

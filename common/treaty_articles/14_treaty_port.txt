@@ -1,0 +1,357 @@
+﻿treaty_port = {
+    kind = directed
+    cost = 25
+
+    relations_progress_per_day = -0.25
+    relations_improvement_min = 0
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/treaty_port_treaties.dds"
+
+	flags = {
+		is_treaty_port
+		can_be_enforced
+		recipient_pays_maintenance
+	}
+
+	usage_limit = once_per_side_with_same_inputs
+
+	maintenance_paid_by = target_country
+
+    required_inputs = {
+        state
+    }
+
+    unlocked_by_technologies = {
+        colonization
+    }
+
+	visible = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+		any_scope_state = {
+			is_coastal = yes
+		}
+	}
+
+	possible = {
+		any_scope_state = {
+			is_coastal = yes
+			is_potential_treaty_port = scope:other_country
+		}
+		scope:other_country = {
+			NOT = { is_subject_of = root }
+		}
+	}
+
+    can_ratify = {
+        scope:source_country = {
+			country_rank <= scope:target_country.country_rank
+        }
+
+		custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            scope:treaty ?= {
+                NOT = {
+                    any_scope_article_option = {
+                        count > 1
+                        has_type = treaty_port
+                        source_country = scope:source_country
+                        input_state = root.input_state
+                    }
+                }
+            }
+        }
+    }
+
+	can_withdraw = {
+		trigger_if = {
+			limit = {
+				scope:withdrawing_country = scope:source_country
+			}
+			scope:withdrawing_country = {
+				country_rank > scope:non_withdrawing_country.country_rank
+			}
+		}
+	}
+
+	state_valid_trigger = {
+		scope:input = {
+			is_potential_treaty_port = scope:target_country
+			is_treaty_port = no
+		}
+		NOT = {
+			any_treaty = {
+				any_scope_article = {
+					has_type = treaty_port
+					input_state = scope:input
+				}
+			}
+		}
+	}
+
+    on_entry_into_force = {
+		scope:article_options = {
+			target_country = {
+				save_scope_as = state_taker
+			}
+			source_country = {
+				save_scope_as = state_giver
+			}
+
+			if = {
+				limit = { exists = input_state }
+				input_state = {
+					hidden_effect = {
+						cede_treaty_port = scope:state_taker
+					}
+				}
+			}
+		}
+
+		scope:state_taker ?= {
+			if = {
+				limit = {
+					has_variable = recently_traded_states_counter
+				}
+				change_variable = {
+					name = recently_traded_states_counter
+					add = 1
+				}
+			}
+			else_if = {
+				limit = {
+					NOT = { has_variable = recently_traded_states_counter }
+				}
+				set_variable = {
+					name = recently_traded_states_counter
+					value = 1
+				}
+			}
+		}
+
+
+		scope:state_giver ?= {
+			if = {
+				limit = {
+					has_variable = recently_traded_states_counter
+				}
+				if = {
+					limit = {
+						var:recently_traded_states_counter > 1
+					}
+					change_variable = {
+						name = recently_traded_states_counter
+						subtract = 1
+					}
+				}
+				else = {
+					remove_variable = recently_traded_states_counter
+				}
+			}
+		}
+	}
+	on_enforced = {
+		scope:article_options.input_state = {
+			state_region = {
+				add_claim = scope:article_options.source_country
+			}
+		}
+	}
+
+	on_withdrawal = {
+		scope:article.input_state = {
+			state_region = {
+				add_claim = scope:article.source_country
+			}
+		}
+	}
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = {
+				country = scope:non_withdrawing_country
+				value = {
+					add = -10
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = -10
+					min = -50
+				}
+			}
+			change_infamy = {
+				value = {
+					add = 3
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = 20
+					min = 2
+				}
+			}
+		}
+	}
+
+	ai = {
+		treaty_categories = {
+			expansion
+		}
+
+		evaluation_chance = {
+			value = 0.1
+		}
+
+		article_ai_usage = {
+            request
+        }
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					exists = scope:article.input_state
+				}
+				if = {
+					limit = {
+						scope:source_country ?= this
+					}
+					if = {
+						limit = {
+							country_rank < rank_value:great_power
+						}
+						subtract = {
+							value = scope:article.input_state.ai_state_value:root
+							multiply = 0.5
+							desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_SOURCE"
+						}
+
+						if = {
+							limit = {
+								is_country_type = recognized
+							}
+							subtract = {
+								value = 50
+							}
+						}
+					}
+					else = {
+						subtract = {
+							value = 1000
+							desc = "great_power"
+						}
+					}
+				}
+				else = {
+					if = {
+						limit = { "scope:article.input_state.ai_treaty_port_value(root)" > 0 }
+						add = {
+							value = "scope:article.input_state.ai_treaty_port_value(root)"
+							desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_TARGET"
+						}
+					}
+					else = {
+						add = {
+							value = -300
+							desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_REJECT"
+						}
+					}
+				}
+			}
+		}
+
+		contextual_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					exists = scope:article.input_state
+					scope:target_country ?= this
+				}
+				if = {
+					limit = { "scope:article.input_state.ai_treaty_port_value(root)" > 0 }
+					if = {
+						limit = {
+							scope:target_country ?= this
+							scope:treaty ?= {
+								NOT = {
+									any_scope_article_option = {
+										OR = {
+											source_country ?= scope:target_country
+											is_giftable_treaty_article = no
+										}
+									}
+								}
+							}
+						}
+						add = {
+							desc = "DIPLOMATIC_ACCEPTANCE_GIFT"
+							value = 200
+						}
+					}
+				}
+			}
+		}
+
+		wargoal_score_multiplier = {
+			value = 1
+
+			# Britain should go for Hong Kong when starting Opium Wars play against Qing
+			if = {
+				limit = {
+					has_journal_entry = je_opium_wars
+					NOT = { is_diplomatic_play_enemy_of = scope:target_country }
+					scope:target_country = {
+						has_variable = opium_wars_target
+					}
+					scope:article.input_state = {
+						state_region = s:STATE_SHAOZHOU
+					}
+				}
+				add = 100
+			}
+		}
+	}
+
+	wargoal = {
+		execution_priority = 23
+		contestion_type = control_target_state
+
+		maneuvers = {
+			value = 5
+
+			scope:target_country = {
+				multiply = {
+					value = total_population
+					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER_MAX_PER_STATE
+				}
+			}
+		}
+
+		infamy = {
+			value = 0
+
+			if = {
+				limit = {
+					exists = scope:state
+				}
+				add = {
+					value = scope:state.state_population
+					divide = 10000
+					max = 5
+				}
+				add = {
+					value = scope:state.gdp
+					divide = 50000
+					max = 5
+				}
+			}
+			min = 5
+		}
+	}
+}
