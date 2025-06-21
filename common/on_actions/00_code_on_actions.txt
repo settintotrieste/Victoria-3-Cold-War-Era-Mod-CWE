@@ -1,5 +1,49 @@
 ﻿# For on_actions launched by the code itself.
 
+# Fires when bookmark initialization is complete but players are still in the lobby
+# At this point we do not know who the players are
+# No root scope set
+on_game_started = {
+	effect = {
+		# Memento Mori
+		every_country = {
+			every_interest_group = {
+				leader = {
+					if = {
+						limit = {
+							NOT = {
+								has_variable = memento_mori_immunity
+							}
+						}
+						set_variable = {
+							name = memento_mori_immunity
+							years = 5
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+# Fires after everyone enters the game from the lobby for the first time for each campaign
+# At this point we DO know who the players are
+# No root scope set
+on_game_started_after_lobby = {
+	effect = {
+		# Game Rule: No Dynamic Naming
+		if = {
+			limit = {
+				has_game_rule = no_dynamic_naming
+			}
+			every_state = {
+				reset_state_name = yes
+			    reset_hub_names = yes
+			}
+		}
+	}
+}
+
 # No root scope set
 on_monthly_pulse = {
 	effect = {
@@ -94,26 +138,44 @@ on_yearly_pulse_country = {
 					has_variable = gov_petition_coin_toss
 				}
 				random_list = {
-					1 = { 
+					1 = {
+						trigger = {
+							any_interest_group = {
+								is_in_government = yes
+								is_marginal = no
+								any_preferred_law = {
+									law_is_valid_for_ig_petition = yes
+								}
+							}
+						}
 						set_variable = { name = gov_petition_cooldown years = 10 }
 						set_variable = { name = gov_petition_fired months = 3 }
 						trigger_event = { id = government_petition_events.1 }
 					}
 					1 = {
-	
+						
 					}
 				}
 				remove_variable = gov_petition_coin_toss
 			}
 			else = {
 				random_list = {
-					1 = { 
+					1 = {
+						trigger = {
+							any_interest_group = {
+								is_in_government = yes
+								is_marginal = no
+								any_preferred_law = {
+									law_is_valid_for_ig_petition = yes
+								}
+							}
+						}
 						set_variable = { name = gov_petition_cooldown years = 10 }
 						set_variable = { name = gov_petition_fired months = 3 }
 						trigger_event = { id = government_petition_events.1 }
 					}
 					9 = {
-	
+
 					}
 				}
 			}
@@ -163,6 +225,25 @@ on_half_yearly_pulse_country = {
 		delay = { days = 20 }
 		movement_half_yearly_events
 	}
+	effect = {
+		if = {
+			limit = {
+				has_variable = recently_traded_states_counter
+			}
+			if = {
+				limit = {
+					var:recently_traded_states_counter > 1
+				}
+				change_variable = {
+					name = recently_traded_states_counter
+					subtract = 1
+				}
+			}
+			else = {
+				remove_variable = recently_traded_states_counter
+			}
+		}
+	}
 }
 on_five_year_pulse_country = {
 	events = {
@@ -205,9 +286,7 @@ on_yearly_pulse_character = {
 }
 on_half_yearly_pulse_character = {}
 on_five_year_pulse_character = {}
-on_decade_pulse_character = {
-	
-}
+on_decade_pulse_character = {}
 
 # Root = State
 on_monthly_pulse_state = {
@@ -471,9 +550,14 @@ on_diplomatic_play_started = {
 on_character_creation = {
 
 	effect = {
-		set_variable = {
-			name = memento_mori_immunity
-			years = 10
+		if = {
+			limit = {
+				NOT = { has_variable = memento_mori_immunity }
+			}
+			set_variable = {
+				name = memento_mori_immunity
+				years = 10
+			}
 		}
 		#Politicians always have state religion
 		if = {
@@ -783,6 +867,117 @@ on_diplomatic_pact_third_party_auto_break = {
 	}
 }
 
+# Root = Treaty
+on_treaty_proposed = {
+	effect = {
+		post_proposal = proposal_treaty
+	}
+}
+
+# Root = Country
+on_treaty_proposal_declined = {
+	effect = {
+		post_notification = treaty_proposal_declined
+	}
+}
+
+# Root = Treaty
+on_treaty_entered_into_force = {
+	effect = {
+		post_notification = treaty_entered_into_force
+	}
+}
+
+# Root = Treaty
+# Fires in addition to on_treaty_entered_into_force for treaties enforced by plays, etc
+on_treaty_enforced = {
+	effect = {
+		scope:first_country = {
+			create_diplomatic_catalyst = {
+				type = catalyst_treaty_enforced
+				target = scope:second_country
+			}
+		}
+	}
+}
+
+# Root = Treaty
+# scope:withdrawing_country = Withdrawing Country
+# scope:non_withdrawing_country = Non-Withdrawing Country
+# Fires when the binding period is not active
+on_country_withdrawn_from_treaty = {
+	effect = {
+		post_notification = country_withdrawn_from_treaty
+	}
+}
+
+# Root = Treaty
+# scope:withdrawing_country = Withdrawing Country
+# scope:non_withdrawing_country = Non-Withdrawing Country
+# Fires instead of on_country_withdrawn_from_treaty when the binding period is still active
+on_country_broke_treaty = {
+	effect = {
+		post_notification = country_broke_treaty
+
+		scope:withdrawing_country = {
+			create_diplomatic_catalyst = {
+				type = catalyst_treaty_broken
+				target = scope:non_withdrawing_country
+			}
+
+			add_modifier = {
+				name = modifier_untrustworthy_country
+				days = long_modifier_time
+				multiplier = {
+					value = 1
+					add = {
+						root = {
+							every_scope_article = {
+								if = {
+									limit = {
+										OR = {
+											has_type = alliance
+											has_type = state_transfer
+										}
+									}
+									add = 5
+								}
+								else_if = {
+									limit = {
+										OR = {
+											has_type = defensive_pact
+											has_type = treaty_port
+										}
+									}
+									add = 3
+								}
+								else_if = {
+									limit = {
+										OR = {
+											has_type = guarantee_independence
+											has_type = support_independence
+										}
+									}
+									add = 2
+								}
+							}
+						}
+					}
+					max = 20
+				}
+			}
+		}
+	}
+}
+
+# Root = Country
+# scope:second_country = Other country
+on_treaty_dissolved = {
+	effect = {
+		post_notification = treaty_dissolved
+	}
+}
+
 # Root = Releasing Country
 # scope:target = Released Country
 on_country_released_as_independent = {
@@ -885,6 +1080,43 @@ on_country_released_as_own_subject = {
 			}
 		}
 		
+		else = {
+			ROOT = { 
+				create_diplomatic_pact = {
+					country = scope:target
+					type = currency_union
+				}
+				create_diplomatic_pact = {
+					country = scope:target
+					type = legal_union
+				}
+			}
+		}
+		
+	}
+}
+
+# Root = Releasing Country
+# scope:target = Released Country
+on_country_released_as_company_subject = {
+	effect = {
+	
+		#Colony
+		if = {
+			limit = { 
+				scope:target = { 
+					is_direct_subject_of = ROOT 
+					NOT = { is_sufficiently_independent = yes }
+				}
+			}
+			scope:target = { make_independent = yes }
+			ROOT = { 
+				create_diplomatic_pact = {
+					country = scope:target
+					type = semi_autonomous_colony
+				}
+			}
+		}
 		else = {
 			ROOT = { 
 				create_diplomatic_pact = {
@@ -1079,7 +1311,7 @@ on_self_capitulated_notification = {
 		post_notification = self_capitulated
 		set_variable = {
 			name = recent_capitulation
-			months = short_modifier_time
+			days = short_modifier_time
 		}
 		set_variable = {
 			name = recently_lost_war
@@ -1095,7 +1327,7 @@ on_self_capitulated_notification = {
 			limit = { has_subject_relation_with = ROOT }
 			set_variable = {
 				name = recent_capitulation
-				months = short_modifier_time
+				days = short_modifier_time
 			}
 			set_variable = {
 				name = recently_lost_war
@@ -1905,17 +2137,17 @@ on_civil_war_won = {
 on_revolution_checkpoint_reached = {
 	effect = {
 	}
-	random_events = {
-		# IGs and Revolutions
-		5 = ig_revolutions.1
-		5 = ig_revolutions.2
-		5 = ig_revolutions.3
-		5 = ig_revolutions.4
-		5 = ig_revolutions.5
-		5 = ig_revolutions.6
-		5 = ig_revolutions.7
-		5 = ig_revolutions.8
-		5 = ig_revolutions.9
+	random_events = { #all these now have cooldowns of 50 years, you normally only get around 5-8 per revolution.
+		150 = 0
+		20 = ig_revolutions.1
+		20 = ig_revolutions.2
+		20 = ig_revolutions.3
+		20 = ig_revolutions.4
+		20 = ig_revolutions.5
+		20 = ig_revolutions.6
+		20 = ig_revolutions.7
+		20 = ig_revolutions.8
+		20 = ig_revolutions.9
 		10 = revolution_pulse_events.1
 		10 = revolution_pulse_events.2
 		10 = revolution_pulse_events.3
@@ -1929,13 +2161,13 @@ on_revolution_checkpoint_reached = {
 		10 = revolution_pulse_events.11
 		10 = revolution_pulse_events.12
 		10 = revolution_pulse_events.13
-		30 = revolution_pulse_events.14
-		30 = revolution_pulse_events.15
-		30 = revolution_pulse_events.16
-		30 = revolution_pulse_events.17
-		30 = revolution_pulse_events.18
-		30 = revolution_pulse_events.19
-		30 = revolution_pulse_events.20
+		50 = revolution_pulse_events.14 #these have tighter conditions
+		50 = revolution_pulse_events.15
+		50 = revolution_pulse_events.16
+		50 = revolution_pulse_events.17
+		50 = revolution_pulse_events.18
+		50 = revolution_pulse_events.19
+		50 = revolution_pulse_events.20
 		10 = revolution_pulse_events.21
 		10 = revolution_pulse_events.22
 		10 = revolution_pulse_events.23
@@ -1988,7 +2220,8 @@ on_secession_checkpoint_reached = {
 	effect = {
 	}
 	random_events = {
-		# Secession events
+		# Secession events and recycled revolution events
+		30 = 0
 		5 = secession_events.1
 		5 = secession_events.2
 		5 = secession_events.3
@@ -2303,12 +2536,12 @@ on_state_incorporation = {
 }
 on_state_owner_change = {
 	effect = {
-		assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
+		evaluate_and_assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
 	}
 }
-on_state_created = { 
-	effect = { 
-		assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
+on_state_created = {
+	effect = {
+		evaluate_and_assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
 	}
 }
 
@@ -2593,7 +2826,7 @@ on_repudiate_obligation = {
 		}
 		add_modifier = {
 			name = repudiated_obligation
-			months = normal_modifier_time
+			days = normal_modifier_time
 			is_decaying = yes			
 		}		
 	}
@@ -2626,7 +2859,7 @@ on_character_recruitment = {
 on_become_subject = {
 	effect = {
 		every_scope_state = {
-			assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
+			evaluate_and_assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
 		}
 	}
 }
@@ -2635,7 +2868,7 @@ on_become_subject = {
 on_become_independent = {
 	effect = { 
 		every_scope_state = {
-			assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
+			evaluate_and_assign_state_hub_dynamic_names = yes # All dynamic naming is handled by this scripted effect
 		}
 	}
 }
@@ -2679,17 +2912,6 @@ on_power_bloc_struggle_started = {
 on_power_bloc_struggle_ended = {
 	effect = {
 		
-	}
-}
-
-# Root = invaded country
-# scope:actor = invading country
-# scope:admiral = invading admiral
-# scope:general = invading general
-# scope:state = location state
-on_naval_invasion = {
-	effect = {
-		post_notification = naval_invasion_against_us
 	}
 }
 
