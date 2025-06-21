@@ -23,10 +23,17 @@
 		is_junior_in_customs_union = no
 		scope:target_country = { is_junior_in_customs_union = no }
 		
-		NOT = { scope:target_country = { has_treaty_port_in_country = root } }
+		NOT = { scope:target_country = { has_treaty_port_in_market = root.market } }
 		
 		# Might have these despite low relations due to a forced pact
-		NOT = { has_diplomatic_pact = { who = scope:target_country type = trade_agreement } }
+		NOT = {
+			any_scope_treaty = {
+				binds = scope:target_country
+				any_scope_article = {
+					has_type = trade_privilege
+				}
+			}
+		}
 		
 		has_diplomatic_relevance = scope:target_country
 		
@@ -36,10 +43,14 @@
 		}
 		
 		# You cannot embargo somebody who has secured foreign investment rights in your country
-		NOT = { has_diplomatic_pact = { who = scope:target_country type = foreign_investment_rights } }
-
-		# You cannot embargo somebody with whom you have foreign investment agreements
-		NOT = { has_diplomatic_pact = { who = scope:target_country type = foreign_investment_agreement } }
+		NOT = {
+			any_scope_treaty = {
+				binds = scope:target_country
+				any_scope_article = {
+					has_type = foreign_investment_rights
+				}
+			}
+		}
 
 		# Might be disallowed by power bloc
 		NOT = {
@@ -110,7 +121,14 @@
 				NOT = { scope:target_country = { has_treaty_port_in_country = root } }
 				
 				# Might have these despite low relations due to a forced pact
-				NOT = { has_diplomatic_pact = { who = scope:target_country type = trade_agreement } }
+				NOT = {
+					any_scope_treaty = {
+						binds = scope:target_country
+						any_scope_article = {
+							has_type = trade_privilege
+						}
+					}
+				}
 				
 				OR = {
 				
@@ -139,19 +157,6 @@
 						has_diplomatic_pact = {
 							who = root
 							type = foreign_investment_rights
-						}
-					} 
-				}
-			}
-		}
-
-		requirement_to_maintain = {
-			trigger = {
-				NOT = { 
-					scope:target_country = { 
-						has_diplomatic_pact = {
-							who = root
-							type = foreign_investment_agreement
 						}
 					} 
 				}
@@ -214,7 +219,7 @@
 		will_propose = { 
 		
 			#THIS has some trade with TARGET
-			"scope:target_country.num_mutual_trade_route_levels_with_country(root)" > 0
+			"scope:target_country.mutual_trade_value_with_country(root)" > 0
 			
 			#THIS is hostile with TARGET OR cares a lot about democracy OR TARGET is embargoing THIS
 			OR = {

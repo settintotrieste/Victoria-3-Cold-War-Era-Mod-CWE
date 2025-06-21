@@ -2,7 +2,7 @@
     icon = "gfx/interface/icons/event_icons/event_scales.dds"
 
 	group = je_group_internal_affairs
-    
+
     immediate = {
         ROOT = {
             var:desired_law_var = {
@@ -35,18 +35,63 @@
             value = medium_radicals
             interest_group = scope:government_petition_ig
         }
-        add_modifier = {
-            name = modifier_successfully_met_petition_legitimacy
-            months = long_modifier_time
-            is_decaying = yes
+        if = {
+            limit = {
+                has_variable = government_petition_variant
+                var:government_petition_variant ?= 1
+            }
+            add_modifier = {
+                name = modifier_successfully_met_petition_legitimacy
+                days = long_modifier_time
+                is_decaying = yes
+            }
+        }
+        if = {
+            limit = {
+                has_variable = government_petition_variant
+                var:government_petition_variant ?= 2
+            }
+            add_modifier = {
+                name = modifier_successfully_met_petition_legitimacy
+                days = long_modifier_time
+                multiplier = 0.5
+                is_decaying = yes
+            }
+            scope:government_petition_ig ?= {
+                add_modifier = {
+                    name = modifier_reasserted_position_petition
+                    days = long_modifier_time
+                    is_decaying = yes
+                }
+            }
+        }
+        if = {
+            limit = {
+                has_variable = government_petition_variant
+                var:government_petition_variant ?= 3
+            }
+            add_modifier = {
+                name = modifier_successfully_met_petition_legitimacy
+                days = long_modifier_time
+                multiplier = 0.5
+                is_decaying = yes
+            }
+            scope:government_petition_ig.leader ?= {
+                add_modifier = {
+                    name = modifier_served_constituents_petition
+                    days = long_modifier_time
+                    is_decaying = yes
+                }
+            }
         }
         remove_variable = desired_law_var
+        remove_variable = government_petition_variant
     }
 
     invalid = {
         OR = {
             scope:government_petition_ig ?= {
-                law_stance = {
+                law_enactment_stance = {
                     law = scope:government_petition_law.type
                     value < approve
                 }
@@ -75,7 +120,7 @@
                     }
                     add_modifier = {
                         name = modifier_failed_to_meet_petition
-                        months = long_modifier_time
+                        days = long_modifier_time
                         is_decaying = yes
                         multiplier = {
                             add = 1.5
@@ -89,7 +134,7 @@
                 else = {
                     add_modifier = {
                         name = modifier_failed_to_meet_petition
-                        months = long_modifier_time
+                        days = long_modifier_time
                         is_decaying = yes
                         multiplier = {
                             add = 1
@@ -110,7 +155,7 @@
                     }
                     add_modifier = {
                         name = modifier_failed_to_meet_petition
-                        months = long_modifier_time
+                        days = long_modifier_time
                         is_decaying = yes
                         multiplier = 1.5
                     }
@@ -118,29 +163,32 @@
                 else = {
                     add_modifier = {
                         name = modifier_failed_to_meet_petition
-                        months = long_modifier_time
+                        days = long_modifier_time
                         is_decaying = yes
                     }
                 }
             }
         }
         remove_variable = desired_law_var
+        remove_variable = government_petition_variant
     }
 
     on_fail = {
 		scope:government_petition_ig = {
 			add_modifier = {
 				name = modifier_failed_to_meet_petition
-				months = long_modifier_time
+				days = long_modifier_time
 				is_decaying = yes
 				multiplier = 2
 			}
 		}
         remove_variable = desired_law_var
+        remove_variable = government_petition_variant
     }
 
     on_invalid = {
         remove_variable = desired_law_var
+        remove_variable = government_petition_variant
     }
 
     timeout = 1825
