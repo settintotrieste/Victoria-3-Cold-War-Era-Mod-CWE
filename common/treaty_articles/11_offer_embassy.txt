@@ -14,55 +14,52 @@
 	usage_limit = once_per_treaty
 
 	visible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
+		is_not_revolutionary_or_decentralised = yes
+		is_sufficiently_independent = yes
+		is_country_type = recognized
 	}
 
 	possible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
+		
+		#Proper countries
+		is_not_revolutionary_or_decentralised = yes
+		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
+		
+		#Both parties are sufficiently independent
+		is_sufficiently_independent = yes
+		scope:other_country = { is_sufficiently_independent = yes }
+		
 	}
 
 	can_ratify = {
-		scope:source_country = {
-			is_country_type = recognized
-			country_rank >= rank_value:great_power
-			save_temporary_scope_as = actor
-			custom_tooltip = {
-				text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
-				scope:target_country.relations:source_country > relations_threshold:poor
+		scope:source_country = { is_country_type = recognized }
+		scope:target_country = { is_country_type = unrecognized }
+	
+		NOR = {
+			scope:target_country = { 
+				has_diplomats_expelled = scope:source_country
+			}
+			scope:source_country = { 
+				has_diplomats_expelled = scope:target_country
 			}
 		}
-		scope:target_country = {
-			is_country_type = unrecognized
-			has_journal_entry = je_earn_recognition
-			NOT = {
-				any_diplomatic_catalyst = {
-					is_diplomatic_catalyst_type = catalyst_recognition_requested
-					target ?= scope:source_country
-				}
-			}
+		save_temporary_scope_as = actor
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
+			scope:target_country.relations:source_country > relations_threshold:poor
 		}
 	}
 
 	on_entry_into_force = {
 		scope:article_options = {
 			target_country = {
-				custom_tooltip = {
-					text = request_recognition_tt
-					if = {
-						limit = {
-							has_journal_entry = je_earn_recognition
+				if = {
+					limit = { NOT = { is_country_type = recognized } }
+					hidden_effect = {
+						create_diplomatic_catalyst = {
+							type = catalyst_recognition_requested
+							target = scope:source_country
 						}
-						je:je_earn_recognition ?= {
-							add_progress = { value = 20 name = earn_recognition_progress_bar }
-						}
-					}
-				}
-				hidden_effect = {
-					create_diplomatic_catalyst = {
-						type = catalyst_recognition_requested
-						target = scope:source_country
 					}
 				}
 			}

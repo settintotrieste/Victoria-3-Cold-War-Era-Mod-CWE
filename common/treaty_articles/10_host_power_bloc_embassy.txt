@@ -16,7 +16,7 @@
 	usage_limit = once_per_treaty
 
 	unlocked_by_technologies = {
-		international_relations
+		
 	}
 
 	source_modifier = {
@@ -24,13 +24,22 @@
 	}
 
 	visible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
+		is_not_revolutionary_or_decentralised = yes
+		is_sufficiently_independent = yes
+		is_power_bloc_leader = no
 	}
 
 	possible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
+		
+		#Proper countries
+		is_not_revolutionary_or_decentralised = yes
+		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
+		
+		#Both parties are sufficiently independent
+		is_sufficiently_independent = yes
+		scope:other_country = { is_sufficiently_independent = yes }
+		
+		#TARGET is in a different power bloc
 		trigger_if = {
 			limit = {
 				exists = power_bloc
@@ -38,6 +47,7 @@
 			}
 			NOT = { power_bloc = scope:other_country.power_bloc }
 		}
+		
 	}
 
 	can_ratify = {
@@ -46,6 +56,14 @@
 		}
 		scope:source_country = {
 			is_power_bloc_leader = no
+		}
+		NOR = {
+			scope:target_country = { 
+				has_diplomats_expelled = scope:source_country
+			}
+			scope:source_country = { 
+				has_diplomats_expelled = scope:target_country
+			}
 		}
         custom_tooltip = {
             text = DUPLICATE_ARTICLE_SAME_INPUTS
@@ -89,6 +107,8 @@
 							exists = target_country.power_bloc
 							source_country.power_bloc = target_country.power_bloc
 						}
+						target_country = { NOT = { is_sufficiently_independent = yes } }
+						source_country = { NOT = { is_sufficiently_independent = yes } }
 					}
                 }
             }

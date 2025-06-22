@@ -23,19 +23,30 @@
     }
 
     unlocked_by_technologies = {
-        international_relations
+        
     }
 
 	visible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
+		is_not_revolutionary_or_decentralised = yes
+		is_sufficiently_independent = yes
 	}
 
 	possible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
-        NOT = { is_subject_of = scope:other_country }
-        save_temporary_scope_as = target_country
+	
+		#Proper countries
+		is_not_revolutionary_or_decentralised = yes
+		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
+		
+		#Both parties are sufficiently independent
+		is_sufficiently_independent = yes
+		scope:other_country = { is_sufficiently_independent = yes }
+		
+		#Neither parties are subjects of the other
+		scope:other_country = { NOT = { is_subject_of = ROOT } } 
+		NOT = { is_subject_of = scope:other_country }
+        
+		#Vanilla
+		save_temporary_scope_as = target_country
         scope:other_country = {
             save_temporary_scope_as = actor
         }
@@ -43,6 +54,7 @@
             text = "EQUAL_OR_BETTER_RANK_THAN_TARGET"
             country_rank <= scope:other_country.country_rank
         }
+		
 	}
 
     non_fulfillment = {
@@ -64,12 +76,16 @@
     }
 
     can_ratify = {
-        scope:source_country = {
-            OR = {
-                is_subject = no
-                NOT = { is_subject_of = scope:target_country }
-            }
+	
+		#Both parties are sufficiently independent
+		scope:source_country = { is_sufficiently_independent_excluding_satellites = yes "
+		scope:target_country = { is_sufficiently_independent_excluding_satellites = yes }
+        
+		#TARGET is not a subject of THIS
+		scope:source_country = {
+			NOT = { is_subject_of = scope:target_country }
         }
+		
         custom_tooltip = {
             text = DUPLICATE_ARTICLE_SAME_INPUTS
             trigger_if = {
@@ -336,22 +352,8 @@
 
                 if = {
                     limit = {
-                        scope:article.input_law = law_type:law_slavery_banned
-                        OR = {
-                            has_strategy = ai_strategy_egalitarian_agenda
-                            has_strategy = ai_strategy_progressive_agenda
-                        }
-                    }
-                    add = {
-                        desc = "DIPLOMATIC_ACCEPTANCE_ANTI_SLAVERY"
-                        value = 15
-                    }
-                }
-
-                if = {
-                    limit = {
-                        scope:article.input_law = law_type:law_council_republic
-                        has_law = law_type:law_council_republic
+                        scope:article.input_law = law_type:law_HOS_communist_leader
+                        has_law = law_type:law_HOS_communist_leader
                     }
                     add = {
                         desc = "communist_solidarity"
@@ -389,26 +391,6 @@
 
                 if = {
                     limit = {
-                        scope:article.input_law = law_type:law_slavery_banned
-                        OR = {
-                            has_strategy = ai_strategy_egalitarian_agenda
-                            has_strategy = ai_strategy_progressive_agenda
-							AND = {
-								has_journal_entry = je_aberdeen_act
-								scope:source_country = {
-									c:BRZ ?= this
-								}
-							}
-                        }
-                    }
-                    add = {
-                        desc = "DIPLOMATIC_ACCEPTANCE_ANTI_SLAVERY"
-                        value = 15
-                    }
-                }
-
-                if = {
-                    limit = {
                         scope:article.input_law = law_type:law_free_trade
                         has_strategy = ai_strategy_economic_imperialism
                     }
@@ -420,8 +402,8 @@
 
                 if = {
                     limit = {
-                        scope:article.input_law = law_type:law_council_republic
-                        has_law = law_type:law_council_republic
+                        scope:article.input_law = law_type:law_HOS_communist_leader
+                        has_law = law_type:law_HOS_communist_leader
                     }
                     add = {
                         desc = "communist_solidarity"
@@ -431,8 +413,8 @@
 
                 if = {
                     limit = {
-                        scope:article.input_law = law_type:law_monarchy
-                        has_law = law_type:law_monarchy
+                        scope:article.input_law = law_type:law_type:law_HOS_monarch
+                        has_law = law_type:law_type:law_HOS_monarch
                         country_rank >= rank_value:great_power
                         OR = {
                             has_strategy = ai_strategy_reactionary_agenda
@@ -448,22 +430,24 @@
                 if = {
                     limit = {
                         # We want to support them irrespective of which law we have and they wish to enact
-                        OR = {
-                            scope:article.input_law = law_type:law_presidential_republic
-                            scope:article.input_law = law_type:law_parliamentary_republic
-                        }
-                        OR = {
-                            has_law = law_type:law_presidential_republic
-                            has_law = law_type:law_parliamentary_republic
-                        }
+                        scope:article.input_law = law_type:law_HOS_president
+                        has_law = law_type:law_HOS_president
                         OR = {
                             has_strategy = ai_strategy_progressive_agenda
                             ruler ?= {
-                                has_ideology = ideology:ideology_radical
+                                OR = { 
+									has_ideology = ideology:ideology_democratic
+									has_ideology = ideology:ideology_liberal
+								}
                             }
                             any_interest_group = {
                                 is_in_government = yes
-                                leader ?= { has_ideology = ideology:ideology_radical }
+                                leader ?= { 
+									OR = { 
+										has_ideology = ideology:ideology_democratic
+										has_ideology = ideology:ideology_liberal
+									}
+								}
                             }
                         }
                     }
@@ -520,36 +504,6 @@
 
 		wargoal_score_multiplier = {
 			value = 1
-
-			if = {
-				limit = {
-					scope:article.input_law ?= law_type:law_slavery_banned
-				}
-
-				# Britain will prioritize ending slavery in Brazil if they have the Aberdeen Act JE
-				if = {
-					limit = {
-						has_journal_entry = je_aberdeen_act
-						scope:source_country = {
-							c:BRZ ?= this
-						}
-					}
-					add = 0.5
-				}
-				# Great Powers with slavery banned will prioritize ending slavery in Brazil if that country failed its slavery JE
-				if = {
-					limit = {
-						has_law = law_type:law_slavery_banned
-						country_rank >= rank_value:great_power
-						scope:source_country = {
-							c:BRZ ?= this
-							has_modifier = brazil_slaving_pariah_modifier
-							has_law = law_type:law_slave_trade
-						}
-					}
-					add = 0.25
-				}
-			}
 		}
 	}
 

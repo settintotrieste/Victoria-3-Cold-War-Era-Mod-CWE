@@ -21,7 +21,7 @@
 	usage_limit = once_per_side
 
 	unlocked_by_technologies = {
-		international_relations
+		
 	}
 
 	target_modifier = {
@@ -29,21 +29,47 @@
 	}
 
 	visible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
+		is_not_revolutionary_or_decentralised = yes
+		is_sufficiently_independent = yes
 	}
 
 	possible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
-	}
-
-	requirement_to_maintain = {
-		trigger = {
-			scope:source_country = {
-				NOT = { has_subject_relation_with = scope:target_country }
-			}
+		
+		#Proper countries
+		is_not_revolutionary_or_decentralised = yes
+		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
+		
+		#Both parties are sufficiently independent
+		is_sufficiently_independent = yes
+		scope:other_country = { is_sufficiently_independent = yes }
+		
+		#Neither parties are subjects of the other
+		scope:other_country = { NOT = { is_subject_of = ROOT } } 
+		NOT = { is_subject_of = scope:other_country }
+		
+		#Neither party is neutral
+		NOR = {
+			is_neutral = yes
+			scope:other_country = { is_neutral = yes }
 		}
+		
+		#Country can meddle in other's affairs
+		OR = { 
+		
+			#Country's laws permit foreign intervention
+			has_law = law_type:law_regionalist_fp
+			has_law = law_type:law_globalist_fp
+			
+			#Leader is jingoistic
+			ruler ?= {
+				OR = {
+					has_ideology = ideology:ideology_autocratic
+					has_ideology = ideology:ideology_power_hungry
+				}
+			}
+			
+		}
+		
 	}
 
 	requirement_to_maintain = {
@@ -51,10 +77,22 @@
 			scope:source_country.country_rank >= scope:target_country.country_rank
 		}
 	}
+	
+	requirement_to_maintain = {
+		trigger = {
+			scope:source_country = {
+				is_sufficiently_independent = yes # Checks if they have diplomatic autonomy
+				is_neutral = no
+			}
+		}
+	}
 
 	requirement_to_maintain = {
 		trigger = {
-			scope:target_country = { is_subject = yes }
+			scope:target_country = { 
+				is_subject = yes 
+				NOT = { is_subject_of = scope:source_country }
+			}
 		}
 	}
 

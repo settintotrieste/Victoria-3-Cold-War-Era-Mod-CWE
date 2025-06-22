@@ -20,7 +20,7 @@
 	}
 
 	unlocked_by_technologies = {
-		international_relations
+		
 	}
 
 	target_modifier = {
@@ -28,20 +28,51 @@
 	}
 
 	visible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
-		is_subject = no
+		is_not_revolutionary_or_decentralised = yes
+		is_sufficiently_independent = yes
 	}
 
 	possible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
-		is_subject = no
-		country_rank > scope:other_country.country_rank
-		scope:other_country = {
-			is_subject = no
+		
+		#Proper countries
+		is_not_revolutionary_or_decentralised = yes
+		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
+		
+		#Both parties are sufficiently independent
+		is_sufficiently_independent = yes
+		scope:other_country = { is_sufficiently_independent = yes }
+		
+		#Neither party is neutral
+		NOR = {
+			is_neutral = yes
+			scope:other_country = { is_neutral = yes }
 		}
+		
+		#Country can meddle in other's affairs
+		OR = { 
+		
+			#Country's laws permit foreign intervention
+			has_law = law_type:law_regionalist_fp
+			has_law = law_type:law_globalist_fp
+			
+			#Leader is jingoistic
+			ruler ?= {
+				OR = {
+					has_ideology = ideology:ideology_autocratic
+					has_ideology = ideology:ideology_power_hungry
+				}
+			}
+			
+		}
+		
+		#Neither parties are subjects of the other
+		scope:other_country = { NOT = { is_subject_of = ROOT } } 
+		NOT = { is_subject_of = scope:other_country }
+		
+		#THIS is higher rank than TARGET
+		country_rank > scope:other_country.country_rank
 
+		#Vanilla
 		save_temporary_scope_as = actor
 		scope:other_country = {
 			save_temporary_scope_as = target_country
@@ -50,6 +81,7 @@
 			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
 			scope:other_country.relations:root > relations_threshold:poor
 		}
+		
 	}
 
 	requirement_to_maintain = {
@@ -61,7 +93,8 @@
 	requirement_to_maintain = {
 		trigger = {
 			scope:source_country = {
-				is_subject = no
+				is_sufficiently_independent = yes # Checks if they have diplomatic autonomy
+				is_neutral = no
 			}
 		}
 	}
@@ -69,7 +102,8 @@
 	requirement_to_maintain = {
 		trigger = {
 			scope:target_country = {
-				is_subject = no
+				is_sufficiently_independent = yes # Checks if they have diplomatic autonomy
+				NOT = { is_subject_of = scope:source_country }
 			}
 		}
 	}
