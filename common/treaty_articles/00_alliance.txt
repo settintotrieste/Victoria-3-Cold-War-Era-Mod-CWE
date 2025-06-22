@@ -30,37 +30,30 @@
 	}
 
 	visible = {
-		scope:first_country = { 
-			is_not_revolutionary_or_decentralised = yes
-		}
-		scope:second_country = {
-			is_not_revolutionary_or_decentralised = yes
-		}
+		is_not_revolutionary_or_decentralised = yes
 	}
 
 	possible = {
+	
+		#Proper countries
+		is_not_revolutionary_or_decentralised = yes
+		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
 		
 		#Both parties are sufficiently independent
-		scope:first_country = { is_sufficiently_independent_excluding_satellites = yes }
-		scope:second_country = { is_sufficiently_independent_excluding_satellites = yes }
+		is_sufficiently_independent_excluding_satellites = yes
+		scope:other_country = { is_sufficiently_independent_excluding_satellites = yes }
+		
+		#Neither parties are subjects of the other
+		NOT = { has_subject_relation_with = scope:other_country }
 		
 		#Neither party is neutral
 		NOR = {
-			scope:first_country = { is_neutral = yes }
-			scope:second_country = { is_neutral = yes }
+			is_neutral = yes
+			scope:other_country = { is_neutral = yes }
 		}
 		
-		#Not at war
-		scope:first_country = { NOT = { has_war_with = scope:second_country } }
-		scope:first_country = { has_diplomatic_relevance = scope:second_country }
-		
-		#Good relations
-		scope:first_country = { 
-			custom_tooltip = {
-				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
-				scope:second_country.relations:root >= relations_threshold:cordial
-			}
-		}
+		#Has diplomatic relations
+		has_diplomatic_relevance = scope:other_country
 		
 	}
 
@@ -72,10 +65,10 @@
                 scope:article = {
 					OR = {
 						first_country = {
-							NOT = { is_sufficiently_independent_excluding_satellites = yes }
+							is_sufficiently_independent_excluding_satellites = no # Checks if they have diplomatic autonomy
 						}
 						second_country = {
-							NOT = { is_sufficiently_independent_excluding_satellites = yes }
+							is_sufficiently_independent_excluding_satellites = no # Checks if they have diplomatic autonomy
 						}
 					}
                 }
@@ -84,20 +77,24 @@
     }
 
 	can_ratify = {
-	
-		NOT = {
+		OR = {
 			scope:first_country = {
-				any_scope_treaty = {
-					hidden_trigger = {
-						OR = {
-							scope:treaty = {
-								is_renegotiation = no
+				is_sufficiently_independent_excluding_satellites = yes
+			}
+			NOT = {
+				scope:first_country = {
+					any_scope_treaty = {
+						hidden_trigger = {
+							OR = {
+								scope:treaty = {
+									is_renegotiation = no
+								}
+								scope:treaty.amended_treaty != this
 							}
-							scope:treaty.amended_treaty != this
 						}
-					}
-					any_scope_article = {
-						has_type = alliance
+						any_scope_article = {
+							has_type = alliance
+						}
 					}
 				}
 			}
@@ -184,40 +181,6 @@
 			}
 		}
 	}
-	
-	can_withdraw = {  
-		
-		#General
-		NOR = { 
-			scope:first_country = { is_diplomatic_play_ally_of = scope:second_country }
-			scope:second_country = { is_diplomatic_play_ally_of = scope:first_country }
-		}
-		
-		#NATO
-		NAND = { 
-			scope:first_country = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
-			scope:second_country = { OR = { has_modifier = nato_member has_modifier = nato_leader } }
-		}
-		
-		#Rio Pact
-		NAND = { 
-			scope:first_country = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
-			scope:second_country = { OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } }
-		}
-		
-		#Warsaw Pact
-		NAND = { 
-			scope:first_country = { OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader } }
-			scope:second_country = { OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader } }
-		}
-		
-		#CSTO
-		NAND = { 
-			scope:first_country = { OR = { has_modifier = csto_member has_modifier = csto_leader } }
-			scope:second_country = { OR = { has_modifier = csto_member has_modifier = csto_leader } }
-		}
-		
-	}
 
 	on_entry_into_force = {
 		if = {
@@ -258,6 +221,7 @@
 	on_withdrawal = {
 		scope:withdrawing_country = {
 			create_bidirectional_truce = { country = scope:non_withdrawing_country months = 12 }
+			change_relations = { country = scope:non_withdrawing_country value = -30 }
 		}
 		add_lobby_appeasement_from_diplomacy_bidirectional = {
 			FIRST = scope:withdrawing_country
@@ -328,7 +292,7 @@
 
 			# We are doing this to be able to reuse loc across treaties and diplomatic actions
 			scope:first_country = {
-				save_temporary_scope_as = first_country
+				save_temporary_scope_as = actor
 			}
 			scope:second_country = {
 				save_temporary_scope_as = target
