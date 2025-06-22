@@ -1,0 +1,760 @@
+﻿host_power_bloc_embassy = {
+	groups= {
+		general
+	}
+	requires_approval = yes
+	should_notify_third_parties = yes
+
+	unlocking_technologies = {
+		
+	}
+
+	selectable = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+		is_power_bloc_leader = no
+	}
+	
+	potential = {
+	
+		scope:target_country = {
+			NOT = { is_country_type = decentralized }
+			NOT = { has_diplomats_expelled = root }
+			is_revolutionary = no
+			is_power_bloc_leader = yes
+		}
+	
+		# scope root
+		NOT = { has_diplomats_expelled = scope:target_country }
+		
+	}
+
+	pact = {
+		cost = 100
+		recipient_pays_maintenance = no
+
+		first_modifier = {
+			country_pact_leverage_generation_add = 400
+		}
+
+		is_two_sided_pact = yes
+		has_junior_participant = yes
+
+		relations_progress_per_day = 0.5  # At 100, +1 relations
+		relations_improvement_max = 25
+
+		can_be_used_in_sway_offers = yes
+		sway_maneuvers_cost = 10
+
+		requirement_to_maintain = {
+			trigger = {
+				has_diplomatic_relevance = scope:target_country
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
+					scope:target_country.relations:root > relations_threshold:poor
+				}
+			}
+
+			show_about_to_break_warning = {
+				scope:target_country.relations:root <= -17 # this is: poor + 3
+				scope:target_country.relations_change_rate:root < 0
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_AT_PEACE"
+					NOT = { has_war_with = scope:target_country }
+				}
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				NOT = { has_law = law_type:law_isolationism }
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				NOT = { scope:target_country = { has_law = law_type:law_isolationism } }
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_NOT_DECENTRALIZED"
+					NOT = { is_country_type = decentralized }
+					scope:target_country = {
+						NOT = { is_country_type = decentralized }
+					}
+				}
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_NO_SUBJECT_RELATION"
+					NOT = {
+						is_subject_of = scope:target_country
+						scope:target_country = { is_subject_of = root }
+					}
+				}
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_DIPLOMATIC_AUTONOMY"
+					AND = {
+						scope:actor = { is_sufficiently_independent = yes }
+						scope:target_country = { is_sufficiently_independent = yes }
+					}
+				}
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				NOT = { has_diplomats_expelled = scope:target_country }
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				scope:target_country = {
+					NOT = { has_diplomats_expelled = root }
+				}
+			}
+		}
+		
+		requirement_to_maintain = {
+			trigger = {
+				is_power_bloc_leader = no
+			}
+		}
+
+		manual_break_effect = {
+			change_relations = { country = scope:target_country value = -20 }
+		}
+		
+		auto_break_effect = {}
+	}
+
+    ai = {
+		check_acceptance_for_will_break = yes
+		check_acceptance_for_will_propose = yes
+		
+		evaluation_chance = {
+			value = 0.01
+		}			
+
+		accept_score = {
+			value = 0
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+				value = -100
+			}
+			
+			### Leverage
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_LEVERAGE"
+				value = "scope:actor.power_bloc.leverage_advantage(root)"
+				multiply = 0.5
+				
+				### Leverage effect when already part of the bloc can go into negative, to help determine if they want to leave
+				if = {
+					limit = { is_in_same_power_bloc = scope:actor }					
+					min = -200
+				}
+				else = {
+					min = 0
+				}
+				
+				max = 200
+			}		
+			
+			if = {
+				limit = {
+					scope:target_country = { is_in_power_bloc = yes }
+				}
+				
+				### Cohesion of current Bloc
+				subtract = {
+					desc = "DIPLOMATIC_ACCEPTANCE_COHESION_OF_TARGET"
+					value = "scope:target_country.power_bloc.current_cohesion_number"
+					subtract = 50
+					
+					### Low cohesion is more impactful than high cohesion
+					if = {
+						limit = { scope:target_country.power_bloc = { current_cohesion_number < 20 } }
+						multiply = 2
+					}					
+					else_if = {
+						limit = { scope:target_country.power_bloc = { current_cohesion_number < 40 } }
+						multiply = 1.5
+					}
+				}				
+			}
+			
+			### Cohesion
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_COHESION"
+				value = "scope:actor.power_bloc.current_cohesion_number"
+				subtract = 50
+				
+				### Low cohesion is more impactful than high cohesion
+				if = {
+					limit = { scope:actor.power_bloc ?= { current_cohesion_number < 20 } }
+					multiply = 4
+				}					
+				else_if = {
+					limit = { scope:actor.power_bloc ?= { current_cohesion_number < 40 } }
+					multiply = 2
+				}
+				
+				### Care more about cohesion when part of bloc
+				if = {
+					limit = { is_in_same_power_bloc = scope:actor }
+					multiply = 2
+				}
+			}
+
+			if = {
+				limit = {
+					scope:target_country.country_rank > rank_value:insignificant_power
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDENTITY_AFFINITY_TO_RANK"
+					if = {
+						limit = {
+							scope:target_country.country_rank >= rank_value:great_power
+						}
+						add = modifier:power_bloc_invite_acceptance_great_power_add 
+					}
+					else_if = {
+						limit = {
+							scope:target_country.country_rank = rank_value:major_power
+						}
+						add = modifier:power_bloc_invite_acceptance_major_power_add 
+					}
+					else_if = {
+						limit = {
+							scope:target_country.country_rank = rank_value:minor_power
+						}
+						add = modifier:power_bloc_invite_acceptance_minor_power_add 
+					}
+					else_if = {
+						limit = {
+							scope:target_country.country_rank = rank_value:unrecognized_major_power
+						}
+						add = modifier:power_bloc_invite_acceptance_unrecognized_major_power_add 
+					}
+					else_if = {
+						limit = {
+							scope:target_country.country_rank = rank_value:unrecognized_regional_power
+						}
+						add = modifier:power_bloc_invite_acceptance_unrecognized_regional_power_add 
+					}
+				}
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_FROM_IDENTITY"
+				scope:actor.power_bloc = {
+					add = modifier:power_bloc_invite_acceptance_add
+				}
+			}
+
+			### How the selected identity fits them
+			add = ai_power_bloc_identity_score
+
+			### Similar to identities but considers selected principles
+			add = ai_power_bloc_principle_score
+
+			# Ideological opinion is always a factor, but much weaker for non ideological unions
+			# Score for ideological unions is handled in ai_power_bloc_identity_score script value
+			if = {
+				limit = {
+					power_bloc ?= {
+						NOT = { has_identity = identity:identity_ideological_union }
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.25
+					max = 25
+					min = -25
+				}
+			}	
+
+			### Powerful Protectors is always a factor, but less so if not being invited to a sovereign empire		
+			if = {
+				limit = {
+					scope:actor.power_bloc ?= {
+						NOT = { has_identity = identity:identity_sovereign_empire }
+					}
+					has_powerful_protectors = yes
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_POWERFUL_PROTECTORS_THEM"
+					value = -25
+				}	
+			}
+			
+			### Relative rank
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RANK"
+				value = scope:actor.country_rank
+				subtract = 2
+				subtract = country_rank
+				multiply = 10			
+			}
+					
+			if = {
+				limit = {
+					gdp >= 2000000
+				}
+				
+				subtract = {
+					desc = "DIPLOMATIC_ACCEPTANCE_HIGH_GDP"
+					value = gdp
+					subtract = 1000000
+					divide = 1000000
+					min = 1
+					max = 100
+				}
+			}		
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+				if = {
+					limit = {
+						has_attitude = {
+							who = scope:actor
+							attitude = genial
+						}											
+					}
+					value = 50
+				}
+				else_if = {
+					limit = {
+						OR = {					
+							has_attitude = {
+								who = scope:actor
+								attitude = cooperative
+							}
+							has_attitude = {
+								who = scope:actor
+								attitude = conciliatory
+							}	
+						}
+					}
+					value = 25
+				}
+				else_if = {
+					limit = {
+						OR = {
+							has_attitude = {
+								who = scope:actor
+								attitude = antagonistic
+							}
+							has_attitude = {
+								who = scope:actor
+								attitude = domineering
+							}	
+							has_attitude = {
+								who = scope:actor
+								attitude = belligerent
+							}							
+						}
+					}
+					value = -1000
+				}
+				else = {
+					value = -50
+				}				
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RELATIONS"								
+				if = {
+					limit = {
+						"relations(scope:actor)" < relations_threshold:friendly
+					}
+					value = 0
+				}
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:amicable
+						"relations(scope:actor)" < relations_threshold:friendly
+					}
+					value = 15
+				}	
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:friendly
+					}
+					value = 30
+				}
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:infamous
+						"scope:actor.infamy" < infamy_threshold:notorious
+					}
+					value = -10
+				}	
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:notorious
+						"scope:actor.infamy" < infamy_threshold:pariah
+					}
+					value = -25
+				}
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:pariah
+					}
+					value = -50
+				}
+			}
+			
+			if = {
+				limit = {
+					scope:actor = {
+						has_variable = pro_lobby_proposal_power_bloc_invite
+						var:pro_lobby_opportunity_target ?= scope:target_country
+					}
+				}
+				add = {
+					desc = "LOBBY_OPPORTUNITY_BONUS"
+					value = 50
+				}
+			}
+			
+			if = {
+				limit = {
+					scope:actor = {
+						has_variable = anti_lobby_proposal_power_bloc_invite
+						var:anti_lobby_opportunity_target ?= scope:target_country
+					}
+				}
+				add = {
+					desc = "LOBBY_OPPORTUNITY_BONUS"
+					value = 50
+				}
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_PRINCIPLE_SACRED_CIVICS"
+
+				if = {
+					limit = {
+						AND = {
+							scope:actor.power_bloc ?= {
+								OR = {
+									has_principle = principle:principle_sacred_civics_1
+									has_principle = principle:principle_sacred_civics_2
+									has_principle = principle:principle_sacred_civics_3
+								}
+							}
+							scope:actor.religion = root.religion
+						}
+					}
+					add = 20
+				}
+			}
+		}
+
+		junior_accept_score = {
+			value = 0
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+				value = -50
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_LEVERAGE_OF_TARGET"
+				value = "power_bloc.leverage_advantage(scope:actor)"
+				multiply = 0.5
+				min = 0
+				max = 200
+			}
+
+			### Impact on Cohesion
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_DECREASED_COHESION"
+				value = "power_bloc.predicted_cohesion_percentage_with(scope:actor)"
+				subtract = "power_bloc.current_cohesion_number"
+				multiply = 2 # -2 acceptance for each lost point of cohesion
+				if = {
+					limit = {
+						exists = power_bloc
+					}
+					if = {
+						limit = { "power_bloc.current_cohesion_number" <= 20 }
+						multiply = 5
+					}
+					else_if = {
+						limit = { "power_bloc.current_cohesion_number" <= 40 }
+						multiply = 2
+					}
+				}			
+				
+				max = 0
+			}
+
+			### How we fit their selected identity
+			add = ai_accept_join_request_score
+			
+			# Ideological opinion is always a factor, but much weaker for non ideological unions
+			# Score for ideological unions is handled in ai_accept_join_request_score script value
+			if = {
+				limit = {
+					scope:target_country.power_bloc ?= {
+						NOT = { has_identity = identity:identity_ideological_union }
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 0.25
+					max = 25
+					min = -25
+				}
+			}				
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+				if = {
+					limit = {
+						OR = {
+							has_attitude = {
+								who = scope:actor
+								attitude = genial
+							}
+							has_attitude = {
+								who = scope:actor
+								attitude = protective
+							}
+						}
+					}
+					value = 100
+				}
+				else_if = {
+					limit = {
+						OR = {
+							has_attitude = {
+								who = scope:actor
+								attitude = cooperative
+							}
+							has_attitude = {
+								who = scope:actor
+								attitude = conciliatory
+							}							
+						}
+					}
+					value = 50
+				}
+				else_if = {
+					limit = {
+						has_attitude = {
+							who = scope:actor
+							attitude = domineering
+						}
+					}
+					value = 25
+				}
+				else_if = {
+					limit = {
+						OR = {
+							has_attitude = {
+								who = scope:actor
+								attitude = antagonistic
+							}
+							has_attitude = {
+								who = scope:actor
+								attitude = belligerent
+							}
+						}
+					}
+					value = -100
+				}
+				else = {
+					value = -25
+				}
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RELATIONS"
+				if = {
+					limit = {
+						"relations(scope:actor)" < relations_threshold:friendly
+					}
+					value = 0
+				}
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:amicable
+						"relations(scope:actor)" < relations_threshold:friendly
+					}
+					value = 50
+				}	
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:friendly
+					}
+					value = 100
+				}
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:infamous
+						"scope:actor.infamy" < infamy_threshold:notorious
+					}
+					value = -5
+				}	
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:notorious
+						"scope:actor.infamy" < infamy_threshold:pariah
+					}
+					value = -10
+				}
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:pariah
+					}
+					value = -25
+				}
+			}
+			
+			if = {
+				limit = {
+					scope:actor = {
+						has_variable = pro_lobby_proposal_power_bloc
+						var:pro_lobby_opportunity_target ?= scope:target_country
+					}
+				}
+				add = {
+					desc = "LOBBY_OPPORTUNITY_BONUS"
+					value = 100
+				}	
+			}	
+			
+			if = {
+				limit = {
+					scope:actor = {
+						has_variable = anti_lobby_proposal_power_bloc
+						var:anti_lobby_opportunity_target ?= scope:target_country
+					}
+				}
+				add = {
+					desc = "LOBBY_OPPORTUNITY_BONUS"
+					value = 50
+				}	
+			}
+		}
+
+		will_propose = {  
+			would_accept_diplomatic_action = {
+				actor = scope:target_country
+				type = host_power_bloc_embassy
+			}
+		}
+
+		propose_score = {
+			value = 10
+		}
+
+		use_obligation_chance = {
+			value = 25
+		}
+	}
+}
+
+request_power_bloc_embassy = {
+	groups= {
+		general
+	}
+
+	requires_approval = yes
+	can_use_obligations = yes
+
+	selectable = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+		is_power_bloc_leader = yes
+	}
+	
+	potential = {
+		scope:target_country = {
+			NOT = { is_country_type = decentralized }
+			is_revolutionary = no
+			is_power_bloc_leader = no
+		}
+
+		NOT = {
+			has_diplomats_expelled = root			
+		}
+	}
+
+	possible = {
+		NOT = { has_war_with = scope:target_country }
+
+		has_diplomatic_relevance = scope:target_country
+		
+		#Both parties are sufficiently independent
+		AND = {
+			scope:actor = { is_sufficiently_independent = yes }
+			scope:target_country = { is_sufficiently_independent = yes }
+		}
+
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
+			scope:target_country.relations:root > relations_threshold:poor
+		}			
+	}
+
+	reverse_pact = host_power_bloc_embassy
+
+	ai = {
+		check_acceptance_for_will_propose = yes
+		
+		evaluation_chance = {
+			value = 0
+			
+			if = {
+				limit = { country_rank < rank_value:major_power }
+				add = 0.1
+			}			
+		}		
+
+		propose_score = {
+			value = 10
+		}
+
+		propose_break_score = {
+			value = 10
+		}
+	}
+}
