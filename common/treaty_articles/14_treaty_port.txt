@@ -1,6 +1,6 @@
 ﻿treaty_port = {
     kind = directed
-    cost = 25
+    cost = 50
 
     relations_progress_per_day = -0.25
     relations_improvement_min = 0
@@ -10,7 +10,6 @@
 	flags = {
 		is_treaty_port
 		can_be_enforced
-		recipient_pays_maintenance
 	}
 
 	usage_limit = once_per_side_with_same_inputs
@@ -56,20 +55,6 @@
         scope:source_country = {
 			country_rank <= scope:target_country.country_rank
         }
-
-		custom_tooltip = {
-            text = DUPLICATE_ARTICLE_SAME_INPUTS
-            scope:treaty ?= {
-                NOT = {
-                    any_scope_article_option = {
-                        count > 1
-                        has_type = treaty_port
-                        source_country = scope:source_country
-                        input_state = root.input_state
-                    }
-                }
-            }
-        }
     }
 
 	can_withdraw = {
@@ -79,13 +64,18 @@
 			}
 			scope:withdrawing_country = {
 				country_rank > scope:non_withdrawing_country.country_rank
+				OR = {
+					NOT = { is_country_type = unrecognized }
+					scope:target_country = { is_country_type = unrecognized }
+				}
 			}
 		}
+		
 	}
 
 	state_valid_trigger = {
 		scope:input = {
-			is_potential_treaty_port = scope:target_country
+			is_potential_treaty_port = scope:other_country
 			is_treaty_port = no
 		}
 		NOT = {
@@ -253,6 +243,16 @@
 							desc = "great_power"
 						}
 					}
+
+					if = {
+						limit = {
+							has_law = law_type:law_isolationism
+						}
+						add = {
+							desc = "law_isolationism"
+							add = -1000
+						}
+					}
 				}
 				else = {
 					if = {
@@ -285,6 +285,7 @@
 					if = {
 						limit = {
 							scope:target_country ?= this
+							scope:source_country = { is_ai = no }
 							scope:treaty ?= {
 								NOT = {
 									any_scope_article_option = {
@@ -307,22 +308,8 @@
 
 		wargoal_score_multiplier = {
 			value = 1
-
-			# Britain should go for Hong Kong when starting Opium Wars play against Qing
-			if = {
-				limit = {
-					has_journal_entry = je_opium_wars
-					NOT = { is_diplomatic_play_enemy_of = scope:target_country }
-					scope:target_country = {
-						has_variable = opium_wars_target
-					}
-					scope:article.input_state = {
-						state_region = s:STATE_SHAOZHOU
-					}
-				}
-				add = 100
-			}
 		}
+		
 	}
 
 	wargoal = {
@@ -363,4 +350,5 @@
 			min = 5
 		}
 	}
+	
 }

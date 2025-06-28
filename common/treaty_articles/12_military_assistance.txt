@@ -1,6 +1,6 @@
 ﻿military_assistance = {
 	kind = directed
-	cost = 50
+	cost = 25
 
 	relations_progress_per_day = 0.5
 	relations_improvement_max = 50
@@ -11,6 +11,8 @@
 		is_military_assistance
 		can_be_renegotiated
 	}
+
+	maintenance_paid_by = source_country
 
 	unlocked_by_technologies = {
 		
@@ -41,13 +43,6 @@
 
 	possible = {
 	
-		is_not_revolutionary_or_decentralised = yes
-		
-		#Both parties are sufficiently independent
-		is_sufficiently_independent = yes
-		
-		country_rank >= scope:other_country.country_rank
-		
 		army_power_projection > scope:other_country.army_power_projection
 		
 		#THIS is willing to have military interventions abroad
@@ -60,18 +55,24 @@
 		
 	}
 
+	requirement_to_maintain = {
+	
+		is_not_revolutionary_or_decentralised = yes
+		
+		#Both parties are sufficiently independent
+		is_sufficiently_independent = yes
+		
+		scope:source_country.country_rank >= scope:target_country.country_rank
+		
+	}
+
     non_fulfillment = {
         consequences = freeze
 
         conditions = {
             weekly = {
 				scope:article = {
-					OR = {
-						source_country.country_rank < target_country.country_rank
-						source_country.army_power_projection < target_country.army_power_projection
-						source_country = { in_default = yes }
-						source_country = { is_neutral = yes }
-					}
+					source_country.army_power_projection < target_country.army_power_projection
 				}
             }
         }
@@ -84,6 +85,14 @@
 		scope:target_country = {
 			any_scope_treaty = {
 				count < 2
+				hidden_trigger = {
+					OR = {
+						scope:treaty = {
+							is_renegotiation = no
+						}
+						scope:treaty.amended_treaty != this
+					}
+				}
 				any_scope_article = {
 					has_type = military_assistance
 					target_country = scope:target_country
@@ -91,7 +100,7 @@
 			}
 		}
         custom_tooltip = {
-            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            text = DUPLICATE_ARTICLE_SAME_INPUTS_TREATY
             NOT = {
                 scope:source_country = {
                     any_scope_treaty = {
@@ -207,7 +216,7 @@
 					}
 					add = {
 						desc = "DIPLOMATIC_ACCEPTANCE_MAINTAIN_POWER_BALANCE"
-						add = 25
+						add = 10
 					}
 				}
 				else_if = {
@@ -216,7 +225,7 @@
 					}
 					add = {
 						desc = "DIPLOMATIC_ACCEPTANCE_ECONOMIC_IMPERIALISM"
-						add = 25
+						add = 10
 					}
 				}
 
@@ -244,49 +253,6 @@
 							}
 						}
 						value = -1000
-					}
-				}
-
-				add = {
-					desc = "GREAT_GAME_BONUS"
-					if = {
-						limit = {
-							OR = {
-								scope:target_country = {
-									has_journal_entry = je_unify_afghanistan
-									OR = {
-										AND = {
-											has_variable = AFG_appealed_to_GBR
-											c:GBR ?= scope:source_country
-										}
-										AND = {
-											has_variable = AFG_appealed_to_RUS
-											c:RUS ?= scope:source_country
-										}
-									}
-								}
-								scope:target_country = {
-									has_journal_entry = je_eastern_frontier
-									OR = {
-										AND = {
-											has_variable = PER_appealed_to_GBR
-											c:GBR ?= scope:source_country
-										}
-										AND = {
-											has_variable = PER_appealed_to_RUS
-											c:RUS ?= scope:source_country
-										}
-									}
-								}
-								scope:target_country = {
-									c:CIR ?= this
-									scope:source_country = {
-										has_variable = circassia_recognizer
-									}
-								}
-							}
-						}
-						value = 50
 					}
 				}
 
@@ -459,7 +425,7 @@
 						subtract = 50
 						multiply = 2
 						min = -50
-						max = 50
+						max = 25
 					}
 				}
 
@@ -472,7 +438,7 @@
 								attitude = protective
 							}
 						}
-						value = 75
+						value = 25
 					}
 					else_if = {
 						limit = {
@@ -619,7 +585,7 @@
 					}
 					add = {
 						desc = "LOBBY_OPPORTUNITY_BONUS"
-						value = 20
+						value = 10
 					}
 				}
 
@@ -632,7 +598,7 @@
 					}
 					add = {
 						desc = "LOBBY_OPPORTUNITY_BONUS"
-						value = 10
+						value = 5
 					}
 				}
 			}
@@ -640,6 +606,7 @@
 			if = {
 				limit = {
 					scope:target_country ?= this
+					scope:source_country = { is_ai = no }
 					scope:treaty ?= {
 						NOT = {
 							any_scope_article_option = {
@@ -658,4 +625,5 @@
 			}
 		}
 	}
+	
 }

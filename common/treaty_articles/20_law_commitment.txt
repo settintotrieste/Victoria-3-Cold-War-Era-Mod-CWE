@@ -9,12 +9,10 @@
 
 	flags = {
         is_law_commitment
-		can_be_renegotiated
         can_be_enforced
-		recipient_pays_maintenance
 	}
 
-	usage_limit = once_per_side_with_same_inputs
+	usage_limit = once_per_side
 
 	maintenance_paid_by = target_country
 
@@ -27,19 +25,10 @@
     }
 
 	visible = {
-		is_not_revolutionary_or_decentralised = yes
-		is_sufficiently_independent = yes
+		
 	}
 
 	possible = {
-	
-		#Proper countries
-		is_not_revolutionary_or_decentralised = yes
-		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
-		
-		#Both parties are sufficiently independent
-		is_sufficiently_independent = yes
-		scope:other_country = { is_sufficiently_independent = yes }
 		
 		#Neither parties are subjects of the other
 		scope:other_country = { NOT = { is_subject_of = ROOT } } 
@@ -76,18 +65,14 @@
     }
 
     can_ratify = {
-	
-		#Both parties are sufficiently independent
-		scope:source_country = { is_sufficiently_independent_excluding_satellites = yes "
-		scope:target_country = { is_sufficiently_independent_excluding_satellites = yes }
-        
-		#TARGET is not a subject of THIS
-		scope:source_country = {
-			NOT = { is_subject_of = scope:target_country }
+        scope:source_country = {
+            OR = {
+                is_subject = no
+                NOT = { is_subject_of = scope:target_country }
+            }
         }
-		
         custom_tooltip = {
-            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            text = DUPLICATE_ARTICLE_SAME_INPUTS_TREATY
             trigger_if = {
                 limit = {
                     exists = root.input_law
@@ -112,6 +97,9 @@
 					}
 				}
             }
+        }
+        custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS
             scope:treaty ?= {
                 NOT = {
                     any_scope_article_option = {
@@ -336,8 +324,33 @@
 
                 add = {
                     desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
-                    value = -25
+                    value = -30
+
+                    if = {
+                        limit = {
+                            NOT = { exists = scope:is_treaty_active }
+                            any_scope_treaty = {
+                                any_scope_article = {
+                                    has_type = law_commitment
+                                    source_country = scope:source_country
+                                }
+                            }
+                        }
+                        add = {
+                            value = -300
+                        }
+                    }
                 }
+
+				if = {
+					limit = {
+						has_law_or_variant = law_type:law_isolationism
+					}
+					add = {
+						desc = "law_isolationism"
+						add = -100
+					}
+				}
 
                 add = {
                     desc = "DIPLOMATIC_ACCEPTANCE_LIKES_LAW"
@@ -347,6 +360,20 @@
                             has_law = scope:article.input_law
                         }
                         add = 5
+                    }
+                }
+
+                if = {
+                    limit = {
+                        scope:article.input_law = law_type:law_slavery_banned
+                        OR = {
+                            has_strategy = ai_strategy_egalitarian_agenda
+                            has_strategy = ai_strategy_progressive_agenda
+                        }
+                    }
+                    add = {
+                        desc = "DIPLOMATIC_ACCEPTANCE_ANTI_SLAVERY"
+                        value = 15
                     }
                 }
 
@@ -375,7 +402,7 @@
 
                 add = {
                     desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
-                    value = -25
+                    value = -30
                 }
 
                 add = {
@@ -413,8 +440,8 @@
 
                 if = {
                     limit = {
-                        scope:article.input_law = law_type:law_type:law_HOS_monarch
-                        has_law = law_type:law_type:law_HOS_monarch
+                        scope:article.input_law = law_type:law_HOS_monarch
+                        has_law = law_type:law_HOS_monarch
                         country_rank >= rank_value:great_power
                         OR = {
                             has_strategy = ai_strategy_reactionary_agenda
@@ -435,19 +462,11 @@
                         OR = {
                             has_strategy = ai_strategy_progressive_agenda
                             ruler ?= {
-                                OR = { 
-									has_ideology = ideology:ideology_democratic
-									has_ideology = ideology:ideology_liberal
-								}
+                                character_is_democratic = yes
                             }
                             any_interest_group = {
                                 is_in_government = yes
-                                leader ?= { 
-									OR = { 
-										has_ideology = ideology:ideology_democratic
-										has_ideology = ideology:ideology_liberal
-									}
-								}
+                                leader ?= { character_is_democratic = yes }
                             }
                         }
                     }
@@ -537,4 +556,5 @@
 			}
 		}
 	}
+	
 }

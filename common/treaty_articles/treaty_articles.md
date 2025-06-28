@@ -21,7 +21,7 @@ In article 2, the source party is B and the target party is A.
 In article 3, which is a mutual article, there is neither a source nor a target party.
 
 ## Directed vs Mutual
-Additionally, only directed articles have source/target. Mutual articles have first/second. 
+Additionally, only directed articles have source/target. Mutual articles have first/second.
 Trying to ask for the "wrong" thing will result in errors as they're undefined.
 
 ## Target links for treaties / articles
@@ -55,6 +55,8 @@ some_treaty_article = {
     relations_improvement_min = 100
 
     icon = path/to/icon
+
+    maintenance_paid_by = source_country | target_country
 
     flags = {
         flag_1
@@ -98,7 +100,13 @@ some_treaty_article = {
 
     possible = { trigger block }
 
-    can_ratify = { trigger block }
+	requirement_to_maintain = { # Any number of these triggers can be added to set up the requirements to propose and maintain an article
+		trigger = {} # If this evaluates to false, the article will automatically break on next update
+
+		show_about_to_break_warning = {} # If this evaluates to true, the player will get an alert that this specific requirement to maintain is in danger of failing
+	}
+
+    can_ratify = { trigger block } # When can_ratify is checked, we also automatically check all requirements to maintain so they do not need to be duplicated here
 
     can_withdraw = { trigger block }
 
@@ -149,6 +157,7 @@ some_treaty_article = {
 
         inherent_accept_score = { script value }
         contextual_accept_score = { script value }
+		proposal_weight = { script value } # Multiplier on AI score for including an article in a treaty they are composing, root is composing AI country
 
         wargoal_score_multiplier = { script value }
     }
@@ -192,6 +201,11 @@ containing an article of this type. Progress is a percentage, when it reaches
 ## icon (default: empty)
 A path to the icon identifying this article type
 
+## maintenance_paid_by (default: empty)
+Must be specified for directed article types, must be unspecified for mutual article types.
+For directed article types, specified who pays the maintenance cost for an article of this type. Can either by the
+source country or the target country.
+
 ## flags (default: empty)
 A set of flags each of which determine some intrinsic behavior of the article.
 The game makes use of these flags in various situations and for a variety of
@@ -220,7 +234,6 @@ Currently, these are the supported flags:
 - `can_be_renegotiated`
 - `can_be_enforced`
 - `causes_state_transfer`
-- `recipient_pays_maintenance`
 
 ### flag behaviors
 
@@ -237,9 +250,6 @@ happened upon renegotiation.
 
 #### can_be_enforced
 This is what determines if an article is enforceable through a war goal or not.
-
-#### recipient_pays_maintenance
-Makes the target country in directed articles pay the influence cost of an article instead of the source
 
 ## required_inputs (default: empty)
 A set of inputs required by this article type, among the list of valid inputs
@@ -446,7 +456,7 @@ This data controls the ai willingness to entertain treaties containing this
 article type, and how much they value it
 
 ### evaluation_chance (default: 0)
-Determines how likely the AI is to add this article to a treaty when trying to build a proposal. 
+Determines how likely the AI is to add this article to a treaty when trying to build a proposal.
 Gets evaluated before anything else, if 0 the AI will never use it.
 Only has root scope for the country we're looking at.
 
@@ -480,7 +490,7 @@ If AI will offer or request an article. Can pick multiple
 - `will_request`
 
 ### Treaty Categories
-Broad groups of types of treaties that the AI will prioritize when trying to propose treaties. 
+Broad groups of types of treaties that the AI will prioritize when trying to propose treaties.
 The weights for which one the AI prefers are set in AI strategies
 The available options are:
 - `economy`
@@ -500,7 +510,7 @@ Integer. Limits the maximum acceptance gained from articles of this type being a
 Integer. Establishes the minimum acceptance gained from articles of this type being added to a treaty
 
 ### inherent_accept_score (default: 0)
-A script value determining the reasons for the AI to accept or reject a treaty. 
+A script value determining the reasons for the AI to accept or reject a treaty.
 Does not get reevaluated every time the AI tries to add an article, so it's more performant to put as much as possible here.
 
 #### inherent_accept_score scopes

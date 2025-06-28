@@ -12,6 +12,8 @@
 		can_be_renegotiated
 	}
 
+	maintenance_paid_by = source_country
+
 	automatically_support = {
 		dp_independence
 		dp_increase_autonomy
@@ -74,14 +76,8 @@
 
 	requirement_to_maintain = {
 		trigger = {
-			scope:source_country.country_rank >= scope:target_country.country_rank
-		}
-	}
-	
-	requirement_to_maintain = {
-		trigger = {
 			scope:source_country = {
-				is_sufficiently_independent = yes # Checks if they have diplomatic autonomy
+				NOT = { has_subject_relation_with = scope:target_country }
 				is_neutral = no
 			}
 		}
@@ -89,9 +85,26 @@
 
 	requirement_to_maintain = {
 		trigger = {
-			scope:target_country = { 
-				is_subject = yes 
-				NOT = { is_subject_of = scope:source_country }
+			scope:target_country = { is_subject = yes }
+		}
+	}
+
+	requirement_to_maintain = {
+		trigger = {
+			scope:target_country = {
+				save_temporary_scope_as = actor
+			}
+			custom_tooltip = {
+				text = "DIPLOMATIC_PACT_REQUIREMENT_HIGH_LIBERTY_DESIRE"
+				OR = {
+					scope:source_country = {
+						is_subject = no
+					}
+					scope:source_country = {
+						NOT = { overlord = scope:target_country.overlord }
+					}
+					scope:target_country.liberty_desire >= define:NDiplomacy|WAR_GOAL_INCREASE_AUTONOMY_MIN_LIBERTY_DESIRE
+				}
 			}
 		}
 	}
@@ -109,22 +122,21 @@
 	}
 
 	can_ratify = {
-		scope:target_country = {
-			is_subject = yes
-			NOT = { is_subject_of = scope:source_country }
-		}
 		scope:target_country.overlord ?= {
 			NOT = {
 				any_scope_treaty = {
 					binds = scope:source_country
 					any_scope_article = {
-						has_type = alliance
+						OR = {
+							has_type = alliance
+							has_type = defensive_pact
+						}
 					}
 				}
 			}
 		}
         custom_tooltip = {
-            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            text = DUPLICATE_ARTICLE_SAME_INPUTS_TREATY
             NOT = {
                 scope:source_country = {
                     any_scope_treaty = {
@@ -171,7 +183,7 @@
 			limit = {
 				scope:withdrawing_country = {
 					is_subject = no
-					scope:target_country = this
+					scope:target_country ?= this
 				}
 			}
 			scope:withdrawing_country = {
@@ -348,7 +360,7 @@
 						value = 30
 					}
 					else = {
-						value = -1000
+						value = -500
 					}
 				}
 			}
@@ -388,6 +400,9 @@
 
 				if = {
 					limit = {
+						scope:target_country ?= {
+							is_subject = yes # For arcane reasons that I will not go into we are repeating this check here
+						}
 						scope:source_country ?= {
 							is_subject = no
 						}
@@ -494,6 +509,7 @@
 			if = {
 				limit = {
 					scope:target_country ?= this
+					scope:source_country = { is_ai = no }
 					scope:treaty ?= {
 						NOT = {
 							any_scope_article_option = {
@@ -513,15 +529,7 @@
 			else_if = {
 				limit = {
 					scope:treaty ?= {
-						NOT = {
-							any_scope_article_option = {
-								NOT = { has_type = support_independence }
-							}
-						}
-						any_scope_article_option = {
-							count = 2
-							has_type = support_independence
-						}
+						is_equal_exchange = yes
 					}
 				}
 				add = {
@@ -531,4 +539,5 @@
 			}
 		}
 	}
+	
 }

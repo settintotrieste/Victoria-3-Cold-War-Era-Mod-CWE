@@ -11,13 +11,13 @@
 		is_investment_rights
 		can_be_enforced
 		can_be_renegotiated
-		recipient_pays_maintenance
 	}
 
+	maintenance_paid_by = target_country
 	usage_limit = once_per_side
 
 	unlocked_by_technologies = {
-		stock_exchange
+		
 	}
 
 	source_modifier = {
@@ -31,6 +31,9 @@
 	}
 
 	possible = {
+	}
+
+	requirement_to_maintain = {
 		
 		#Proper countries
 		is_not_revolutionary_or_decentralised = yes
@@ -68,7 +71,7 @@
 
 	can_ratify = {
         custom_tooltip = {
-            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            text = DUPLICATE_ARTICLE_SAME_INPUTS_TREATY
             NOT = {
                 scope:source_country = {
                     any_scope_treaty = {
@@ -142,9 +145,19 @@
 
 				if = {
 					limit = {
+						has_law_or_variant = law_type:law_isolationism
+					}
+					add = {
+						desc = "law_isolationism"
+						add = -100
+					}
+				}
+
+				if = {
+					limit = {
 						any_diplomatic_catalyst = {
 							is_diplomatic_catalyst_type = catalyst_declared_bankruptcy
-							target ?= scope:source_country
+							target ?= scope:target_country
 						}
 					}
 					add = {
@@ -167,17 +180,25 @@
 						max = 50
 					}
 				}
+				
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_GDP"
+					value = "scope:target_country.ai_gdp_comparison(scope:source_country)"
+					multiply = 10
+					min = -50
+					max = 10
+				}				
 
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_MUTUAL_TRADE_VALUE"
-					value = "mutual_trade_value_with_country(scope:source_country)"
+					value = "mutual_trade_value_with_country(scope:target_country)"
 					multiply = 50000
 					divide = { # We modulate this value by GDP, clamped to a range to ensure it remains relevant for very small/very large economies
 						value = gdp
-						max = scope:source_country.gdp # We use whichever GDP is smaller
+						max = scope:target_country.gdp # We use whichever GDP is smaller
 						min = 1000000
 					}
-					max = 25
+					max = 10
 				}
 
 				add = {
@@ -186,15 +207,15 @@
 						limit = {
 							OR = {
 								has_attitude = {
-									who = scope:source_country
+									who = scope:target_country
 									attitude = antagonistic
 								}
 								has_attitude = {
-									who = scope:source_country
+									who = scope:target_country
 									attitude = belligerent
 								}
 								has_attitude = {
-									who = scope:source_country
+									who = scope:target_country
 									attitude = rebellious
 								}
 							}
@@ -216,13 +237,16 @@
 					value = -10
 				}
 
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_GDP"
-					value = "scope:source_country.ai_gdp_comparison(scope:target_country)"
-					min = -50
-					max = 50
+				if = {
+					limit = {
+						has_law_or_variant = law_type:law_isolationism
+					}
+					add = {
+						desc = "law_isolationism"
+						add = -100
+					}
 				}
-
+				
 				if = {
 					limit = {
 						scope:target_country ?= {
@@ -242,7 +266,7 @@
 					}
 					add = {
 						desc = "DIPLOMATIC_ACCEPTANCE_ECONOMIC_IMPERIALISM"
-						add = 50
+						add = 25
 					}
 				}
 
@@ -257,7 +281,7 @@
 					}
 					add = {
 						desc = "catalyst_declared_bankruptcy"
-						add = 50
+						add = 25
 					}
 				}
 
@@ -270,8 +294,17 @@
 						max = scope:source_country.gdp # We use whichever GDP is smaller
 						min = 1000000
 					}
-					max = 50
+					max = 25
 				}
+				
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_GDP"
+					value = "scope:source_country.ai_gdp_comparison(scope:target_country)"
+					add = 10.0 # Bonus if they have at least 10% of the target's GDP
+					multiply = 5
+					min = 0
+					max = 25
+				}				
 
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
@@ -315,22 +348,6 @@
 								}
 							}
 						}
-						value = -100
-					}
-				}
-
-				if = {
-					limit = {
-						scope:target_country = {
-							c:CHI ?= THIS
-							OR = {
-								country_rank >= rank_value:unrecognized_major_power
-								country_rank >= rank_value:great_power
-							}
-						}
-					}
-					add = {
-						desc = "DIPLOMATIC_ACCEPTANCE_IS_CHINA"
 						value = -100
 					}
 				}
@@ -387,7 +404,7 @@
 					}
 					add = {
 						desc = "LOBBY_OPPORTUNITY_BONUS"
-						value = 20
+						value = 10
 					}
 				}
 
@@ -400,7 +417,7 @@
 					}
 					add = {
 						desc = "LOBBY_OPPORTUNITY_BONUS"
-						value = 10
+						value = 5
 					}
 				}
 			}
@@ -468,4 +485,5 @@
 			}
 		}
 	}
+	
 }

@@ -7,22 +7,24 @@
 	flags = {
 		causes_state_transfer
 	}
+	
+	usage_limit = once_per_side_with_same_inputs
+
+	maintenance_paid_by = source_country
 
     required_inputs = {
 		state
     }
 
 	visible = {
-	
-		is_not_revolutionary_or_decentralised = yes
-		
+		#is_not_revolutionary_or_decentralised = yes
 	}
 
 	possible = {
 	
 		#Proper countries
 		is_not_revolutionary_or_decentralised = yes
-		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
+		#scope:other_country = { is_not_revolutionary_or_decentralised = yes }
 		
 		#Both parties are sufficiently independent
 		OR = { 
@@ -144,26 +146,33 @@
 			change_relations = {
 				country = scope:non_withdrawing_country
 				value = {
-					add = -10
-					multiply = {
-						value = scope:treaty_options.remaining_binding_period
-						min = 365
-						divide = 365
+					value = -50
+					add = {
+						value = -50
+						multiply = {
+							value = scope:treaty_options.remaining_binding_period
+							min = 365
+							divide = 365
+						}
 					}
-					max = -10
-					min = -50
+					max = -50
+					min = -100
 				}
 			}
 			change_infamy = {
 				value = {
-					add = 3
-					multiply = {
-						value = scope:treaty_options.remaining_binding_period
-						min = 365
-						divide = 365
+					value = 25
+					add = {
+						value = 25
+						multiply = {
+							value = scope:treaty_options.remaining_binding_period
+							min = 365
+							divide = 365
+							divide = 25
+						}
 					}
+					min = 25
 					max = 50
-					min = 10
 				}
 			}
 		}
@@ -183,14 +192,25 @@
             request
         }
 
-		inherent_accept_score = {
+		contextual_accept_score = {
 			value = 0
 
 			if = {
 				limit = {
+					scope:treaty ?= { is_renegotiation = yes }		
+				}
+				
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ALREADY_TRADED_STATE"
+					value = -1000
+				}			
+			}
+			else_if = {
+				limit = {
 					exists = scope:article.input_state
 					scope:source_country ?= this
-					scope:article.input_state.ai_state_value:root > 0
+					NOT = { exists = scope:is_treaty_active }
+					scope:article.input_state.ai_state_value:root > 0									
 				}
 				subtract = {
 					value = scope:article.input_state.ai_state_value:root
@@ -227,6 +247,7 @@
 				limit = {
 					exists = scope:article.input_state
 					scope:target_country ?= this
+					NOT = { exists = scope:is_treaty_active }
 					scope:article.input_state.ai_state_value:root > 0
 				}
 				add = {
@@ -234,21 +255,20 @@
 					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_TARGET"
 				}
 			}
-			else = {
+			else_if = {
+				limit = { NOT = { exists = scope:is_treaty_active } }
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_REJECT"
 					value = -300
 				}
-			}
-		}
-
-		contextual_accept_score = {
-			value = 0
-
+			}			
+			
 			if = {
 				limit = {
 					exists = scope:article.input_state
 					scope:target_country ?= this
+					scope:source_country = { is_ai = no }
+					NOT = { exists = scope:is_treaty_active }
 				}
 				if = {
 					limit = { scope:article.input_state.ai_state_value:root > 0 }
@@ -275,4 +295,5 @@
 			}
 		}
 	}
+	
 }

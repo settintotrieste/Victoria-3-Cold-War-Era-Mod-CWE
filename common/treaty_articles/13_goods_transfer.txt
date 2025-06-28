@@ -1,6 +1,6 @@
 ﻿goods_transfer = {
     kind = directed
-    cost = 25
+    cost = 10
 
     relations_progress_per_day = 0.1
     relations_improvement_max = 20
@@ -13,6 +13,8 @@
 		can_be_renegotiated
 	}
 
+	maintenance_paid_by = source_country
+
     required_inputs = {
         quantity
         goods
@@ -23,14 +25,24 @@
     }
 
 	visible = {
-		is_not_revolutionary_or_decentralised = yes
         is_junior_in_customs_union = no
 	}
 
 	possible = {
-		is_not_revolutionary_or_decentralised = yes
-        is_junior_in_customs_union = no
         is_market_reachable_for_trade = scope:other_country.market
+        OR = {
+            AND = {
+                any_scope_state = {
+                    has_port = yes
+                }
+                scope:other_country = {
+                    any_scope_state = {
+                        has_port = yes
+                    }
+                }
+            }
+            is_adjacent_to_country = scope:other_country
+        }
 	}
 
     non_fulfillment = {
@@ -40,8 +52,15 @@
             weekly = {
                 scope:article = {
 					OR = {
-						"input_market_goods(scope:article.source_country)" = {
-							market_goods_production < 1
+                        source_country = {
+                            supply_network_strength < 0.25
+                            NOT = { is_adjacent_to_country = scope:article.target_country }
+                        }
+						"scope:article.input_market_goods(scope:article.source_country)" = {
+                            OR = {
+    							market_goods_production < 1
+                                market_goods_pricier > 0.70
+                            }
 						}
                         NOT = { scope:article.source_country = { is_market_reachable_for_trade = scope:article.target_country.market } }
 					}
@@ -59,8 +78,20 @@
             market.owner ?= scope:target_country
         }
 
+        "scope:article.input_market_goods(scope:source_country)" = {
+  		    market_goods_production > 1
+            market_goods_pricier < 0.70
+		}
+
+        scope:source_country = {
+            OR = {
+                supply_network_strength >= 0.5
+                is_adjacent_to_country = scope:target_country
+            }
+        }
+
         custom_tooltip = {
-            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            text = DUPLICATE_ARTICLE_SAME_INPUTS_TREATY
             NOT = {
                 scope:source_country = {
                     any_scope_treaty = {
@@ -81,6 +112,9 @@
                     }
                 }
             }
+        }
+        custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS
             scope:treaty ?= {
                 NOT = {
                     any_scope_article_option = {
@@ -123,14 +157,21 @@
 
         if = {
             limit = {
-                exists = "scope:article.input_market_goods(root)"
-                exists = "scope:article.input_market_goods(scope:other_country)"
+                exists = "scope:article.input_market_goods(scope:source_country)"
+                exists = "scope:article.input_market_goods(scope:target_country)"
             }
-            "scope:article.input_market_goods(scope:other_country)" ?= {
-                add = market_goods_delta
-                multiply = 2
-                multiply = -1
-                add = 10
+            "scope:article.input_market_goods(scope:target_country)" ?= {
+                add = market_import_cap
+                subtract = treaty_imports
+            }
+
+            max = {
+                "scope:article.input_market_goods(scope:source_country)" ?= {
+                    value = {
+                        add = market_export_cap
+                        subtract = treaty_exports
+                    }
+                }
             }
         }
 
@@ -185,7 +226,7 @@
         }
 
 		evaluation_chance = {
-            value = 0.1
+            value = 0.2
         }
 
         article_ai_usage = {
@@ -264,8 +305,8 @@
                         "scope:article.input_market_goods(root)" ?= {
                             goods ?= {
                                 OR = {
-                                    g:explosives ?= this
-                                    g:fertilizer ?= this
+                                    g:steel ?= this
+                                    g:industrial_chemicals ?= this
                                 }
                             }
                         }
@@ -308,7 +349,6 @@
                                     g:oil ?= this
                                     g:lead ?= this
                                     g:wood ?= this
-                                    g:hardwood ?= this
                                     g:sulfur ?= this
                                 }
                             }
@@ -327,13 +367,9 @@
                                 OR = {
                                     g:fruit ?= this
                                     g:fabric ?= this
-                                    g:sugar ?= this
                                     g:coffee ?= this
                                     g:tea ?= this
-                                    g:opium ?= this
                                     g:tobacco ?= this
-                                    g:dye ?= this
-                                    g:silk ?= this
                                 }
                             }
                         }
@@ -413,7 +449,7 @@
                                     g:coal ?= this
                                     g:iron ?= this
                                     g:steel ?= this
-                                    g:tools ?= this
+                                    g:industrial_robots ?= this
                                     g:lead ?= this
                                     g:wood ?= this
                                     g:sulfur ?= this
@@ -434,8 +470,8 @@
                         "scope:article.input_market_goods(root)" ?= {
                             goods ?= {
                                 OR = {
-                                    g:fertilizer ?= this
-                                    g:tools ?= this
+                                    g:industrial_chemicals ?= this
+                                    g:industrial_robots ?= this
                                 }
                             }
                         }
@@ -451,8 +487,8 @@
                         "scope:article.input_market_goods(root)" ?= {
 						    goods ?= {
 								OR = {
-									g:explosives ?= this
-									g:tools ?= this
+									g:industrial_chemicals ?= this
+									g:industrial_robots ?= this
 								}
 							}
                         }
@@ -538,4 +574,5 @@
 			}
 		}
 	}
+	
 }

@@ -21,18 +21,14 @@
     }
 
     unlocked_by_technologies = {
-        corporate_charters
+        
     }
 
 	visible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
-        #has_dlc_feature = mp1_treaties
+		is_not_revolutionary_or_decentralised = yes
 	}
 
 	possible = {
-		NOT = { is_country_type = decentralized }
-		is_revolutionary = no
 		scope:other_country = {
 			any_company = {
 				owner = prev
@@ -60,9 +56,25 @@
 			scope:source_country = {
 				is_subject_of = scope:target_country
 			}
+			scope:source_country.top_overlord ?= {
+				any_scope_treaty = {
+					binds = scope:target_country
+					any_scope_article = {
+						has_type = foreign_investment_rights
+						source_country = scope:source_country.top_overlord
+					}
+				}
+			}
+			scope:source_country.power_bloc ?= {
+				has_principle = principle:principle_foreign_investment_3
+				any_power_bloc_member = {
+					this = scope:target_country
+				}
+				scope:target_country.country_rank > scope:source_country.country_rank
+			}
 		}
         custom_tooltip = {
-            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            text = DUPLICATE_ARTICLE_SAME_INPUTS_TREATY
 			trigger_if = {
 				limit = {
 					exists = root.input_building_type
@@ -87,16 +99,6 @@
 					}
 				}
 			}
-            scope:treaty ?= {
-                NOT = {
-                    any_scope_article_option = {
-                        count > 1
-                        has_type = acquire_monopoly_for_company
-                        source_country = scope:source_country
-                        input_building_type = root.input_building_type
-                    }
-                }
-            }
         }
     }
 
@@ -151,6 +153,9 @@
 		article_ai_usage = {
             request
         }
+
+		combined_acceptance_cap_max = 50
+		combined_acceptance_cap_min = -500
 
 		inherent_accept_score = {
 			value = 0
@@ -226,8 +231,8 @@
 							}
 						}
 					}
-					max = 100
-					min = 20
+					max = 200
+					min = 50
 				}
 			}
 			else_if = {
@@ -308,4 +313,5 @@
 			}
 		}
 	}
+	
 }

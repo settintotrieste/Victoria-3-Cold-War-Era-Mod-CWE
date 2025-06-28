@@ -8,6 +8,7 @@
 		is_take_on_debt
 	}
 
+	maintenance_paid_by = source_country
 	usage_limit = once_per_treaty
 
 	unlocked_by_technologies = {
@@ -141,47 +142,31 @@
 
 					if = {
 						limit = {
-							scope:target_country.scaled_debt < 0.4
+							scope:source_country.gold_reserves > 0
 						}
-						value = -40
+						subtract = {
+							value = scope:target_country.principal
+							divide = scope:source_country.gold_reserves
+							multiply = 50
+						}
 					}
+
 					if = {
 						limit = {
-							scope:target_country.scaled_debt >= 0.4
-							scope:target_country.scaled_debt < 0.6
+							scope:target_country.principal > scope:source_country.gold_reserves
 						}
-						value = -50
+						value = -300
 					}
-					if = {
-						limit = {
-							scope:target_country.scaled_debt >= 0.6
-							scope:target_country.scaled_debt < 0.8
-						}
-						value = -75
-					}
-					if = {
-						limit = {
-							scope:target_country.scaled_debt >= 0.8
-							scope:target_country.scaled_debt < 0.9
-						}
-						value = -100
-					}
-					if = {
-						limit = {
-							scope:target_country.scaled_debt >= 0.9
-							scope:target_country = {
-								in_default = no
-							}
-						}
-						value = -150
-					}
-					if = {
-						limit = {
-							scope:target_country = {
-								in_default = yes
-							}
-						}
-						value = -200
+				}
+
+				multiply = {
+					desc = "concept_rank"
+					value = 1
+
+					add = {
+						value = 10
+						subtract = scope:target_country.country_rank
+						divide = 10
 					}
 				}
 
@@ -321,7 +306,7 @@
 						limit = {
 							in_default = yes
 						}
-						value = 50
+						value = 40
 					}
 				}
 			}
@@ -333,6 +318,7 @@
 			if = {
 				limit = {
 					scope:target_country ?= this
+					scope:source_country = { is_ai = no }
 					scope:treaty ?= {
 						NOT = {
 							any_scope_article_option = {
@@ -351,4 +337,5 @@
 			}
 		}
 	}
+	
 }
