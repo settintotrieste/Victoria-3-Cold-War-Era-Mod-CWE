@@ -147,6 +147,8 @@ decree_events.2 = {
 
 	duration = 3
 	
+	cooldown = { days = very_long_modifier_time }
+	
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 
 	icon = "gfx/interface/icons/event_icons/event_industry.dds"
@@ -177,43 +179,27 @@ decree_events.2 = {
 				is_incorporated = yes
 				has_decree = decree_road_maintenance
 				state_region = {
-					pollution_amount > 75
+					pollution_amount > 50
 				}
 			}
 			save_scope_as = decree_state
+			set_variable = {
+				name = pollution_amount
+				value = state_region.pollution_amount
+			}
+			change_variable = {
+				name = pollution_amount
+				multiply = -0.50
+			}
 		}
 		random_interest_group = {
 			limit = {
 				law_stance = {
-					law = law_type:law_charitable_health_system
+					law = law_type:law_no_health_system
 					value < neutral
 				}
 			}
 			save_scope_as = ecology_ig
-		}
-	}
-	
-	option = { #take measures
-		name = decree_events.2.a
-		default_option = yes
-		trigger = {
-			scope:decree_state.state_region = {
-				pollution_amount < 150
-			}
-		}
-		add_modifier = {
-			name = addressed_pollution_modifier
-			multiplier = money_amount_multiplier_medium
-			days = normal_modifier_time
-		}
-		scope:ecology_ig = {
-			add_modifier = {
-				name = good_pollution_modifier
-				days = normal_modifier_time
-			}
-		}
-		scope:decree_state.state_region = {
-			add_pollution = -50
 		}
 	}
 	
@@ -229,23 +215,25 @@ decree_events.2 = {
 			}
 		}
 	}
-	
-	option = { #super big pollution 
+
+	option = { #take measures
 		name = decree_events.2.a
+		default_option = yes
 		trigger = {
 			scope:decree_state.state_region = {
-				pollution_amount >= 150
+				pollution_amount >= 50
 			}
 		}
 		add_modifier = {
 			name = addressed_pollution_modifier
-			multiplier = money_amount_multiplier_small
+			multiplier = money_amount_multiplier_very_small
 			days = normal_modifier_time
 		}
 		scope:decree_state.state_region = {
-			add_pollution = -75
+			add_pollution = scope:decree_state.var:pollution_amount
 		}
 	}
+	
 }
 
 # David Copperfield (a lowborn man becomes important IG leader)
@@ -373,6 +361,7 @@ decree_events.4 = {
 				}
 			}
 		}
+		naval_power_projection > 0 # You must have at least a single boat for the admiral to crew
 	}
 	
 	immediate = {
@@ -466,8 +455,10 @@ decree_events.5 = {
 	title = decree_events.5.t
 	desc = decree_events.5.d
 	flavor = decree_events.5.f
-	
+
 	duration = 3
+
+	cooldown = { days = stupidly_long_modifier_time }
 
 	event_image = {
 		video = "unspecific_world_fair"
@@ -476,13 +467,13 @@ decree_events.5 = {
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 
 	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
-	
+
 	trigger = {
 		any_scope_state = {
 			is_incorporated = yes
 			has_decree = decree_promote_national_values
 			any_scope_building = {
-				is_building_type = building_retail_services_industry
+				is_building_type = building_arts_academy
 			}
 		}
 		income >= 400
@@ -491,7 +482,7 @@ decree_events.5 = {
 			has_modifier = opera_didnt_pay_modifier
 		}
 	}
-	
+
 	immediate = {
 		random_scope_state = {
 			limit = {
@@ -501,19 +492,19 @@ decree_events.5 = {
 			save_scope_as = decree_state
 			random_scope_building = {
 				limit = {
-					is_building_type = building_retail_services_industry
+					is_building_type = building_arts_academy
 				}
 				save_scope_as = decree_building
 			}
 		}
 	}
-	
-	option = { #comission an important artist
+
+	option = { #commission an important artist
 		name = decree_events.5.a
 		default_option = yes
 		add_modifier = {
 			name = opera_modifier
-			days = normal_modifier_time
+			days = long_modifier_time
 			multiplier = 2
 		}
 
@@ -523,12 +514,12 @@ decree_events.5 = {
 			multiplier = money_amount_multiplier_small
 		}
 	}
-	
+
 	option = { #get a cheaper guy to do it
 		name = decree_events.5.b
 		add_modifier = {
 			name = opera_modifier
-			days = normal_modifier_time
+			days = long_modifier_time
 		}
 
 		add_modifier = {
@@ -537,22 +528,23 @@ decree_events.5 = {
 			multiplier = money_amount_multiplier_very_small
 		}
 	}
-	
-	option = { #comission the expensive one, refuse to pay
+
+	option = { #commission the expensive one, refuse to pay
 		name = decree_events.5.c
 		add_modifier = {
 			name = opera_didnt_pay_modifier
-			days = normal_modifier_time
+			days = long_modifier_time
 		}
-		ig:ig_petty_bourgeoisie = {
+		ig:ig_intelligentsia = {
 			add_modifier = {
 				name = refused_to_pay_modifier
 				days = normal_modifier_time
+				multiplier = 2
 			}
 		}
 		scope:decree_state = {
 			add_radicals_in_state = {
-				value = medium_radicals
+				value = very_large_radicals
 				pop_type = academics
 			}
 		}
