@@ -26,6 +26,9 @@
 
 	visible = {
         is_junior_in_customs_union = no
+		scope:other_country ?= {
+           is_junior_in_customs_union = no
+        }
 	}
 
 	possible = {
@@ -41,7 +44,7 @@
                     }
                 }
             }
-            is_adjacent_to_country = scope:other_country
+            market = { is_adjacent_to_market = scope:other_country.market }
         }
 	}
 
@@ -53,16 +56,21 @@
                 scope:article = {
 					OR = {
                         source_country = {
-                            supply_network_strength < 0.25
-                            NOT = { is_adjacent_to_country = scope:article.target_country }
+                            supply_network_strength < 0.5
+                            NOT = { market = { is_adjacent_to_market = scope:article.target_country.market } }
                         }
 						"scope:article.input_market_goods(scope:article.source_country)" = {
-                            OR = {
-    							market_goods_production < 1
-                                market_goods_pricier > 0.70
-                            }
+							treaty_exports > market_export_cap
 						}
-                        NOT = { scope:article.source_country = { is_market_reachable_for_trade = scope:article.target_country.market } }
+                        NOT = { source_country = { is_market_reachable_for_trade = scope:article.target_country.market } }
+						source_country = {
+							NOR = {
+								market = { is_adjacent_to_market = scope:article.target_country.market }
+								any_scope_state = {
+									has_port = yes
+								}
+							}
+						}
 					}
                 }
             }
@@ -72,20 +80,8 @@
     # root = article
     can_ratify = {
         scope:source_country = {
-            market.owner ?= scope:source_country
-        }
-        scope:target_country = {
-            market.owner ?= scope:target_country
-        }
-
-        "scope:article.input_market_goods(scope:source_country)" = {
-  		    market_goods_production > 1
-            market_goods_pricier < 0.70
-		}
-
-        scope:source_country = {
             OR = {
-                supply_network_strength >= 0.5
+                supply_network_strength >= 0.75
                 is_adjacent_to_country = scope:target_country
             }
         }
@@ -138,14 +134,15 @@
 	}
 
     goods_valid_trigger = {
-        root.market = {
-            scope:market_goods = {
-                market_goods_delta >= 10
-            }
-        }
-        scope:input = {
+       scope:input = {
             is_tradeable = yes
         }
+		scope:market_goods ?= {
+			treaty_exports < market_export_cap
+		}
+		scope:other_market_goods ?= {
+			treaty_imports < market_import_cap
+		}
     }
 
     quantity_min_value = {
@@ -240,6 +237,10 @@
 		inherent_accept_score = {
 			value = 0
 
+			scope:article.input_goods = {
+				save_temporary_scope_as = input
+			}
+
             if = {
                 limit = {
                     exists = "scope:article.input_market_goods(root)"
@@ -256,7 +257,7 @@
                 }
 
                 add = {
-                    desc = "DIPLOMATIC_ACCEPTANCE_INPUT_QUANTITY"
+                    desc = "DIPLOMATIC_ACCEPTANCE_INPUT_QUANTITY_GOODS"
 					value = scope:article.input_quantity
 					multiply = {
                         "scope:article.input_market_goods(root)" ?= {
@@ -397,7 +398,7 @@
                 }
 
                 add = {
-                    desc = "DIPLOMATIC_ACCEPTANCE_INPUT_QUANTITY"
+                    desc = "DIPLOMATIC_ACCEPTANCE_INPUT_QUANTITY_GOODS"
                     value = scope:article.input_quantity
 					multiply = {
                         "scope:article.input_market_goods(root)" ?= {
@@ -525,11 +526,16 @@
 	}
 
 	wargoal = {
-		execution_priority = 60
-		contestion_type = control_target_country_capital
+		execution_priority = 21
+		contestion_type = control_any_target_incorporated_state
 
 		maneuvers = {
-			value = 2.5
+			value = 0
+
+			add = {
+				desc = "MANEUVERS_BASE_VALUE"
+				value = 2.5
+			}
 
 			if = {
 				limit = {
@@ -538,6 +544,7 @@
 				}
 
 				add = {
+					desc = "MANEUVERS_QUANTITY_FACTOR"
 					value = scope:quantity
 					divide = {
 						value = scope:market_goods.market_goods_sell_orders
@@ -561,6 +568,7 @@
 				}
 
 				add = {
+					desc = "INFAMY_QUANTITY_FACTOR"
 					value = scope:quantity
 					divide = {
 						value = scope:market_goods.market_goods_sell_orders

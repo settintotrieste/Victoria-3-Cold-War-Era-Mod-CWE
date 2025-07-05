@@ -6,6 +6,7 @@
 
 	flags = {
 		causes_state_transfer
+		giftable
 	}
 	
 	usage_limit = once_per_side_with_same_inputs
@@ -202,30 +203,45 @@
             request
         }
 
-		contextual_accept_score = {
+		inherent_accept_score = {
 			value = 0
 
 			if = {
 				limit = {
-					scope:treaty ?= { is_renegotiation = yes }		
+					exists = scope:is_renegotiation
 				}
-				
+
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_ALREADY_TRADED_STATE"
 					value = -1000
-				}			
+				}
 			}
 			else_if = {
 				limit = {
 					exists = scope:article.input_state
 					scope:source_country ?= this
 					NOT = { exists = scope:is_treaty_active }
-					scope:article.input_state.ai_state_value:root > 0									
+					scope:article.input_state.ai_state_value:root > 0
 				}
 				subtract = {
+					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_SOURCE"
 					value = scope:article.input_state.ai_state_value:root
 					min = 100
-					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_SOURCE"
+
+					if = {
+						limit = {
+							scope:article.input_state = {
+								any_neighbouring_state = {
+									owner = scope:source_country
+									OR = {
+										is_incorporated = yes
+										ai_can_incorporate_state = yes
+									}
+								}
+							}
+						}
+						min = 200
+					}
 
 					if = {
 						limit = {
@@ -242,7 +258,7 @@
 
 				if = {
 					limit = {
-						exists =  scope:target_country.var:recently_traded_states_counter
+						exists = scope:target_country.var:recently_traded_states_counter
 						scope:target_country.var:recently_traded_states_counter > 0
 					}
 					add = {
@@ -270,37 +286,6 @@
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_REJECT"
 					value = -300
-				}
-			}			
-			
-			if = {
-				limit = {
-					exists = scope:article.input_state
-					scope:target_country ?= this
-					scope:source_country = { is_ai = no }
-					NOT = { exists = scope:is_treaty_active }
-				}
-				if = {
-					limit = { scope:article.input_state.ai_state_value:root > 0 }
-					if = {
-						limit = {
-							scope:target_country ?= this
-							scope:treaty ?= {
-								NOT = {
-									any_scope_article_option = {
-										OR = {
-											source_country ?= scope:target_country
-											is_giftable_treaty_article = no
-										}
-									}
-								}
-							}
-						}
-						add = {
-							desc = "DIPLOMATIC_ACCEPTANCE_GIFT"
-							value = 200
-						}
-					}
 				}
 			}
 		}
