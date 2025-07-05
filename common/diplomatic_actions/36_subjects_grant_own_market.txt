@@ -47,22 +47,7 @@
 		}
 		
 		actor_can_break = {
-			trigger_if = {
-				limit = { scope:target_country = { is_non_customs_union_subject = yes } }
-				scope:actor = {
-					ruler ?= {
-						character_is_democratic = yes
-						interest_group = {
-							law_stance = {
-								law = law_type:law_free_trade
-								value >= approve
-							}
-						}
-					}
-				}
-			}
 			scope:target_country = { is_a_very_autonomous_subject = no }
-			scope:actor = { government_has_legislative_simple_majority = yes }
 		}
 		
 		manual_break_effect = {
@@ -74,6 +59,7 @@
 					}
 					add_liberty_desire = 50
 					scope:actor = { change_infamy = 10 }
+					change_relations = { country = scope:actor value = -50 }
 				}
 				else = {
 					add_liberty_desire = 25
@@ -121,7 +107,7 @@
 					add = -5
 				}
 			}				
-		}		
+		}
 	}
 	
 	ai = {
@@ -135,17 +121,15 @@
 		}
 	
 		will_propose = {
-			NOT = { is_adjacent_to_country = scope:target_country }
-			scope:target_country.capital = { is_isolated_from_market = yes }						
-		}
-		
-		will_break = {
-			NAND = {
-				scope:target_country = { is_non_customs_union_subject = yes }
-				scope:actor = { 
-					ruler ?= {
-						OR = {
-							character_is_democratic = yes
+			OR = { 
+				AND = { 
+					NOT = { is_adjacent_to_country = scope:target_country }
+					scope:target_country.capital = { is_isolated_from_market = yes }
+				}
+				AND = {
+					scope:target_country = { is_non_customs_union_subject = yes }
+					scope:actor = { 
+						ruler ?= {
 							interest_group = {
 								law_stance = {
 									law = law_type:law_free_trade
@@ -153,6 +137,28 @@
 								}
 							}
 						}
+					}
+				}
+			}
+		}
+		
+		will_break = {
+			NAND = {
+				scope:target_country = { is_non_customs_union_subject = yes }
+				scope:actor = { 
+					OR = { 
+						ruler ?= {
+							OR = {
+								character_is_democratic = yes
+								interest_group = {
+									law_stance = {
+										law = law_type:law_free_trade
+										value < approve
+									}
+								}
+							}
+						}
+						infamy >= infamy_threshold:infamous
 					}
 				}
 			}
