@@ -163,7 +163,7 @@ some_treaty_article = {
     }
 
     wargoal = {
-        execution_priority = 60
+        execution_priority = 21
 
         maneuvers = { script value }
 

@@ -11,6 +11,8 @@
 		is_trade_privilege
 		can_be_enforced
 		can_be_renegotiated
+		giftable
+		friendly
 	}
 
 	maintenance_paid_by = target_country
@@ -20,7 +22,7 @@
         
     }
 
-	target_modifier = {
+	source_modifier = {
 		country_treaty_leverage_generation_add = 300
 	}
 
@@ -158,6 +160,11 @@
 					save_temporary_scope_as = actor
 				}
 
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = -25
+				}
+
 				if = {
 					limit = {
 						has_law_or_variant = law_type:law_isolationism
@@ -185,6 +192,7 @@
 						max = scope:target_country.gdp # We use whichever GDP is smaller
 						min = 1000000
 					}
+					min = 1
 					max = 10
 				}
 
@@ -243,9 +251,14 @@
 				}
 
 				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = -5
+				}
+
+				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_GDP"
 					value = "scope:source_country.ai_gdp_comparison(root)"
-					multiply = 2
+					multiply = 4
 					min = -10
 					max = 10
 				}
@@ -253,13 +266,14 @@
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_MUTUAL_TRADE_VALUE"
 					value = "mutual_trade_value_with_country(scope:source_country)"
-					multiply = 50000
+					multiply = 100000
 					divide = { # We modulate this value by GDP, clamped to a range to ensure it remains relevant for very small/very large economies
 						value = gdp
 						max = scope:source_country.gdp # We use whichever GDP is smaller
 						min = 1000000
 					}
-					max = 10
+					min = 1
+					max = 25
 				}
 
 				add = {
@@ -379,131 +393,25 @@
 					}
 				}
 			}
-
-			add = {
-				desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
-				value = -15
-			}
-
-			if = { # if we are only trading Trade Privileges
-				limit = {
-					scope:treaty ?= {
-						is_equal_exchange = yes
-					}
-				}
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_EQUAL_EXCHANGE"
-					value = 5
-
-					if = {
-						limit = {
-							scope:source_country ?= this
-						}
-						add = {
-							value = "mutual_trade_value_with_country(scope:target_country)"
-							multiply = 50000
-							divide = { # We modulate this value by GDP, clamped to a range to ensure it remains relevant for very small/very large economies
-								value = gdp
-								max = scope:target_country.gdp # We use whichever GDP is smaller
-								min = 1000000
-							}
-							min = 0
-							max = 5
-						}
-					}
-					else = {
-						add = {
-							value = "mutual_trade_value_with_country(scope:source_country)"
-							multiply = 50000
-							divide = { # We modulate this value by GDP, clamped to a range to ensure it remains relevant for very small/very large economies
-								value = gdp
-								max = scope:source_country.gdp # We use whichever GDP is smaller
-								min = 1000000
-							}
-							min = 0
-							max = 5
-						}
-					}
-				}
-			}
-			else_if = { # if we are trading Trade Privileges but also other stuff
-				limit = {
-					scope:treaty ?= {
-						is_equal_exchange = yes
-						any_scope_article_option = {
-							NOT = { has_type = trade_privilege }
-						}
-					}
-				}
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_EQUAL_EXCHANGE"
-					value = 5
-
-					if = {
-						limit = {
-							scope:source_country ?= this
-						}
-						add = {
-							value = "mutual_trade_value_with_country(scope:target_country)"
-							multiply = 50000
-							divide = { # We modulate this value by GDP, clamped to a range to ensure it remains relevant for very small/very large economies
-								value = gdp
-								max = scope:target_country.gdp # We use whichever GDP is smaller
-								min = 1000000
-							}
-							min = 0
-							max = 5
-						}
-					}
-					else = {
-						add = {
-							value = "mutual_trade_value_with_country(scope:source_country)"
-							multiply = 50000
-							divide = { # We modulate this value by GDP, clamped to a range to ensure it remains relevant for very small/very large economies
-								value = gdp
-								max = scope:source_country.gdp # We use whichever GDP is smaller
-								min = 1000000
-							}
-							min = 0
-							max = 5
-						}
-					}
-				}
-			}
-
-			if = {
-				limit = {
-					scope:target_country ?= this
-					scope:source_country = { is_ai = no }
-					scope:treaty ?= {
-						NOT = {
-							any_scope_article_option = {
-								OR = {
-									source_country ?= scope:target_country
-									is_giftable_treaty_article = no
-								}
-							}
-						}
-					}
-				}
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_GIFT"
-					value = 200
-				}
-			}
 		}
 	}
 
 	wargoal = {
-		execution_priority = 60
+		execution_priority = 21
 
 		contestion_type = control_any_target_country_state
 
 		maneuvers = {
-			value = 2.5
+			value = 0
+
+			add = {
+				desc = "MANEUVERS_BASE_VALUE"
+				value = 2.5
+			}
 
 			scope:target_country = {
 				multiply = {
+					desc = "MANEUVERS_TARGET_COUNTRY_POPULATION_FACTOR"
 					value = total_population
 					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
 					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
@@ -513,10 +421,16 @@
 		}
 
 		infamy = {
-			value = 0.25
+			value = 0
+
+			add = {
+				desc = "INFAMY_BASE_VALUE"
+				value = 0.25
+			}
 
 			scope:target_country = {
 				multiply = {
+					desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
 					value = total_population
 					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
 					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
@@ -525,5 +439,4 @@
 			}
 		}
 	}
-	
 }
