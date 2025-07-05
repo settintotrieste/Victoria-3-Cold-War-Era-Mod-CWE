@@ -310,6 +310,10 @@
 		inherent_accept_score = {
 			value = 0
 
+            scope:article.input_law = {
+                save_temporary_scope_as = input
+            }
+
             if = {
                 limit = {
                     scope:source_country ?= this
@@ -322,9 +326,16 @@
                     }
                 }
 
+				scope:source_country = {
+					save_temporary_scope_as = target
+				}
+				scope:target_country = {
+					save_temporary_scope_as = actor
+				}
+
                 add = {
                     desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
-                    value = -30
+                    value = -100
 
                     if = {
                         limit = {
@@ -352,6 +363,27 @@
 					}
 				}
 
+				if = {
+					limit = {
+						country_rank >= scope:target_country.country_rank
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_RANK"
+						value = -300
+					}
+				}
+				else = {
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_RANK"
+						add = scope:target_country.country_rank
+						subtract = country_rank
+						multiply = 10
+						min = 0
+						max = 50
+					}
+				}
+
                 add = {
                     desc = "DIPLOMATIC_ACCEPTANCE_LIKES_LAW"
 
@@ -373,7 +405,7 @@
                     }
                     add = {
                         desc = "DIPLOMATIC_ACCEPTANCE_ANTI_SLAVERY"
-                        value = 15
+                        value = 25
                     }
                 }
 
@@ -384,7 +416,7 @@
                     }
                     add = {
                         desc = "communist_solidarity"
-                        value = 15
+                        value = 25
                     }
                 }
             }
@@ -399,6 +431,13 @@
                         }
                     }
                 }
+
+				scope:source_country = {
+					save_temporary_scope_as = actor
+				}
+				scope:target_country = {
+					save_temporary_scope_as = target
+				}
 
                 add = {
                     desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
@@ -423,7 +462,7 @@
                     }
                     add = {
                         desc = "DIPLOMATIC_ACCEPTANCE_ECONOMIC_IMPERIALISM"
-                        value = 15
+                        value = 25
                     }
                 }
 
@@ -434,7 +473,7 @@
                     }
                     add = {
                         desc = "communist_solidarity"
-                        value = 15
+                        value = 25
                     }
                 }
 
@@ -527,14 +566,20 @@
 	}
 
 	wargoal = {
-		execution_priority = 60
+		execution_priority = 21
 		contestion_type = control_target_country_capital
 
 		maneuvers = {
-			value = 2.5
+			value = 0
+
+			add = {
+				desc = "MANEUVERS_BASE_VALUE"
+				value = 2.5
+			}
 
 			scope:target_country = {
 				multiply = {
+					desc = "MANEUVERS_TARGET_COUNTRY_POPULATION_FACTOR"
 					value = total_population
 					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
 					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
@@ -544,10 +589,16 @@
 		}
 
 		infamy = {
-			value = 0.5
+			value = 0
+
+			add = {
+				desc = "INFAMY_BASE_VALUE"
+				value = 0.5
+			}
 
 			scope:target_country = {
 				multiply = {
+					desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
 					value = total_population
 					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
 					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
@@ -556,5 +607,4 @@
 			}
 		}
 	}
-	
 }

@@ -38,42 +38,55 @@
 
     can_ratify = {
 		OR = {
-			scope:source_country = {
-				any_scope_treaty = {
-					binds = scope:target_country
-					any_scope_article = {
-						has_type = foreign_investment_rights
-						source_country = scope:source_country
+			trigger_if = {
+				limit = {
+					exists = scope:source_country.top_overlord
+				}
+				scope:source_country.top_overlord = {
+					save_temporary_scope_as = source_overlord
+				}
+				scope:source_overlord = {
+					scope:target_country = {
+						has_treaty_foreign_investment_rights_with = { TARGET = scope:source_overlord }
 					}
 				}
 			}
-			scope:treaty ?= {
-				any_scope_article_option = {
-					has_type = foreign_investment_rights
-					source_country = scope:source_country
+			custom_description = {
+				text = has_treaty_foreign_investment_rights_with_trigger
+				subject = scope:target_country # Country
+				object = scope:source_country # Country
+
+				hidden_trigger = {
+					OR = {
+						scope:treaty ?= {
+							any_scope_article_option = {
+								has_type = foreign_investment_rights
+								source_country = scope:source_country
+							}
+						}
+						scope:source_country = {
+							any_scope_treaty = {
+								binds = scope:target_country
+								any_scope_article = {
+									has_type = foreign_investment_rights
+									source_country = scope:source_country
+								}
+							}
+						}
+					}
 				}
 			}
 			scope:source_country = {
 				is_subject_of = scope:target_country
-			}
-			trigger_if = {
-				limit = { scope:source_country = { is_subject = yes } }
-				scope:source_country.top_overlord ?= {
-					any_scope_treaty = {
-						binds = scope:target_country
-						any_scope_article = {
-							has_type = foreign_investment_rights
-							source_country = scope:source_country.top_overlord
-						}
-					}
-				}
 			}
 			scope:source_country.power_bloc ?= {
 				has_principle = principle:principle_foreign_investment_3
 				any_power_bloc_member = {
 					this = scope:target_country
 				}
-				scope:target_country.country_rank > scope:source_country.country_rank
+				scope:target_country = {
+					country_rank > scope:source_country.country_rank
+				}
 			}
 		}
         custom_tooltip = {
@@ -234,6 +247,23 @@
 							}
 						}
 					}
+					if = {
+						limit = {
+							scope:article.input_building_type = {
+							}
+							any_scope_state = {
+								"num_potential_resources(scope:article.input_building_type.group)" > 0
+							}
+						}
+						every_scope_state = {
+							limit = {
+								"num_potential_resources(scope:article.input_building_type.group)" > 0
+							}
+							add = {
+								value = "num_potential_resources(scope:article.input_building_type.group)"
+							}
+						}
+					}
 					max = 200
 					min = 50
 				}
@@ -278,6 +308,21 @@
 								}
 							}
 						}
+						if = {
+							limit = {
+								any_scope_state = {
+									"num_potential_resources(scope:article.input_building_type.group)" > 0
+								}
+							}
+							every_scope_state = {
+								limit = {
+									"num_potential_resources(scope:article.input_building_type.group)" > 0
+								}
+								add = {
+									value = "num_potential_resources(scope:article.input_building_type.group)"
+								}
+							}
+						}
 					}
 					max = 20
 					min = -100
@@ -287,14 +332,20 @@
 	}
 
 	wargoal = {
-		execution_priority = 60
+		execution_priority = 21
 		contestion_type = control_target_country_capital
 
 		maneuvers = {
-			value = 2.5
+			value = 0
+
+			add = {
+				desc = "MANEUVERS_BASE_VALUE"
+				value = 2.5
+			}
 
 			scope:target_country = {
 				multiply = {
+					desc = "MANEUVERS_TARGET_COUNTRY_POPULATION_FACTOR"
 					value = total_population
 					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
 					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
@@ -304,10 +355,16 @@
 		}
 
 		infamy = {
-			value = 0.5
+			value = 0
+
+			add = {
+				desc = "INFAMY_BASE_VALUE"
+				value = 0.5
+			}
 
 			scope:target_country = {
 				multiply = {
+					desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
 					value = total_population
 					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
 					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
@@ -316,5 +373,4 @@
 			}
 		}
 	}
-	
 }
