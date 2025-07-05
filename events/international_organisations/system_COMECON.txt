@@ -346,3 +346,65 @@ COMECON_system.6 = {
     }
 
 }
+
+#Set COMECON relations
+COMECON_system.7 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = { has_modifier = COMECON_member has_modifier = COMECON_leader }
+		
+		any_country = { 
+			OR = { has_modifier = COMECON_member has_modifier = COMECON_leader }
+			NOR = { any_scope_treaty = { binds = ROOT any_scope_article = { has_type = trade_privilege } } any_scope_treaty = { binds = ROOT any_scope_article = { has_type = transit_rights } } }
+		}
+		
+	}
+
+	immediate = {
+		
+		#Force COMECON pact on COMECON members
+		every_country = { 
+			limit = { 
+				OR = { has_modifier = COMECON_member has_modifier = COMECON_leader }
+				NOR = { any_scope_treaty = { binds = ROOT any_scope_article = { has_type = trade_privilege } } any_scope_treaty = { binds = ROOT any_scope_article = { has_type = transit_rights } } }
+			}
+			save_scope_as = target_country
+			create_treaty = {
+				name = treaty_name_COMECON_treaty
+				first_country = ROOT
+				second_country = scope:target_country
+
+				is_draft = no
+				#binding_period = { years = 10 }
+
+				articles_to_create = {
+					{
+						article = trade_privilege
+						source_country = scope:target_country
+						target_country = ROOT
+					}
+					{
+						article = trade_privilege
+						source_country = ROOT
+						target_country = scope:target_country
+					}
+					{
+						article = transit_rights
+						source_country = scope:target_country
+						target_country = ROOT
+					}
+					{
+						article = transit_rights
+						source_country = ROOT
+						target_country = scope:target_country
+					}
+				}
+			}
+		}
+		
+	}
+
+}

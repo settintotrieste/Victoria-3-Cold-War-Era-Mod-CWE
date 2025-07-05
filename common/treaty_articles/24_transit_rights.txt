@@ -37,27 +37,6 @@
 	}
 
     can_ratify = {
-        custom_tooltip = {
-            text = DUPLICATE_ARTICLE_SAME_INPUTS_TREATY
-            NOT = {
-                scope:source_country = {
-                    any_scope_treaty = {
-                        hidden_trigger = {
-							OR = {
-								scope:treaty = {
-									is_renegotiation = no
-								}
-								scope:treaty.amended_treaty != this
-							}
-						}
-                        any_scope_article = {
-                            has_type = transit_rights
-                            source_country = scope:source_country
-                        }
-                    }
-                }
-            }
-        }
 		scope:target_country = {
 			OR = {
 				has_strategic_land_adjacency = scope:source_country
@@ -103,6 +82,14 @@
 					}
 				}
 				
+			}
+		}
+		
+		trigger_if = {
+			limit = { scope:source_country = { OR = { has_modifier = COMECON_member has_modifier = COMECON_leader } } }
+			NAND = { 
+				scope:source_country = { OR = { has_modifier = COMECON_member has_modifier = COMECON_leader } } 
+				scope:target_country = { OR = { has_modifier = COMECON_member has_modifier = COMECON_leader } }
 			}
 		}
 		
@@ -161,9 +148,9 @@
 
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
-
 					if = {
 						limit = {
+							scope:source_country = { is_a_democracy = no }
 							OR = {
 								has_attitude = {
 									who = scope:target_country
@@ -180,6 +167,26 @@
 							}
 						}
 						add = -200
+					}
+					else_if = {
+						limit = {
+							scope:source_country = { is_a_democracy = yes }
+							OR = {
+								has_attitude = {
+									who = scope:target_country
+									attitude = antagonistic
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = domineering
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = belligerent
+								}
+							}
+						}
+						add = -50
 					}
 				}
 			}
@@ -205,6 +212,37 @@
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
 					value = -300
+				}
+			}
+			
+			#Democracies want to help each other
+			if = {
+				limit = { 
+					scope:target_country = { 
+						is_a_democracy = yes
+						any_primary_culture = { shares_non_heritage_trait_with_any_primary_culture = scope:source_country } 
+					} 
+					scope:source_country = {
+						is_a_democracy = yes
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_SIMILAR_CULTURE"
+					value = 200
+				}
+			}
+			if = {
+				limit = { 
+					scope:target_country = { 
+						is_neutral = yes
+					} 
+					scope:source_country = {
+						is_a_democracy = yes
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_TRANSIT_RIGHTS_NEUTRALITY"
+					value = 100
 				}
 			}
 		}
