@@ -436,8 +436,7 @@ historical_interstate_wars.5 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:EGY
-		this = c:EGY											# Change TAG of the overlord ****
+		c:EGY ?= this											# Change TAG of the overlord ****
 		game_date >= 1956.7.26									# START DATE: Date colony became self governing ****
 		game_date < 1966.7.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -450,16 +449,21 @@ historical_interstate_wars.5 = {
 		#left_wing_ruling_coalition = yes						# Correct ruling coalition ****
 		
 		#Recipent conditions
-		exists = c:GBR
-		c:GBR = { 												# Change TAG of the transferee ****
-			is_sufficiently_independent = yes
-			has_state_in_state_region = STATE_SINAI
-		}
-		#Recipent conditions
-		exists = c:FRA
-		c:FRA = { 												# Change TAG of the transferee ****
-			is_sufficiently_independent = yes
-			has_state_in_state_region = STATE_SINAI
+		OR = {
+			AND = {
+				exists = c:GBR
+				c:GBR ?= { 												# Change TAG of the transferee ****
+					is_sufficiently_independent = yes
+					has_state_in_state_region = STATE_SINAI
+				}
+			}
+			AND = {
+				exists = c:FRA
+				c:FRA ?= { 												# Change TAG of the transferee ****
+					is_sufficiently_independent = yes
+					has_state_in_state_region = STATE_SINAI
+				}
+			}
 		}
 		
 		# Event has not been fired before
@@ -479,8 +483,14 @@ historical_interstate_wars.5 = {
         highlighted_option = yes
 		
 		#Option for war
-		c:GBR = { trigger_event = { id = historical_interstate_wars.6 } }
-		c:FRA = { trigger_event = { id = historical_interstate_wars.6 } }
+		every_country = {
+			limit = { 
+				OR = { c:GBR ?= this c:FRA ?= this } 
+				is_sufficiently_independent = yes
+				has_state_in_state_region = STATE_SINAI
+			}
+			trigger_event = { id = historical_interstate_wars.6 }
+		}
 		
 		ai_chance = { 
 			base = 90 
@@ -493,13 +503,16 @@ historical_interstate_wars.5 = {
 		default_option = yes
 		
 		#FROM is happy!
-		change_relations = {
-			country = c:GBR
-			value = 25
-		}
-		change_relations = {
-			country = c:FRA
-			value = 25
+		every_country = {
+			limit = { 
+				OR = { c:GBR ?= this c:FRA ?= this } 
+				is_sufficiently_independent = yes
+				has_state_in_state_region = STATE_SINAI
+			}
+			change_relations = {
+				country = ROOT
+				value = 25
+			}
 		}
 		
 		#Minor discontent
