@@ -1,0 +1,252 @@
+multilateral_development_bank = {
+	kind = mutual
+	cost = 25
+
+	relations_progress_per_day = 0.5
+	relations_improvement_max = 50
+
+	icon = "gfx/interface/icons/lens_toolbar_icons/multilateral_development_bank.dds"
+
+	flags = {
+		#is_investment_rights
+		can_be_renegotiated
+		friendly
+	}
+
+	usage_limit = once_per_treaty
+
+	mutual_exclusions = {
+		
+	}
+
+	unlocked_by_technologies = {
+		tech_economy_4
+	}
+
+	mutual_modifier = {
+		country_minting_mult = 0.01
+		country_loan_interest_rate_add = -0.01
+		country_treaty_leverage_generation_add = 100
+		state_trade_advantage_mult = 0.01
+	}
+
+	visible = {
+		is_not_revolutionary_or_decentralised = yes
+		is_sufficiently_independent = yes
+	}
+
+	possible = {
+	
+		#THIS has a healthy economy
+		has_healthy_economy = yes
+		scope:other_country = { has_healthy_economy = yes }
+	
+		#Correct economic system
+		NOT = { has_law = law_type:law_isolationism }
+		scope:other_country = { NOT = { has_law = law_type:law_isolationism } }
+		
+		#THIS is interested in multilateral institutions
+		OR = { 
+			has_law = law_type:law_regionalist_fp
+			has_law = law_type:law_globalist_fp
+		}
+		scope:other_country = {
+			OR = { 
+				has_law = law_type:law_regionalist_fp
+				has_law = law_type:law_globalist_fp
+			}
+		}
+	
+	}
+
+	requirement_to_maintain = {
+		
+		#Proper countries
+		is_not_revolutionary_or_decentralised = yes
+		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
+		
+		#Both parties are sufficiently independent
+		is_sufficiently_independent = yes
+		scope:other_country = { is_sufficiently_independent = yes }
+		
+	}
+	
+	can_withdraw = {  
+		
+	}
+
+	can_ratify = {
+		
+	}
+
+	on_entry_into_force = {
+	
+		scope:article_options.first_country = {
+			
+			#Lobby
+			add_lobby_appeasement_from_diplomacy_bidirectional = {
+				FIRST = scope:article_options.first_country
+				SECOND = scope:article_options.second_country
+				PRO_AMOUNT = 2
+				ANTI_AMOUNT = -2
+				FACTOR = appeasement_defensive_pact_formed
+			}
+			
+			#Gain relations with TARGET
+			change_relations = { country = scope:article_options.second_country value = 25 }
+			
+		}
+		
+	}
+
+	on_withdrawal = {
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -25 }
+		}
+	}
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = {
+				country = scope:non_withdrawing_country
+				value = {
+					add = -5
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = -10
+					min = -50
+				}
+			}
+			change_infamy = {
+				value = {
+					add = 2
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = 50
+					min = 10
+				}
+			}
+		}
+	}
+
+
+	ai = {
+
+		treaty_categories = {
+			other
+		}
+
+		evaluation_chance = {
+			value = 0.1
+			add = {
+				value = country_rank
+				multiply = 0.05
+			}
+		}
+		
+		proposal_weight = {
+			value = 1
+		}
+
+		article_ai_usage = {
+            offer
+        }
+
+		inherent_accept_score = {
+			value = 0
+
+			# We are doing this to be able to reuse loc across treaties and diplomatic actions
+			save_temporary_scope_as = target
+			scope:other_country = {
+				save_temporary_scope_as = actor
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+				value = -10
+			}
+			
+			if = {
+				limit = {
+					has_law_or_variant = law_type:law_isolationism
+				}
+				add = {
+					desc = "law_isolationism"
+					add = -100
+				}
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_GDP"
+				value = "scope:second_country.ai_gdp_comparison(scope:first_country)"
+				multiply = 10
+				min = -50
+				max = 100
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+				if = {
+					limit = {
+						OR = {
+							has_attitude = {
+								who = scope:first_country
+								attitude = antagonistic
+							}
+							has_attitude = {
+								who = scope:first_country
+								attitude = domineering
+							}
+							has_attitude = {
+								who = scope:first_country
+								attitude = belligerent
+							}
+							has_attitude = {
+								who = scope:first_country
+								attitude = rebellious
+							}
+						}
+					}
+					value = -100
+				}
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INCOMPATIBLE_ECONOMIC_SYSTEMS"
+				if = {
+					limit = {
+						OR = {
+							AND = {
+								scope:first_country = { has_radical_leftist_economy = no }
+								scope:second_country = { has_radical_leftist_economy = yes }
+							}
+							AND = {
+								scope:first_country = { has_radical_leftist_economy = yes }
+								scope:second_country = { has_radical_leftist_economy = no }
+							}
+						}
+					}
+					value = -100
+				}
+			}
+			
+			if = {
+				limit = {
+					has_strategy = ai_strategy_economic_imperialism
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ECONOMIC_IMPERIALISM"
+					add = 25
+				}
+			}
+			
+		}
+		
+	}
+	
+}
