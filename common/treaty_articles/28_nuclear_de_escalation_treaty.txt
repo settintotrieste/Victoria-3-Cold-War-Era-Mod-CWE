@@ -1,11 +1,11 @@
-non_aggression_pact = {
+nuclear_de_escalation_treaty = {
 	kind = mutual
 	cost = 25
 
 	relations_progress_per_day = 1
 	relations_improvement_max = 80
 
-	icon = "gfx/interface/icons/lens_toolbar_icons/non_aggression_pact.dds"
+	icon = "gfx/interface/icons/lens_toolbar_icons/nuclear_de_escalation_treaty.dds"
 
 	flags = {
 		can_be_renegotiated
@@ -17,21 +17,25 @@ non_aggression_pact = {
 	mutual_exclusions = {
 		alliance
 		defensive_pact
-		guarantee_independence
 	}
 
 	unlocked_by_technologies = {
-		tech_geopolitics_2
+		tech_geopolitics_3
 	}
 
 	mutual_modifier = {
 		country_infamy_decay_mult = 0.05
-		country_treaty_leverage_generation_add = -100
 	}
 
 	visible = {
+	
 		is_not_revolutionary_or_decentralised = yes
 		is_sufficiently_independent = yes
+		
+		#THIS and TARGET have nukes
+		has_modifier = nuclear_capability
+		scope:other_country ?= { has_modifier = nuclear_capability }
+		
 	}
 
 	possible = {
@@ -39,16 +43,28 @@ non_aggression_pact = {
 		#THIS is interested in TARGET
 		has_diplomatic_relevance = scope:other_country
 	
-		#THIS and TARGET hate each other and so there is a need for a NAP
-		#custom_tooltip = {
-		#	text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
-		#	scope:other_country.relations:root < relations_threshold:neutral
-		#}
-		
-		#Countries are important enough to want to have a NAP
-		OR = {
-			has_strategic_adjacency = scope:other_country
-			scope:other_country = { country_rank >= rank_value:major_power }
+		#THIS is of equal rank to TARGET
+		OR = { 
+			AND = { 
+				country_rank = rank_value:super_power
+				scope:other_country = { country_rank = rank_value:super_power }
+			}
+			AND = { 
+				country_rank = rank_value:great_power
+				scope:other_country = { country_rank = rank_value:great_power }
+			}
+			AND = { 
+				OR = { country_rank = rank_value:major_power country_rank = rank_value:unrecognized_major_power }
+				scope:other_country = { OR = { country_rank = rank_value:major_power country_rank = rank_value:unrecognized_major_power } }
+			}
+			AND = { 
+				OR = { country_rank = rank_value:minor_power country_rank = rank_value:unrecognized_regional_power }
+				scope:other_country = { OR = { country_rank = rank_value:minor_power country_rank = rank_value:unrecognized_regional_power } }
+			}
+			AND = { 
+				OR = { country_rank = rank_value:insignificant_power country_rank = rank_value:unrecognized_power }
+				scope:other_country = { OR = { country_rank = rank_value:insignificant_power country_rank = rank_value:unrecognized_power } }
+			}
 		}
 		
 		#THIS and TARGET are not enemies in a DP
@@ -70,6 +86,10 @@ non_aggression_pact = {
 		scope:other_country = { NOT = { is_subject_of = ROOT } } 
 		NOT = { is_subject_of = scope:other_country }
 		
+		#THIS and TARGET have nukes
+		has_modifier = nuclear_capability
+		scope:other_country ?= { has_modifier = nuclear_capability }
+		
 	}
 	
 	can_withdraw = {  
@@ -90,26 +110,50 @@ non_aggression_pact = {
 			add_lobby_appeasement_from_diplomacy_bidirectional = {
 				FIRST = scope:article_options.first_country
 				SECOND = scope:article_options.second_country
-				PRO_AMOUNT = 2
-				ANTI_AMOUNT = -2
+				PRO_AMOUNT = 5
+				ANTI_AMOUNT = -5
 				FACTOR = appeasement_defensive_pact_formed
 			}
 			
 			#Gain relations with TARGET
-			change_relations = { country = scope:article_options.second_country value = 20 }
+			change_relations = { country = scope:article_options.second_country value = 25 }
 			
-			#International community likes rivals to be peaceful
-			if = {
-				limit = { has_diplomatic_pact = { who = scope:article_options.second_country type = rivalry } }
-				change_infamy = -10
-				scope:article_options.second_country = { change_infamy = -10 }
-				
-				#TARGET's ruler can win a nobel peace prize
+			#International community likes reduced nuclear arms race
+			change_infamy = -10
+			scope:article_options.second_country = { change_infamy = -10 }
+			
+			#Rulers of both countries can win a nobel peace prize
+			nominate_ruler_for_nobel_peace_prize = yes
+			scope:article_options.second_country = { 
 				nominate_ruler_for_nobel_peace_prize = yes
-				scope:article_options.second_country = { 
-					nominate_ruler_for_nobel_peace_prize = yes
+			}
+			
+			#Reset ABM
+			if = {
+				limit = { has_modifier = law_moderate_civil_defence_law }
+				add_modifier = { name = law_weak_civil_defence_law }
+			}
+			if = {
+				limit = { has_modifier = law_strong_civil_defence_law }
+				add_modifier = { name = law_weak_civil_defence_law }
+			}
+			if = {
+				limit = { has_modifier = law_very_strong_civil_defence_law }
+				add_modifier = { name = law_weak_civil_defence_law }
+			}
+			scope:article_options.second_country = {
+				if = {
+					limit = { has_modifier = law_moderate_civil_defence_law }
+					add_modifier = { name = law_weak_civil_defence_law }
 				}
-				
+				if = {
+					limit = { has_modifier = law_strong_civil_defence_law }
+					add_modifier = { name = law_weak_civil_defence_law }
+				}
+				if = {
+					limit = { has_modifier = law_very_strong_civil_defence_law }
+					add_modifier = { name = law_weak_civil_defence_law }
+				}
 			}
 			
 		}
@@ -118,8 +162,25 @@ non_aggression_pact = {
 
 	on_withdrawal = {
 		scope:withdrawing_country = {
+		
 			create_bidirectional_truce = { country = scope:non_withdrawing_country months = 12 }
 			change_relations = { country = scope:non_withdrawing_country value = -25 }
+			
+			#Nuclear power remains low for a while
+			if = {
+				limit = {  
+					NOT = { 
+						any_scope_treaty = { binds = scope:withdrawing_country any_scope_article = { has_type = nuclear_de_escalation_treaty } }
+					}
+					has_modifier = nuclear_capability
+				}
+				hidden_effect = { remove_modifier = recently_reduced_nukes }
+				add_modifier = { name = recently_reduced_nukes years = 5 }
+			}
+			
+			#Gain infamy for re-arming
+			change_infamy = 10
+			
 		}
 	}
 	on_break = {
@@ -232,31 +293,10 @@ non_aggression_pact = {
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_ARMY_STRENGTH"
 				value = "scope:other_country.ai_army_comparison(root)"
-				add = 0.5
+				add = 1
 				multiply = 20
 				min = -200
 				max = 100
-			}
-			
-			if = {
-				limit = {
-					has_modifier = nuclear_capability
-					scope:other_country ?= { has_modifier = nuclear_capability }
-				}
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_THREAT_OF_MUTALLY_ASSURED_DESTRUCTION"
-					value = 100
-				}
-			}
-			if = {
-				limit = {
-					NOT = { has_modifier = nuclear_capability }
-					scope:other_country ?= { has_modifier = nuclear_capability }
-				}
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_THREAT_OF_MUTALLY_ASSURED_DESTRUCTION"
-					value = 200
-				}
 			}
 			
 			if = {
@@ -334,38 +374,6 @@ non_aggression_pact = {
 			
 			if = {
 				limit = {
-					"num_alliances_and_defensive_pacts_with_rivals(scope:other_country)" > 0
-				}
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_ALLIED_TO_RIVALS"
-					value = "num_alliances_and_defensive_pacts_with_rivals(scope:other_country)"
-					multiply = -20
-				}
-			}
-			if = {
-				limit = {
-					"num_alliances_and_defensive_pacts_with_allies(scope:other_country)" > 0
-				}
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_ALLIED_TO_ALLIES"
-					value = "num_alliances_and_defensive_pacts_with_allies(scope:other_country)"
-					multiply = 10
-				}
-			}
-			if = {
-				limit = {
-					"num_shared_rivals(scope:other_country)" > 0
-				}
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_SHARED_RIVALS"
-					value = "num_shared_rivals(scope:other_country)"
-					multiply = 10
-					max = 100
-				}
-			}
-			
-			if = {
-				limit = {
 					ruler ?= {
 						has_ideology = ideology:ideology_autocratic
 					}
@@ -406,6 +414,43 @@ non_aggression_pact = {
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_JINGOISTIC_RULER"
 					value = 50
+				}
+			}
+			
+			if = {
+				limit = {
+					has_global_variable = very_high_world_tension
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_THREAT_OF_MUTALLY_ASSURED_DESTRUCTION"
+					value = 200
+				}
+			}
+			if = {
+				limit = {
+					has_global_variable = high_world_tension
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_THREAT_OF_MUTALLY_ASSURED_DESTRUCTION"
+					value = 100
+				}
+			}
+			if = {
+				limit = {
+					has_global_variable = medium_world_tension
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_THREAT_OF_MUTALLY_ASSURED_DESTRUCTION"
+					value = 50
+				}
+			}
+			if = {
+				limit = {
+					has_global_variable = low_world_tension
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_THREAT_OF_MUTALLY_ASSURED_DESTRUCTION"
+					value = 25
 				}
 			}
 			
