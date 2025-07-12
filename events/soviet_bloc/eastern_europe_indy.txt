@@ -575,7 +575,7 @@ eastern_europe_indy.4 = {
 #Sino-Soviet Split
 eastern_europe_indy.5 = {
     type = country_event
-	placement = scope:communist_china_scope
+	placement = c:SOV
 	
     title = sino_soviet_split.t 				# Title of the event; ADD LOCALISATION
     desc = sino_soviet_split.d 					# Description of the event; ADD LOCALISATION
@@ -594,61 +594,47 @@ eastern_europe_indy.5 = {
 		NOT = { has_variable = sino_soviet_split }				# CHANGE ****
 		
 		#Overlord conditions
-		exists = c:SOV
-		this = c:SOV											# Change TAG of the overlord ****
-		game_date >= 1961.10.17									# START DATE: Date colony became self governing ****
-		game_date < 1971.10.17									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		OR = { c:PRC ?= this c:CHI ?= this }
+		game_date >= 1961.10.17
+		game_date < 1971.10.17
 		
-		country_rank = rank_value:super_power
 		is_a_communist_government = yes							# Correct gov types
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
-		#Triggered by Khrushchev
-		OR = {
+		#USSR exists
+		exists = c:SOV
+		c:SOV ?= { 												# Change TAG of the colony ****
+			
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			
+			NOT = { is_direct_subject_of = ROOT }
+			any_scope_treaty = { binds = ROOT any_scope_article = { OR = { has_type = defensive_pact has_type = alliance } } }
+			
+			#Triggered by Khrushchev
+			OR = {
+				AND = { 
+					exists = ruler
+					ruler ?= { interest_group = { is_interest_group_type = ig_rural_folk } is_historical = yes }
+				}
+				NOT = { has_modifier = communist_ruling_party_ideology }
+			}
+			
+		}
+		NOT = { is_direct_subject_of = c:SOV }
+		
+		#Cause
+		OR = { 
+			#Triggered by Mao
 			AND = { 
 				exists = ruler
-				ruler = { interest_group = { is_interest_group_type = ig_rural_folk } is_historical = yes }
+				ruler ?= { interest_group = { is_interest_group_type = ig_trade_unions } is_historical = yes }
 			}
-			NOT = { has_modifier = communist_ruling_party_ideology }
-		}
-		
-		#Colony conditions
-		OR = {
-			AND = { 
-				exists = c:PRC
-				c:PRC ?= { 												# Change TAG of the colony ****
-					is_direct_subject_of = ROOT
-					is_a_communist_government = yes
-					is_sufficiently_independent = yes
-					is_at_war = no
-					OR = { 
-						#Triggered by Mao
-						AND = { 
-							exists = ruler
-							ruler = { interest_group = { is_interest_group_type = ig_trade_unions } is_historical = yes }
-						}
-						has_modifier = communist_ruling_party_ideology
-					}
-				}
-			}
-			AND = { 
-				exists = c:CHI
-				c:CHI ?= { 												# Change TAG of the colony ****
-					is_direct_subject_of = ROOT
-					is_a_communist_government = yes
-					is_sufficiently_independent = yes
-					is_at_war = no
-					OR = { 
-						#Triggered by Mao
-						AND = { 
-							exists = ruler
-							ruler = { interest_group = { is_interest_group_type = ig_trade_unions } is_historical = yes }
-						}
-						has_modifier = communist_ruling_party_ideology
-					}
-				}
-			}
+			has_modifier = communist_ruling_party_ideology
+			country_rank >= rank_value:great_power
+			c:SOV ?= { country_rank < root.country_rank }
 		}
 		
     }
@@ -658,131 +644,21 @@ eastern_europe_indy.5 = {
 		# Fire only once
 		set_variable = sino_soviet_split					# Change variable ****
 		
-		#Mark PRC
-		random_country = {
-			limit = {
-				OR = { c:PRC ?= this c:CHI ?= this }
-				is_direct_subject_of = ROOT
-				is_a_communist_government = yes
-				is_sufficiently_independent = yes
-				is_at_war = no
-			}
-			save_scope_as = communist_china_scope
-		}
-		
 	}
     
     option = {
-        name = sino_soviet_split.option.1						# Grant them independence
+        name = sino_soviet_split.option.1					# Grant them independence
         highlighted_option = yes
 		
-		# Colony becomes independent
-		scope:communist_china_scope = { 						# Change TAG of the colony ****
-			make_independent = yes
-			set_relations = {
-				country = ROOT
-				value = -50
-			}
-			trigger_event = { id = eastern_europe_indy.6 }
+		# Lose relations with USSR
+		change_relations = { 
+			country = c:SOV 
+			value = -200 
 		}
-		
-		#Albania goes to China
-		random_country = {
-			limit = {
-				c:ALB ?= this
-				is_direct_subject_of = ROOT
-				is_a_communist_government = yes
-				is_sufficiently_independent = yes
-				is_at_war = no
-				is_player = no
-			}
-			make_independent = yes
-			set_relations = {
-				country = scope:communist_china_scope
-				value = 100
-			}
-			scope:communist_china_scope = {
-				create_diplomatic_pact = {
-					country = c:ALB
-					type = satellite
-				}
-			}
+		if = {
+			limit = { NOT = { has_diplomatic_pact = { who = c:SOV type = rivalry } } }
+			create_diplomatic_pact = { country = c:SOV type = rivalry }
 		}
-		
-		#Mark as Sino-Soviet
-		set_global_variable = sino_soviet_split_global_var
-		
-		ai_chance = { 
-			base = 90 
-		}
-		
-    }
-	
-	option = {
-        name = sino_soviet_split.option.2						# REFUSE
-		default_option = yes
-		
-		#Fracture the Eastern Bloc
-		every_country = {
-			limit = { 
-				NOT = { scope:communist_china_scope ?= this }
-				is_direct_subject_of = ROOT
-				is_a_communist_government = yes
-				is_subject_type = subject_type_satellite
-			}
-			change_subject_type = subject_type_protectorate
-			if = {
-				limit = { NOT = { scope:communist_china_scope ?= this } }
-				set_relations = {
-					country = scope:communist_china_scope
-					value = 50
-				}
-			}
-			set_relations = {
-				country = ROOT
-				value = 50
-			}
-		}
-		
-		ai_chance = { 
-			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
-		}
-		
-    }
-
-}
-
-#Sino-Soviet Split - Notify China
-eastern_europe_indy.6 = {
-    type = country_event
-	placement = c:SOV
-	
-    title = sino_soviet_split_prc.t 			# Title of the event; ADD LOCALISATION
-    desc = sino_soviet_split.d 					# Description of the event; ADD LOCALISATION
-    flavor = sino_soviet_split.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
-
-    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
-
-    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
-    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
-
-    duration = 1 # Duration to fire if triggers are met
-	
-	trigger = {													# What triggers the event, if using other events or journal entries leave empty
-		
-		#Triggered by event
-		
-    }
-	
-	immediate = { 
-		
-		c:SOV = { save_scope_as = sino_soviet_split_ussr }
-		
-	}
-    
-    option = {
-        name = sino_soviet_split.option.3						# Oh well...
-		default_option = yes
 		
 		#Prestige from being independent of USSR
 		add_modifier = { 
@@ -805,6 +681,112 @@ eastern_europe_indy.6 = {
 				principle = principle_foreign_investment_3
 
 				# subjects are automatically part of the bloc
+			}
+		}
+		
+		#AI
+		hidden_effect = {
+			set_mutual_secret_goal = {
+				country = c:SOV
+				secret_goal = antagonize
+			}
+		}
+		
+		#Inform SOV
+		c:SOV = { trigger_event = { id = eastern_europe_indy.6 } }
+		
+		#Mark as Sino-Soviet
+		set_global_variable = sino_soviet_split_global_var
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = sino_soviet_split.option.2						# REFUSE
+		default_option = yes
+		
+		#Domestic effects
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		add_modifier = {
+			name = weakened_government_authority
+			years = 10
+			is_decaying = yes
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Sino-Soviet Split - Notify SOV
+eastern_europe_indy.6 = {
+    type = country_event
+	placement = c:PRC
+	
+    title = sino_soviet_split_prc.t 			# Title of the event; ADD LOCALISATION
+    desc = sino_soviet_split.d 					# Description of the event; ADD LOCALISATION
+    flavor = sino_soviet_split.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = { 
+		
+		#Mark country
+		random_country = {
+			limit = { has_variable = sino_soviet_split } 
+			save_scope_as = sino_soviet_split_ussr 
+		}
+		
+	}
+    
+    option = {
+        name = sino_soviet_split.option.3						# Oh well...
+		default_option = yes
+		
+		#Effect on Eastern Bloc
+		every_country = {
+			limit = { 
+				is_a_communist_government = yes
+			}
+			if = {
+				limit = { is_direct_subject_of = ROOT }
+				add_liberty_desire = 50
+			}
+			if = {
+				limit = { 
+					ruler ?= { 
+						character_is_autocratic = yes 
+						interest_group = { is_interest_group_type = ig_trade_unions } 
+					} 
+				}
+				change_relations = { 
+					country = c:SOV 
+					value = -50
+				}
 			}
 		}
 		

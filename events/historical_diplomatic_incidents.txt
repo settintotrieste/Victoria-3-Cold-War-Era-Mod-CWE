@@ -2640,3 +2640,238 @@ historical_diplomatic_incidents.27 = {
     }
 
 }
+
+# The Vlora incident - ALB
+historical_diplomatic_incidents.28 = {
+    type = country_event
+
+    title = SOV_ALB_Vlora_Incident.t 							# Title of the event; ADD LOCALISATION
+    desc = SOV_ALB_Vlora_Incident.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SOV_ALB_Vlora_Incident.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_battlefield_trenches.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:ALB ?= this											# Change TAG of the overlord ****
+		game_date >= 1961.6.8									# START DATE: Date colony became self governing ****
+		game_date < 1971.6.8									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Hoxha
+		ruler ?= { 
+			character_is_autocratic = yes 
+			interest_group = { is_interest_group_type = ig_trade_unions } 
+		}
+		
+		#Cause
+		has_global_variable = sino_soviet_split_global_var
+		exists = c:SOV
+		c:SOV ?= { 												# Change TAG of the colony ****
+			
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			
+			NOT = { is_direct_subject_of = ROOT }
+			any_scope_treaty = { binds = ROOT any_scope_article = { OR = { has_type = defensive_pact has_type = alliance } } }
+			
+			#Triggered by Khrushchev
+			OR = {
+				AND = { 
+					exists = ruler
+					ruler ?= { interest_group = { is_interest_group_type = ig_rural_folk } is_historical = yes }
+				}
+				NOT = { has_modifier = communist_ruling_party_ideology }
+			}
+			
+		}
+		is_direct_subject_of = c:SOV
+		
+		# Event has not been fired before
+		NOT = { has_variable = SOV_ALB_Vlora_Incident_hdi }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SOV_ALB_Vlora_Incident_hdi				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Choice for USSR
+		c:SOV ?= {
+			trigger_event = { id = historical_diplomatic_incidents.29 }
+		}
+		
+		#Gain relations with China
+		every_country = {
+			limit = {
+				OR = { c:PRC ?= this c:CHI ?= this }
+				is_a_communist_government = yes
+				is_sufficiently_independent = yes
+			}
+			change_relations = { 
+				country = ROOT
+				value = 200 
+			}
+			#AI
+			hidden_effect = {
+				set_mutual_secret_goal = {
+					country = ROOT
+					secret_goal = befriend
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		#Domestic effects
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		add_modifier = {
+			name = weakened_government_authority
+			years = 10
+			is_decaying = yes
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The Vlora incident - SOV
+historical_diplomatic_incidents.29 = {
+    type = country_event
+	placement = c:ALB
+
+    title = SOV_ALB_Vlora_Incident.t 							# Title of the event; ADD LOCALISATION
+    desc = SOV_ALB_Vlora_Incident.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SOV_ALB_Vlora_Incident.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_battlefield_trenches.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Albania becomes independent
+		c:ALB ?= {
+			
+			make_independent = yes
+			
+			#Prestige from being independent of USSR
+			add_modifier = { 
+				name = national_pride_modifier 
+				months = 60 
+				is_decaying = yes 
+			}
+			
+		}
+		
+		# Lose relations with ALB
+		change_relations = { 
+			country = c:ALB
+			value = -100
+		}
+		
+		#AI
+		hidden_effect = {
+			set_mutual_secret_goal = {
+				country = c:ALB
+				secret_goal = antagonize
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		#Albania becomes independent
+		c:ALB ?= {
+			make_independent = yes
+		}
+		
+		#War
+		create_diplomatic_play = {
+			name = ALB_SOV_war
+			type = dp_make_puppet
+			target_country = c:ALB
+			
+			#war = yes
+			
+			#ALB's Goals
+			add_war_goal = {
+				holder = c:ALB
+				type = humiliation
+				target_country = c:SOV
+			}
+		}
+		
+		#AI
+		hidden_effect = {
+			set_mutual_secret_goal = {
+				country = c:ALB
+				secret_goal = antagonize
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
