@@ -240,33 +240,6 @@ cwe_ai_aggression_factors = {
 cwe_ai_neutrality_factors = {
 
 	### MORE NEUTRALITY ###
-
-	# AI is more neutral when not bordering TARGET
-	if = {
-		limit = { 
-			NOT = { is_adjacent_to_country = scope:target_country }
-		}
-		add = 200
-	}
-	
-	# AI is more neutral if have weaker army or navy than TARGET
-	if = {
-		limit = { 
-			OR = {
-				navy_size < scope:target_country.navy_size
-				army_size < scope:target_country.army_size
-			}
-		}
-		add = 50
-	}
-	
-	# AI is more neutral if have weaker economy than TARGET
-	if = {
-		limit = { 
-			root.gdp < scope:target_country.gdp
-		}
-		add = 50
-	}
 	
 	# AI is more neutral if have domestic instability
 	if = {
@@ -279,31 +252,47 @@ cwe_ai_neutrality_factors = {
 		add = 100
 	}
 	
-	# AI is more neutral if have non aggression pact with TARGET
+	# AI is more neutral if leader is democratic
 	if = {
 		limit = { 
-			OR = { 
-				has_diplomatic_pact = { who = scope:target_country type = nuclear_de_escalation_treaty }
-				any_scope_treaty = { binds = scope:target_country any_scope_article = { has_type = non_aggression_pact } }
-			}
+			ruler ?= { character_is_democratic = yes }
 		}
-		add = -100
+		add = 100
 	}
 	
-	# AI is more neutral if TARGET has nukes
+	# AI is more neutral based on laws
 	if = {
 		limit = { 
-			has_modifier = nuclear_capability
-			scope:target_country = { has_modifier = nuclear_capability }
+			has_law = law_type:law_no_war
 		}
-		multiply = 5
+		add = 200
 	}
 	if = {
 		limit = { 
-			NOT = { has_modifier = nuclear_capability }
-			scope:target_country = { has_modifier = nuclear_capability }
+			has_law = law_type:law_defensive_war
 		}
-		multiply = 5
+		add = 100
+	}
+	if = {
+		limit = { 
+			has_law = law_type:law_peasant_levies
+		}
+		add = 200
+	}
+	if = {
+		limit = { 
+			has_law = law_type:law_national_militia
+		}
+		add = 100
+	}
+	if = {
+		limit = { 
+			NOR = { 
+				has_law = law_type:law_regionalist_fp
+				has_law = law_type:law_globalist_fp
+			}
+		}
+		add = 100
 	}
 	
 	### LESS NEUTRALITY ###
@@ -322,51 +311,12 @@ cwe_ai_neutrality_factors = {
 		add = -200
 	}
 	
-	# AI is less neutral if have territorial ambitions in TARGET
+	# AI is less neutral if leader is autocratic
 	if = {
 		limit = { 
-			scope:target_country = { any_scope_state = { is_homeland_of_country_cultures = ROOT } }
+			ruler ?= { character_is_autocratic = yes }
 		}
 		add = -100
-	}
-	
-	# AI is less neutral if have rivalry with TARGET
-	if = {
-		limit = { 
-			has_diplomatic_pact = { who = scope:target_country type = rivalry }
-		}
-		add = -100
-	}
-	
-	# AI is less neutral if TARGET is a pariah
-	if = {
-		limit = { 
-			scope:target_country = { infamy >= infamy_threshold:pariah }
-		}
-		multiply = 0.5
-	}
-	
-	# AI is less neutral if THIS is a democracy and TARGET is a dictatorship
-	if = {
-		limit = { 
-			is_a_democracy = yes
-			scope:target_country = { NOT = { is_some_kind_of_democracy = yes } }
-		}
-		multiply = 0.5
-	}
-	
-	# AI is less neutral if TARGET is a subject of THIS
-	if = {
-		limit = { 
-			OR = { 
-				scope:target_country = { is_subject_of = ROOT }
-				any_scope_treaty = { binds = scope:target_country any_scope_article = { has_type = defensive_pact } }
-				any_scope_treaty = { binds = scope:target_country any_scope_article = { has_type = alliance } }
-				has_diplomatic_pact = { who = scope:target_country type = station_nuclear_weapons }
-				has_diplomatic_pact = { who = scope:target_country type = military_cooperation_agreement }
-			}
-		}
-		multiply = 0.1
 	}
 	
 	### OVERALL ###
@@ -375,7 +325,6 @@ cwe_ai_neutrality_factors = {
 	if = {
 		limit = { 
 			is_a_democracy = yes
-			scope:target_country = { is_a_democracy = yes }
 		}
 		add = 200
 	}
