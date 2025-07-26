@@ -475,56 +475,37 @@
 				value = -50
 			}
 			
-			add = {
-				desc = "DIPLOMATIC_ACCEPTANCE_LEVERAGE_OF_TARGET"
-				value = "power_bloc.leverage_advantage(scope:actor)"
-				multiply = 0.5
-				min = 0
-				max = 200
-			}
-
-			### Impact on Cohesion
-			add = {
-				desc = "DIPLOMATIC_ACCEPTANCE_DECREASED_COHESION"
-				value = "power_bloc.predicted_cohesion_percentage_with(scope:actor)"
-				subtract = "power_bloc.current_cohesion_number"
-				multiply = 2 # -2 acceptance for each lost point of cohesion
-				if = {
-					limit = {
-						exists = power_bloc
-					}
-					if = {
-						limit = { "power_bloc.current_cohesion_number" <= 20 }
-						multiply = 5
-					}
-					else_if = {
-						limit = { "power_bloc.current_cohesion_number" <= 40 }
-						multiply = 2
-					}
-				}			
-				
-				max = 0
-			}
-
-			### How we fit their selected identity
-			add = ai_accept_join_request_score
-			
-			# Ideological opinion is always a factor, but much weaker for non ideological unions
-			# Score for ideological unions is handled in ai_accept_join_request_score script value
 			if = {
 				limit = {
-					scope:target_country.power_bloc ?= {
-						NOT = { has_identity = identity:identity_ideological_union }
-					}
+					"num_alliances_and_defensive_pacts_with_rivals(scope:target_country)" > 0
 				}
 				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
-					value = "scope:actor.ai_ideological_opinion(root)"
-					multiply = 0.25
-					max = 25
-					min = -25
+					desc = "DIPLOMATIC_ACCEPTANCE_ALLIED_TO_RIVALS"
+					value = -1000
 				}
-			}				
+			}
+
+			if = {
+				limit = {
+					exists = power_bloc
+					exists = scope:target_country.power_bloc
+				}
+				if = {
+					limit = {
+						power_bloc = scope:target_country.power_bloc
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_SAME_POWER_BLOC"
+						value = 25
+					}
+				}
+				else = {
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_DIFFERENT_POWER_BLOC"
+						value = -25
+					}
+				}
+			}		
 			
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
