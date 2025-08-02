@@ -1,0 +1,424 @@
+﻿migration_treaty = {
+    kind = directed
+    cost = 100
+
+    relations_progress_per_day = 0.5
+    relations_improvement_max = 20
+
+	icon = "gfx/interface/icons/goods_icons/prestige_goods/clyde_built_liners_prestige.dds"
+
+	flags = {
+		can_be_enforced
+		can_be_renegotiated
+		giftable
+		friendly
+	}
+
+	maintenance_paid_by = target_country
+    usage_limit = once_per_side
+
+    unlocked_by_technologies = {
+        
+    }
+
+	visible = {
+	
+		is_not_revolutionary_or_decentralised = yes
+		is_sufficiently_independent = yes
+		
+		#One such treaty per country
+		NOT = { any_scope_treaty = { binds = scope:other_country any_scope_article = { has_type = migration_treaty } } }
+		
+	}
+
+	possible = {
+		
+		#THIS is interested in TARGET
+		has_diplomatic_relevance = scope:other_country
+		
+		#Borders are not closed
+		NOT = { has_law = law_type:law_closed_borders }
+		scope:other_country = { NOT = { has_law = law_type:law_closed_borders } }
+		
+	}
+	
+	non_fulfillment = {
+        consequences = freeze
+        conditions = {
+            weekly = {
+				scope:article = { 
+					source_country = { has_law = law_type:law_closed_borders } 
+				}
+            }
+        }
+    }
+
+    can_ratify = {
+	
+		scope:source_country = {
+			NAND = {
+				capital ?= { is_mass_migration_target = yes }
+				market_capital ?= { is_mass_migration_target = yes }
+			}
+		}
+		
+    }
+	
+	can_withdraw = {  
+		
+	}
+
+    on_entry_into_force = {
+		
+		scope:article_options.source_country = {
+			random_primary_culture = {
+				save_scope_as = mass_migration_culture
+			}
+			save_scope_as = mass_migration_country
+		}
+		scope:article_options.target_country = {
+			if = {
+				limit = { exists = scope:mass_migration_culture }
+				random_scope_state = {
+					limit = { 
+						OR = { 
+							is_capital = yes
+							state_is_eligible_as_mass_migration_target = yes
+						}
+					}
+					create_mass_migration = {
+						origin = scope:mass_migration_country
+						culture = scope:mass_migration_culture
+					}
+				}
+			}
+		}
+		
+	}
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -10 }
+		}
+	}
+
+	ai = {
+
+        treaty_categories = {
+			other
+		}
+
+		evaluation_chance = {
+			value = 0.05
+		}
+
+        article_ai_usage = {
+            request
+        }
+
+        inherent_accept_score = {
+			value = 0
+			
+			# We are doing this to be able to reuse loc across treaties and diplomatic actions
+			scope:source_country = {
+				save_temporary_scope_as = target
+			}
+			scope:target_country = {
+				save_temporary_scope_as = actor
+			}
+			
+			# Generally not permissive
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+				value = -50
+			}
+
+			#Ruler stance
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_MIGRATION_STANCE"
+				if = {
+					limit = {
+						scope:target_country.ruler ?= {
+							interest_group = {
+								law_stance = {
+									law = law_type:law_no_migration_controls
+									value >= approve
+								}
+							}
+						}
+					}
+					add = 100
+				}
+				else_if = {
+					limit = {
+						scope:target_country.ruler ?= {
+							interest_group = {
+								law_stance = {
+									law = law_type:law_migration_controls
+									value >= approve
+								}
+							}
+						}
+					}
+					add = 50
+				}
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+				if = {
+					limit = {
+						"scope:target_country.infamy" >= infamy_threshold:pariah
+					}
+					value = -1000
+				}
+			}
+
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+				if = {
+					limit = {
+						scope:source_country = { is_a_democracy = no }
+						OR = {
+							has_attitude = {
+								who = scope:target_country
+								attitude = antagonistic
+							}
+							has_attitude = {
+								who = scope:target_country
+								attitude = domineering
+							}
+							has_attitude = {
+								who = scope:target_country
+								attitude = belligerent
+							}
+						}
+					}
+					add = -100
+				}
+				else_if = {
+					limit = {
+						scope:source_country = { is_a_democracy = yes }
+						OR = {
+							has_attitude = {
+								who = scope:target_country
+								attitude = antagonistic
+							}
+							has_attitude = {
+								who = scope:target_country
+								attitude = domineering
+							}
+							has_attitude = {
+								who = scope:target_country
+								attitude = belligerent
+							}
+						}
+					}
+					add = -50
+				}
+			}
+			
+			### Relative rank
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RANK"
+				value = scope:target_country.country_rank
+				subtract = 2
+				subtract = country_rank
+				multiply = 5
+			}
+			multiply = {
+				desc = "DIPLOMATIC_ACCEPTANCE_GDP"
+				value = 1
+
+				add = {
+					value = "scope:source_country.ai_gdp_comparison(root)"
+					max = 25
+					min = -50
+					multiply = 0.01
+				}
+			}
+			if = {
+				limit = {
+					gdp >= 2000000
+				}
+
+				subtract = {
+					desc = "DIPLOMATIC_ACCEPTANCE_HIGH_GDP"
+					value = gdp
+					subtract = 1000000
+					divide = 1000000
+					min = 1
+					max = 10
+				}
+			}
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_MUTUAL_TRADE_VALUE"
+				value = "mutual_trade_value_with_country(scope:target_country)"
+				multiply = 50000
+				divide = { # We modulate this value by GDP, clamped to a range to ensure it remains relevant for very small/very large economies
+					value = gdp
+					max = scope:target_country.gdp # We use whichever GDP is smaller
+					min = 1000000
+				}
+				max = 10
+			}
+			if = {
+				limit = {
+					scope:target_country ?= {
+						modifier:country_construction_add <= 50
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_LOW_CONSTRUCTION"
+					value = scope:target_country.modifier:country_construction_add
+					subtract = 50
+				}
+			}
+			
+		}
+		
+		contextual_accept_score = {
+			if = {
+				limit = {
+					scope:source_country ?= this
+				}
+				if = {
+					limit = {
+						OR = {
+							any_scope_treaty = {
+								binds = scope:target_country
+								any_scope_article = {
+									has_type = trade_privilege
+									source_country = scope:target_country
+								}
+							}
+							scope:treaty ?= {
+								any_scope_article_option = {
+									has_type = trade_privilege
+									source_country = scope:target_country
+								}
+							}
+						}
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_TRADE_PRIVILEGES"
+						value = 10
+					}
+				}
+
+				if = {
+					limit = {
+						OR = {
+							any_scope_treaty = {
+								binds = scope:target_country
+								any_scope_article = {
+									has_type = foreign_investment_rights
+									source_country = scope:target_country
+								}
+							}
+							scope:treaty ?= {
+								any_scope_article_option = {
+									has_type = foreign_investment_rights
+									source_country = scope:target_country
+								}
+							}
+						}
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_FOREIGN_INVESTMENT_RIGHTS"
+						value = 10
+					}
+				}
+
+				if = {
+					limit = {
+						OR = {
+							any_scope_treaty = {
+								binds = scope:target_country
+								any_scope_article = {
+									has_type = alliance
+								}
+							}
+							scope:treaty ?= {
+								any_scope_article_option = {
+									has_type = alliance
+								}
+							}
+						}
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_ALLIANCE"
+						value = 30
+					}
+				}
+				else_if = {
+					limit = {
+						OR = {
+							any_scope_treaty = {
+								binds = scope:target_country
+								any_scope_article = {
+									has_type = defensive_pact
+								}
+							}
+							scope:treaty ?= {
+								any_scope_article_option = {
+									has_type = defensive_pact
+								}
+							}
+						}
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_DEFENSIVE_PACT"
+						value = 15
+					}
+				}
+			}
+		}
+		
+	}
+
+	wargoal = {
+		execution_priority = 21
+
+		contestion_type = control_any_target_country_state
+
+		maneuvers = {
+			value = 0
+
+			add = {
+				desc = "MANEUVERS_BASE_VALUE"
+				value = 1
+			}
+
+			scope:target_country = {
+				multiply = {
+					desc = "MANEUVERS_TARGET_COUNTRY_POPULATION_FACTOR"
+					value = total_population
+					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+
+		infamy = {
+			value = 0
+
+			add = {
+				desc = "INFAMY_BASE_VALUE"
+				value = 0.1
+			}
+
+			scope:target_country = {
+				multiply = {
+					desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
+					value = total_population
+					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+	}
+}
