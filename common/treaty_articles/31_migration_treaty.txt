@@ -20,6 +20,11 @@
     unlocked_by_technologies = {
         
     }
+	
+	target_modifier = {
+		country_mass_migration_attraction_mult = 0.05
+		state_migration_pull_mult = 0.05
+	}
 
 	visible = {
 	
@@ -137,6 +142,29 @@
 				value = -50
 			}
 
+			#Rank based reluctance
+			if = {
+				limit = { scope:source_country = { country_rank = rank_value:super_power } }
+				add = {
+					desc = "great_power"
+					value = -300
+				}
+			}
+			else_if = {
+				limit = { scope:source_country = { country_rank = rank_value:great_power } }
+				add = {
+					desc = "great_power"
+					value = -200
+				}
+			}
+			else_if = {
+				limit = { scope:source_country = { country_rank = rank_value:major_power } }
+				add = {
+					desc = "major_power"
+					value = -100
+				}
+			}
+
 			#Ruler stance
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_MIGRATION_STANCE"
@@ -145,13 +173,13 @@
 						scope:target_country.ruler ?= {
 							interest_group = {
 								law_stance = {
-									law = law_type:law_no_migration_controls
+									law = law_type:law_closed_borders
 									value >= approve
 								}
 							}
 						}
 					}
-					add = 100
+					add = -100
 				}
 				else_if = {
 					limit = {
@@ -164,7 +192,7 @@
 							}
 						}
 					}
-					add = 50
+					add = -50
 				}
 			}
 			
@@ -228,7 +256,7 @@
 				value = scope:target_country.country_rank
 				subtract = 2
 				subtract = country_rank
-				multiply = 5
+				multiply = 50
 			}
 			multiply = {
 				desc = "DIPLOMATIC_ACCEPTANCE_GDP"
@@ -236,46 +264,32 @@
 
 				add = {
 					value = "scope:source_country.ai_gdp_comparison(root)"
-					max = 25
-					min = -50
+					max = 250
+					min = -500
 					multiply = 0.01
-				}
-			}
-			if = {
-				limit = {
-					gdp >= 2000000
-				}
-
-				subtract = {
-					desc = "DIPLOMATIC_ACCEPTANCE_HIGH_GDP"
-					value = gdp
-					subtract = 1000000
-					divide = 1000000
-					min = 1
-					max = 10
 				}
 			}
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_MUTUAL_TRADE_VALUE"
 				value = "mutual_trade_value_with_country(scope:target_country)"
-				multiply = 50000
+				multiply = 500000
 				divide = { # We modulate this value by GDP, clamped to a range to ensure it remains relevant for very small/very large economies
 					value = gdp
 					max = scope:target_country.gdp # We use whichever GDP is smaller
 					min = 1000000
 				}
-				max = 10
+				max = 1000
 			}
 			if = {
 				limit = {
 					scope:target_country ?= {
-						modifier:country_construction_add <= 50
+						modifier:country_construction_add <= 100
 					}
 				}
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_LOW_CONSTRUCTION"
 					value = scope:target_country.modifier:country_construction_add
-					subtract = 50
+					subtract = 100
 				}
 			}
 			
