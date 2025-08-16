@@ -1,541 +1,475 @@
-#Cameroon
+# ===========================
+#  Decolonisation – Events
+#  (Paradox script)
+# ===========================
+
+# Optional, but strongly recommended to avoid ID collisions across files
+namespace = decolonisation
+
+# --------------------------------------------
+# Cameroon — French independence choice
+# --------------------------------------------
 french_decolonisation_indy.1 = {
     type = country_event
-	
-    title = french_entercountryname.indy.t 					# Title of the event; ADD LOCALISATION
-    desc = french_entercountryname.indy.d 					# Description of the event; ADD LOCALISATION
-    #flavor = french_entercountryname.indy.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    title = french_entercountryname.indy.t                  # ADD LOCALISATION
+    desc  = french_entercountryname.indy.d                  # ADD LOCALISATION
+    #flavor = french_entercountryname.indy.f               # ADD LOCALISATION, IF NEEDED
 
     event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
 
-    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
-    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 
-    duration = 1 # Duration to fire if triggers are met
-	
-	trigger = {													# What triggers the event, if using other events or journal entries leave empty
-		
-		#Overlord conditions
-		exists = c:FRA
-		this = c:FRA											# Change TAG of the overlord ****
-		game_date >= 1960.1.1									# START DATE: Date colony became self governing ****
-		game_date < 1970.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
-		
-		is_a_republican_democracy = yes							# Correct gov types
-		is_sufficiently_independent = yes						# is_vassal = no		
-		is_at_war = no											# war = no
-		
-		#Colony conditions
-		c:insert_TAG = { 												# Change TAG of the colony ****
-			is_direct_subject_of = ROOT
-			is_not_sufficiently_independent = yes
-		}
-		
-		# Event has not been fired before
-		NOT = { has_variable = french_entercountryname_indy }			# CHANGE ****
-		
+    duration = 1                                            # Days window to evaluate triggers (kept)
+
+    trigger = {                                             # Event fires for the overlord
+        # Overlord conditions
+        exists = c:FRA
+        this = c:FRA                                        # Overlord TAG ****
+        game_date >= 1960.1.1                               # START DATE ****
+        game_date <  1970.1.1                               # END DATE (10y window) ****
+
+        is_a_republican_democracy = yes
+        is_sufficiently_independent = yes
+        is_at_war = no
+
+        # Colony conditions
+        c:insert_TAG = {                                    # Colony TAG ****
+            is_direct_subject_of = ROOT
+            is_not_sufficiently_independent = yes
+        }
+
+        # Fire only once
+        NOT = { has_variable = french_entercountryname_indy }   # ****
     }
-    
+
+    # Mark as fired as soon as it pops (prevents daily refiring spam)
+    immediate = {
+        set_variable = french_entercountryname_indy             # ****
+    }
+
     option = {
-        name = french_decolonisation_indy.option.1				# Grant them independence
+        name = french_decolonisation_indy.option.1          # Grant independence
         highlighted_option = yes
-		
-		# Colony becomes independent
-		c:insert_TAG = { 												# Change TAG of the colony ****
-			make_independent = yes
-		}
-		
-		# Overlord create client state pact with colony
-		create_diplomatic_pact = {
-			country = c:insert_TAG										# Change TAG ****
-			type = protectorate
-		}
-		
-		# Fire only once
-		set_variable = french_entercountryname_indy						# Change variable ****
-		
-		ai_chance = { 
-			base = 90 
-		}
-		
-    }
-	
-	option = {
-        name = french_decolonisation_indy.option.2					# REFUSE
-		default_option = yes
-		
-		c:insert_TAG = {
-		
-			# Natives are angry!
-			every_scope_state = {
-				add_radicals = {
-					value = large_radicals
-				}
-				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
-			}
-			
-			#Colony is angry
-			change_relations = {
-				country = ROOT
-				value = -100
-			}
-		}
-		
-		# Fire only once
-		set_variable = french_entercountryname_indy						# Change variable ****
-		
-		ai_chance = { 
-			base = 10 
-		}
-		
+
+        # Colony becomes independent (scope‑safe)
+        if = {
+            limit = { exists = c:insert_TAG }
+            c:insert_TAG = { make_independent = yes }       # ****
+        }
+
+        # Create protectorate pact if colony exists
+        if = {
+            limit = { exists = c:insert_TAG }
+            create_diplomatic_pact = {
+                country = c:insert_TAG                      # ****
+                type = protectorate
+            }
+        }
+
+        ai_chance = { base = 90 }
     }
 
+    option = {
+        name = french_decolonisation_indy.option.2          # REFUSE
+        default_option = yes
+
+        if = {
+            limit = { exists = c:insert_TAG }
+            c:insert_TAG = {
+                # Natives are angry in colony states only
+                every_scope_state = {
+                    limit = { owner = THIS }
+                    add_radicals = { value = large_radicals }
+                    add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes }
+                }
+                # Relations penalty with overlord
+                change_relations = { country = ROOT value = -100 }
+            }
+        }
+
+        ai_chance = { base = 10 }
+    }
 }
 
-# Sudan
+# --------------------------------------------
+# Sudan — British self‑government choice (release)
+# --------------------------------------------
 british_decolonisation.1 = {
     type = country_event
-	
-    title = british_entercountryname.sgc.t 			# Title of the event; ADD LOCALISATION
-    desc = british_entercountryname.sgc.d 				# Description of the event; ADD LOCALISATION
-    #flavor = british_entercountryname.sgc.f 			# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    title = british_entercountryname.sgc.t                  # ADD LOCALISATION
+    desc  = british_entercountryname.sgc.d                  # ADD LOCALISATION
+    #flavor = british_entercountryname.sgc.f               # ADD LOCALISATION, IF NEEDED
 
     event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
 
-    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
-    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 
-    duration = 1 # Duration to fire if triggers are met
-	
-	trigger = {													# What triggers the event, if using other events or journal entries leave empty
-		
-		#Overlord conditions
-		exists = c:GBR
-		this = c:GBR											# Change TAG of the overlord ****
-		game_date >= 1956.1.1									# START DATE: Date colony became self governing ****
-		game_date < 1966.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
-		
-		is_a_democratic_monarchy = yes									# Correct gov types
-		is_sufficiently_independent = yes						# is_vassal = no		
-		is_at_war = no											# war = no
-		
-		#Colony conditions
-		NOT = { 												# Colony to be released must not already exist on the map
-			exists = c:insert_TAG										# Change TAG of the colony ****
-		}
-		any_scope_state = { 									# Overlord owns the states of the colony to be released
-			state_region = { is_homeland = cu:entercountryculture }		# Change homeland identity to match colony to be released ****
-			is_incorporated = no								# State is a colony
-			#owner = ROOT										# Overlord must own the state to be released
-		}
-		
-		# Event has not been fired before
-		NOT = { has_variable = british_entercountryname_sgc }				# CHANGE ****
-		
+    duration = 1
+
+    trigger = {
+        # Overlord conditions
+        exists = c:GBR
+        this   = c:GBR                                      # Overlord TAG ****
+        game_date >= 1956.1.1                               # START DATE ****
+        game_date <  1966.1.1                               # END DATE (10y window) ****
+
+        is_a_democratic_monarchy = yes
+        is_sufficiently_independent = yes
+        is_at_war = no
+
+        # Colony to be released must not already exist
+        NOT = { exists = c:insert_TAG }                     # Colony TAG ****
+
+        # Overlord must own non‑incorporated homeland states of the colony culture
+        any_scope_state = {
+            state_region = { is_homeland = cu:entercountryculture }  # ****
+            is_incorporated = no
+            #owner = ROOT                                      # Optional stricter check
+        }
+
+        # Fire only once
+        NOT = { has_variable = british_entercountryname_sgc }        # ****
     }
-	
-	immediate = {
-	
-		# Generate list of provinces to be released				# DO NOT TOUCH ROOT SECTION
-		every_scope_state = {
-			limit = {
-				state_region = { is_homeland = cu:entercountryculture }	# Change homeland identity to match colony to be released ****
-				is_incorporated = no							# State is a colony
-				#contains_capital_of = c:insert_TAG						# State is the capital of colony ****
-			}
-			save_scope_as = colonial_state
-		}
-		
-		# Fire only once
-		set_variable = british_entercountryname_sgc						# Change variable ****
-		
-	}
-    
+
+    immediate = {
+        # Collect candidate states into a saved scope list
+        every_scope_state = {
+            limit = {
+                state_region = { is_homeland = cu:entercountryculture }   # ****
+                is_incorporated = no
+                #contains_capital_of = c:insert_TAG                        # Optional capital lock ****
+            }
+            save_scope_as = colonial_state
+        }
+
+        # Mark as fired
+        set_variable = british_entercountryname_sgc                     # ****
+    }
+
     option = {
-        name = british_decolonisation.option.1				#Grant them self-government
-        default_option = yes highlighted_option = yes
-		
-		#Release country
-		create_country = {
-			tag = insert_TAG										# Change TAG of country being released ****
-			origin = ROOT									# TAG where the created country takes tech from
-			state = scope:colonial_state
-			
-			on_created = {									# Set government laws & rulers here
-				
-				# SET laws for colony ****
-				effect_starting_politics_constitutional_monarchy = yes
-				effect_starting_politics_democratic = yes
-				effect_starting_politics_constitutional_unitary_state = yes
-				effect_starting_politics_war_policy_anti_military = yes
-				effect_starting_politics_economic_policy_interventionism = yes
-				effect_starting_politics_trade_policy_protectionism = yes
-				effect_starting_politics_anti_nuclear_policy = yes
-				
-				# CREATE leader for colony ****
-				create_character = {
-					first_name = "guy_incognito_first_name"		# CHANGE
-					last_name = "guy_incognito_last_name"		# CHANGE
-					ruler = yes
-					#birth_date = 1910.1.1						# CHANGE
-					interest_group = ig_rural_folk					# CHANGE
-					ideology = ideology_democratic				# CHANGE
-					traits = {
-						charismatic								# CHANGE
-						persistent								# CHANGE
-						meticulous								# CHANGE
-					}
-				}
-				
-				# Set diplomatic recognition
-				set_country_type = unrecognized
-			}
-		}
-		every_scope_state = {
-			limit = {
-		 		state_region = { is_homeland = cu:entercountryculture }	# Change homeland identity to match colony to be released ****
-				is_incorporated = no							# State is a colony
-		 	}
-			set_state_owner = c:insert_TAG								# Change TAG to colony ****
-		}
-		
-		# Overlord create self governing colony pact with colony
-		if = { 
-			limit = { exists = c:insert_TAG }
-			create_diplomatic_pact = {
-				country = c:insert_TAG										# Change TAG ****
-				type = semi_autonomous_colony
-			}
-		}
-		
-		# Fire only once
-		set_variable = british_entercountryname_sgc						# Change variable ****
-		
-		ai_chance = { 
-			base = 90 
-		}
-		
-    }
-	
-	option = {
-        name = british_decolonisation.option.2					# REFUSE
-		
-		# Natives are angry!
-		every_scope_state = {
-			limit = {
-		 		state_region = { is_homeland = cu:entercountryculture }	# Change homeland identity to match colony to be released ****
-		 	}
-			add_radicals_in_state = {
-				culture = cu:entercountryculture							# Change culture ****
-				value = large_radicals
-			}
-			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
-		}
-		
-		# Fire only once
-		set_variable = british_entercountryname_sgc						# Change variable ****
-		
-		ai_chance = { 
-			base = 10 
-		}
-		
+        name = british_decolonisation.option.1          # Grant self‑government
+        default_option = yes
+        highlighted_option = yes
+
+        # Create the country from saved states
+        create_country = {
+            tag    = insert_TAG                          # Released TAG ****
+            origin = ROOT
+            state  = scope:colonial_state
+
+            on_created = {
+                # Laws ****
+                effect_starting_politics_constitutional_monarchy = yes
+                effect_starting_politics_democratic = yes
+                effect_starting_politics_constitutional_unitary_state = yes
+                effect_starting_politics_war_policy_anti_military = yes
+                effect_starting_politics_economic_policy_interventionism = yes
+                effect_starting_politics_trade_policy_protectionism = yes
+                effect_starting_politics_anti_nuclear_policy = yes
+
+                # Ruler ****
+                create_character = {
+                    first_name = "guy_incognito_first_name"     # ****
+                    last_name  = "guy_incognito_last_name"       # ****
+                    ruler = yes
+                    #birth_date = 1910.1.1                      # ****
+                    interest_group = ig_rural_folk              # ****
+                    ideology = ideology_democratic              # ****
+                    traits = { charismatic persistent meticulous }  # ****
+                }
+
+                set_country_type = unrecognized
+            }
+        }
+
+        # Transfer all relevant states (safe if country exists)
+        if = {
+            limit = { exists = c:insert_TAG }
+            every_scope_state = {
+                limit = {
+                    state_region = { is_homeland = cu:entercountryculture } # ****
+                    is_incorporated = no
+                }
+                set_state_owner = c:insert_TAG                               # ****
+            }
+        }
+
+        # Create self‑governing colony pact when possible
+        if = {
+            limit = { exists = c:insert_TAG }
+            create_diplomatic_pact = {
+                country = c:insert_TAG                                       # ****
+                type    = semi_autonomous_colony
+            }
+        }
+
+        ai_chance = { base = 90 }
     }
 
+    option = {
+        name = british_decolonisation.option.2          # REFUSE
+
+        # Natives in homeland region get radicals (only in matching states)
+        every_scope_state = {
+            limit = { state_region = { is_homeland = cu:entercountryculture } }  # ****
+            add_radicals_in_state = { culture = cu:entercountryculture value = large_radicals }  # ****
+            add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes }
+        }
+
+        ai_chance = { base = 10 }
+    }
 }
 
-#Canada
+# --------------------------------------------
+# Canada — British independence choice
+# --------------------------------------------
 british_decolonisation_indy.1 = {
     type = country_event
-	
-    title = british_entercountryname.indy.t 				# Title of the event; ADD LOCALISATION
-    desc = british_entercountryname.indy.d 					# Description of the event; ADD LOCALISATION
-    #flavor = british_entercountryname.indy.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    title = british_entercountryname.indy.t               # ADD LOCALISATION
+    desc  = british_entercountryname.indy.d               # ADD LOCALISATION
+    #flavor = british_entercountryname.indy.f            # ADD LOCALISATION, IF NEEDED
 
     event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
 
-    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
-    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 
-    duration = 1 # Duration to fire if triggers are met
-	
-	trigger = {													# What triggers the event, if using other events or journal entries leave empty
-		
-		#Overlord conditions
-		exists = c:GBR
-		this = c:GBR											# Change TAG of the overlord ****
-		game_date >= 1960.1.1									# START DATE: Date colony became self governing ****
-		game_date < 1970.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
-		
-		is_a_democratic_monarchy = yes							# Correct gov types
-		is_sufficiently_independent = yes						# is_vassal = no		
-		is_at_war = no											# war = no
-		
-		#Colony conditions
-		c:insert_TAG = { 												# Change TAG of the colony ****
-			is_direct_subject_of = ROOT
-			is_not_sufficiently_independent = yes
-		}
-		
-		# Event has not been fired before
-		NOT = { has_variable = british_entercountryname_indy }			# CHANGE ****
-		
+    duration = 1
+
+    trigger = {
+        # Overlord
+        exists = c:GBR
+        this   = c:GBR                                     # Overlord TAG ****
+        game_date >= 1960.1.1                              # START DATE ****
+        game_date <  1970.1.1                              # END DATE (10y window) ****
+
+        is_a_democratic_monarchy = yes
+        is_sufficiently_independent = yes
+        is_at_war = no
+
+        # Colony is a direct subject
+        c:insert_TAG = {                                   # Colony TAG ****
+            is_direct_subject_of = ROOT
+            is_not_sufficiently_independent = yes
+        }
+
+        # Fire only once
+        NOT = { has_variable = british_entercountryname_indy }   # ****
     }
-	
-	immediate = { 
-		
-		# Fire only once
-		set_variable = british_entercountryname_indy						# Change variable ****
-		
-	}
-    
+
+    immediate = {
+        set_variable = british_entercountryname_indy            # ****
+    }
+
     option = {
-        name = british_decolonisation_indy.option.1				# Grant them independence
+        name = british_decolonisation_indy.option.1     # Grant independence
         highlighted_option = yes
-		
-		# Colony becomes independent
-		c:insert_TAG = { 												# Change TAG of the colony ****
-			make_independent = yes
-		}
-		
-		# Overlord create client state pact with colony
-		create_diplomatic_pact = {
-			country = c:insert_TAG										# Change TAG ****
-			type = personal_union
-		}
-		
-		ai_chance = { 
-			base = 90 
-		}
-		
-    }
-	
-	option = {
-        name = british_decolonisation_indy.option.2					# REFUSE
-		default_option = yes
-		
-		c:insert_TAG = {
-		
-			# Natives are angry!
-			every_scope_state = {
-				add_radicals = {
-					value = large_radicals
-				}
-				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
-			}
-			
-			#Colony is angry
-			change_relations = {
-				country = ROOT
-				value = -100
-			}
-		}
-		
-		ai_chance = { 
-			base = 10 
-		}
-		
+
+        if = {
+            limit = { exists = c:insert_TAG }
+            c:insert_TAG = { make_independent = yes }
+        }
+
+        if = {
+            limit = { exists = c:insert_TAG }
+            create_diplomatic_pact = {
+                country = c:insert_TAG
+                type    = personal_union
+            }
+        }
+
+        ai_chance = { base = 90 }
     }
 
+    option = {
+        name = british_decolonisation_indy.option.2     # REFUSE
+        default_option = yes
+
+        if = {
+            limit = { exists = c:insert_TAG }
+            c:insert_TAG = {
+                every_scope_state = {
+                    limit = { owner = THIS }
+                    add_radicals = { value = large_radicals }
+                    add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes }
+                }
+                change_relations = { country = ROOT value = -100 }
+            }
+        }
+
+        ai_chance = { base = 10 }
+    }
 }
 
-### Algerian War ###
-
+# --------------------------------------------
+# Historical Colonial War — parameterised aggressor/defender
+# (e.g., Algerian War)
+# --------------------------------------------
 historical_colonial_wars.1 = {
     type = country_event
 
-    title = entercountryculture_war.t 								# Title of the event; ADD LOCALISATION
-    desc = entercountryculture_war.d 								# Description of the event; ADD LOCALISATION
-    #flavor = entercountryculture_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+    title = entercountryculture_war.t                     # ADD LOCALISATION
+    desc  = entercountryculture_war.d                     # ADD LOCALISATION
+    #flavor = entercountryculture_war.f                  # ADD LOCALISATION, IF NEEDED
 
     event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
 
-    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
-    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 
-    duration = 1 # Duration to fire if triggers are met
-	
-	trigger = {															# What triggers the event, if using other events or journal entries leave empty
-		
-		#Overlord conditions
-		exists = c:aggressor_tag this = c:aggressor_tag										# Change TAG of the overlord ****
-		game_date >= 1950.3.25											# START DATE: Date colony became self governing ****
-		game_date < 1960.6.25											# END DATE: All historical events must not fire 10 years after the START DATE ****
-		
-		is_a_democracy = yes											# Correct gov types
-		is_sufficiently_independent = yes								# is_vassal = no		
-		#is_at_war = no													# war = no
-		
-		#can_go_to_war = yes											# No legal or political restrictions on going to war
-		
-		#Colony conditions
-		NOT = { 												# Colony to be released must not already exist on the map
-			exists = c:defender_tag										# Change TAG of the colony ****
-		}
-		any_scope_state = { 									# Overlord owns the states of the colony to be released
-			state_region = { is_homeland = cu:entercountryculture }			# Change homeland identity to match colony to be released ****
-			is_incorporated = no								# State is a colony
-		}
-		
-		# Event has not been fired before
-		NOT = { has_variable = entercountryculture_war_hcw }					# CHANGE ****
-		
+    duration = 1
+
+    trigger = {
+        # Overlord / aggressor
+        exists = c:aggressor_tag                          # ****
+        this   = c:aggressor_tag                          # ****
+
+        game_date >= 1950.3.25                            # START DATE ****
+        game_date <  1960.6.25                            # END DATE (10y window) ****
+
+        is_a_democracy = yes
+        is_sufficiently_independent = yes
+        #is_at_war = no                                   # Deliberately commented (war possible)
+
+        # Target (defender) does not already exist
+        NOT = { exists = c:defender_tag }                 # ****
+
+        # Aggressor owns non‑incorporated homeland states of the target culture
+        any_scope_state = {
+            state_region = { is_homeland = cu:entercountryculture }   # ****
+            is_incorporated = no
+        }
+
+        # Fire only once
+        NOT = { has_variable = entercountryculture_war_hcw }          # ****
     }
-	
-	immediate = {
-	
-		# Generate list of provinces to be released						# DO NOT TOUCH ROOT SECTION
-		every_scope_state = {
-			limit = {
-				state_region = { is_homeland = cu:entercountryculture }	# Change homeland identity to match colony to be released ****
-				is_incorporated = no									# State is a colony
-				#contains_capital_of = c:defender_tag					# State is the capital of colony ****
-			}
-			save_scope_as = colonial_state
-		}
-	
-		# Fire only once
-		set_variable = entercountryculture_war_hcw							# Change variable ****
-		
-	}
-    
+
+    immediate = {
+        # Collect colonial states for release
+        every_scope_state = {
+            limit = {
+                state_region = { is_homeland = cu:entercountryculture }   # ****
+                is_incorporated = no
+                #contains_capital_of = c:defender_tag                      # Optional capital lock ****
+            }
+            save_scope_as = colonial_state
+        }
+
+        set_variable = entercountryculture_war_hcw                        # ****
+    }
+
     option = {
-        name = historical_colonial_wars.option.1					# Declare war!
+        name = historical_colonial_wars.option.1      # Declare war!
         highlighted_option = yes
-		
-		#Release country
-		create_country = {
-			tag = defender_tag								# Change TAG of country being released ****
-			origin = ROOT									# TAG where the created country takes tech from
-			state = scope:colonial_state
-			
-			on_created = {									# Set government laws & rulers here
-				
-				# SET laws for colony ****
-				effect_starting_politics_nationalist_republic = yes
-				effect_starting_politics_regime = yes
-				effect_starting_politics_constitutional_unitary_state = yes
-				effect_starting_politics_war_policy_pro_military = yes
-				effect_starting_politics_economic_policy_interventionism = yes
-				effect_starting_politics_trade_policy_protectionism = yes
-				effect_starting_politics_anti_nuclear_policy = yes
-				
-				# CREATE leader for colony ****
-				create_character = {
-					first_name = "guy_incognito_first_name"		# CHANGE
-					last_name = "guy_incognito_last_name"		# CHANGE
-					ruler = yes
-					#birth_date = 1910.1.1						# CHANGE
-					interest_group = ig_rural_folk					# CHANGE
-					ideology = ideology_democratic				# CHANGE
-					traits = {
-						charismatic								# CHANGE
-						persistent								# CHANGE
-						meticulous								# CHANGE
-					}
-				}
-				
-				# Set diplomatic recognition
-				set_country_type = unrecognized
-			}
-		}
-		every_scope_state = {
-			limit = {
-		 		state_region = { is_homeland = cu:entercountryculture }	# Change homeland identity to match colony to be released ****
-		 	}
-			set_state_owner = c:defender_tag							# Change TAG to colony ****
-		}
-		
-		#entercountryculture War
-		create_diplomatic_play = {
-			name = entercountryculture_war
-			type = dp_annex_war_historical
-			target_country = c:defender_tag
-			
-			#war = yes
-			
-			add_war_goal = {
-				holder = c:defender_tag
-				type = humiliation
-				target_country = c:aggressor_tag
-			}
-			
-		}
-		
-		ai_chance = { 
-			base = 90 
-		}
-		
-    }
-	
-	option = {
-        name = historical_colonial_wars.option.2					# Peace option
-		default_option = yes
-		
-		#Independence for the defender
-		#Release country
-		create_country = {
-			tag = defender_tag										# Change TAG of country being released ****
-			origin = ROOT											# TAG where the created country takes tech from
-			state = scope:colonial_state
-			
-			on_created = {											# Set government laws & rulers here
-				
-				# SET laws for colony ****
-				effect_starting_politics_constitutional_monarchy = yes
-				effect_starting_politics_democratic = yes
-				effect_starting_politics_constitutional_unitary_state = yes
-				effect_starting_politics_war_policy_anti_military = yes
-				effect_starting_politics_economic_policy_interventionism = yes
-				effect_starting_politics_trade_policy_protectionism = yes
-				effect_starting_politics_anti_nuclear_policy = yes
-				
-				# CREATE leader for colony ****
-				create_character = {
-					first_name = "guy_incognito_first_name"		# CHANGE
-					last_name = "guy_incognito_last_name"		# CHANGE
-					ruler = yes
-					#birth_date = 1910.1.1						# CHANGE
-					interest_group = ig_rural_folk				# CHANGE
-					ideology = ideology_democratic				# CHANGE
-					traits = {
-						charismatic								# CHANGE
-						persistent								# CHANGE
-						meticulous								# CHANGE
-					}
-				}
-				
-				# Set diplomatic recognition
-				set_country_type = unrecognized
-			}
-		}
-		every_scope_state = {
-			limit = {
-		 		state_region = { is_homeland = cu:entercountryculture }		# Change homeland identity to match colony to be released ****
-		 	}
-			set_state_owner = c:defender_tag								# Change TAG to colony ****
-		}
-		
-		#National humiliation
-		add_modifier = { 
-			name = national_humiliation 
-			years = 1
-			is_decaying = yes 
-		}
-		
-		#Minor discontent
-		custom_tooltip = {
-			text = everyone_is_angry_custom_tooltip
-			every_scope_state = {
-				add_radicals = {
-					value = small_radicals
-				}
-			}
-		}
-		
-		ai_chance = { 
-			base = 10 
-		}
-		
+
+        # Release defender country in those states
+        create_country = {
+            tag    = defender_tag                     # ****
+            origin = ROOT
+            state  = scope:colonial_state
+
+            on_created = {
+                # Laws (militant nationalist republic) ****
+                effect_starting_politics_nationalist_republic = yes
+                effect_starting_politics_regime = yes
+                effect_starting_politics_constitutional_unitary_state = yes
+                effect_starting_politics_war_policy_pro_military = yes
+                effect_starting_politics_economic_policy_interventionism = yes
+                effect_starting_politics_trade_policy_protectionism = yes
+                effect_starting_politics_anti_nuclear_policy = yes
+
+                # Ruler ****
+                create_character = {
+                    first_name = "guy_incognito_first_name"  # ****
+                    last_name  = "guy_incognito_last_name"    # ****
+                    ruler = yes
+                    #birth_date = 1910.1.1                   # ****
+                    interest_group = ig_rural_folk           # ****
+                    ideology = ideology_democratic           # ****
+                    traits = { charismatic persistent meticulous }  # ****
+                }
+
+                set_country_type = unrecognized
+            }
+        }
+
+        # Transfer states (idempotent)
+        every_scope_state = {
+            limit = { state_region = { is_homeland = cu:entercountryculture } }  # ****
+            set_state_owner = c:defender_tag                                      # ****
+        }
+
+        # Kick off the historical diplomatic play / war wrapper
+        if = {
+            limit = { exists = c:defender_tag }
+            create_diplomatic_play = {
+                name = entercountryculture_war
+                type = dp_annex_war_historical
+                target_country = c:defender_tag
+
+                add_war_goal = {
+                    holder = c:defender_tag
+                    type   = humiliation
+                    target_country = c:aggressor_tag
+                }
+            }
+        }
+
+        ai_chance = { base = 90 }
     }
 
+    option = {
+        name = historical_colonial_wars.option.2      # Peace option
+        default_option = yes
+
+        # Peaceful independence (constitutional monarchy template)
+        create_country = {
+            tag    = defender_tag
+            origin = ROOT
+            state  = scope:colonial_state
+
+            on_created = {
+                effect_starting_politics_constitutional_monarchy = yes
+                effect_starting_politics_democratic = yes
+                effect_starting_politics_constitutional_unitary_state = yes
+                effect_starting_politics_war_policy_anti_military = yes
+                effect_starting_politics_economic_policy_interventionism = yes
+                effect_starting_politics_trade_policy_protectionism = yes
+                effect_starting_politics_anti_nuclear_policy = yes
+
+                create_character = {
+                    first_name = "guy_incognito_first_name"  # ****
+                    last_name  = "guy_incognito_last_name"    # ****
+                    ruler = yes
+                    #birth_date = 1910.1.1                   # ****
+                    interest_group = ig_rural_folk           # ****
+                    ideology = ideology_democratic           # ****
+                    traits = { charismatic persistent meticulous }  # ****
+                }
+
+                set_country_type = unrecognized
+            }
+        }
+
+        every_scope_state = {
+            limit = { state_region = { is_homeland = cu:entercountryculture } }  # ****
+            set_state_owner = c:defender_tag                                      # ****
+        }
+
+        # National humiliation for the aggressor (decaying)
+        add_modifier = { name = national_humiliation years = 1 is_decaying = yes }
+
+        # Minor discontent everywhere (kept)
+        custom_tooltip = {
+            text = everyone_is_angry_custom_tooltip
+            every_scope_state = { add_radicals = { value = small_radicals } }
+        }
+
+        ai_chance = { base = 10 }
+    }
 }
