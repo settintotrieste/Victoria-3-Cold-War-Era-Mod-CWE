@@ -1,0 +1,167 @@
+namespace = BEL_gov_changes
+
+# Abdication of Leopold III
+BEL_gov_changes.1 = {
+    type = country_event
+
+    title = BEL_1951_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = BEL_1951_revolution.d 							# Description of the event; ADD LOCALISATION
+    flavor = BEL_1951_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:BEL ?= this
+		game_date >= 1951.7.16									# START DATE: Date colony became self governing ****
+		game_date < 1961.7.16									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_constitutional_monarchy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = BEL_1951_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = BEL_1951_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Mark abdication
+		set_variable = Leopold_III_abdication
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			culture = cu:flemish
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_semi_constitutional_monarchy = yes
+		
+		#Install King
+		trigger_event = { id = historical_restore_monarchy.1 }
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			culture = cu:wallonian
+		}
+		every_scope_state = {
+			limit = { state_region = { is_homeland = cu:wallonian } }
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Federal Government of Belgium
+BEL_gov_changes.2 = {
+    type = country_event
+
+    title = BEL_1993_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = BEL_1993_revolution.d 							# Description of the event; ADD LOCALISATION
+    flavor = BEL_1993_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:BEL ?= this
+		game_date >= 1993.5.5									# START DATE: Date colony became self governing ****
+		game_date < 2003.5.5									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democratic_monarchy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Not a federal state
+		NOT = { has_law = law_type:law_federal_state }
+		
+		# Event has not been fired before
+		NOT = { has_variable = BEL_1993_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = BEL_1993_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_constitutional_federal_state = yes
+		effect_increase_multiculturalism = yes
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			culture = cu:wallonian
+		}
+		add_radicals = {
+			value = large_radicals
+			culture = cu:flemish
+		}
+		every_scope_state = {
+			limit = { state_region = { OR = { is_homeland = cu:wallonian is_homeland = cu:flemish } } }
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
