@@ -1,0 +1,90 @@
+namespace = NET_gov_changes
+
+# Depillarisation
+NET_gov_changes.1 = {
+    type = country_event
+
+    title = NET_1970_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = NET_1970_revolution.d 							# Description of the event; ADD LOCALISATION
+    flavor = NET_1970_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:NET ?= this
+		game_date >= 1970.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1980.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_constitutional_monarchy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Causes
+		OR = { 
+			has_law = law_type:law_state_religion
+			has_law = law_type:law_freedom_of_conscience
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = NET_1970_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = NET_1970_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		activate_law = law_type:law_total_separation
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_devout
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_landowners
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
