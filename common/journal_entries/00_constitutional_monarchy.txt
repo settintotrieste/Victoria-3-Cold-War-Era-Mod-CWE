@@ -15,12 +15,32 @@ je_constitutional_monarchy = {
 
 	possible = {
 		
-		is_revolutionary = no
-		is_secessionist = no
+		#is_revolutionary = no
+		#is_secessionist = no
 		
 	}
 
 	immediate = {
+		
+		#No existing monarch
+		if = {
+			limit = {
+				NOT = {
+					any_scope_character = {
+						has_modifier = monarch_character
+					}
+				}
+			}
+			generate_monarch_for_country = yes
+		}
+		
+		#Mark Monarch
+		random_scope_character = {
+			limit = { 
+				has_modifier = monarch_character
+			}
+			save_scope_as = constitutional_monarch_scope
+		}
 		
 		#Clear modifiers
 		if = { limit = { has_modifier = monarch_ig_landowners } remove_modifier = monarch_ig_landowners }
@@ -35,9 +55,6 @@ je_constitutional_monarchy = {
 		remove_variable = elective_monarchy_system_timer
 		remove_variable = female_monarch_var
 		
-		#Select Monarch
-		select_new_monarch = yes
-		
 		#Historical elective monarchies
 		if = {
 			limit = { 
@@ -50,13 +67,30 @@ je_constitutional_monarchy = {
 			set_variable = elective_monarchy_system
 		}
 		
+		#Elective Monarchy
+		if = {
+			limit = { 
+				has_variable = elective_monarchy_system
+			}
+			set_variable = { 
+				name = elective_monarchy_system_timer
+				years = 5
+			}
+		}
+		
 	}
 
 	fail = {
 		
-		NAND = {
-			has_law = law_type:law_HOS_monarch
-			is_a_constitutional_monarchy = yes
+		OR = { 
+		
+			NAND = {
+				has_law = law_type:law_HOS_monarch
+				is_a_constitutional_monarchy = yes
+			}
+			
+			NOT = { exists = scope:constitutional_monarch_scope }
+			
 		}
 		
 	}
@@ -82,24 +116,6 @@ je_constitutional_monarchy = {
 	
 		effect = {
 			
-			#Change monarch
-			if = {
-				limit = { 
-					has_variable = elective_monarchy_system 
-					NOT = { has_variable = elective_monarchy_system_timer }
-				}
-				select_new_monarch = yes
-			}
-			else = {
-				random_list = {
-					40 = { }
-					1 = { 
-						select_new_monarch = yes 
-						trigger_event = { id = constitutional_monarchy_system.1 }
-					}
-				}
-			}
-			
 		}
 		
 	}
@@ -109,37 +125,61 @@ je_constitutional_monarchy = {
 			triggered_desc = {
 				desc = monarch_ig_landowners
 				trigger = {
-					has_modifier = monarch_ig_landowners
+					scope:constitutional_monarch_scope ?= {
+						has_modifier = monarch_character
+						is_interest_group_type = ig_landowners
+					}
 				}
 			}
 			triggered_desc = {
 				desc = monarch_ig_devout
 				trigger = {
-					has_modifier = monarch_ig_devout
+					scope:constitutional_monarch_scope ?= {
+						has_modifier = monarch_character
+						is_interest_group_type = ig_devout
+					}
 				}
 			}
 			triggered_desc = {
 				desc = monarch_ig_rural_folk
 				trigger = {
-					has_modifier = monarch_ig_rural_folk
+					scope:constitutional_monarch_scope ?= {
+						has_modifier = monarch_character
+						is_interest_group_type = ig_rural_folk
+					}
 				}
 			}
 			triggered_desc = {
 				desc = monarch_ig_industrialists
 				trigger = {
-					has_modifier = monarch_ig_industrialists
+					scope:constitutional_monarch_scope ?= {
+						has_modifier = monarch_character
+						is_interest_group_type = ig_industrialists
+					}
 				}
 			}
 			triggered_desc = {
 				desc = monarch_ig_petty_bourgeoisie
 				trigger = {
-					has_modifier = monarch_ig_petty_bourgeoisie
+					scope:constitutional_monarch_scope ?= {
+						has_modifier = monarch_character
+						is_interest_group_type = ig_petty_bourgeoisie
+					}
 				}
 			}
 			triggered_desc = {
 				desc = monarch_ig_trade_unions
 				trigger = {
-					has_modifier = monarch_ig_trade_unions
+					scope:constitutional_monarch_scope ?= {
+						has_modifier = monarch_character
+						is_interest_group_type = ig_trade_unions
+					}
+				}
+			}
+			triggered_desc = {
+				desc = monarch_technocratic
+				trigger = {
+					always = yes
 				}
 			}
 		}
