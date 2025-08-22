@@ -8103,3 +8103,89 @@ historical_domestic_unrest.85 = {
     }
 
 }
+
+# The "doctors' plot"
+historical_domestic_unrest.86 = {
+    type = country_event
+
+    title = SOV_doctors_plot_1951.t 							# Title of the event; ADD LOCALISATION
+    desc = SOV_doctors_plot_1951.d 								# Description of the event; ADD LOCALISATION
+    #flavor = SOV_doctors_plot_1951.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_police_breaking_door.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SOV ?= this											# Change TAG of the overlord ****
+		game_date >= 1951.7.14									# START DATE: Date colony became self governing ****
+		game_date < 1961.7.14									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Stalin is alive
+		ruler ?= { has_variable = joseph_stalin }
+		
+		# Event has not been fired before
+		NOT = { has_variable = SOV_doctors_plot_1951_hdu }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SOV_doctors_plot_1951_hdu				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		
+		#Benefits
+		add_modifier = { 
+			name = strengthened_government_authority
+			years = 5
+			is_decaying = yes 
+		}
+		
+		#Major discontent
+		add_radicals = {
+			religion = rel:jewish
+			value = very_large_radicals
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2				# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_intelligentsia
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_petty_bourgeoisie
+			value = very_large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
