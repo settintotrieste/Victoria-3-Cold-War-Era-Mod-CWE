@@ -587,7 +587,7 @@ american_decolonisation_indy.4 = {
 				limit = { exists = c:PAU }
 				create_diplomatic_pact = {
 					country = c:PAU										# Change TAG ****
-					type = protectorate
+					type = mandate
 				}
 			}
 		}
@@ -1670,6 +1670,110 @@ american_decolonisation_indy.14 = {
 			months = 60 
 			is_decaying = yes 
 		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+#Palau
+american_decolonisation_indy.15 = {
+    type = country_event
+	placement = c:PAU
+
+    title = american_palau.indy.t 								# Title of the event; ADD LOCALISATION
+    desc = american_palau.indy.d 								# Description of the event; ADD LOCALISATION
+    #flavor = american_palau.indy.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this
+		game_date >= 1994.10.1
+		game_date < 2004.10.1
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		exists = c:PAU
+		c:PAU = { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			NOT = { is_sufficiently_independent = yes }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = american_palau_indy }			# CHANGE ****
+		
+    }
+	
+	immediate = { 
+		
+		# Fire only once
+		set_variable = american_palau_indy						# Change variable ****
+		
+	}
+    
+    option = {
+        name = american_decolonisation_indy.option.1			# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		c:PAU = { 												# Change TAG of the colony ****
+			make_independent = yes
+		}
+		
+		# Overlord create self governing colony pact with colony
+		if = {
+			limit = { exists = c:PAU }
+			create_diplomatic_pact = {
+				country = c:PAU									# Change TAG ****
+				type = protectorate
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = american_decolonisation_indy.option.2			# REFUSE
+		default_option = yes
+		
+		#Reaction
+		c:PAU = {
+		
+			# Natives are angry!
+			add_radicals = {
+				value = large_radicals
+			}
+			every_scope_state = {
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+			#Colony is angry
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+			
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
