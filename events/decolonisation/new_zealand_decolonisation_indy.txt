@@ -113,3 +113,117 @@ new_zealand_decolonisation_indy.1 = {
     }
 
 }
+
+#Cook Islands
+new_zealand_decolonisation_indy.2 = {
+    type = country_event
+	placement = scope:colonial_state
+
+    title = new_zealand_cook_islands.indy.t 					# Title of the event; ADD LOCALISATION
+    desc = new_zealand_cook_islands.indy.d 						# Description of the event; ADD LOCALISATION
+    #flavor = new_zealand_cook_islands.indy.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:NZL ?= this											# Change TAG of the overlord ****
+		game_date >= 1965.8.4									# START DATE: Date colony became self governing ****
+		game_date < 1975.8.4									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democratic_monarchy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:COI										# Change TAG of the colony ****
+		}
+		p:xA000B0.state.owner = {
+			THIS = ROOT
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = new_zealand_cook_islands_indy }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+		
+		p:xA000B0.state = {
+			save_scope_as = colonial_state
+		}
+		
+		# Fire only once
+		set_variable = new_zealand_cook_islands_indy			# Change variable ****
+	}
+    
+    option = {
+        name = australian_decolonisation_indy.option.1			# Grant them independence
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = COI											# Change TAG of country being released ****
+			origin = ROOT										# TAG where the created country takes tech from
+			province = p:xA000B0
+			
+			on_created = {										# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_constitutional_monarchy = yes
+				effect_starting_politics_democratic = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_anti_military = yes
+				effect_starting_politics_economic_policy_laissez_faire = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		
+		# Overlord create self governing colony pact with colony
+		if = { 
+			limit = { exists = c:COI }
+			create_diplomatic_pact = {
+				country = c:COI								# Change TAG ****
+				type = semi_autonomous_colony
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = australian_decolonisation_indy.option.2				# REFUSE
+		default_option = yes
+		
+		# Natives are angry!
+		scope:colonial_state ?= {
+			add_radicals_in_state = {
+				value = large_radicals
+			}
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
