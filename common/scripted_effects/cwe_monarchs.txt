@@ -1843,15 +1843,24 @@ generate_monarch_for_country = {
 					has_modifier = monarch_character
 					is_ruler = no
 				}
-				retire_character_scripted_effect = yes
+				retire_monarch_character_scripted_effect = yes
 			}
 		}
 		else = {
-			create_character = {
-				save_scope_as = ruler_to_be
-				is_agitator = yes noble = yes
-				on_created = { 
-					set_character_as_monarch = yes
+			if = {
+				limit = {
+					NOT = { 
+						any_scope_character = { 
+							has_modifier = monarch_character 
+						}
+					}
+				}
+				create_character = {
+					save_scope_as = ruler_to_be
+					is_agitator = yes noble = yes
+					on_created = { 
+						set_character_as_monarch = yes
+					}
 				}
 			}
 		}
@@ -1931,7 +1940,7 @@ remove_current_monarchs = {
 		limit = { 
 			has_modifier = monarch_character
 		}
-		retire_character_scripted_effect = yes
+		retire_monarch_character_scripted_effect = yes
 	}
 	set_variable = { 
 		name = monarchy_deposed_recently
@@ -1940,10 +1949,18 @@ remove_current_monarchs = {
 	
 }
 
-retire_character_scripted_effect = {
+retire_monarch_character_scripted_effect = {
 	save_scope_as = retiring_monarch
 	custom_tooltip = {
 		text = retire_monarch
+		kill_character = { hidden = yes }
+	}
+}
+
+retire_character_scripted_effect = {
+	save_scope_as = retiring_monarch
+	custom_tooltip = {
+		text = retire_character
 		kill_character = { hidden = yes }
 	}
 }
@@ -1964,6 +1981,60 @@ resolve_any_exiled_monarch = {
 		hidden_effect = {
 			remove_modifier = in_exile_modifier
 		}
+	}
+
+}
+
+generate_viceroy_for_country = {
+
+	#Generic Viceroy
+	if = {
+		limit = {
+			any_scope_character = {
+				has_modifier = viceroy_character
+				is_ruler = no
+			}
+		}
+		random_scope_character = {
+			limit = {
+				has_modifier = viceroy_character
+				is_ruler = no
+			}
+			set_character_as_viceroy = yes
+		}
+	}
+	else = {
+		create_character = {
+			save_scope_as = ruler_to_be
+			is_agitator = yes
+			on_created = { 
+				set_character_as_viceroy = yes
+			}
+		}
+	}
+
+}
+
+set_character_as_viceroy = {
+	
+	if = { 
+		limit = { 
+			owner ?= { is_a_foreign_regime_monarchy = yes } 
+			is_ruler = no
+		}
+		set_character_as_ruler = yes
+		if = {
+			limit = { has_role = agitator }
+			remove_character_role = agitator
+		}
+	}
+	if = {
+		limit = { NOT = { has_modifier = viceroy_character } }
+		add_modifier = { name = viceroy_character }
+	}
+	if = {
+		limit = { NOT = { has_variable = viceroy_character_term_limit } }
+		set_variable = { name = viceroy_character_term_limit years = 5 }
 	}
 
 }

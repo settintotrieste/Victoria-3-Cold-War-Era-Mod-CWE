@@ -46,6 +46,17 @@ je_constitutional_monarchy = {
 						save_scope_as = constitutional_monarch_scope
 					}
 				}
+				#No existing viceroy
+				if = {
+					limit = {
+						NOT = {
+							any_scope_character = {
+								has_modifier = viceroy_character
+							}
+						}
+					}
+					generate_viceroy_for_country = yes
+				}
 			}
 			else_if = {
 				limit = { 
@@ -62,6 +73,17 @@ je_constitutional_monarchy = {
 						}
 						save_scope_as = constitutional_monarch_scope
 					}
+				}
+				#No existing viceroy
+				if = {
+					limit = {
+						NOT = {
+							any_scope_character = {
+								has_modifier = viceroy_character
+							}
+						}
+					}
+					generate_viceroy_for_country = yes
 				}
 			}
 			else = {
@@ -176,6 +198,46 @@ je_constitutional_monarchy = {
 	
 	on_fail = {
 		
+		#Mark viceroy
+		random_scope_character = {
+			limit = { 
+				has_modifier = viceroy_character
+			}
+			save_scope_as = viceroy_character_label
+			if = {
+				limit = { 
+					owner ?= { 
+						top_overlord ?= { c:GBR ?= this }
+						NAND = { 
+							c:HND ?= this 
+							is_sufficiently_independent = yes
+						}
+					}
+				}
+				custom_tooltip = {
+					text = governor_general_character_label.tt
+				}
+			}
+			else = {
+				custom_tooltip = {
+					text = viceroy_character_label.tt
+				}
+			}
+		}
+		
+		#Remove all viceroys
+		hidden_effect = {
+			if = {
+				limit = { is_a_foreign_regime_monarchy = no }
+				every_scope_character = {
+					limit = { 
+						has_modifier = viceroy_character
+					}
+					retire_character_scripted_effect = yes
+				}
+			}
+		}
+		
 		#Clear modifiers
 		if = { limit = { has_modifier = monarch_ig_landowners } remove_modifier = monarch_ig_landowners }
 		if = { limit = { has_modifier = monarch_ig_devout } remove_modifier = monarch_ig_devout }
@@ -188,6 +250,38 @@ je_constitutional_monarchy = {
 		remove_variable = elective_monarchy_system
 		remove_variable = elective_monarchy_system_timer
 		remove_variable = female_monarch_var
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			#If there is no Viceroy
+			if = {
+				limit = { 
+					exists = scope:constitutional_monarch_scope
+					NOT = {
+						any_scope_character = {
+							has_modifier = monarch_character
+						}
+					}
+					OR = { 
+						NOT = {
+							any_scope_character = {
+								has_modifier = viceroy_character
+							}
+						}
+						any_scope_character = {
+							has_modifier = viceroy_character
+							NOT = { has_variable = viceroy_character_term_limit }
+						}
+					}
+				}
+				generate_viceroy_for_country = yes
+			}
+			
+		}
 		
 	}
 	
