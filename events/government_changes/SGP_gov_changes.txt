@@ -68,32 +68,44 @@ SGP_gov_changes.1 = {
         highlighted_option = yes
 		
 		#Enact new regime
-		effect_starting_politics_dictatorship = yes
-		activate_law = law_type:law_multicultural
+		effect_starting_politics_regime = yes
+		if = {
+			limit = { NOT = { has_law = law_type:law_multicultural } }
+			activate_law = law_type:law_multicultural
+		}
 		
 		#Regenerate ruler if required
 		if = {
 			limit = {
 				NOT = { 
-					ruler = { 
-						is_historical = yes
-						is_interest_group_type = ig_petty_bourgeoisie
+					ruler ?= { 
+						has_variable = Lee_Kuan_Yew
 					}
 				}
 			}
-			create_character = {
-				first_name = "Lee_Kuan_Yew_first_name"
-				last_name = "Lee_Kuan_Yew_last_name"
-				ruler = yes ig_leader = yes historical = yes
-				birth_date = 1923.9.16
-				interest_group = ig_petty_bourgeoisie
-				ideology = ideology_autocratic
-				culture = cu:singaporean
-				religion = rel:atheist
-				traits = {
-					charismatic
-					innovative
-					direct
+			if = {
+				limit = { any_scope_character = { has_variable = Lee_Kuan_Yew } }
+				random_scope_character = {
+					limit = { has_variable = Lee_Kuan_Yew }
+					set_character_as_ruler = yes
+				}
+			}
+			else = {
+				create_character = {
+					first_name = "Lee_Kuan_Yew_first_name"
+					last_name = "Lee_Kuan_Yew_last_name"
+					ruler = yes ig_leader = yes historical = yes
+					birth_date = 1923.9.16
+					interest_group = ig_petty_bourgeoisie
+					ideology = ideology_autocratic
+					culture = cu:singaporean
+					religion = rel:atheist
+					traits = {
+						charismatic
+						innovative
+						direct
+					}
+					on_created = { set_variable = Lee_Kuan_Yew }
 				}
 			}
 		}
@@ -156,10 +168,8 @@ SGP_gov_changes.2 = {
 		is_at_war = no											# war = no
 		
 		#Lee Kuan Yew is still the ruler
-		exists = ruler
-		ruler = { 
-			is_historical = yes 
-			interest_group = { is_interest_group_type = ig_petty_bourgeoisie }
+		ruler ?= { 
+			has_variable = Lee_Kuan_Yew
 		}
 		
 		# Event has not been fired before
@@ -178,7 +188,11 @@ SGP_gov_changes.2 = {
         name = historical_gov_changes.option.1					# Accept
         highlighted_option = yes
 		
-		activate_law = law_type:law_multicultural
+		#Enact new regime
+		if = {
+			limit = { NOT = { has_law = law_type:law_multicultural } }
+			activate_law = law_type:law_multicultural
+		}
 		
 		#Create character
 		create_character = {
@@ -195,6 +209,7 @@ SGP_gov_changes.2 = {
 				meticulous
 				reserved
 			}
+			on_created = { set_variable = Goh_Chok_Tong }
 		}
 		
 		ai_chance = { 
@@ -251,11 +266,9 @@ SGP_gov_changes.3 = {
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
-		#Lee Kuan Yew is still the ruler
-		exists = ruler
-		ruler = { 
-			is_historical = yes 
-			interest_group = { is_interest_group_type = ig_petty_bourgeoisie }
+		#Goh Chok Tong is still the ruler
+		ruler ?= { 
+			has_variable = Goh_Chok_Tong
 		}
 		
 		# Event has not been fired before
@@ -274,7 +287,11 @@ SGP_gov_changes.3 = {
         name = historical_gov_changes.option.1					# Accept
         highlighted_option = yes
 		
-		activate_law = law_type:law_multicultural
+		#Enact new regime
+		if = {
+			limit = { NOT = { has_law = law_type:law_multicultural } }
+			activate_law = law_type:law_multicultural
+		}
 		
 		#Create character
 		create_character = {
@@ -291,9 +308,115 @@ SGP_gov_changes.3 = {
 				grifter
 				erudite
 			}
+			on_created = { set_variable = Lee_Hsien_Loong }
 		}
 		
 		activate_law = law_type:law_pro_pop_growth_policy
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_modifier = { 
+			name = domestic_unrest
+			months = 60 
+			is_decaying = yes 
+		}
+		add_modifier = { 
+			name = party_in_chaos_modifier
+			months = 12
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Lee Hsien Loong's successor
+SGP_gov_changes.4 = {
+    type = country_event
+
+    title = SGP_2024_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = SGP_2024_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SGP_2024_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SGP ?= this
+		game_date >= 2024.5.15									# START DATE: Date colony became self governing ****
+		game_date < 2034.5.15									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_parliamentary_regime = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Lee Hsien Loong is still the ruler
+		ruler ?= { 
+			has_variable = Lee_Hsien_Loong
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SGP_2024_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SGP_2024_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		if = {
+			limit = { NOT = { has_law = law_type:law_multicultural } }
+			activate_law = law_type:law_multicultural
+		}
+		if = {
+			limit = { NOT = { has_law = law_type:law_high_social_security } }
+			activate_law = law_type:law_high_social_security
+		}
+		
+		#Create character
+		create_character = {
+			first_name = "Lawrence_Wong_first_name"
+			last_name = "Lawrence_Wong_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1972.12.18
+			interest_group = ig_petty_bourgeoisie
+			ideology = ideology_elitist
+			culture = cu:singaporean
+			religion = rel:atheist
+			traits = {
+				meticulous
+				tactful
+				erudite
+			}
+			on_created = { set_variable = Lawrence_Wong }
+		}
 		
 		ai_chance = { 
 			base = 90 

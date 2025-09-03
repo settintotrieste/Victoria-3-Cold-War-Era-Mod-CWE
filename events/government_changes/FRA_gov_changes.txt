@@ -1,7 +1,251 @@
 namespace = FRA_gov_changes
 
-# The Fifth French Republic
+# The May 1958 crisis
 FRA_gov_changes.1 = {
+    type = country_event
+
+    title = FRA_1958_revolution_0.t 							# Title of the event; ADD LOCALISATION
+    desc = FRA_1958_revolution_0.d 								# Description of the event; ADD LOCALISATION
+    #flavor = FRA_1958_revolution_0.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:FRA ?= this											# Change TAG of the overlord ****
+		game_date >= 1958.5.13									# START DATE: Date colony became self governing ****
+		game_date < 1968.5.13									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		has_government_type = gov_parliamentary_democracy		# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#left_wing_ruling_coalition = yes						# Correct Ruling Coalition
+		
+		#Special conditions - Algerian issue
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:ALG										# Change TAG of the colony ****
+		}
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:algerian }		# Change homeland identity to match colony to be released ****
+			is_incorporated = no								# State is a colony
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = FRA_1958_0_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		#Right wing military
+		ig:ig_armed_forces ?= {
+			add_ruling_interest_group = yes
+			remove_ideology = ideology_left_economy
+			add_ideology = ideology_right_economy
+		}
+	
+		# Fire only once
+		set_variable = FRA_1958_0_hgc							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Create leader
+		if = {
+			limit = { any_scope_character = { has_variable = charles_de_gaulle } }
+			random_scope_character = {
+				limit = { has_variable = charles_de_gaulle }
+				set_character_as_ruler = yes
+			}
+		}
+		else = {
+			create_character = {
+				first_name = "charles_de_gaulle_first_name"
+				last_name = "charles_de_gaulle_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1890.11.22
+				interest_group = ig_armed_forces
+				ideology = ideology_elitist
+				culture = cu:french
+				religion = rel:catholic
+				traits = {
+					charismatic
+					ambitious
+					direct
+				}
+				on_created = { set_variable = charles_de_gaulle }
+			}
+		}
+		add_government_cohesion_100 = yes
+		
+		#Create the 5th Republic
+		set_variable = FRA_1958_crisis_resolved
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_armed_forces
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_landowners
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_devout
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_rural_folk
+			value = very_large_radicals
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_nationalist_republic = yes
+		effect_starting_politics_dictatorship = yes
+		effect_conservative_ruling_coalition = yes
+		
+		#Raoul Salan
+		create_character = {
+			first_name = "Raoul_Salan_first_name"
+			last_name = "Raoul_Salan_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1899.6.10
+			interest_group = ig_armed_forces
+			ideology = ideology_autocratic
+			culture = cu:french
+			religion = rel:catholic
+			traits = {
+				brave
+				cruel
+				bigoted
+			}
+			on_created = { set_variable = Raoul_Salan }
+		}
+		
+		#Create French Algeria
+		if = {
+			limit = { 
+				NOT = { exists = c:FAG } 
+				any_scope_state = { 									# Overlord owns the states of the colony to be released
+					state_region = { is_homeland = cu:algerian }		# Change homeland identity to match colony to be released ****
+				}
+			}
+			random_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:algerian }		# Change homeland identity to match colony to be released ****
+				}
+				save_scope_as = colonial_state
+			}
+			create_country = {
+				tag = FAG												# Change TAG of country being released ****
+				origin = ROOT											# TAG where the created country takes tech from
+				state = scope:colonial_state
+				
+				on_created = {											# Set government laws & rulers here
+					
+					# SET laws for colony ****
+					effect_starting_politics_nationalist_republic = yes
+					effect_starting_politics_dictatorship = yes
+					effect_starting_politics_constitutional_unitary_state = yes
+					effect_starting_politics_war_policy_pro_military = yes
+					effect_starting_politics_economic_policy_interventionism = yes
+					effect_starting_politics_trade_policy_free_trade = yes
+					effect_starting_politics_anti_nuclear_policy = yes
+		
+					effect_starting_politics_specialisation_natural_resource = yes
+		
+					effect_starting_politics_semi_gold_system = yes
+					
+					# CREATE leader for colony ****
+					create_character = {
+						first_name = "Jacques_Massu_first_name"
+						last_name = "Jacques_Massu_last_name"
+						ruler = yes ig_leader = yes historical = yes
+						birth_date = 1908.5.5
+						interest_group = ig_armed_forces
+						ideology = ideology_autocratic
+						culture = cu:french
+						religion = rel:catholic
+						traits = {
+							brave
+							cruel
+							bigoted
+						}
+						on_created = { set_variable = Jacques_Massu }
+					}
+					
+					# Set diplomatic recognition
+					set_country_type = unrecognized
+				}
+			}
+			if = {
+				limit = { exists = c:FAG }
+				every_scope_state = {
+					limit = {
+						state_region = { is_homeland = cu:algerian }	# Change homeland identity to match colony to be released ****
+					}
+					set_state_owner = c:FAG								# Change TAG to colony ****
+				}
+				create_diplomatic_pact = {
+					country = c:FAG										# Change TAG ****
+					type = semi_autonomous_colony
+				}
+				create_decolonisation_pacts = yes
+			}
+		}
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_industrialists
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_petty_bourgeoisie
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_trade_unions
+			value = very_large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		#International Reaction
+		change_infamy = 20
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The Fifth French Republic
+FRA_gov_changes.2 = {
     type = country_event
 
     title = FRA_1958_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -18,8 +262,7 @@ FRA_gov_changes.1 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:FRA
-		this = c:FRA											# Change TAG of the overlord ****
+		c:FRA ?= this											# Change TAG of the overlord ****
 		game_date >= 1958.10.4									# START DATE: Date colony became self governing ****
 		game_date < 1968.10.4									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -27,16 +270,8 @@ FRA_gov_changes.1 = {
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
-		#left_wing_ruling_coalition = yes						# Correct Ruling Coalition
-		
-		#Special conditions - Algerian issue
-		NOT = { 													# Colony to be released must not already exist on the map
-			exists = c:ALG											# Change TAG of the colony ****
-		}
-		any_scope_state = { 										# Overlord owns the states of the colony to be released
-			state_region = { is_homeland = cu:algerian }			# Change homeland identity to match colony to be released ****
-			is_incorporated = no									# State is a colony
-		}
+		#Special conditions - From 13 May 1958 Crisis
+		has_variable = FRA_1958_crisis_resolved
 		
 		# Event has not been fired before
 		NOT = { has_variable = FRA_1958_hgc }					# CHANGE ****
@@ -56,28 +291,31 @@ FRA_gov_changes.1 = {
 		
 		#Enact new regime
 		effect_starting_politics_semi_presidential_republic = yes
-		effect_conservative_ruling_coalition = yes
-		ig:ig_armed_forces = {
-			add_ruling_interest_group = yes
-			remove_ideology = ideology_left_economy
-			add_ideology = ideology_right_economy
-		}
 		
 		#Create leader
-		create_character = {
-			first_name = "charles_de_gaulle_first_name"
-			last_name = "charles_de_gaulle_last_name"
-			ig_leader = yes historical = yes
-			is_general = yes
-			hq = region_france
-			commander_rank = commander_rank_5
-			birth_date = 1890.11.22
-			interest_group = ig_armed_forces
-			ideology = ideology_elitist
-			traits = {
-				charismatic
-				ambitious
-				direct
+		if = {
+			limit = { any_scope_character = { has_variable = charles_de_gaulle } }
+			random_scope_character = {
+				limit = { has_variable = charles_de_gaulle }
+				set_character_as_ruler = yes
+			}
+		}
+		else = {
+			create_character = {
+				first_name = "charles_de_gaulle_first_name"
+				last_name = "charles_de_gaulle_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1890.11.22
+				interest_group = ig_armed_forces
+				ideology = ideology_elitist
+				culture = cu:french
+				religion = rel:catholic
+				traits = {
+					charismatic
+					ambitious
+					direct
+				}
+				on_created = { set_variable = charles_de_gaulle }
 			}
 		}
 		
@@ -92,13 +330,8 @@ FRA_gov_changes.1 = {
 		default_option = yes
 		
 		#Major discontent
-		custom_tooltip = {
-			text = everyone_is_angry_custom_tooltip
-			every_scope_state = {
-				add_radicals_in_state = {
-					value = large_radicals
-				}
-			}
+		add_radicals = {
+			value = large_radicals
 		}
 		add_modifier = { 
 			name = stirrings_of_revolution
