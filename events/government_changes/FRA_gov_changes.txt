@@ -346,3 +346,273 @@ FRA_gov_changes.2 = {
     }
 
 }
+
+# The Algiers putsch of 1961
+FRA_gov_changes.3 = {
+    type = country_event
+
+    title = FRA_1961_revolution.t 								# Title of the event; ADD LOCALISATION
+    desc = FRA_1961_revolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = FRA_1961_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:FRA ?= this											# Change TAG of the overlord ****
+		game_date >= 1961.4.21									# START DATE: Date colony became self governing ****
+		game_date < 1971.4.21									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Special conditions - Algerian issue
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:ALG										# Change TAG of the colony ****
+		}
+		NOT = { 
+			exists = c:FAG 
+		} 
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:algerian }		# Change homeland identity to match colony to be released ****
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = FRA_1961_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = FRA_1961_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Effects
+		if = {
+			limit = { ruler ?= { has_variable = charles_de_gaulle } }
+			
+			#Major discontent
+			add_radicals = {
+				interest_group = ig:ig_armed_forces
+				value = very_large_radicals
+			}
+			add_radicals = {
+				interest_group = ig:ig_landowners
+				value = very_large_radicals
+			}
+			add_radicals = {
+				interest_group = ig:ig_devout
+				value = very_large_radicals
+			}
+			add_radicals = {
+				interest_group = ig:ig_rural_folk
+				value = very_large_radicals
+			}
+			add_modifier = { 
+				name = stirrings_of_revolution
+				years = 5
+				is_decaying = yes 
+			}
+			
+		}
+		else = {
+			#Create French Algeria
+			if = {
+				limit = { 
+					NOT = { exists = c:FAG } 
+					any_scope_state = { 									# Overlord owns the states of the colony to be released
+						state_region = { is_homeland = cu:algerian }		# Change homeland identity to match colony to be released ****
+					}
+				}
+				random_scope_state = {
+					limit = {
+						state_region = { is_homeland = cu:algerian }		# Change homeland identity to match colony to be released ****
+					}
+					save_scope_as = colonial_state
+				}
+				create_country = {
+					tag = FAG												# Change TAG of country being released ****
+					origin = ROOT											# TAG where the created country takes tech from
+					state = scope:colonial_state
+					
+					on_created = {											# Set government laws & rulers here
+						
+						# SET laws for colony ****
+						effect_starting_politics_nationalist_republic = yes
+						effect_starting_politics_dictatorship = yes
+						effect_starting_politics_constitutional_unitary_state = yes
+						effect_starting_politics_war_policy_pro_military = yes
+						effect_starting_politics_economic_policy_interventionism = yes
+						effect_starting_politics_trade_policy_free_trade = yes
+						effect_starting_politics_anti_nuclear_policy = yes
+			
+						effect_starting_politics_specialisation_natural_resource = yes
+			
+						effect_starting_politics_semi_gold_system = yes
+						
+						# CREATE leader for colony ****
+						create_character = {
+							first_name = "Raoul_Salan_first_name"
+							last_name = "Raoul_Salan_last_name"
+							ruler = yes ig_leader = yes historical = yes
+							birth_date = 1899.6.10
+							interest_group = ig_armed_forces
+							ideology = ideology_autocratic
+							culture = cu:french
+							religion = rel:catholic
+							traits = {
+								brave
+								cruel
+								bigoted
+							}
+							on_created = { set_variable = Raoul_Salan }
+						}
+						
+						# Set diplomatic recognition
+						set_country_type = unrecognized
+					}
+				}
+				if = {
+					limit = { exists = c:FAG }
+					create_diplomatic_play = {
+						name = algerian_war
+						type = dp_annex_war_historical
+						target_country = c:FAG
+						
+						#war = yes
+						
+						add_war_goal = {
+							holder = c:FAG
+							type = regime_change
+							target_country = c:FRA
+						}
+						
+					}
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Create French Algeria
+		if = {
+			limit = { 
+				NOT = { exists = c:FAG } 
+				any_scope_state = { 									# Overlord owns the states of the colony to be released
+					state_region = { is_homeland = cu:algerian }		# Change homeland identity to match colony to be released ****
+				}
+			}
+			random_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:algerian }		# Change homeland identity to match colony to be released ****
+				}
+				save_scope_as = colonial_state
+			}
+			create_country = {
+				tag = FAG												# Change TAG of country being released ****
+				origin = ROOT											# TAG where the created country takes tech from
+				state = scope:colonial_state
+				
+				on_created = {											# Set government laws & rulers here
+					
+					# SET laws for colony ****
+					effect_starting_politics_nationalist_republic = yes
+					effect_starting_politics_dictatorship = yes
+					effect_starting_politics_constitutional_unitary_state = yes
+					effect_starting_politics_war_policy_pro_military = yes
+					effect_starting_politics_economic_policy_interventionism = yes
+					effect_starting_politics_trade_policy_free_trade = yes
+					effect_starting_politics_anti_nuclear_policy = yes
+		
+					effect_starting_politics_specialisation_natural_resource = yes
+		
+					effect_starting_politics_semi_gold_system = yes
+					
+					# CREATE leader for colony ****
+					create_character = {
+						first_name = "Raoul_Salan_first_name"
+						last_name = "Raoul_Salan_last_name"
+						ruler = yes ig_leader = yes historical = yes
+						birth_date = 1899.6.10
+						interest_group = ig_armed_forces
+						ideology = ideology_autocratic
+						culture = cu:french
+						religion = rel:catholic
+						traits = {
+							brave
+							cruel
+							bigoted
+						}
+						on_created = { set_variable = Raoul_Salan }
+					}
+					
+					# Set diplomatic recognition
+					set_country_type = unrecognized
+				}
+			}
+			if = {
+				limit = { exists = c:FAG }
+				every_scope_state = {
+					limit = {
+						state_region = { is_homeland = cu:algerian }	# Change homeland identity to match colony to be released ****
+					}
+					set_state_owner = c:FAG								# Change TAG to colony ****
+				}
+				create_diplomatic_pact = {
+					country = c:FAG										# Change TAG ****
+					type = semi_autonomous_colony
+				}
+				create_decolonisation_pacts = yes
+			}
+		}
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_industrialists
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_petty_bourgeoisie
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_trade_unions
+			value = very_large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		#International Reaction
+		change_infamy = 20
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
