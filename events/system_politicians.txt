@@ -797,3 +797,571 @@ politicians_system.3 = {
 	}
 
 }
+
+politicians_system.4 = {
+    type = country_event
+
+    title = appoint_prime_minister.t 								# Title of the event; ADD LOCALISATION
+    desc = appoint_prime_minister.d 								# Description of the event; ADD LOCALISATION
+    flavor = appoint_prime_minister.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+	
+		remove_variable = recently_reformed_gov_var
+	
+		#Mark IGs
+		if = { limit = { exists = ig:ig_industrialists } ig:ig_industrialists = { save_scope_as = ig_industrialists_scope_ig } }
+		if = { limit = { exists = ig:ig_petty_bourgeoisie } ig:ig_petty_bourgeoisie = { save_scope_as = ig_petty_bourgeoisie_scope_ig } }
+		if = { limit = { exists = ig:ig_trade_unions } ig:ig_trade_unions = { save_scope_as = ig_trade_unions_scope_ig } }
+		if = { limit = { exists = ig:ig_landowners } ig:ig_landowners = { save_scope_as = ig_landowners_scope_ig } }
+		if = { limit = { exists = ig:ig_devout } ig:ig_devout = { save_scope_as = ig_devout_scope_ig } }
+		if = { limit = { exists = ig:ig_rural_folk } ig:ig_rural_folk = { save_scope_as = ig_rural_folk_scope_ig } }
+		if = { limit = { exists = ig:ig_intelligentsia } ig:ig_intelligentsia = { save_scope_as = ig_intelligentsia_scope_ig } }
+		if = { limit = { exists = ig:ig_armed_forces } ig:ig_armed_forces = { save_scope_as = ig_armed_forces_scope_ig } }
+		
+		#Mark most powerful IG in Government
+		random_interest_group = {
+			limit = { 
+				is_in_government = yes
+				AND = { is_in_government = yes ig_government_power_share > 0.5 }
+			}
+			save_scope_as = most_powerful_gov_ig
+			leader = { save_scope_as = most_powerful_gov_ig_leader }
+		}
+		
+	}
+	
+	cancellation_trigger = {
+		
+		#Ruler's IG is not a government IG
+		ruler ?= { 
+			interest_group ?= { 
+				is_in_government = no
+			} 
+		}
+		
+	}
+    
+    option = {
+        name = appoint_prime_minister.option.1					# ig_industrialists
+		trigger = {
+			exists = scope:ig_industrialists_scope_ig
+			scope:ig_industrialists_scope_ig ?= {
+				is_in_government = yes
+			}
+			ruler ?= { 
+				interest_group = { NOT = { is_interest_group_type = ig_industrialists } }
+			}
+		}
+		
+		#Appoint ruler
+		random_scope_character = {
+			limit = { 
+				has_role = politician
+				interest_group = { is_interest_group_type = ig_industrialists }
+			}
+			set_character_as_ruler = yes
+		}
+		
+		#Party unrest if non-most powerful gov IG is selected
+		if = {
+			limit = { scope:ig_industrialists_scope_ig ?= { NAND = { is_in_government = yes ig_government_power_share > 0.5 } } }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		else = {
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		
+		ai_chance = { 
+			base = 10
+			modifier = { 
+				trigger = { 
+					scope:ig_industrialists_scope_ig ?= { 
+						is_in_government = yes ig_government_power_share > 0.5
+					}
+				}
+				add = 90
+			}
+			modifier = { 
+				trigger = { 
+					scope:ig_industrialists_scope_ig ?= { 
+						leader ?= { is_historical = yes }
+					}
+				}
+				add = 1000
+			}
+		}
+		
+    }
+	
+	option = {
+        name = appoint_prime_minister.option.2					# ig_petty_bourgeoisie
+		trigger = {
+			exists = scope:ig_petty_bourgeoisie_scope_ig
+			scope:ig_petty_bourgeoisie_scope_ig ?= {
+				is_in_government = yes
+			}
+			ruler ?= { 
+				interest_group = { NOT = { is_interest_group_type = ig_petty_bourgeoisie } }
+			}
+		}
+		
+		#Appoint ruler
+		random_scope_character = {
+			limit = { 
+				has_role = politician
+				interest_group = { is_interest_group_type = ig_petty_bourgeoisie }
+			}
+			set_character_as_ruler = yes
+		}
+		
+		#Party unrest if non-most powerful gov IG is selected
+		if = {
+			limit = { scope:ig_petty_bourgeoisie_scope_ig ?= { NAND = { is_in_government = yes ig_government_power_share > 0.5 } } }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		else = {
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		
+		ai_chance = { 
+			base = 10
+			modifier = { 
+				trigger = { 
+					scope:ig_petty_bourgeoisie_scope_ig ?= { 
+						is_in_government = yes ig_government_power_share > 0.5
+					}
+				}
+				add = 90
+			}
+			modifier = { 
+				trigger = { 
+					scope:ig_petty_bourgeoisie_scope_ig ?= { 
+						leader ?= { is_historical = yes }
+					}
+				}
+				add = 1000
+			}
+		}
+		
+    }
+	
+	option = {
+        name = appoint_prime_minister.option.3					# ig_trade_unions
+		trigger = {
+			exists = scope:ig_trade_unions_scope_ig
+			scope:ig_trade_unions_scope_ig ?= {
+				is_in_government = yes
+			}
+			ruler ?= { 
+				interest_group = { NOT = { is_interest_group_type = ig_trade_unions } }
+			}
+		}
+		
+		#Appoint ruler
+		random_scope_character = {
+			limit = { 
+				has_role = politician
+				interest_group = { is_interest_group_type = ig_trade_unions }
+			}
+			set_character_as_ruler = yes
+		}
+		
+		#Party unrest if non-most powerful gov IG is selected
+		if = {
+			limit = { scope:ig_trade_unions_scope_ig ?= { NAND = { is_in_government = yes ig_government_power_share > 0.5 } } }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		else = {
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		
+		ai_chance = { 
+			base = 10
+			modifier = { 
+				trigger = { 
+					scope:ig_trade_unions_scope_ig ?= { 
+						is_in_government = yes ig_government_power_share > 0.5
+					}
+				}
+				add = 90
+			}
+			modifier = { 
+				trigger = { 
+					scope:ig_trade_unions_scope_ig ?= { 
+						leader ?= { is_historical = yes }
+					}
+				}
+				add = 1000
+			}
+		}
+		
+    }
+	
+	option = {
+        name = appoint_prime_minister.option.4					# ig_landowners
+		trigger = {
+			exists = scope:ig_landowners_scope_ig
+			scope:ig_landowners_scope_ig ?= {
+				is_in_government = yes
+			}
+			ruler ?= { 
+				interest_group = { NOT = { is_interest_group_type = ig_landowners } }
+			}
+		}
+		
+		#Appoint ruler
+		random_scope_character = {
+			limit = { 
+				has_role = politician
+				interest_group = { is_interest_group_type = ig_landowners }
+			}
+			set_character_as_ruler = yes
+		}
+		
+		#Party unrest if non-most powerful gov IG is selected
+		if = {
+			limit = { scope:ig_landowners_scope_ig ?= { NAND = { is_in_government = yes ig_government_power_share > 0.5 } } }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		else = {
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		
+		ai_chance = { 
+			base = 10
+			modifier = { 
+				trigger = { 
+					scope:ig_landowners_scope_ig ?= { 
+						is_in_government = yes ig_government_power_share > 0.5
+					}
+				}
+				add = 90
+			}
+			modifier = { 
+				trigger = { 
+					scope:ig_landowners_scope_ig ?= { 
+						leader ?= { is_historical = yes }
+					}
+				}
+				add = 1000
+			}
+		}
+		
+    }
+	
+	option = {
+        name = appoint_prime_minister.option.5					# ig_devout
+		trigger = {
+			exists = scope:ig_devout_scope_ig
+			scope:ig_devout_scope_ig ?= {
+				is_in_government = yes
+			}
+			ruler ?= { 
+				interest_group = { NOT = { is_interest_group_type = ig_devout } }
+			}
+		}
+		
+		#Appoint ruler
+		random_scope_character = {
+			limit = { 
+				has_role = politician
+				interest_group = { is_interest_group_type = ig_devout }
+			}
+			set_character_as_ruler = yes
+		}
+		
+		#Party unrest if non-most powerful gov IG is selected
+		if = {
+			limit = { scope:ig_devout_scope_ig ?= { NAND = { is_in_government = yes ig_government_power_share > 0.5 } } }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		else = {
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		
+		ai_chance = { 
+			base = 10
+			modifier = { 
+				trigger = { 
+					scope:ig_devout_scope_ig ?= { 
+						is_in_government = yes ig_government_power_share > 0.5
+					}
+				}
+				add = 90
+			}
+			modifier = { 
+				trigger = { 
+					scope:ig_devout_scope_ig ?= { 
+						leader ?= { is_historical = yes }
+					}
+				}
+				add = 1000
+			}
+		}
+		
+    }
+	
+	option = {
+        name = appoint_prime_minister.option.6					# ig_rural_folk
+		trigger = {
+			exists = scope:ig_rural_folk_scope_ig
+			scope:ig_rural_folk_scope_ig ?= {
+				is_in_government = yes
+			}
+			ruler ?= { 
+				interest_group = { NOT = { is_interest_group_type = ig_rural_folk } }
+			}
+		}
+		
+		#Appoint ruler
+		random_scope_character = {
+			limit = { 
+				has_role = politician
+				interest_group = { is_interest_group_type = ig_rural_folk }
+			}
+			set_character_as_ruler = yes
+		}
+		
+		#Party unrest if non-most powerful gov IG is selected
+		if = {
+			limit = { scope:ig_rural_folk_scope_ig ?= { NAND = { is_in_government = yes ig_government_power_share > 0.5 } } }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		else = {
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		
+		ai_chance = { 
+			base = 10
+			modifier = { 
+				trigger = { 
+					scope:ig_rural_folk_scope_ig ?= { 
+						is_in_government = yes ig_government_power_share > 0.5
+					}
+				}
+				add = 90
+			}
+			modifier = { 
+				trigger = { 
+					scope:ig_rural_folk_scope_ig ?= { 
+						leader ?= { is_historical = yes }
+					}
+				}
+				add = 1000
+			}
+		}
+		
+    }
+	
+	option = {
+        name = appoint_prime_minister.option.7					# ig_intelligentsia
+		trigger = {
+			exists = scope:ig_intelligentsia_scope_ig
+			scope:ig_intelligentsia_scope_ig ?= {
+				is_in_government = yes
+			}
+			ruler ?= { 
+				interest_group = { NOT = { is_interest_group_type = ig_intelligentsia } }
+			}
+		}
+		
+		#Appoint ruler
+		random_scope_character = {
+			limit = { 
+				has_role = politician
+				interest_group = { is_interest_group_type = ig_intelligentsia }
+			}
+			set_character_as_ruler = yes
+		}
+		
+		#Party unrest if non-most powerful gov IG is selected
+		if = {
+			limit = { scope:ig_intelligentsia_scope_ig ?= { NAND = { is_in_government = yes ig_government_power_share > 0.5 } } }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		else = {
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		
+		ai_chance = { 
+			base = 10
+			modifier = { 
+				trigger = { 
+					scope:ig_intelligentsia_scope_ig ?= { 
+						is_in_government = yes ig_government_power_share > 0.5
+					}
+				}
+				add = 90
+			}
+			modifier = { 
+				trigger = { 
+					scope:ig_intelligentsia_scope_ig ?= { 
+						leader ?= { is_historical = yes }
+					}
+				}
+				add = 1000
+			}
+		}
+		
+    }
+	
+	option = {
+        name = appoint_prime_minister.option.8					# ig_armed_forces
+		trigger = {
+			exists = scope:ig_armed_forces_scope_ig
+			scope:ig_armed_forces_scope_ig ?= {
+				is_in_government = yes
+			}
+			ruler ?= { 
+				interest_group = { NOT = { is_interest_group_type = ig_armed_forces } }
+			}
+		}
+		
+		#Appoint ruler
+		random_scope_character = {
+			limit = { 
+				has_role = politician
+				interest_group = { is_interest_group_type = ig_armed_forces }
+			}
+			set_character_as_ruler = yes
+		}
+		
+		#Party unrest if non-most powerful gov IG is selected
+		if = {
+			limit = { scope:ig_armed_forces_scope_ig ?= { NAND = { is_in_government = yes ig_government_power_share > 0.5 } } }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		else = {
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		
+		ai_chance = { 
+			base = 10
+			modifier = { 
+				trigger = { 
+					scope:ig_armed_forces_scope_ig ?= { 
+						is_in_government = yes ig_government_power_share > 0.5
+					}
+				}
+				add = 90
+			}
+			modifier = { 
+				trigger = { 
+					scope:ig_armed_forces_scope_ig ?= { 
+						leader ?= { is_historical = yes }
+					}
+				}
+				add = 90
+			}
+		}
+		
+    }
+	
+	option = {
+        name = appoint_prime_minister.option.9					# Incumbent stays
+		default_option = yes
+		
+		#Party unrest if non-most powerful gov IG is selected
+		if = {
+			limit = { ruler.interest_group ?= { NAND = { is_in_government = yes ig_government_power_share > 0.5 } } }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:most_powerful_gov_ig
+			}
+		}
+		else = {
+			add_loyalists = {
+				value = small_radicals
+				interest_group = ruler.interest_group
+			}
+		}
+		
+		ai_chance = {
+			base = 10
+			modifier = { 
+				trigger = { 
+					ruler ?= { 
+						interest_group = {
+							is_in_government = yes ig_government_power_share > 0.5
+						}
+					}
+				}
+				add = 90
+			}
+			modifier = { 
+				trigger = { 
+					ruler ?= { 
+						interest_group = {
+							leader ?= { is_historical = yes }
+						}
+					}
+				}
+				add = 1000
+			}
+		}
+		
+    }
+
+}

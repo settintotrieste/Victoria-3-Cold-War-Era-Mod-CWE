@@ -6,80 +6,44 @@ historical_restore_monarchy.1 = {
 	
 	trigger = {															# What triggers the event, if using other events or journal entries leave empty
 		
-		# Event has not been fired before
-		NOT = { has_variable = historical_restore_monarchy_hrm }		# CHANGE ****
-		
+		#King is the ruler
 		is_a_regime_monarchy = yes										# Correct gov types
 		
-		#Correct TAG
-		OR = {
-			
-			### European Monarchies ###
-			
-			#UK
-			AND = { c:GBR ?= this game_date >= 1936.12.11 game_date < 1952.2.6 }	# George VI
-			AND = { c:GBR ?= this game_date >= 1952.2.6 game_date < 2022.9.8 }		# Elizabeth II
-			AND = { c:GBR ?= this game_date >= 2022.9.8 }							# Charles III
-			
-			#Spain
-			AND = { c:SPA ?= this game_date >= 1938.1.5 game_date < 2014.6.19 }		# Juan Carlos I
-			AND = { c:SPA ?= this game_date >= 2014.6.19 }							# Felipe VI
-			
-			#Belgium
-			AND = { c:BEL ?= this game_date >= 1934.2.23 game_date < 1951.7.16 }	# Leopold III
-			AND = { c:BEL ?= this game_date >= 1951.7.16 game_date < 1993.7.31 }	# Baudouin
-			AND = { c:BEL ?= this game_date >= 1993.7.31 game_date < 2013.7.21 }	# Albert II
-			AND = { c:BEL ?= this game_date >= 2013.7.21 }							# Philippe
-			
-			#Netherlands
-			AND = { c:NET ?= this game_date >= 1890.11.23 game_date < 1948.9.4 }	# Wilhelmina
-			AND = { c:NET ?= this game_date >= 1948.9.4 game_date < 1980.4.30 }		# Juliana
-			AND = { c:NET ?= this game_date >= 1980.4.30 game_date < 2013.4.30 }	# Beatrix
-			AND = { c:NET ?= this game_date >= 2013.4.30 }							# Willem-Alexander
-			
-			#Germany
-			AND = { OR = { c:GER ?= this c:WGR ?= this c:EGR ?= this } game_date >= 1951.7.20 game_date < 1994.9.26 }	# Louis Ferdinand
-			
-			#Austria
-			AND = { OR = { c:AUS ?= this c:WAU ?= this c:EAU ?= this } game_date >= 1922.4.1 game_date < 2007.1.1 }		# Otto von Habsburg
-			
-			#Greece
-			AND = { c:GRE ?= this game_date >= 1901.12.14 game_date < 1964.3.6 }	# Paul of Greece
-			AND = { c:GRE ?= this game_date >= 1964.3.6 game_date < 2023.1.10 }		# Constantine II of Greece
-			
-			### Middle Eastern Monarchies ###
-			AND = { c:LBY ?= this game_date >= 1890.3.13 game_date < 1983.5.25 }	# Idris
-			
-			### Asian Monarchies ###
-			
-			#Japan
-			AND = { c:JAP ?= this game_date >= 1926.12.25 game_date < 1989.1.7 }	# Hirohito
-			AND = { c:JAP ?= this game_date >= 1989.1.7 game_date < 2019.4.30 }		# Akihito
-			AND = { c:JAP ?= this game_date >= 2019.4.30 }							# Naruhito
-			
-			#China
-			AND = { OR = { c:CHI ?= this c:PRC ?= this c:ROC ?= this } game_date >= 1908.12.2 game_date < 1967.10.17 }	# Puyi
-			
-			#Thailand
-			AND = { c:THI ?= this game_date >= 1927.12.5 game_date < 2016.10.13 }	# Bhumibol Adulyadej Mahidol
-			AND = { c:THI ?= this game_date >= 2016.10.13 game_date < 2042.7.28 }	# Vajiralongkorn Mahidol
-			
-			### South American Monarchies ###
-			
-			#Brazil
-			AND = { c:BRZ ?= this game_date >= 1940.1.29 game_date < 2007.12.27 }	# Pedro Gastão
-			
+		#Too many kings
+		any_scope_character = {
+			has_modifier = monarch_character
+			count > 1
 		}
 		
     }
 	
 	immediate = {
 	
-		# Fire only once
-		set_variable = historical_restore_monarchy_hrm					# Change variable ****
-		
-		#Install monarch
-		generate_monarch_for_country = yes
+		#Prefer historical characters; remove all excess monarchs
+		if = {
+			limit = { 
+				any_scope_character = {
+					has_modifier = monarch_character
+					is_historical = yes
+					is_ruler = no
+				}
+			}
+			random_scope_character = {
+				limit = { 
+					has_modifier = monarch_character 
+					is_historical = yes
+					is_ruler = no
+				}
+				set_character_as_monarch = yes
+			}
+		}
+		every_scope_character = {
+			limit = { 
+				has_modifier = monarch_character 
+				is_ruler = no
+			}
+			kill_character = { hidden = yes }
+		}
 		
 	}
 
