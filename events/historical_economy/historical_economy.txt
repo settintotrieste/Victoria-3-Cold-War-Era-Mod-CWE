@@ -3875,3 +3875,120 @@ historical_economy.42 = {
     }
 
 }
+
+# EU Expansion
+historical_economy.43 = {
+    type = country_event
+
+    title = XEU_EE_Expansion_2004.t 							# Title of the event; ADD LOCALISATION
+    desc = XEU_EE_Expansion_2004.d 								# Description of the event; ADD LOCALISATION
+    #flavor = XEU_EE_Expansion_2004.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		has_variable = XEU_ambitions							# Change TAG of the overlord ****
+		has_journal_entry = je_superstate_system
+		
+		# Event has not been fired before
+		NOT = { has_variable = XEU_EE_Expansion_2004_hee }		# CHANGE ****
+		
+		# EU exists
+		any_power_bloc = {
+			has_identity = identity:identity_superstate
+			power_bloc_leader = {
+				shares_same_superstate = yes
+			}
+		}
+		
+		#Historical EU joining dates
+		OR = {
+			AND = { 
+				game_date >= 2004.5.1 
+				game_date < 2014.5.1
+				OR = { 
+					c:CYP ?= this c:WCY ?= this
+					c:BOH ?= this c:CZH ?= this
+					c:EST ?= this
+					c:LAT ?= this
+					c:LIT ?= this
+					c:HUN ?= this
+					c:MLT ?= this
+					c:POL ?= this
+					c:SLO ?= this
+					c:SLV ?= this
+				}
+			}
+			AND = { 
+				game_date >= 2007.1.1 
+				game_date < 2017.5.1
+				OR = { 
+					c:BUL ?= this
+					c:ROM ?= this
+				}
+			}
+			AND = { 
+				game_date >= 2013.7.1 
+				game_date < 2017.5.1
+				c:CRO ?= this
+			}
+		}
+		
+		is_a_democracy = yes
+		is_subject = no
+		is_at_war = no											# war = no
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = XEU_EE_Expansion_2004_hee				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Lose relations with any power bloc leader
+		every_country = {
+			limit = { 
+				is_power_bloc_leader = yes
+				is_in_same_power_bloc = ROOT 
+			}
+			change_relations = { 
+				country = ROOT 
+				value = -200 
+			}
+		}
+		
+		#Join Superstate Customs Union
+		set_variable = superstate_free_trade_zone
+		set_variable = superstate_customs_union
+		create_superstate_customs_union = yes
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
