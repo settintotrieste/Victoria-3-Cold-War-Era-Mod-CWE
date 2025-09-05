@@ -354,6 +354,40 @@ superstate_system.2 = {
 			}
 		}
 		
+		#Clean up any duplicate Superstate Power Blocs
+		if = {
+			limit = {
+				any_power_bloc = {
+					has_identity = identity:identity_superstate
+					power_bloc_leader = {
+						shares_same_superstate = yes
+					}
+					count > 1
+				}
+			}
+			random_country = {
+				limit = { 
+					shares_same_superstate = yes
+					is_in_power_bloc = yes
+					is_power_bloc_leader = yes
+					power_bloc ?= { has_identity = identity:identity_superstate }
+				}
+				save_scope_as = superstate_power_bloc
+			}
+			if = {
+				limit = { exists = scope:superstate_power_bloc }
+				every_country = {
+					limit = {
+						NOT = { scope:superstate_power_bloc ?= this }
+						shares_same_superstate = yes
+						is_in_power_bloc = yes
+						power_bloc ?= { has_identity = identity:identity_superstate }
+					}
+					join_power_bloc = scope:superstate_power_bloc
+				}
+			}
+		}
+		
 	}
 
 }
