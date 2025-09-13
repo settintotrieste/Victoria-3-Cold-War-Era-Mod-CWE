@@ -3992,3 +3992,94 @@ historical_economy.43 = {
     }
 
 }
+
+# British Economic Reforms
+historical_economy.44 = {
+    type = country_event
+
+    title = GBR_ELR_Reforms.t 								# Title of the event; ADD LOCALISATION
+    desc = GBR_ELR_Reforms.d 								# Description of the event; ADD LOCALISATION
+    #flavor = GBR_ELR_Reforms.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:GBR ?= this
+		game_date >= 1986.10.27									# START DATE: Date colony became self governing ****
+		game_date < 1996.10.27									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		NAND = {
+			has_law = law_type:law_free_trade
+			has_law = law_type:law_laissez_faire
+			has_law = law_type:law_pro_industry_regulations
+			has_law = law_type:law_weak_financial_regulations
+			has_law = law_type:law_globalist_fp
+		}
+		
+		ruler ?= { 
+			has_variable = Margaret_Thatcher
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = GBR_ELR_Reforms_hee }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = GBR_ELR_Reforms_hee						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		activate_law = law_type:law_laissez_faire
+		activate_law = law_type:law_expansionary_monetary_policy
+		activate_law = law_type:law_pro_industry_regulations
+		activate_law = law_type:law_weak_financial_regulations
+		activate_law = law_type:law_free_trade
+		activate_law = law_type:law_globalist_fp
+		activate_law = law_type:law_full_foreign_investment_policy
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			strata = upper
+		}
+		add_radicals = {
+			value = large_radicals
+			strata = middle
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
