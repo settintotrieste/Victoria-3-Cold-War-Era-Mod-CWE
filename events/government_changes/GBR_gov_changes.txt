@@ -1,0 +1,107 @@
+namespace = GBR_gov_changes
+
+# Vote of No Confidence
+GBR_gov_changes.1 = {
+    type = country_event
+
+    title = GBR_1979_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = GBR_1979_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = GBR_1979_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:GBR ?= this
+		game_date >= 1979.3.28									# START DATE: Date colony became self governing ****
+		game_date < 1989.3.28									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_parliamentary_elective_system = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Correct ruler
+		ruler ?= { has_variable = James_Callaghan }
+		
+		# Event has not been fired before
+		NOT = { has_variable = GBR_1979_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = GBR_1979_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Trigger election
+		call_election = {
+			months = 1
+		}
+		add_journal_entry = { type = je_elections_system }
+		
+		#Hurt Labour Government
+		random_interest_group = {
+			limit = {
+				is_interest_group_type = ig_trade_unions
+			}
+			add_modifier = {
+				name = politically_weakened_interest_group
+				years = 5
+				is_decaying = yes
+			}
+		}
+		random_scope_character = {
+			limit = {
+				has_variable = James_Callaghan
+			}
+			add_modifier = {
+				name = politically_weakened_character
+				years = 5
+				is_decaying = yes
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			strata = upper
+		}
+		add_radicals = {
+			value = large_radicals
+			strata = middle
+		}
+		add_modifier = { 
+			name = domestic_unrest
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
