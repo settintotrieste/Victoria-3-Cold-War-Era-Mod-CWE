@@ -2875,3 +2875,160 @@ historical_diplomatic_incidents.29 = {
     }
 
 }
+
+# The Sri Lankan Northern Offensive - SRL
+historical_diplomatic_incidents.30 = {
+    type = country_event
+	placement = c:TAE
+
+    title = SRL_TAE_civil_war_end.t 							# Title of the event; ADD LOCALISATION
+    desc = SRL_TAE_civil_war_end.d 								# Description of the event; ADD LOCALISATION
+    #flavor = SRL_TAE_civil_war_end.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SRL ?= this											# Change TAG of the overlord ****
+		game_date >= 2009.5.17									# START DATE: Date colony became self governing ****
+		game_date < 2019.5.17									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Cause of unrest
+		exists = c:TAE
+		c:TAE ?= {
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			NOT = { is_subject_of = ROOT }
+		}
+		NOT = { is_subject_of = c:TAE }
+		
+		# Event has not been fired before
+		NOT = { has_variable = SRL_TAE_civil_war_end_hdi }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SRL_TAE_civil_war_end_hdi				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#TAE to react
+		c:TAE = { trigger_event = { id = historical_diplomatic_incidents.31 } }
+		
+		#International reaction
+		create_incident = {
+			country = c:TAE
+			value = 25
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2					# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			culture = cu:sinhala
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The Sri Lankan Northern Offensive - TAE
+historical_diplomatic_incidents.31 = {
+    type = country_event
+	placement = c:TAE
+
+    title = SRL_TAE_civil_war_end.t 							# Title of the event; ADD LOCALISATION
+    desc = SRL_TAE_civil_war_end.d 								# Description of the event; ADD LOCALISATION
+    #flavor = SRL_TAE_civil_war_end.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		
+    }
+	
+	immediate = {
+		
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Reintegrate into SRL
+		c:SRL ?= {
+			activate_law = law_type:law_multicultural
+			annex = ROOT
+		}
+		
+		ai_chance = { 
+			base = 90 
+			modifier = { trigger = { c:SRL ?= { is_player = yes } } add = -100 }
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2					# No
+		default_option = yes
+		
+		#Attack TAE
+		c:SRL ?= {
+			create_diplomatic_play = {
+				name = TAE_SRL_war
+				type = dp_annex_war_historical
+				target_country = c:TAE
+				
+				add_war_goal = {
+					holder = c:TAE
+					type = humiliation
+					target_country = c:SRL
+				}
+			}
+		}
+		
+		ai_chance = {
+			base = 10 
+			modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+			modifier = { trigger = { c:SRL ?= { is_player = yes } } add = 100 }
+		}
+		
+    }
+
+}
