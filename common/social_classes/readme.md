@@ -63,7 +63,7 @@ social_class_1 = {
     }
 
     pop_criteria = {
-        religion = { NOT = { has_discrimination_trait = christian } }
+        religion = { NOT = { has_discrimination_trait = heritage_christian } }
     }
 }
 
@@ -77,7 +77,7 @@ social_class_2 = {
 
     pop_criteria = {
         NOT = { has_pop_religion = catholic }
-        religion = { has_discrimination_trait = christian }
+        religion = { has_discrimination_trait = heritage_christian }
     }
 }
 
