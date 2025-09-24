@@ -420,6 +420,17 @@ ai_strategy_default = {
 		max = 30
 	}
 	
+	# How much does the AI want to include a particular interest group in their government?
+	# Positive values will act as a multiplier (ie 5 means AI will assign a 5x value to this IG)
+	# Negative values will act as a divisor (ie -5 means AI will assign a 0.2x value to this IG)
+	# The AI will still only consider the most legitimate government constellations, as set by define REFORM_GOVERNMENT_NUM_OPTIONS_TO_CHECK
+	# Using this value in other strategies will function additively
+	# root = country
+	# scope:interest_group = IG
+	interest_group_government_weight = {
+		value = 0
+	}
+	
 	# How much does the AI desire a state owned by another country
 	# Using this value in other strategies will function additively
 	# root = country
@@ -464,6 +475,26 @@ ai_strategy_default = {
 				if = {
 					limit = { scope:target_state = { is_treaty_port = yes } }
 					add = 20
+				}
+				
+				if = { # High-fervour AI really wants to take its homelands
+					limit = {
+						country_fervor_primary_culture > 10
+						scope:target_state = {
+							is_homeland_of_country_cultures = root
+						}
+						scope:target_country = {
+							NOT = {
+								any_primary_culture = {
+									is_primary_culture_of = root
+								}
+							}
+						}
+					}
+					add = {
+						value = country_fervor_primary_culture
+						divide = 2
+					}
 				}
 			}
 			
@@ -1210,7 +1241,29 @@ ai_strategy_default = {
 				is_subject_of = scope:target_country
 			}
 			add = 1
-		}				
+		}
+
+		# Countries with high-fervour primary cultures are more reckless against rivals or countries with homelands
+		if = {
+			limit = {
+				country_fervor_primary_culture > 10
+				scope:target_country = {
+					OR = {
+						has_diplomatic_pact = {
+							who = root
+							type = rivalry
+						}
+						any_scope_state = {
+							is_homeland_of_country_cultures = root
+						}
+					}
+				}
+			}
+			add = {
+				value = country_fervor_primary_culture
+				divide = 20
+			}
+		}
 	
 	}
 	
@@ -1277,6 +1330,33 @@ ai_strategy_default = {
 				}				
 			}
 			add = 1
+		}
+		
+		# Countries with high-fervour primary cultures are more aggressive against rivals or countries with homelands
+		if = {
+			limit = {
+				country_fervor_primary_culture > 10
+				scope:target_country = {
+					OR = {
+						has_diplomatic_pact = {
+							who = root
+							type = rivalry
+						}
+						any_scope_state = {
+							is_homeland_of_country_cultures = root
+						}
+						NOT = {
+							any_primary_culture = {
+								is_primary_culture_of = root
+							}
+						}
+					}
+				}
+			}
+			add = {
+				value = country_fervor_primary_culture
+				divide = 20
+			}
 		}
 		
         # Neutrality law
@@ -1483,7 +1563,7 @@ ai_strategy_default = {
 		#	multiply = 2
 		#}
 		if = {
-			limit = { country_rank = rank_value:great_power }
+			limit = { country_rank >= rank_value:great_power }
 			multiply = 0.80
 		}
 		if = {
@@ -1607,7 +1687,7 @@ ai_strategy_default = {
 			multiply = 2
 		}
 		if = {
-			limit = { country_rank = rank_value:great_power }
+			limit = { country_rank >= rank_value:great_power }
 			multiply = 1.50
 		}
 		if = {
@@ -1948,6 +2028,14 @@ ai_strategy_default = {
 			add = 0.1
 		}		
 	}
+	
+	# How much does the AI want to liberate a specific tag, added to the wargoal score calculation for liberate_country
+	# Using this value in other strategies will function additively
+	# root = liberator
+	# scope:target = oppressor
+	liberate_country_scores = {
+		
+	}
 
 	# How important is it that the AI maintains an interest in a specific strategic region (added on top of region value calculations set in defines)
 	# Using this value in other strategies will function additively
@@ -1956,1135 +2044,1101 @@ ai_strategy_default = {
 	}
 	
 	# How likely should the AI be to have a particular strategic desire towards another country
+	# Trigger is used for filtering, so if it fails score will always be 0 from this strategy
 	# Using this value in other strategies will function additively
 	# scope:target_country = target country
 	secret_goal_scores = {
 		none = {
-			value = 0
-			
-			if = {
-				limit = {		
-					scope:target_country = { NOT = { is_subject_of = root } }
-					root = { NOT = { is_subject_of = scope:target_country } }
-				}
-				add = 150	
-			}				
-			
-			if = {
-				limit = {
-					country_rank = scope:target_country.country_rank
-				}
-				multiply = 0.5
-			}		
-		}	
-		befriend = {
-			value = 200
-			
-			if = {
-				limit = {	
-					country_rank <= scope:target_country.country_rank
-				}
-				add = 100
+			trigger = {
+				NOT = { has_subject_relation_with = scope:target_country }
 			}
-		
-			if = {
-				limit = {
-					has_je_befriend_reason = { TARGET = scope:target_country }
-				}
-				add = 500
-			}					
-			
-			multiply = {
-				value = "ai_ideological_opinion(scope:target_country)"
-				multiply = 0.05
-				add = 1
-				min = 0.5
-				max = 2.0
-			}	
-			
-			multiply = {
-				value = 1
-				add = {
-					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
-					multiply = 2
-				}
-				subtract = {
-					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
-					divide = 2
-				}				
-			}			
+			score = {
+				value = 150
 
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_government = yes
-						scope:target_country = {
-							has_radical_leftist_government = yes
-						}
-					}
-				}
-				multiply = 1.5
-			}
-			
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_economy = yes
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-				}
-				multiply = 1.5
-			}			
-
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_government = no			
-						scope:target_country = {
-							has_radical_leftist_government = yes
-						}
-					}
-					
-				}
-				multiply = 0.5
-			}
-	
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_economy = no			
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-					
-				}
-				multiply = 0.5
-			}	
-	
-			if = {
-				limit = {
-					lenient_ai_behavior_trigger = yes
-				}
-				multiply = 1.5
-			}
-			
-			if = {
-				limit = {
-					harsh_ai_behavior_trigger = yes
-				}
-				multiply = 0.75
-			}	
-
-			if = {
-				limit = {
-					scope:target_country.infamy >= infamy_threshold:infamous
-				}
-				multiply = 0.9
-			}	
-
-			if = {
-				limit = {
-					scope:target_country.infamy >= infamy_threshold:notorious
-				}
-				multiply = 0.9
-			}	
-
-			if = {
-				limit = {
-					scope:target_country.infamy >= infamy_threshold:pariah
-				}
-				multiply = 0.5
-			}
-			
-			# AI implications for Power Blocs: 'befriend' secret goal is more likely towards the Bloc members
-			if = {
-				limit = {
-					is_in_same_power_bloc = scope:target_country
-				}
-				multiply = 1.5
-			}
-
-			if = {
-				limit = {
-					OR = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = rivalry
-						}					
-						scope:target_country = { relations:root <= relations_threshold:poor }			
-					}				
-				}
-				multiply = 0.0
-			}
-			
-			# Don't befriend large isolationist powers
-			if = {
-				limit = { 	
-					scope:target_country = {
+				# Large isolationist countries should ignore the world
+				if = {
+					limit = {
 						has_law_or_variant = law_type:law_isolationism
-						gdp >= 5000000			
+						gdp >= 5000000
 					}
+					add = 10000
 				}
-				multiply = 0
-			}
-		}
-		reconcile = {
-			value = 0
-
-			if = {
-				limit = {
-					OR = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = rivalry
-						}	
-						scope:target_country = { relations:root <= relations_threshold:poor }		
-					}
-				}
-				
-				add = 100	
 
 				if = {
 					limit = {
-						scope:target_country = { 
+						country_rank = scope:target_country.country_rank
+					}
+					multiply = 0.5
+				}
+			}
+		}
+		befriend = {
+			trigger = {
+				# Don't befriend large isolationist powers
+				NOT = {
+					scope:target_country = {
+						has_law_or_variant = law_type:law_isolationism
+						gdp >= 5000000
+					}
+				}				
+			}
+		
+			score = {
+				value = 200
+
+				if = {
+					limit = {
+						country_rank <= scope:target_country.country_rank
+					}
+					add = 100
+				}
+
+				if = {
+					limit = {
+						has_je_befriend_reason = { TARGET = scope:target_country }
+					}
+					add = 10000
+				}
+
+				multiply = {
+					value = "ai_ideological_opinion(scope:target_country)"
+					multiply = 0.05
+					add = 1
+					min = 0.5
+					max = 2.0
+				}
+
+				multiply = {
+					value = 1
+					add = {
+						value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+						multiply = 2
+					}
+					subtract = {
+						value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+						divide = 2
+					}
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_government = yes
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+					}
+					multiply = 1.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = yes
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+					}
+					multiply = 1.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_government = no
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = no
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						lenient_ai_behavior_trigger = yes
+					}
+					multiply = 1.5
+				}
+
+				if = {
+					limit = {
+						harsh_ai_behavior_trigger = yes
+					}
+					multiply = 0.75
+				}
+
+				if = {
+					limit = {
+						scope:target_country.infamy >= infamy_threshold:infamous
+					}
+					multiply = 0.9
+				}
+
+				if = {
+					limit = {
+						scope:target_country.infamy >= infamy_threshold:notorious
+					}
+					multiply = 0.9
+				}
+
+				if = {
+					limit = {
+						scope:target_country.infamy >= infamy_threshold:pariah
+					}
+					multiply = 0.5
+				}
+				
+				# AI implications for Power Blocs: 'befriend' secret goal is more likely towards the Bloc members
+				if = {
+					limit = {
+						is_in_same_power_bloc = scope:target_country
+					}
+					multiply = 1.5
+				}
+
+				if = {
+					limit = {
+						OR = {
+							has_diplomatic_pact = {
+								who = scope:target_country
+								type = rivalry
+							}
+							scope:target_country = { relations:root <= relations_threshold:poor }
+						}
+					}
+					multiply = 0.0
+				}
+			}
+		}
+		reconcile = {
+			trigger = {
+				OR = {
+					has_diplomatic_pact = {
+						who = scope:target_country
+						type = rivalry
+					}
+					scope:target_country = { relations:root <= relations_threshold:poor }
+				}
+				
+				# Don't reconcile with your oppressors while civil war is ongoing
+				is_insurrectionary = no
+			
+				# Historical enemies shouldn't start as conciliatory unless we explicitly script this in history
+				game_date >= 1950.1.2			
+			}
+			score = {
+				value = 100
+
+				if = {
+					limit = {
+						scope:target_country = {
 							has_secret_goal = {
 								who = root
 								secret_goal = reconcile
-							}						
-						}											
-					}
-					
-					add = 200				
-				}					
-			}
-
-			multiply = {
-				value = "ai_ideological_opinion(scope:target_country)"
-				multiply = 0.05
-				add = 1
-				min = 0.5
-				max = 2.0
-			}
-
-			multiply = {
-				value = 1
-				add = {
-					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
-					multiply = 2
-				}
-				subtract = {
-					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
-					divide = 2
-				}				
-			}			
-
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_government = yes
-						scope:target_country = {
-							has_radical_leftist_government = yes
+							}
 						}
 					}
+
+					add = 200
 				}
-				multiply = 1.5
-			}
-			
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_economy = yes
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
+
+				multiply = {
+					value = "ai_ideological_opinion(scope:target_country)"
+					multiply = 0.05
+					add = 1
+					min = 0.5
+					max = 2.0
+				}
+
+				multiply = {
+					value = 1
+					add = {
+						value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+						multiply = 2
+					}
+					subtract = {
+						value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+						divide = 2
 					}
 				}
-				multiply = 1.5
-			}			
 
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_government = no			
-						scope:target_country = {
-							has_radical_leftist_government = yes
-						}
-					}
-					
-				}
-				multiply = 0.5
-			}
-	
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_economy = no			
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-					
-				}
-				multiply = 0.5
-			}	
-	
-			
-			if = {
-				limit = {
-					scope:target_country = {
-						is_revolutionary = yes
-						scope:target_country.civil_war_origin_country = root
-					}
-				}
-				multiply = 0.10
-			}
-			
-			if = {
-				limit = {
-					lenient_ai_behavior_trigger = yes
-				}
-				multiply = 1.5
-			}
-			
-			if = {
-				limit = {
-					harsh_ai_behavior_trigger = yes
-				}
-				multiply = 0.75
-			}	
-
-			if = {
-				limit = {
-					scope:target_country.infamy >= infamy_threshold:infamous
-				}
-				multiply = 0.9
-			}	
-
-			if = {
-				limit = {
-					scope:target_country.infamy >= infamy_threshold:notorious
-				}
-				multiply = 0.9
-			}	
-
-			if = {
-				limit = {
-					scope:target_country.infamy >= infamy_threshold:pariah
-				}
-				multiply = 0.5
-			}	
-			
-			# AI implications for Power Blocs: 'reconcile' secret goal is more likely towards the Bloc members
-			if = {
-				limit = {
-					is_in_same_power_bloc = scope:target_country
-				}
-				multiply = 5
-			}
-			
-			# Historical enemies shouldn't start as conciliatory unless we explicitly script this in history
-			if = {
-				limit = {
-					game_date < 1836.1.2 
-				}
-				multiply = 0
-			}
-		}		
-		protect = {
-			value = 0
-			
-			if = {
-				limit = {
-					OR = {
-						country_rank > scope:target_country.country_rank	
-						scope:target_country = { is_subject_of = root }	
-					}
-				}
-				add = 200
-			}
-			
-			if = {
-				limit = {
-					has_je_protect_reason = { TARGET = scope:target_country }
-				}
-				add = 500
-			}			
-			
-			multiply = {
-				value = "ai_ideological_opinion(scope:target_country)"
-				multiply = 0.05
-				add = 1
-				min = 0.5
-				max = 2.0
-			}	
-			
-			multiply = {
-				value = 1
-				add = {
-					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
-					multiply = 2
-				}
-				subtract = {
-					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
-					divide = 2
-				}				
-			}		
-
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_government = yes
-						scope:target_country = {
-							has_radical_leftist_government = yes
-						}
-					}
-				}
-				multiply = 1.5
-			}
-			
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_economy = yes
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-				}
-				multiply = 1.5
-			}			
-
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_government = no			
-						scope:target_country = {
-							has_radical_leftist_government = yes
-						}
-					}
-					
-				}
-				multiply = 0.5
-			}
-	
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_economy = no			
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-					
-				}
-				multiply = 0.5
-			}
-
-			if = {
-				limit = {
-					harsh_ai_behavior_trigger = yes
-				}
-				multiply = 0.75
-			}
-
-			if = {
-				limit = {
-					scope:target_country.infamy >= infamy_threshold:infamous
-				}
-				multiply = 0.9
-			}	
-
-			if = {
-				limit = {
-					scope:target_country.infamy >= infamy_threshold:notorious
-				}
-				multiply = 0.9
-			}	
-
-			if = {
-				limit = {
-					scope:target_country.infamy >= infamy_threshold:pariah
-				}
-				multiply = 0.5
-			}				
-
-			# AI implications for Power Blocs: 'protect' secret goal is more likely towards the Bloc members
-			if = {
-				limit = {
-					is_in_same_power_bloc = scope:target_country
-				}
-				multiply = 2.5
-			}
-
-			if = {
-				limit = {
-					OR = {
-						has_diplomatic_pact = {
-							who = scope:target_country
-							type = rivalry
-						}					
-						scope:target_country = { relations:root <= relations_threshold:poor }					
-					}				
-				}
-				multiply = 0.0
-			}	
-
-			if = {
-				limit = {		
-					NOR = {
-						country_rank >= rank_value:great_power
-						has_strategic_adjacency = scope:target_country
+				if = {
+					limit = {
 						AND = {
-							country_rank >= rank_value:major_power
-							scope:target_country = { is_country_type = unrecognized }
-						}						
+							has_radical_leftist_government = yes
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
 					}
-				}
-				multiply = 0.0					
-			}
-
-			if = {
-				limit = {		
-					is_subject_of = scope:target_country	
-				}
-				multiply = 0.0	
-			}
-			
-			# Don't protect large isolationist powers
-			if = {
-				limit = { 
-					scope:target_country = {
-						has_law_or_variant = law_type:law_isolationism
-						gdp >= 5000000		
-					}
+					multiply = 1.5
 				}
 
-				multiply = 0
-			}
-		}		
-		antagonize = {
-			value = 0
-			
-			if = {
-				limit = {
-					countries_are_valid_rivals = yes
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = yes
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+					}
+					multiply = 1.5
 				}
-				add = 50
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_government = no
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = no
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						lenient_ai_behavior_trigger = yes
+					}
+					multiply = 1.5
+				}
+
+				if = {
+					limit = {
+						harsh_ai_behavior_trigger = yes
+					}
+					multiply = 0.75
+				}
+
+				if = {
+					limit = {
+						scope:target_country.infamy >= infamy_threshold:infamous
+					}
+					multiply = 0.9
+				}
+
+				if = {
+					limit = {
+						scope:target_country.infamy >= infamy_threshold:notorious
+					}
+					multiply = 0.9
+				}
+
+				if = {
+					limit = {
+						scope:target_country.infamy >= infamy_threshold:pariah
+					}
+					multiply = 0.5
+				}
+
+				# AI implications for Power Blocs: 'reconcile' secret goal is more likely towards the Bloc members
+				if = {
+					limit = {
+						is_in_same_power_bloc = scope:target_country
+					}
+					multiply = 5
+				}
 			}
-			
-			if = {
-				limit = {		
+		}
+		protect = {
+			trigger = {
+				OR = {
+					country_rank >= rank_value:great_power
+					has_strategic_adjacency = scope:target_country
+					AND = {
+						country_rank >= rank_value:major_power
+						scope:target_country = { is_country_type = unrecognized }
+					}
+				}	
+
+				# Don't protect your overlord
+				NOT = { is_subject_of = scope:target_country }
+				
+				# Don't protect enemies
+				scope:target_country = { relations:root > relations_threshold:poor }
+				NOT = {
 					has_diplomatic_pact = {
 						who = scope:target_country
 						type = rivalry
 					}	
-				}
-				add = 100
-			}
-			
-			if = {
-				limit = {
-					can_reach_target_country = yes	
-					NOT = { is_subject_of = scope:target_country }
-				}
-				add = 50
-			}			
+				}						
 
-			if = {
-				limit = {
+				# Don't protect large isolationist powers
+				NOT = {
 					scope:target_country = {
-						is_revolutionary = yes
-						scope:target_country.civil_war_origin_country = root
+						has_law_or_variant = law_type:law_isolationism
+						gdp >= 5000000
 					}
-				}
-				add = 500
-			}
+				}		
 
-			multiply = {
-				value = "ai_ideological_opinion(scope:target_country)"
-				multiply = -0.05
-				add = 1
-				min = 0.5
-				max = 2.0
-			}	
-
-			multiply = {
-				value = 1
-				add = {
-					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
-					multiply = 2
-				}
-				subtract = {
-					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
-					divide = 2
-				}				
-			}			
-			
-			if = {
-				limit = {
-					lenient_ai_behavior_trigger = yes
-				}
-				multiply = 0.75
-			}
-			
-			if = {
-				limit = {
-					harsh_ai_behavior_trigger = yes
-				}
-				multiply = 1.5
-			}	
-			
-			if = {
-				limit = {
-					has_game_rule = high_ai_aggression
-				}
-				multiply = 0.75 # Yes, this is actually intended to be a decrease - AI should want to conquer/dominate more instead
-			}			
-
-			if = {
-				limit = {
-					has_game_rule = low_ai_aggression
-				}
-				multiply = 1.25 # Yes, this is actually intended to be an increase - it's to partially compensate for lowered conquer/dominate desires
-			}				
-			
-			if = {
-				limit = {		
-					scope:target_country = { is_subject_of = root }		
-				}
-				multiply = 0.0	
-			}
-
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_government = yes
-						scope:target_country = {
-							has_radical_leftist_government = yes
-						}
-					}
-				}
-				multiply = 0.5
-			}
-			
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_economy = yes
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-				}
-				multiply = 0.5
-			}			
-
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_government = no			
-						scope:target_country = {
-							has_radical_leftist_government = yes
-						}
-					}
-					
-				}
-				multiply = 1.5
-			}
-	
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_economy = no			
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-					
-				}
-				multiply = 1.5
-			}			
-
-			# AI implications for Power Blocs: 'antagonize' secret goal is more likely towards the country from another Bloc
-			if = {
-				limit = {
-					country_is_in_different_power_bloc = { TARGET = scope:target_country }
-				}
-				multiply = 1.5
-			}
-			# AI implications for Power Blocs: 'antagonize' secret goal is more likely towards the rival of the power struggle
-			else_if = {
-				limit = {
-					country_is_power_struggle_rival = { TARGET = scope:target_country }
-				}
-				multiply = 2
-			}
-			
-			if = {
-				limit = { scope:target_country = { is_still_learning = yes } }
-				multiply = 0
-			}	
-
-			# Countries scripted to have a friendly pact or same power bloc shouldn't start with hostile goals
-			if = {
-				limit = { 
-					game_date < 1950.1.2
-					OR = {
-						is_in_same_power_bloc = scope:target_country
-						has_friendly_diplomatic_pact = { TARGET = scope:target_country } 			
-					}				
-				}
-				multiply = 0
-			}
-			
-		}
-		conquer = {
-			value = 0
-
-			if = {
-				limit = { has_je_conquest_reason = { TARGET = scope:target_country } }
-				add = 500
-			}		
-
-			if = {
-				limit = {
-					NOT = { is_country_type = unrecognized }
-					scope:target_country = { is_country_type = unrecognized }
-				}
-				add = 50
-			}		
-
-			if = {
-				limit = {
-					scope:target_country = {
-						any_scope_state = {
-							root = { has_claim = prev }
-						}
-					}
-				}
-				add = 200
-			}		
-
-			multiply = {
-				value = "ai_ideological_opinion(scope:target_country)"
-				multiply = -0.05
-				add = 1
-				min = 0.5
-				max = 2.0
-			}	
-			
-			multiply = {
-				value = 1
-				add = {
-					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
-					multiply = 2
-				}
-				subtract = {
-					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
-					divide = 2
-				}				
-			}				
-
-			if = {
-				limit = { scope:target_country = { has_modifier = declared_bankruptcy } }
-				multiply = 2.0
-			}	
-
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_government = yes
-						scope:target_country = {
-							has_radical_leftist_government = yes
-						}
-					}
-				}
-				multiply = 0.5
-			}
-			
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_economy = yes
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-				}
-				multiply = 0.5
-			}			
-
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_government = no			
-						scope:target_country = {
-							has_radical_leftist_government = yes
-						}
-					}
-					
-				}
-				multiply = 1.5
-			}
-	
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_economy = no			
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-					
-				}
-				multiply = 1.5
-			}			
-			
-			if = {
-				limit = {
-					lenient_ai_behavior_trigger = yes
-				}
-				multiply = 0.25
-			}
-			
-			if = {
-				limit = {
-					harsh_ai_behavior_trigger = yes
-				}
-				multiply = 1.25
-			}
-			
-			if = {
-				limit = {
-					has_game_rule = high_ai_aggression
-				}
-				multiply = 1.25
-			}
-			
-			if = {
-				limit = {
-					has_game_rule = low_ai_aggression
-				}
-				multiply = 0.75
-			}		
-			
-			# AI implications for Power Blocs: 'conquer' secret goal is more likely towards the country from another Bloc
-			if = {
-				limit = {
-					country_is_in_different_power_bloc = { TARGET = scope:target_country }
-				}
-				multiply = 1.5
-			}
-
-			if = {
-				limit = {
-					can_reach_target_country = no
-				}
-				multiply = 0.0
-			}
-
-			if = {
-				limit = {		
-					is_subject_of = scope:target_country	
-				}
-				multiply = 0.0	
-			}			
-			
-			if = {
-				limit = { scope:target_country = { is_still_learning = yes } }
-				multiply = 0
-			}
-			
-			# Countries scripted to have a friendly pact or same power bloc shouldn't start with hostile goals
-			if = {
-				limit = { 
-					game_date < 1950.1.2
-					OR = {
-						is_in_same_power_bloc = scope:target_country
-						has_friendly_diplomatic_pact = { TARGET = scope:target_country } 			
-					}				
-				}
-				multiply = 0
-			}
-		}		
-		dominate = {
-			value = 0
-			
-			if = {
-				limit = {
-					has_je_subjugation_reason = { TARGET = scope:target_country }
-					NOT = { is_subject_of = root }
-				}
-				add = 500
-			}					
-
-			if = {
-				limit = {
-					scope:target_country = { 
-						is_direct_subject_of = root
-						relations:root < relations_threshold:cordial 
-						scope:target_country.country_rank < rank_value:major_power
-					}
-				}
-				add = 50
-			}	
-
-			if = {
-				limit = {
-					can_reach_target_country = yes
+				# Valid target for protection?
+				OR = {
 					country_rank > scope:target_country.country_rank
-					NOT = { is_country_type = unrecognized }
-					scope:target_country = { is_country_type = unrecognized }
-					scope:target_country = { NOT = { is_subject_of = root }	}
-				}
-				add = 25
+					scope:target_country = { is_subject_of = root }
+				}	
 				
-				if = {
-					limit = {
-						is_adjacent_to_country = scope:target_country
-						"relations(scope:target_country)" < relations_threshold:amicable							
-					}
-					add = 1000					
+			}
+			score = {
+				value = 200
+
+				multiply = {
+					value = "ai_ideological_opinion(scope:target_country)"
+					multiply = 0.05
+					add = 1
+					min = 0.5
+					max = 2.0
 				}
 
-				if = {
-					limit = {
-						power_bloc ?= { has_principle_group = principle_group:principle_group_colonial_offices }
+				multiply = {
+					value = 1
+					add = {
+						value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+						multiply = 2
 					}
-					add = 50
-				}
-				
-			}			
-			
-			if = {
-				limit = {
-					can_reach_target_country = yes
-					country_rank > scope:target_country.country_rank
-					scope:target_country.country_rank < rank_value:major_power
-					scope:target_country = { NOT = { is_subject_of = root }	}
-				}
-				add = 25
-			}
-			
-
-			multiply = {
-				value = "ai_ideological_opinion(scope:target_country)"
-				multiply = -0.05
-				add = 1
-				min = 0.5
-				max = 2.0
-			}	
-			
-			multiply = {
-				value = 1
-				add = {
-					value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
-					multiply = 2
-				}
-				subtract = {
-					value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
-					divide = 2
-				}				
-			}				
-
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_government = yes
-						scope:target_country = {
-							has_radical_leftist_government = yes
-						}
-					}
-				}
-				multiply = 0.5
-			}
-			
-			if = {
-				limit = {	
-					AND = {
-						has_radical_leftist_economy = yes
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-				}
-				multiply = 0.5
-			}			
-
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_government = no			
-						scope:target_country = {
-							has_radical_leftist_government = yes
-						}
-					}
-					
-				}
-				multiply = 1.5
-			}
-	
-			if = {
-				limit = {
-					AND = {
-						has_radical_leftist_economy = no			
-						scope:target_country = {
-							has_radical_leftist_economy = yes
-						}
-					}
-					
-				}
-				multiply = 1.5
-			}
-			
-			if = {
-				limit = {
-					lenient_ai_behavior_trigger = yes
-				}
-				multiply = 0.50
-			}		
-			
-			if = {
-				limit = { scope:target_country = { has_modifier = declared_bankruptcy } }
-				multiply = 2.0
-			}			
-			
-			if = {
-				limit = {
-					harsh_ai_behavior_trigger = yes
-				}
-				multiply = 1.5
-			}	
-
-			if = {
-				limit = {
-					has_game_rule = high_ai_aggression
-				}
-				multiply = 1.25
-			}
-			
-			if = {
-				limit = {
-					has_game_rule = low_ai_aggression
-				}
-				multiply = 0.75
-			}
-			
-			# Shouldn't usually upset diplomatic pacts unless they're bankrupt or infamous
-			if = {
-				limit = {
-					scope:target_country = {
-						in_default = no
-						infamy < infamy_threshold:notorious
+					subtract = {
+						value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+						divide = 2
 					}
 				}
 
 				if = {
 					limit = {
-						any_scope_treaty = {
-							binds = scope:target_country
-							any_scope_article = {
-								has_type = defensive_pact
-							}
-						}
-					}
-					multiply = 0.5
-				}
-
-				if = {
-					limit = {
-						any_scope_treaty = {
-							binds = scope:target_country
-							any_scope_article = {
-								has_type = alliance
-							}
-						}
-					}
-					multiply = 0.25
-				}
-
-				if = {
-					limit = {
-						any_scope_treaty = {
-							binds = scope:target_country
-							any_scope_article = {
-								has_type = trade_privilege
-								source_country = scope:target_country
-							}
-						}
-					}
-					multiply = 0.5
-				}
-
-				if = {
-					limit = {
-						is_in_customs_union_with = scope:target_country
-					}
-					multiply = 0.25
-				}
-			}			
-
-			# AI implications for Power Blocs: 'dominate' secret goal is more likely towards the country from another Bloc
-			if = {
-				limit = {
-					country_is_in_different_power_bloc = { TARGET = scope:target_country }
-				}
-				multiply = 1.5
-			}
-
-			if = {
-				limit = {		
-					NOR = {
-						country_rank >= rank_value:great_power
-						has_strategic_adjacency = scope:target_country 
 						AND = {
-							country_rank >= rank_value:major_power
-							scope:target_country = { is_country_type = unrecognized }
+							has_radical_leftist_government = yes
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
 						}
 					}
+					multiply = 1.5
 				}
-				multiply = 0.0					
-			}			
-			
-			if = {
-				limit = {		
-					is_subject_of = scope:target_country	
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = yes
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+					}
+					multiply = 1.5
 				}
-				multiply = 0.0	
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_government = no
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = no
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						harsh_ai_behavior_trigger = yes
+					}
+					multiply = 0.75
+				}
+
+				if = {
+					limit = {
+						scope:target_country.infamy >= infamy_threshold:infamous
+					}
+					multiply = 0.9
+				}
+
+				if = {
+					limit = {
+						scope:target_country.infamy >= infamy_threshold:notorious
+					}
+					multiply = 0.9
+				}
+
+				if = {
+					limit = {
+						scope:target_country.infamy >= infamy_threshold:pariah
+					}
+					multiply = 0.5
+				}
+
+				# AI implications for Power Blocs: 'protect' secret goal is more likely towards the Bloc members
+				if = {
+					limit = {
+						is_in_same_power_bloc = scope:target_country
+					}
+					multiply = 2.5
+				}
 			}
-			
-			# AI shouldn't be aggressive against subjects of subjects
-			if = {
-				limit = {	
-					scope:target_country = { 
-						is_subject_of = root 
-						NOT = { is_direct_subject_of = root }
-					}	
-				}
-				multiply = 0.0	
-			}			
-			
-			if = {
-				limit = { scope:target_country = { is_still_learning = yes } }
-				multiply = 0
-			}
-			
-			# Countries scripted to have a friendly pact, historical overlord status or same power bloc shouldn't start with randomly generated hostile goals
-			if = {
-				limit = { 
-					game_date < 1836.1.2
+		}
+		antagonize = {
+			trigger = {
+				NOT = { scope:target_country = { is_subject_of = root } }
+
+				# Countries scripted to have a friendly pact or same power bloc shouldn't start with hostile goals
+				NAND = {
+					game_date < 1950.1.2
 					OR = {
 						is_in_same_power_bloc = scope:target_country
 						has_friendly_diplomatic_pact = { TARGET = scope:target_country }
-						scope:target_country = { is_subject_of = root }	
 					}				
 				}
-				multiply = 0
-			}			
-		}			
+				
+			}
+			score = {
+				value = 0
+
+				if = {
+					limit = {
+						countries_are_valid_rivals = yes
+					}
+					add = 50
+				}
+
+				if = {
+					limit = {
+						has_diplomatic_pact = {
+							who = scope:target_country
+							type = rivalry
+						}
+					}
+					add = 100
+				}
+
+				if = {
+					limit = {
+						can_reach_target_country = yes
+						NOT = { is_subject_of = scope:target_country }
+					}
+					add = 50
+				}
+
+				if = {
+					limit = {
+						scope:target_country = {
+							is_revolutionary = yes
+							scope:target_country.civil_war_origin_country = root
+						}
+					}
+					add = 500
+				}			
+
+				multiply = {
+					value = "ai_ideological_opinion(scope:target_country)"
+					multiply = -0.05
+					add = 1
+					min = 0.5
+					max = 2.0
+				}
+
+				multiply = {
+					value = 1
+					add = {
+						value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+						multiply = 2
+					}
+					subtract = {
+						value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+						divide = 2
+					}
+				}
+
+				if = {
+					limit = {
+						lenient_ai_behavior_trigger = yes
+					}
+					multiply = 0.75
+				}
+
+				if = {
+					limit = {
+						harsh_ai_behavior_trigger = yes
+					}
+					multiply = 1.5
+				}
+
+				if = {
+					limit = {
+						has_game_rule = high_ai_aggression
+					}
+					multiply = 0.75 # Yes, this is actually intended to be a decrease - AI should want to conquer/dominate more instead
+				}
+
+				if = {
+					limit = {
+						has_game_rule = low_ai_aggression
+					}
+					multiply = 1.25 # Yes, this is actually intended to be an increase - it's to partially compensate for lowered conquer/dominate desires
+				}			
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_government = yes
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = yes
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_government = no
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+
+					}
+					multiply = 1.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = no
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+
+					}
+					multiply = 1.5
+				}
+
+				# AI implications for Power Blocs: 'antagonize' secret goal is more likely towards the country from another Bloc
+				if = {
+					limit = {
+						country_is_in_different_power_bloc = { TARGET = scope:target_country }
+					}
+					multiply = 1.5
+				}
+				# AI implications for Power Blocs: 'antagonize' secret goal is more likely towards the rival of the power struggle
+				else_if = {
+					limit = {
+						country_is_power_struggle_rival = { TARGET = scope:target_country }
+					}
+					multiply = 2
+				}				
+			}
+		}
+		conquer = {
+			trigger = {
+				can_reach_target_country = yes
+				NOT = { is_subject_of = scope:target_country }
+
+				# Countries scripted to have a friendly pact or same power bloc shouldn't start with hostile goals
+				NAND = {
+					game_date < 1950.1.2
+					OR = {
+						is_in_same_power_bloc = scope:target_country
+						has_friendly_diplomatic_pact = { TARGET = scope:target_country }
+					}
+				}			
+			}
+			score = {
+				value = 0
+
+				if = {
+					limit = {
+						NOT = { is_country_type = unrecognized }
+						scope:target_country = { is_country_type = unrecognized }
+						scope:target_country = {
+							OR = {
+								is_subject = no
+								top_overlord ?= {
+									is_country_type = unrecognized
+								}
+							}
+						}
+						institution_investment_level = {
+							institution = institution_colonial_affairs
+							value >= 1
+						}
+					}
+					add = 50
+
+					if = {
+						limit = {
+							power_bloc ?= { has_principle_group = principle_group:principle_group_colonial_offices }
+						}
+						add = 50
+					}
+			
+					if = {
+						limit = {
+							scope:target_country = {
+								is_subject = yes
+								is_country_type = unrecognized
+								top_overlord ?= {
+									NOT = { is_country_type = unrecognized }
+								}
+							}
+						}
+						multiply = 0.1
+					}
+				}			
+
+				if = {
+					limit = {
+						scope:target_country = {
+							any_scope_state = {
+								root = { has_claim = prev }
+							}
+						}
+					}
+					add = 200
+				}
+
+				multiply = {
+					value = "ai_ideological_opinion(scope:target_country)"
+					multiply = -0.05
+					add = 1
+					min = 0.5
+					max = 2.0
+				}
+
+				multiply = {
+					value = 1
+					add = {
+						value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+						multiply = 2
+					}
+					subtract = {
+						value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+						divide = 2
+					}
+				}
+
+				if = {
+					limit = { scope:target_country = { has_modifier = declared_bankruptcy } }
+					multiply = 2.0
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_government = yes
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = yes
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_government = no
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+
+					}
+					multiply = 1.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = no
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+
+					}
+					multiply = 1.5
+				}
+
+				if = {
+					limit = {
+						lenient_ai_behavior_trigger = yes
+					}
+					multiply = 0.25
+				}
+
+				if = {
+					limit = {
+						harsh_ai_behavior_trigger = yes
+					}
+					multiply = 1.25
+				}
+
+				if = {
+					limit = {
+						has_game_rule = high_ai_aggression
+					}
+					multiply = 1.25
+				}
+
+				if = {
+					limit = {
+						has_game_rule = low_ai_aggression
+					}
+					multiply = 0.75
+				}
+
+				# AI implications for Power Blocs: 'conquer' secret goal is more likely towards the country from another Bloc
+				if = {
+					limit = {
+						country_is_in_different_power_bloc = { TARGET = scope:target_country }
+					}
+					multiply = 1.5
+				}
+
+				# AI implications for Power Blocs: 'conquer' secret goal is much less likely towards the Bloc members
+				if = {
+					limit = {
+						is_in_same_power_bloc = scope:target_country
+					}
+					multiply = 0.25
+				}
+			}
+		}
+
+		dominate = {
+			trigger = {
+				OR = {
+					country_rank >= rank_value:great_power
+					has_strategic_adjacency = scope:target_country
+					AND = {
+						country_rank >= rank_value:major_power
+						scope:target_country = { is_country_type = unrecognized }
+					}
+				}					
+				can_reach_target_country = yes
+				NOT = { is_subject_of = scope:target_country }
+				
+				# AI shouldn't be aggressive against subjects of their subjects
+				NOT = {
+					scope:target_country = {
+						is_subject_of = root
+						NOT = { is_direct_subject_of = root }
+					}
+				}
+
+				# Countries scripted to have a friendly pact or same power bloc shouldn't start with hostile goals
+				NAND = {
+					game_date < 1950.1.2
+					OR = {
+						is_in_same_power_bloc = scope:target_country
+						has_friendly_diplomatic_pact = { TARGET = scope:target_country }
+					}
+				}						
+			}
+			score = {
+				value = 0
+
+				if = {
+					limit = {
+						scope:target_country = {
+							is_direct_subject_of = root
+							relations:root < relations_threshold:cordial
+							scope:target_country.country_rank < rank_value:major_power
+						}
+					}
+					add = 50
+				}
+
+				if = {
+					limit = {
+						can_reach_target_country = yes
+						country_rank > scope:target_country.country_rank
+						NOT = { is_country_type = unrecognized }
+						scope:target_country = { is_country_type = unrecognized }
+						scope:target_country = { NOT = { is_subject_of = root }	}
+						scope:target_country = {
+							OR = {
+								is_subject = no
+								top_overlord ?= {
+									is_country_type = unrecognized
+								}
+							}
+						}
+						institution_investment_level = {
+							institution = institution_colonial_affairs
+							value >= 1
+						}
+					}
+					add = 25
+
+					if = {
+						limit = {
+							power_bloc ?= { has_principle_group = principle_group:principle_group_colonial_offices }
+						}
+						add = 50
+					}
+
+					if = {
+						limit = {
+							scope:target_country = {
+								is_subject = yes
+								is_country_type = unrecognized
+								top_overlord ?= {
+									NOT = { is_country_type = unrecognized }
+								}
+							}
+						}
+						multiply = 0.1
+					}
+				}
+
+				if = {
+					limit = {
+						can_reach_target_country = yes
+						country_rank > scope:target_country.country_rank
+						scope:target_country.country_rank < rank_value:major_power
+						scope:target_country = { NOT = { is_subject_of = root }	}
+					}
+					add = 25
+				}
+
+				multiply = {
+					value = "ai_ideological_opinion(scope:target_country)"
+					multiply = -0.05
+					add = 1
+					min = 0.5
+					max = 2.0
+				}
+
+				multiply = {
+					value = 1
+					add = {
+						value = "lobby_in_government_foreign_anti_clout(scope:target_country)"
+						multiply = 2
+					}
+					subtract = {
+						value = "lobby_in_government_foreign_pro_clout(scope:target_country)"
+						divide = 2
+					}
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_government = yes
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = yes
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+					}
+					multiply = 0.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_government = no
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+
+					}
+					multiply = 1.5
+				}
+
+				if = {
+					limit = {
+						AND = {
+							has_radical_leftist_economy = no
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+
+					}
+					multiply = 1.5
+				}
+				
+				if = {
+					limit = {
+						lenient_ai_behavior_trigger = yes
+					}
+					multiply = 0.50
+				}
+
+				if = {
+					limit = { scope:target_country = { has_modifier = declared_bankruptcy } }
+					multiply = 2.0
+				}
+
+				if = {
+					limit = {
+						harsh_ai_behavior_trigger = yes
+					}
+					multiply = 1.5
+				}
+
+				if = {
+					limit = {
+						has_game_rule = high_ai_aggression
+					}
+					multiply = 1.25
+				}
+
+				if = {
+					limit = {
+						has_game_rule = low_ai_aggression
+					}
+					multiply = 0.75
+				}
+
+				# Shouldn't usually upset diplomatic pacts unless they're bankrupt or infamous
+				if = {
+					limit = {
+						scope:target_country = {
+							in_default = no
+							infamy < infamy_threshold:notorious
+						}
+					}
+
+					if = {
+						limit = {
+							any_scope_treaty = {
+								binds = scope:target_country
+								any_scope_article = {
+									has_type = defensive_pact
+								}
+							}
+						}
+						multiply = 0.5
+					}
+
+					if = {
+						limit = {
+							any_scope_treaty = {
+								binds = scope:target_country
+								any_scope_article = {
+									has_type = alliance
+								}
+							}
+						}
+						multiply = 0.25
+					}
+
+					if = {
+						limit = {
+							any_scope_treaty = {
+								binds = scope:target_country
+								any_scope_article = {
+									has_type = trade_privilege
+									source_country = scope:target_country
+								}
+							}
+						}
+						multiply = 0.5
+					}
+
+					if = {
+						limit = {
+							is_in_customs_union_with = scope:target_country
+						}
+						multiply = 0.25
+					}
+				}
+
+				# AI implications for Power Blocs: 'dominate' secret goal is more likely towards the country from another Bloc
+				if = {
+					limit = {
+						country_is_in_different_power_bloc = { TARGET = scope:target_country }
+					}
+					multiply = 1.5
+				}
+			}
+		}
 	}
 	
 	treaty_category_scores = {
@@ -3600,6 +3654,8 @@ ai_strategy_default = {
 
 		liberate_country = {
 			value = 0
+		
+			# If there is a custom value scripted for the tag to be liberated in liberate_country_scores, that value is automatically added to the score here
 		
 			if = {
 				limit = {
