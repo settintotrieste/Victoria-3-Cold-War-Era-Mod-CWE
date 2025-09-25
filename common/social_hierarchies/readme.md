@@ -36,7 +36,7 @@ other_hierarchy = {
     pop_criteria = {
         has_pop_religion = hindu
         culture = {
-            has_discrimination_trait = south_asian_heritage
+            has_discrimination_trait_group = heritage_group_south_asian
         }
     }
 }
