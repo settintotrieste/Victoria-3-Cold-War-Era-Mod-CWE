@@ -267,49 +267,158 @@ decree_promote_national_values = {
 	unlocking_technologies = {
 		
 	}
-	state_trigger = {
-		OR = {
-			has_assimilating_pops = yes
-			has_converting_pops = yes
-		}
+	
+	country_trigger = {
+		NOT = { has_law_or_variant = law_type:law_multicultural }
 	}
+	
 	modifier = {
-		state_assimilation_mult = 1
-		state_conversion_mult = 1
+		state_assimilation_mult = 0.5
+		state_conversion_mult = 0.5
+		state_allow_assimilation_in_homeland_bool = yes
+		state_radicalism_increases_violent_hostility_mult = 0.5
+		state_radicalism_increases_cultural_erasure_mult = 0.4
+		state_radicalism_increases_open_prejudice_mult = 0.3
 	}
 	cost = 200
 
 	ai_weight = {
 		value = 0
-		if = {
-			limit = {
-				scope:country = {
-					OR = {
-						has_strategy = ai_strategy_reactionary_agenda
-						has_strategy = ai_strategy_conservative_agenda
-					}
-				}
-			}
-			add = 100
-		}
-		else_if = {
-			limit = {
-				scope:country = {
-					has_strategy = ai_strategy_nationalist_agenda
-				}
-			}
-			add = 200
-		}
 
 		if = {
 			limit = {
 				scope:country = {
-					OR = {
-						has_law_or_variant = law_type:law_ethnostate
-						has_law_or_variant = law_type:law_state_religion
-						has_law_or_variant = law_type:law_HOS_religious_leader
+					NOR = {
+						has_law_or_variant = law_type:law_multicultural
+						has_law_or_variant = law_type:law_subjecthood
 					}
 				}
+				primary_cultures_percent_state <= 0.9
+			}
+			if = {
+				limit = {
+					scope:country = {
+						OR = {
+							has_strategy = ai_strategy_reactionary_agenda
+							has_strategy = ai_strategy_conservative_agenda
+							has_strategy = ai_strategy_maintain_mandate_of_heaven
+						}
+					}
+				}
+				add = 100
+			}
+			else_if = {
+				limit = {
+					scope:country = {
+						has_strategy = ai_strategy_nationalist_agenda
+					}
+				}
+				add = 200
+			}
+
+			if = {
+				limit = {
+					primary_cultures_percent_state <= 0.1
+				}
+				multiply = 5.0
+			}
+			else_if = {
+				limit = {
+					primary_cultures_percent_state <= 0.3
+				}
+				multiply = 3.0
+			}
+			else_if = {
+				limit = {
+					primary_cultures_percent_state <= 0.5
+				}
+				multiply = 2.0
+			}
+
+			if = {
+				limit = {
+					is_homeland_of_country_cultures = scope:country
+				}
+				multiply = 5.0
+			}
+		}
+
+		if = {
+			limit = {
+				NOT = { scope:country = { has_law_or_variant = law_type:law_total_separation } }
+				religion_percent_state = {
+					target = scope:country.religion
+					value <= 0.9
+				}
+			}
+
+			if = {
+				limit = {
+					scope:country = {
+						has_strategy = ai_strategy_conservative_agenda
+					}
+				}
+				add = 50
+			}
+			else_if = {
+				limit = {
+					scope:country = {
+						has_strategy = ai_strategy_reactionary_agenda
+					}
+				}
+				add = 100
+			}
+
+			if = {
+				limit = {
+					scope:country = {
+						OR = {
+							has_law_or_variant = law_type:law_state_religion
+							has_law_or_variant = law_type:law_state_atheism
+						}
+					}
+				}
+				add = 50
+			}
+
+			if = {
+				limit = {
+					religion_percent_state = {
+						target = scope:country.religion
+						value <= 0.1
+					}
+				}
+				multiply = 5.0
+			}
+			else_if = {
+				limit = {
+					religion_percent_state = {
+						target = scope:country.religion
+						value <= 0.3
+					}
+				}
+				multiply = 3.0
+			}
+			else_if = {
+				limit = {
+					religion_percent_state = {
+						target = scope:country.religion
+						value <= 0.5
+					}
+				}
+				multiply = 2.0
+			}
+		}
+
+		if = {
+			limit = {
+				state_population < 100000
+			}
+			multiply = 0
+		}
+		else_if = {
+			limit = {
+				state_population < 300000
 			}
 			multiply = 2.0
 		}
@@ -317,8 +426,8 @@ decree_promote_national_values = {
 			limit = {
 				scope:country = {
 					OR = {
-						has_law_or_variant = law_type:law_cultural_exclusion
-						has_law_or_variant = law_type:law_freedom_of_conscience
+						has_law = law_type:law_cultural_exclusion
+						has_law = law_type:law_freedom_of_conscience
 					}
 				}
 			}
@@ -328,14 +437,14 @@ decree_promote_national_values = {
 			limit = {
 				scope:country = {
 					OR = {
-						has_law_or_variant = law_type:law_multicultural
-						has_law_or_variant = law_type:law_total_separation
+						has_law = law_type:law_multicultural
+						has_law = law_type:law_total_separation
 					}
 				}
 			}
 			multiply = 0.1
 		}
-		
+
 		if = {
 			limit = {
 				primary_cultures_percent_state > 0.9
@@ -357,6 +466,7 @@ decree_promote_national_values = {
 			multiply = 0.5
 		}
 	}
+	
 }
 
 decree_encourage_manufacturing_industry = {
