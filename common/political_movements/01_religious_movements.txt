@@ -6,6 +6,8 @@
 		ideology_autocratic
 		ideology_power_hungry
 	}
+	
+	can_cause_obstinance = yes
 
 	creation_trigger = {
 		NOT = {
@@ -323,6 +325,26 @@
 			min = 0
 			desc = "STANDARD_OF_LIVING_FOR_RELIGION"
 		}
+		
+		if = {
+			limit = {
+				owner = {
+					any_neighbouring_state = {
+						owner = {
+							NOT = { THIS = ROOT.owner }
+							any_political_movement = {
+								religion ?= ROOT.religion
+								is_insurrectionary = yes
+							}
+						}
+					}
+				}
+			}
+			add = {
+				desc = "NEIGHBOURING_COUNTRY_WITH_RELIGIOUS_REVOLUTION"
+				value = 0.15
+			}
+		}
 	}
 }
 
@@ -337,6 +359,8 @@ movement_religious_minority = {
 		ideology_democratic
 		ideology_liberal
 	}
+
+	can_cause_obstinance = yes
 
 	creation_trigger = {
 		
@@ -506,14 +530,13 @@ movement_religious_minority = {
 
 		if = {
 			limit = {
-				standard_of_living < 15
+				standard_of_living < state.average_expected_sol
 			}
-
-			add = {
-				value =	standard_of_living
-				subtract = 15
-				multiply = -5
+			add = { # Increases likelihood of support if impoverished
 				desc = "POP_POVERTY"
+				value = state.average_expected_sol
+				subtract = standard_of_living
+				max = 10
 			}
 		}
 
@@ -562,11 +585,17 @@ movement_religious_minority = {
 					}
 				}
 			}
-			multiply = {
+			add = { # From +2 at 80 to +10 at 0
 				desc = "POP_RELIGIOUS_DISCRIMINATION"
 				value = 100
 				subtract = pop_acceptance
-				divide = 25 # Maxes out at 4x at 0% acceptance, starts being a liability at 75% acceptance
+				divide = 10
+			}
+		}
+		else = { # Non-discriminated pops are less likely to form separatist movements
+			multiply = {
+				desc = "POP_ACCEPTANCE"
+				value = 0.25
 			}
 		}
 
@@ -696,6 +725,62 @@ movement_religious_minority = {
 			subtract = political_movement_identity_support
 			min = 0
 			desc = "LOW_MOVEMENT_IDENTITY_SUPPORT"
+		}
+		
+		if = {
+			limit = {
+				owner = {
+					any_neighbouring_state = {
+						owner = {
+							NOT = { THIS = ROOT.owner }
+							any_political_movement = {
+								religion ?= ROOT.religion
+								is_insurrectionary = yes
+							}
+						}
+					}
+				}
+			}
+			add = {
+				desc = "NEIGHBOURING_COUNTRY_WITH_RELIGIOUS_REVOLUTION"
+				value = 0.15
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					any_political_movement = {
+						NOT = { this = root } # Insurrectionary movements should not make themselves more insurrectionary
+						is_insurrectionary = yes
+					}
+				}
+			}
+			add = {
+				desc = "INSURRECTIONARY_MOVEMENTS"
+				owner = {
+					every_political_movement = {
+						limit = {
+							NOT = { this = root } # Insurrectionary movements should not make themselves more insurrectionary
+							is_insurrectionary = yes
+						}
+						if = {
+							limit = {
+								exists = this.political_movement_identity_support
+							}
+							add = { # Identity support can get a bit high
+								value = this.political_movement_identity_support
+								multiply = 0.5
+							}
+						}
+						else = {
+							add = this.political_movement_support
+						}
+					}
+				}
+				min = 0.05
+				max = 0.25
+			}
 		}
 	}
 }

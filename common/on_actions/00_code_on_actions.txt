@@ -282,9 +282,20 @@ on_decade_pulse_character = {}
 # Root = State
 on_monthly_pulse_state = {
 	random_events = {
-		10 = goldrush.5
 	}
-
+	effect = {
+		if = {
+			limit = {
+				state_region = {
+					has_harvest_condition = disease_outbreak
+					NOT = { has_variable = had_disease_outbreak_recently }
+				}
+			}
+			state_region = {
+				set_variable = { name = had_disease_outbreak_recently days = 365 }
+			}
+		}
+	}
 }
 
 on_half_yearly_pulse_state = {
@@ -639,15 +650,199 @@ on_character_death = {
 			}
 		}
 		
+		#Enforce culture
+		if = {
+			limit = {
+				has_role = politician
+
+				# Check that the character's country has a non-primary culture homeland or cultural community for a culture that is accepted by the country
+				accepted_cultural_minority_check_character_scope = yes
+
+				# cultural trends do not impact the monarchy's line of succession
+				is_heir = no
+				NAND = {
+					is_ruler = yes
+					owner ?= {
+						has_law_or_variant = law_type:law_HOS_monarch
+					}
+				}
+
+  				## the IG must be at least okay with the status quo regarding cultures in order to potentially accept a minority culture character as a leader, and not want to move things back
+  				OR = {
+  					AND = {
+  						ROOT.owner = { has_law_or_variant = law_type:law_national_supremacy }
+  						NOT = {
+							interest_group = {
+								law_stance = {
+									law = law_type:law_ethnostate
+									value >= approve
+								}
+			  				}
+		  				}
+	  				}
+  					AND = {
+  						ROOT.owner = { has_law_or_variant = law_type:law_racial_segregation }
+  						NOT = {
+							interest_group = {
+								law_stance = {
+									law = law_type:law_national_supremacy
+									value >= approve
+								}
+			  				}
+			  			}
+	  				}
+  					AND = {
+  						ROOT.owner = { has_law_or_variant = law_type:law_subjecthood }
+  						NOT = {
+							interest_group = {
+								law_stance = {
+									law = law_type:law_national_supremacy
+									value >= approve
+								}
+			  				}
+			  			}
+	  				}
+  					AND = {
+  						ROOT.owner = { has_law_or_variant = law_type:law_cultural_exclusion }
+  						NOT = {
+							interest_group = {
+								law_stance = {
+									law = law_type:law_racial_segregation
+									value >= approve
+								}
+			  				}
+			  			}
+	  				}
+  					AND = {
+  						ROOT.owner = { has_law_or_variant = law_type:law_multicultural }
+  						NOT = {
+							interest_group = {
+								law_stance = {
+									law = law_type:law_cultural_exclusion
+									value >= approve
+								}
+			  				}
+			  			}
+	  				}
+  				}
+			}
+
+			# If the country and the IG support women's rights, do combinations of woman and/or minority culture for character generation
+			if = {
+				limit = {
+					owner ?= {
+						has_law_or_variant = law_type:law_full_womens_rights
+					}
+					interest_group = {
+						law_stance = {
+							law = law_type:law_full_womens_rights
+							value >= approve
+						}
+	  				}
+				}
+
+				# 40/10/20/5 chance of primary culture man/woman as leader or of accepted minority culture man/woman as leader
+				random_list = {
+					40 = {
+						# Nothing special happens. Regular guy spawns as new leader.
+					}
+					10 = {
+						owner ?= {
+							accepted_cultural_minority_selector_owner_scope_save_scope_as_minority_culture = yes
+							if = {
+								limit = {
+									exists = scope:minority_culture
+								}
+								create_character = {
+									ig_leader = yes
+									culture = scope:minority_culture
+									interest_group = ROOT.interest_group
+								}
+							}
+						}
+					}
+					20 = {
+						owner ?= {
+							create_character = {
+								ig_leader = yes
+								female = yes
+								interest_group = ROOT.interest_group
+							}
+						}
+					}
+					5 = {
+						owner ?= {
+							accepted_cultural_minority_selector_owner_scope_save_scope_as_minority_culture = yes
+							if = {
+								limit = {
+									exists = scope:minority_culture
+								}
+								create_character = {
+									ig_leader = yes
+									female = yes
+									culture = scope:minority_culture
+									interest_group = ROOT.interest_group
+								}
+							}
+						}
+					}
+				}
+			}
+			else = {
+				# 75/25 chance of primary culture leader spawning or of minority culture leader spawning
+				random_list = {
+					75 = {
+						# regular guy spawns as usual
+					}
+					25 = {
+						owner ?= {
+							accepted_cultural_minority_selector_owner_scope_save_scope_as_minority_culture = yes
+							if = {
+								limit = {
+									exists = scope:minority_culture
+								}
+								create_character = {
+									ig_leader = yes
+									culture = scope:minority_culture
+									interest_group = ROOT.interest_group
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
 	}
+}
+
+# Root = Character
+on_new_interest_group_leader = {
+
 }
 
 # Root = Character
 on_new_ruler = {
 	effect = {
-		
-		post_notification = new_ruler
-		
+		if = {
+			limit = {
+				owner = {
+					NOT = {
+						has_variable = hide_ruler_change_notification
+					}
+				}
+			}
+			post_notification = new_ruler
+		}
+		if = {
+			limit = {
+				owner = {
+					has_law_or_variant = law_type:law_HOS_religious_leader
+				}
+				NOT = { religion = owner.religion }
+			}
+			change_character_religion = owner.religion
+		}
 	}
 }
 
@@ -2071,6 +2266,15 @@ on_secession_start = {
 # Root = Country
 # scope:target = Uprising country
 on_secession_end = {
+	effect = {
+		# successions trigger an infamy raising event the first time. Event triggers ensure event only fires once.
+		scope:target = {
+			save_scope_as = rebel_nation
+			random_primary_culture = {
+				save_scope_as = rebel_culture
+			}
+		}
+	}
 }
 
 # Root = Country
@@ -2266,6 +2470,19 @@ on_wargoal_enforced = {
 				name = has_won_a_war
 				days = 100
 				value = yes
+			}
+		}
+		if = { # recently crushed a secession
+			limit = {
+				scope:diplomatic_play ?= {
+					is_diplomatic_play_type = dp_secession
+				}
+			}
+			ROOT ?= {
+				set_variable = {
+					name = crushed_secession
+					days = 90
+				}
 			}
 		}
 	}
@@ -2519,7 +2736,54 @@ on_state_created = {
 # Root = political movement
 on_political_movement_formed = {
 	effect = {
-		post_notification = political_movement_formed
+		owner = {
+			save_scope_as = movement_country
+		}
+		if = {
+			limit = {
+				NOT = { # Movements spawned by agitators should use the default notification
+					any_supporting_character = {
+						exists = this
+					}
+				}
+				any_neighbouring_country_has_same_movement_type_as_root = yes
+			}
+			owner = {
+				random_neighbouring_state = {
+					limit = {
+						owner = {
+							prestige > ROOT.owner.prestige # ROOT.owner.prestige refers to the prestige of the country for whom the movement was just formed
+							any_political_movement = {
+								type = ROOT.type
+							}
+						}
+					}
+					owner = {
+						save_scope_as = movement_spread_country
+					}
+				}
+			}
+			random_list = {
+				1 = {
+					modifier = { # Chance of spreading from another country scales with the power differential
+						value = scope:movement_spread_country.prestige
+						if = {
+							limit = {
+								ROOT.owner.prestige > 0
+							}
+							divide = ROOT.owner.prestige
+						}
+					}
+					post_notification = political_movement_spread_from_country
+				}
+				1 = {
+					post_notification = political_movement_formed
+				}
+			}
+		}
+		else = {
+			post_notification = political_movement_formed
+		}
 	}
 }
 
@@ -2933,6 +3197,30 @@ on_military_formation_created = {
 			}
 			owner = {
 				remove_variable = formation_tutorial_ongoing
+			}
+		}
+	}
+}
+
+# Root = Culture
+# scope:region = state region where the awakening started
+# scope:culture = culture that had an awakening
+on_national_awakening_started = {
+	effect = {
+		scope:region = {
+			every_scope_interest_marker = {
+				owner = {
+					post_notification = national_awakening_started
+					if = {
+						limit = {
+							country_can_have_cultural_minority_movement_of_culture = yes
+						}
+						create_political_movement = {
+							type = movement_cultural_minority
+							culture = scope:culture
+						}
+					}
+				}
 			}
 		}
 	}

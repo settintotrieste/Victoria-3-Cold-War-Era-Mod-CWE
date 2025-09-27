@@ -7,6 +7,8 @@
 		ideology_power_hungry
 	}
 
+	can_cause_obstinance = yes
+
 	creation_trigger = {}
 	creation_weight = {
 		value = 100
@@ -66,7 +68,8 @@
 	}
 
 	pop_support_factors = {
-		movement_support_high_literacy
+		movement_support_national_awakening
+		movement_support_cultural_fervor
 		movement_support_shopkeepers
 		movement_support_officers
 		movement_support_farmers
@@ -114,11 +117,6 @@
 					desc = "concept_bolstered"
 				}
 			}
-		}
-
-		add = {
-			value = 5
-			desc = "POP_BASE_SUPPORT"
 		}
 
 		if = {
@@ -177,7 +175,7 @@
 					is_pop_type = clerks
 				}
 				add = {
-					value = 20
+					value = 25
 					desc = "POP_CLERKS"
 				}
 			}
@@ -196,7 +194,7 @@
 				}
 				add = {
 					value = 10
-					desc = "POP_SOLDIERS"
+					desc = "POP_PEASANTS"
 				}
 			}
 			else = {
@@ -214,16 +212,9 @@
 				}
 			}
 			multiply = {
-				value = 2
+				value = 1.5
 				desc = "COLONIAL_SETTLERS"
 			}
-		}
-
-		multiply = { # Illiterate pops participate at 1/8 the rate of fully literate pops
-			desc = "POP_LITERACY"
-			value = literacy_rate
-			add = 0.15
-			max = 1 # Caps out below ideological movements.
 		}
 
 		if = { # If a more radical movement exists, it'll poach radicals from this one.
@@ -243,6 +234,27 @@
 				subtract = pop_radical_fraction
 			}
 		}
+		
+		multiply = { # Range from x0.625 to x3.125
+			desc = "POP_CULTURE_FERVOR"
+			value = culture.culture_current_fervor
+			subtract = 15
+			multiply = 0.025
+			add = 1
+		}
+		
+		if = {
+			limit = {
+				culture ?= {
+					culture_has_national_awakening = yes
+				}
+			}
+			multiply = {
+				value = 1.5
+				desc = "POP_ACTIVE_NATIONAL_AWAKENING"
+			}
+		}
+		
 	}
 
 	revolution = {
@@ -364,6 +376,27 @@
 			min = 0
 			desc = "STANDARD_OF_LIVING_FOR_PRIMARY_CULTURES"
 		}
+		
+		if = {
+			limit = {
+				owner = {
+					any_neighbouring_state = {
+						owner = {
+							NOT = { THIS = ROOT.owner }
+							any_political_movement = {
+								culture ?= ROOT.culture
+								is_insurrectionary = yes
+							}
+						}
+					}
+				}
+			}
+			add = {
+				desc = "NEIGHBOURING_COUNTRY_WITH_CULTURE_REVOLUTION"
+				value = 0.15
+			}
+		}
+		
 	}
 	
 }
@@ -377,9 +410,11 @@ movement_cultural_minority = {
 		ideology_liberal
 	}
 
+	can_cause_obstinance = yes
+
 	creation_trigger = {}
 	creation_weight = {
-		value = 50
+		value = 100
 	}
 	on_created = {
 		
@@ -419,6 +454,18 @@ movement_cultural_minority = {
 
 	culture_selection_trigger = {
 		NOT = { is_primary_culture_of = scope:country }
+		OR = {
+			culture_current_fervor >= 10
+			scope:country = {
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = support_separatism
+					second_country = prev
+					"diplomatic_pact_other_country(scope:country)" = {
+						country_has_primary_culture = root
+					}
+				}
+			}
+		}
 		scope:country = {
 			OR = {
 				any_scope_state = {
@@ -442,11 +489,26 @@ movement_cultural_minority = {
 	}
 	culture_selection_weight = {
 		value = 100
+
+		if = {
+			limit = {
+				scope:country = {
+					any_scope_diplomatic_pact = {
+						is_diplomatic_action_type = support_separatism
+						second_country = prev
+						"diplomatic_pact_other_country(scope:country)" = {
+							country_has_primary_culture = root
+						}
+					}
+				}
+			}
+			multiply = 3
+		}
 	}
 
 	character_support_trigger = {
-		culture = scope:culture
 		OR = {
+			culture = scope:culture
 			has_ideology = ideology:ideology_liberal
 			has_ideology = ideology:ideology_democratic
 			interest_group ?= { has_ideology = ideology:ideology_progressive }
@@ -455,7 +517,7 @@ movement_cultural_minority = {
 		}
 	}
 	character_support_weight = {
-		value = 200
+		value = 50
 		if = {
 			limit = {
 				has_ideology = ideology:ideology_liberal
@@ -479,17 +541,14 @@ movement_cultural_minority = {
 	}
 
 	pop_support_factors = {
-		movement_support_high_literacy
+		movement_support_national_awakening
+		movement_support_cultural_fervor
 		movement_support_cultural_discrimination
-		movement_support_je_sick_man_main
-		movement_support_je_dual_monarchy
-		movement_support_aristocrats_polish
 		movement_support_academics
 		movement_support_clergymen
 		movement_support_clerks
 		movement_support_soldiers
-		movement_support_nationalism_tech
-		movement_support_pan_nationalism_tech
+		movement_support_support_separatism_action
 	}
 
 	pop_support_weight = {
@@ -530,18 +589,24 @@ movement_cultural_minority = {
 			}
 		}
 
-		add = {
-			value = 10
-			desc = "POP_BASE_SUPPORT"
-		}
-
 		if = {
 			limit = {
 				strata = upper
 			}
-			add = {
-				value = 6
-				desc = "UPPER_NO_ICON"
+			if = {
+				limit = {
+					is_pop_type = aristocrats
+				}
+				add = {
+					value = 6
+					desc = "POP_ARISTOCRATS"
+				}
+			}
+			else = {
+				add = {
+					value = 12
+					desc = "UPPER_NO_ICON"
+				}
 			}
 		}
 		else_if = {
@@ -561,9 +626,40 @@ movement_cultural_minority = {
 				limit = {
 					is_pop_type = clergymen
 				}
+				if = {
+					limit = {
+						NOT = {
+							this.religion = owner.religion
+						}
+					}
+					add = {
+						value = 35
+						desc = "POP_CLERGYMEN"
+					}
+				}
+				else = {
+					add = {
+						value = 25
+						desc = "POP_CLERGYMEN"
+					}
+				}
+			}
+			if = {
+				limit = {
+					is_pop_type = shopkeepers
+				}
 				add = {
 					value = 25
-					desc = "POP_CLERGYMEN"
+					desc = "POP_SHOPKEEPERS"
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = soldiers
+				}
+				add = {
+					value = 20
+					desc = "POP_OFFICERS"
 				}
 			}
 			else = {
@@ -582,7 +678,7 @@ movement_cultural_minority = {
 					is_pop_type = clerks
 				}
 				add = {
-					value = 10
+					value = 20
 					desc = "POP_CLERKS"
 				}
 			}
@@ -591,8 +687,17 @@ movement_cultural_minority = {
 					is_pop_type = soldiers
 				}
 				add = {
-					value = 9
+					value = 15
 					desc = "POP_SOLDIERS"
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = peasants
+				}
+				add = {
+					value = 5
+					desc = "POP_PEASANTS"
 				}
 			}
 			else = {
@@ -605,14 +710,13 @@ movement_cultural_minority = {
 
 		if = {
 			limit = {
-				standard_of_living < 15
+				standard_of_living < state.average_expected_sol
 			}
-
-			add = {
-				value =	standard_of_living
-				subtract = 15
-				multiply = -5
+			add = { # Increases likelihood of support if impoverished
 				desc = "POP_POVERTY"
+				value = state.average_expected_sol
+				subtract = standard_of_living
+				max = 10
 			}
 		}
 
@@ -625,31 +729,64 @@ movement_cultural_minority = {
 					}
 				}
 			}
-
-			multiply = {
+			add = { # From +2 at 80 to +10 at 0
 				desc = "POP_DISCRIMINATED"
 				value = 100
 				subtract = pop_acceptance
-				divide = 25
+				divide = 10
 			}
 		}
 		else = { # Non-discriminated pops are less likely to form separatist movements
 			multiply = {
 				desc = "POP_ACCEPTANCE"
-				value = 0.10
+				value = 0.25
 			}
-		}
-
-		multiply = { # Illiterate pops participate at 1/8 the rate of fully literate pops
-			desc = "POP_LITERACY"
-			value = literacy_rate
-			add = 0.15
 		}
 
 		multiply = { # Multiplied by 2x max
 			desc = "POP_RADICALS"
 			value = pop_radical_fraction
 			add = 1
+		}
+		
+		multiply = { # Range from x0.625 to x3.125
+			desc = "POP_CULTURE_FERVOR"
+			value = culture.culture_current_fervor
+			subtract = 15
+			multiply = 0.025
+			add = 1
+		}
+		
+		if = {
+			limit = {
+				culture ?= {
+					culture_has_national_awakening = yes
+				}
+			}
+			multiply = {
+				value = 1.5
+				desc = "POP_ACTIVE_NATIONAL_AWAKENING"
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					any_scope_diplomatic_pact = {
+						is_diplomatic_action_type = support_separatism
+						second_country = prev
+						"diplomatic_pact_other_country(root.owner)" = {
+							country_has_primary_culture = root.culture
+						}
+					}
+				}
+			}
+			multiply = {
+				desc = "SUPPORT_SEPARATISM_ACTION"
+				value = support_separatism_total_pop_support
+				multiply = 0.01
+				add = 1
+			}
 		}
 		
 	}
@@ -775,11 +912,96 @@ movement_cultural_minority = {
 			}
 		}
 
+		if = {
+			limit = {
+				owner = {
+					any_scope_diplomatic_pact = {
+						is_diplomatic_action_type = support_separatism
+						second_country = prev
+						"diplomatic_pact_other_country(root.owner)" = {
+							country_has_primary_culture = root.culture
+						}
+					}
+				}
+			}
+			add = {
+				desc = "SUPPORT_SEPARATISM_ACTION"
+				value = support_separatism_radicalism
+			}
+		}
+
 		subtract = {
-			value = 0.5
+			value = 0.25
 			subtract = political_movement_identity_support
 			min = 0
 			desc = "LOW_MOVEMENT_IDENTITY_SUPPORT"
+		}
+
+		if = {
+			limit = {
+				owner = { cultural_acceptance_base = { target = scope:culture value <= acceptance_status_4 } }
+			}
+			add = {
+				desc = "FERVOR_OF_CULTURE_ACTIVISM"
+				value = scope:culture.culture_current_fervor
+				divide = 400
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					any_neighbouring_state = {
+						owner = {
+							NOT = { THIS = ROOT.owner }
+							any_political_movement = {
+								culture ?= ROOT.culture
+								is_insurrectionary = yes
+							}
+						}
+					}
+				}
+			}
+			add = {
+				desc = "NEIGHBOURING_COUNTRY_WITH_CULTURE_REVOLUTION"
+				value = 0.15
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					any_political_movement = {
+						NOT = { this = root } # Insurrectionary movements should not make themselves more insurrectionary
+						is_insurrectionary = yes
+					}
+				}
+			}
+			add = {
+				desc = "INSURRECTIONARY_MOVEMENTS"
+				owner = {
+					every_political_movement = {
+						limit = {
+							NOT = { this = root } # Insurrectionary movements should not make themselves more insurrectionary
+							is_insurrectionary = yes
+						}
+						if = {
+							limit = {
+								exists = this.political_movement_identity_support
+							}
+							add = { # Identity support can get a bit high
+								value = this.political_movement_identity_support
+								multiply = 0.5
+							}
+						}
+						else = {
+							add = this.political_movement_support
+						}
+					}
+				}
+				min = 0.05
+				max = 0.25
+			}
 		}
 	}
 }
@@ -972,14 +1194,13 @@ movement_minority_rights = {
 
 		if = {
 			limit = {
-				standard_of_living < 15
+				standard_of_living < state.average_expected_sol
 			}
-
-			add = {
-				value =	standard_of_living
-				subtract = 15
-				multiply = -5
+			add = { # Increases likelihood of support if impoverished
 				desc = "POP_POVERTY"
+				value = state.average_expected_sol
+				subtract = standard_of_living
+				max = 10
 			}
 		}
 
@@ -992,12 +1213,12 @@ movement_minority_rights = {
 					}
 				}
 			}
-
-			multiply = {
+			multiply = { # From 1.21x at 79 to 2x at 0
 				desc = "POP_DISCRIMINATED"
 				value = 100
 				subtract = pop_acceptance
-				divide = 25
+				divide = 100
+				add = 1
 			}
 		}
 		else = { # Non-discriminated pops are less likely to form separatist movements
