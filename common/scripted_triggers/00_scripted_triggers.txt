@@ -382,7 +382,6 @@ in_earthquake_zone = {
 		region = sr:region_indochina
 		region = sr:region_south_china
 		region = sr:region_north_china
-		region = sr:region_manchuria
 		region = sr:region_himalayas
 		region = sr:region_japan
 		region = sr:region_la_plata
@@ -391,6 +390,27 @@ in_earthquake_zone = {
 		region = sr:region_central_america
 		region = sr:region_mexico
 		region = sr:region_pacific_coast
+		region = sr:region_anatolia
+		region = sr:region_persia
+		#region = sr:region_bombay
+		state_region = s:STATE_KARS
+		state_region = s:STATE_GREATER_CAUCASUS
+		state_region = s:STATE_ARMENIA
+		state_region = s:STATE_CRETE
+		state_region = s:STATE_ELIZAVETPOL
+		state_region = s:STATE_WEST_AEGEAN_ISLANDS
+		state_region = s:STATE_PELOPONNESE
+		state_region = s:STATE_ATTICA
+		state_region = s:STATE_THESSALIA
+		state_region = s:STATE_MACEDONIA
+		state_region = s:STATE_WESTERN_THRACE
+		state_region = s:STATE_NORTHERN_THRACE
+		state_region = s:STATE_BOUGAINVILLE
+		state_region = s:STATE_KANAK
+		state_region = s:STATE_SOLOMON_ISLANDS
+		state_region = s:STATE_NORTH_ISLAND
+		state_region = s:STATE_SOUTH_ISLAND
+		state_region = s:STATE_KAMCHATKA
 	}
 }
 
@@ -398,16 +418,41 @@ in_volcanic_zone = {
 	OR = {
 		region = sr:region_indonesia
 		region = sr:region_japan
-		region = sr:region_la_plata
-		region = sr:region_andes
-		region = sr:region_gran_colombia
 		region = sr:region_central_america
-		region = sr:region_mexico
-		region = sr:region_pacific_coast
 		region = sr:region_zanj
-		region = sr:region_italy
+		state_region = s:STATE_SANTIAGO
+		state_region = s:STATE_LOS_RIOS
+		state_region = s:STATE_ARAUCANIA
+		state_region = s:STATE_ANTOFAGASTA
+		state_region = s:STATE_TARAPACA
+		state_region = s:STATE_POTOSI
+		state_region = s:STATE_AREQUIPA
+		state_region = s:STATE_ICA
+		state_region = s:STATE_LIMA
+		state_region = s:STATE_CAJAMARCA
+		state_region = s:STATE_ECUADOR
+		state_region = s:STATE_PASTAZA
+		state_region = s:STATE_CAUCA
+		state_region = s:STATE_GUAVIARE
+		state_region = s:STATE_CUNDINAMARCA
+		state_region = s:STATE_ANTIOQUIA
+		state_region = s:STATE_PANAMA
+		state_region = s:STATE_OAXACA
+		state_region = s:STATE_GUERRERO
+		state_region = s:STATE_JALISCO
+		state_region = s:STATE_SINALOA
+		state_region = s:STATE_SONORA
+		state_region = s:STATE_BAJA_CALIFORNIA
+		state_region = s:STATE_CALIFORNIA
+		state_region = s:STATE_OREGON
+		state_region = s:STATE_WASHINGTON
+		state_region = s:STATE_BRITISH_COLUMBIA
+		state_region = s:STATE_ALASKA
+		state_region = s:STATE_SICILY
+		state_region = s:STATE_CAMPANIA
 		state_region = s:STATE_ICELAND
 		state_region = s:STATE_HAWAIIAN_ISLANDS
+		state_region = s:STATE_NORTH_ISLAND
 	}
 }
 
@@ -447,6 +492,8 @@ on_river = {
 		has_state_trait = state_trait_paraguay_river
 		has_state_trait = state_trait_amazon_river
 		state_region = s:STATE_QUEBEC
+		has_state_trait = state_trait_white_nile
+		has_state_trait = state_trait_rio_grande_river
 	}
 }
 
@@ -870,18 +917,29 @@ will_be_accepted_culture = {
         }
         AND = {
             owner = { is_enacting_law = law_type:law_national_supremacy }
-            AND = {
-				culture = { shares_heritage_trait_with_any_primary_culture = root }
-				culture = { shares_non_heritage_trait_with_any_primary_culture = root }
+			culture = {
+				AND = {
+					shares_heritage_trait_group_with_any_primary_culture = root
+					OR = {
+						shares_language_trait_group_with_any_primary_culture = root
+						shares_tradition_trait_with_any_primary_culture = root
+					}
+				}
 			}
         }
         AND = {
             owner = { is_enacting_law = law_type:law_racial_segregation }
-            culture = { shares_heritage_trait_with_any_primary_culture = root }
+            culture = { shares_heritage_trait_group_with_any_primary_culture = root }
         }
         AND = {
             owner = { is_enacting_law = law_type:law_cultural_exclusion }
-            culture = { shares_trait_with_any_primary_culture = root }
+            culture = {
+				OR = {
+					shares_heritage_trait_group_with_any_primary_culture = root
+					shares_language_trait_group_with_any_primary_culture = root
+					shares_tradition_trait_with_any_primary_culture = root
+				}
+			}
         }
         owner = { is_enacting_law = law_type:law_multicultural }
     }
@@ -1184,6 +1242,12 @@ has_radical_leftist_economy = {
 	OR = {
 		has_law_or_variant = law_type:law_command_economy	
 		has_law_or_variant = law_type:law_semi_command_economy
+	}
+}
+
+any_insurrection_ongoing = {
+	any_political_movement = {
+		is_insurrectionary = yes
 	}
 }
 
@@ -1940,5 +2004,58 @@ anti_foreign_imposition_country = {
 	OR = {
 		is_political_lobby_type = lobby_anti_country
 		is_political_lobby_type = lobby_anti_overlord
+	}
+}
+
+accepted_cultural_minority_check_character_scope = {
+	owner ?= {
+		any_scope_state = {
+			any_scope_culture = {
+				OR = {
+					has_homeland = prev
+					culture_has_community_in_state = prev
+				}
+				prev = {
+					OR  = {
+						AND = {
+							ROOT.owner = { has_law_or_variant = law_type:law_national_supremacy }
+							state_cultural_acceptance = {
+								target = prev
+								value >= acceptance_status_5
+							}
+						}
+						AND = {
+							ROOT.owner = { has_law_or_variant = law_type:law_racial_segregation }
+							state_cultural_acceptance = {
+								target = prev
+								value >= acceptance_status_4
+							}
+						}
+						#AND = {
+						#	ROOT.owner = { has_law_or_variant = law_type:law_subjecthood }
+						#	state_cultural_acceptance = {
+						#		target = prev
+						#		value >= acceptance_status_4
+						#	}
+						#}
+						AND = {
+							ROOT.owner = { has_law_or_variant = law_type:law_cultural_exclusion }
+							state_cultural_acceptance = {
+								target = prev
+								value >= acceptance_status_3
+							}
+						}
+						AND = {
+							ROOT.owner = { has_law_or_variant = law_type:law_multicultural }
+							state_cultural_acceptance = {
+								target = prev
+								value >= acceptance_status_2
+							}
+						}
+					}
+				}
+				NOT = { is_primary_culture_of = ROOT.owner }
+			}
+		}
 	}
 }
