@@ -1,0 +1,561 @@
+﻿namespace = national_awakening
+
+national_awakening.1 = {
+	type = country_event
+	placement = root
+	title = national_awakening.1.t
+	desc = national_awakening.1.d
+	flavor = national_awakening.1.f
+	duration = 3
+	event_image = {
+		video = "ip3_officer_inspecting_peasant_conscripts"
+	}
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	#dlc = dlc014
+
+	trigger = {
+		# Triggered by completing je_balkan_national_awakening
+	}
+
+	cancellation_trigger = {
+
+	}
+
+	immediate = {
+		ordered_scope_state = {
+			order_by = "pop_type_percent_state(pop_type:peasants)"
+			save_scope_as = rural_state
+		}
+		ig:ig_armed_forces ?= {
+			save_scope_as = armed_forces_ig
+		}
+		create_character = {
+			is_general = yes
+			culture = scope:primary_culture_scope
+			on_created = {
+				set_variable = national_awakening_name_scope
+				place_character_in_void = 6
+			}
+		}
+		random_character_in_void = {
+			limit = {
+				has_variable = national_awakening_name_scope
+			}
+			save_scope_as = relevant_character
+		}
+	}
+
+	option = {
+		name = national_awakening.1.a
+		default_option = yes
+		if = {
+			limit = {
+				any_state_region = {
+					any_scope_state = {
+						is_homeland_of_country_cultures = ROOT
+						NOT = { owner = ROOT }
+						NOT = { has_claim_by = ROOT }
+					}
+				}
+			}
+			custom_tooltip = {
+				text = claims_on_all_homelands_tt
+				every_state_region = {
+					limit = {
+						any_scope_state = {
+							is_homeland_of_country_cultures = ROOT
+							NOT = { owner = ROOT }
+							NOT = { has_claim_by = ROOT }
+						}
+					}
+					add_claim = ROOT
+				}
+			}
+		}
+		add_loyalists = {
+			value = large_radicals
+			culture = scope:primary_culture_scope
+		}
+	}
+
+	option = {
+		name = national_awakening.1.b
+		if = {
+			limit = {
+				any_state_region = {
+					any_scope_state = {
+						is_homeland_of_country_cultures = ROOT
+						NOT = { owner = ROOT }
+						NOT = { has_claim_by = ROOT }
+					}
+				}
+			}
+			custom_tooltip = {
+				text = claims_on_all_homelands_tt
+				every_state_region = {
+					limit = {
+						any_scope_state = {
+							is_homeland_of_country_cultures = ROOT
+							NOT = { owner = ROOT }
+							NOT = { has_claim_by = ROOT }
+						}
+					}
+					add_claim = ROOT
+				}
+			}
+		}
+		add_modifier = {
+			name = modifier_fervour_military_bonus
+			days = long_modifier_time
+			is_decaying = yes
+		}
+		ig:ig_armed_forces ={
+			add_modifier = {
+				name = modifier_fervour_military_bonus_ig
+				days = long_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+}
+
+national_awakening.2 = { # Village Schooling
+	type = country_event
+	placement = scope:relevant_state
+	title = national_awakening.2.t
+	desc = national_awakening.2.d
+	flavor = national_awakening.2.f
+	duration = 3
+	event_image = {
+		video = "ip3_village_school"
+	}
+	#dlc = dlc014
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/pops_icons/academics.dds"
+
+	trigger = {
+		NOT = {
+			has_law_or_variant = law_type:law_no_schools
+		}
+		any_scope_state = {
+			pop_type_percent_state = {
+				target = pop_type:peasants
+    			value >= 0.5
+			}
+		}
+	}
+
+	immediate = {
+		ordered_scope_state = {
+			limit = {
+				pop_type_percent_state = {
+					target = pop_type:peasants
+					value >= 0.5
+				}
+			}
+			order_by = "pop_type_percent_state(pop_type:peasants)"
+			save_scope_as = relevant_state
+		}
+		random_primary_culture = {
+			save_scope_as = relevant_culture
+		}
+	}
+
+	cooldown = { days = long_modifier_time }
+
+	option = {
+		name = national_awakening.2.a
+		default_option = yes
+		add_modifier = {
+			name = modifier_national_awakening_village_schooling
+			days = normal_modifier_time
+		}
+	}
+
+	option = {
+		name = national_awakening.2.b
+		add_modifier = {
+			name = modifier_national_awakening_village_schooling
+			days = normal_modifier_time
+			multiplier = 2
+		}
+		add_modifier = {
+			name = modifier_national_awakening_teaching_expenses
+			days = normal_modifier_time
+			multiplier = money_amount_multiplier_medium
+		}
+	}
+}
+
+national_awakening.3 = { # National epic written/rediscovered
+	type = country_event
+	placement = root
+	title = national_awakening.3.t
+	desc = national_awakening.3.d
+	flavor = national_awakening.3.f
+	duration = 3
+	event_image = {
+		video = "ep1_printing_press"
+	}
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/goods_icons/literature.dds"
+
+	#dlc = dlc014
+
+	trigger = {
+		NOT = {
+			has_variable = national_epic
+		}
+		literacy_rate >= 0.30
+	}
+
+	immediate = {
+		set_variable = national_epic
+		random_primary_culture = {
+			save_scope_as = relevant_culture
+		}
+	}
+
+	cooldown = { days = long_modifier_time }
+
+	option = {
+		name = national_awakening.3.a
+		default_option = yes
+		add_modifier = {
+			name = modifier_national_awakening_national_epic
+			days = normal_modifier_time
+		}
+		scope:relevant_culture = {
+			add_fervor = 10
+		}
+	}
+
+	option = {
+		name = national_awakening.3.b
+		add_modifier = {
+			name = modifier_national_awakening_national_epic_prestige
+			days = normal_modifier_time
+		}
+		ig:ig_petty_bourgeoisie ?= {
+			add_modifier = {
+				name = modifier_national_awakening_luminaries
+				days = normal_modifier_time
+			}
+		}
+		scope:relevant_culture = {
+			add_fervor = 5
+		}
+	}
+}
+
+national_awakening.4 = { # New Testament translated into local language
+	type = country_event
+	placement = root
+	title = national_awakening.4.t
+	desc = national_awakening.4.d
+	flavor = national_awakening.4.f
+	duration = 3
+	event_image = {
+		video = "ep1_printing_press"
+	}
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/goods_icons/literature.dds"
+
+	#dlc = dlc014
+
+	trigger = {
+		religion = { has_discrimination_trait = heritage_christian }
+		NOR = {
+			has_variable = new_testament
+			country_has_primary_culture = cu:greek
+		}
+		ig:ig_petty_bourgeoisie ?= {
+			is_marginal = no
+		}
+	}
+
+	cancellation_trigger = {
+		scope:intelligentsia_leader ?= {
+			is_character_alive = no
+		}
+	}
+
+	immediate = {
+		set_variable = new_testament
+		random_primary_culture = {
+			save_scope_as = relevant_culture
+		}
+		ig:ig_petty_bourgeoisie ?= {
+			leader = {
+				save_scope_as = intelligentsia_leader
+			}
+		}
+	}
+
+	cooldown = { days = long_modifier_time }
+
+	option = {
+		name = national_awakening.4.a
+		default_option = yes
+		if = {
+			limit = {
+				NOT = {
+					scope:intelligentsia_leader = { has_trait = literary }
+				}
+			}
+			scope:intelligentsia_leader = {
+				add_trait = literary
+			}
+		}
+		add_modifier = {
+			name = modifier_national_awakening_tech_spread
+			days = long_modifier_time
+		}
+		scope:relevant_culture = {
+			add_fervor = 5
+		}
+	}
+
+	option = {
+		name = national_awakening.4.b
+		if = {
+			limit = {
+				NOT = {
+					scope:intelligentsia_leader = { has_trait = literary }
+				}
+			}
+			scope:intelligentsia_leader = {
+				add_trait = literary
+			}
+		}
+		add_modifier = {
+			name = modifier_national_awakening_domestic_works
+			days = long_modifier_time
+		}
+		scope:relevant_culture = {
+			add_fervor = 10
+		}
+	}
+}
+
+national_awakening.5 = { # Nationalist paintings
+	type = country_event
+	placement = root
+	title = national_awakening.5.t
+	desc = national_awakening.5.d
+	flavor = national_awakening.5.f
+	duration = 3
+	event_image = {
+		video = "europenorthamerica_art_gallery"
+	}
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/invention_icons/romanticism.dds"
+
+	#dlc = dlc014
+
+	trigger = {
+		any_primary_culture = {
+				has_discrimination_trait = language_scandinavian
+				culture_national_awakening_occurred = yes
+			}
+		}
+		any_scope_state = {
+			is_incorporated = yes
+			has_building = building_arts_academy
+		}
+		NOT = {
+			has_variable = national_romanticism
+		}
+	}
+
+	cancellation_trigger = {
+
+	}
+
+	immediate = {
+		set_variable = national_romanticism
+		random_primary_culture = {
+			save_scope_as = relevant_culture
+		}
+		random_scope_state = {
+			limit = {
+				is_incorporated = yes
+				has_building = building_arts_academy
+			}
+			save_scope_as = arts_academy_state
+			random_scope_building = {
+				limit = {
+					is_building_type = building_arts_academy
+				}
+				save_scope_as = arts_academy_building
+			}
+		}
+	}
+
+	cooldown = { days = long_modifier_time }
+
+	option = {
+		name = national_awakening.5.a
+		default_option = yes
+		add_modifier = {
+			name = modifier_national_awakening_romantic_nationalism_prestige
+			days = normal_modifier_time
+		}
+		scope:relevant_culture = {
+			add_fervor = 5
+		}
+	}
+
+	option = {
+		name = national_awakening.5.b
+		scope:arts_academy_building = {
+			add_modifier = {
+				name = modifier_national_awakening_romantic_nationalism_throughput
+				days = normal_modifier_time
+			}
+		}
+		scope:relevant_culture = {
+			add_fervor = 10
+		}
+	}
+}
+
+national_awakening.6 = { # Intellectuals going to the peasantry
+	type = country_event
+	placement = root
+	title = national_awakening.6.t
+	desc = national_awakening.6.d
+	flavor = national_awakening.6.f
+	duration = 3
+	#dlc = dlc014
+	event_image = {
+		video = "votp_realist_household"
+	}
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/pops_icons/peasants.dds"
+
+	trigger = {
+		ig:ig_rural_folk ?= {
+			is_marginal = no
+		}
+		ig:ig_petty_bourgeoisie ?= {
+			is_marginal = no
+		}
+	}
+
+	immediate = {
+		ig:ig_rural_folk ?= {
+			save_scope_as = rural_folk_ig
+		}
+		ig:ig_petty_bourgeoisie ?= {
+			save_scope_as = intelligentsia_ig
+		}
+		random_primary_culture = {
+			save_scope_as = relevant_culture
+		}
+	}
+
+	cooldown = { days = long_modifier_time }
+
+	option = {
+		name = national_awakening.6.a
+		default_option = yes
+		add_modifier = {
+			name = modifier_national_awakening_folklore
+			days = normal_modifier_time
+		}
+		scope:relevant_culture = {
+			add_fervor = 10
+		}
+	}
+
+	option = {
+		name = national_awakening.6.b
+		scope:rural_folk_ig = {
+			add_modifier = {
+				name = modifier_national_awakening_roots_of_the_nation
+				days = normal_modifier_time
+			}
+		}
+		scope:relevant_culture = {
+			add_fervor = 5
+		}
+	}
+}
+
+national_awakening.7 = { # Minorities excluded from nation-building project
+	type = country_event
+	placement = root
+	title = national_awakening.7.t
+	desc = national_awakening.7.d
+	flavor = national_awakening.7.f
+	duration = 3
+	#dlc = dlc014
+	event_image = {
+		video = "ip3_village_school"
+	}
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	trigger = {
+		any_scope_culture = {
+			NOT = {
+				is_primary_culture_of = ROOT
+			}
+		}
+	}
+
+	cancellation_trigger = {
+
+	}
+
+	immediate = {
+		random_primary_culture = {
+			save_scope_as = primary_culture
+		}
+		ordered_scope_culture = {
+			limit = {
+				NOT = {
+					is_primary_culture_of = root
+				}
+			}
+			order_by = "culture_percent_country(this)"
+			save_scope_as = minority_culture
+		}
+	}
+
+	cooldown = { days = long_modifier_time }
+
+	option = {
+		name = national_awakening.7.a
+		default_option = yes
+		add_modifier = {
+			name = modifier_national_awakening_intense_assimilation_programs
+			days = normal_modifier_time
+		}
+		add_radicals = {
+			value = medium_radicals
+			culture = scope:minority_culture
+		}
+		scope:minority_culture = {
+			add_fervor = 5
+		}
+	}
+
+	option = {
+		name = national_awakening.7.b
+		add_modifier = {
+			name = modifier_national_awakening_lessened_assimilation
+			days = normal_modifier_time
+		}
+		add_radicals = {
+			value = small_radicals
+			culture = scope:minority_culture
+		}
+		scope:minority_culture = {
+			add_fervor = -5
+		}
+	}
+}
