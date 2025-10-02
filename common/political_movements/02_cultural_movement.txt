@@ -235,11 +235,11 @@
 			}
 		}
 		
-		multiply = { # Range from x0.625 to x3.125
+		multiply = { # Range from x0.775 to 2.275
 			desc = "POP_CULTURE_FERVOR"
 			value = culture.culture_current_fervor
 			subtract = 15
-			multiply = 0.025
+			multiply = 0.015
 			add = 1
 		}
 		
@@ -324,31 +324,18 @@
 					is_homeland_of_country_cultures = owner
 					primary_cultures_percent_state >= 0.05
 				}
-				add = 10
-
-				if = {
-					limit = {
-						primary_cultures_percent_state >= 0.75
+				add = { # These three values must add up to more than 1 - 5 x Obstinance, 1/2 Turmoil, percent of pops of primary cultures
+					value = -1
+					add = "this.primary_cultures_percent_state"
+					add = {
+						value = this.turmoil
+						multiply = 0.5
 					}
-					add = 1000
-				}
-				else_if = {
-					limit = {
-						primary_cultures_percent_state >= 0.5
+					add = {
+						value = this.obstinance
+						multiply = 5
 					}
-					add = 500
-				}
-				else_if = {
-					limit = {
-						primary_cultures_percent_state >= 0.25
-					}
-					add = 100
-				}
-				else_if = {
-					limit = {
-						primary_cultures_percent_state >= 0.1
-					}
-					add = 50
+					multiply = 100
 				}
 			}
 		}
@@ -417,7 +404,22 @@ movement_cultural_minority = {
 		value = 100
 	}
 	on_created = {
-		
+		if = {
+			limit = {
+				owner = {
+					has_variable_list = failed_uprisings_culture_list
+					is_target_in_variable_list = { name = failed_uprisings_culture_list target = root.culture }
+				}
+			}
+			owner = {
+				remove_list_variable = { name = failed_uprisings_culture_list target = root.culture }
+			}
+			add_modifier = {
+				name = movement_suppressed_after_civil_war_copy
+				days = very_long_modifier_time
+				is_decaying = yes
+			}
+		}
 	}
 
 	disband_trigger = {
@@ -598,13 +600,13 @@ movement_cultural_minority = {
 					is_pop_type = aristocrats
 				}
 				add = {
-					value = 6
+					value = 12
 					desc = "POP_ARISTOCRATS"
 				}
 			}
 			else = {
 				add = {
-					value = 12
+					value = 18
 					desc = "UPPER_NO_ICON"
 				}
 			}
@@ -618,7 +620,7 @@ movement_cultural_minority = {
 					is_pop_type = academics
 				}
 				add = {
-					value = 35
+					value = 40
 					desc = "POP_ACADEMICS"
 				}
 			}
@@ -633,13 +635,13 @@ movement_cultural_minority = {
 						}
 					}
 					add = {
-						value = 35
+						value = 40
 						desc = "POP_CLERGYMEN"
 					}
 				}
 				else = {
 					add = {
-						value = 25
+						value = 15
 						desc = "POP_CLERGYMEN"
 					}
 				}
@@ -678,7 +680,7 @@ movement_cultural_minority = {
 					is_pop_type = clerks
 				}
 				add = {
-					value = 20
+					value = 25
 					desc = "POP_CLERKS"
 				}
 			}
@@ -702,7 +704,7 @@ movement_cultural_minority = {
 			}
 			else = {
 				add = {
-					value = 5
+					value = 10
 					desc = "LOWER_NO_ICON"
 				}
 			}
@@ -749,11 +751,11 @@ movement_cultural_minority = {
 			add = 1
 		}
 		
-		multiply = { # Range from x0.625 to x3.125
+		multiply = { # Range from x0.775 to 2.275
 			desc = "POP_CULTURE_FERVOR"
 			value = culture.culture_current_fervor
 			subtract = 15
-			multiply = 0.025
+			multiply = 0.015
 			add = 1
 		}
 		
@@ -820,43 +822,18 @@ movement_cultural_minority = {
 						value >= 0.05
 					}
 				}
-				add = 10
-
-				if = {
-					limit = {
-						culture_percent_state = {
-							target = scope:political_movement.culture
-							value >= 0.75
-						}
+				add = { # These three values must add up to more than 1 - 5 x Obstinance, 1/2 Turmoil, percent of pops of this culture
+					value = -1
+					add = "this.culture_percent_state(scope:political_movement.culture)"
+					add = {
+						value = this.turmoil
+						multiply = 0.5
 					}
-					add = 1000
-				}
-				else_if = {
-					limit = {
-						culture_percent_state = {
-							target = scope:political_movement.culture
-							value >= 0.5
-						}
+					add = {
+						value = this.obstinance
+						multiply = 5
 					}
-					add = 500
-				}
-				else_if = {
-					limit = {
-						culture_percent_state = {
-							target = scope:political_movement.culture
-							value >= 0.25
-						}
-					}
-					add = 100
-				}
-				else_if = {
-					limit = {
-						culture_percent_state = {
-							target = scope:political_movement.culture
-							value >= 0.1
-						}
-					}
-					add = 50
+					multiply = 100
 				}
 			}
 		}
@@ -883,32 +860,48 @@ movement_cultural_minority = {
 
 		if = {
 			limit = {
-				owner = { cultural_acceptance_base = { target = scope:culture value <= acceptance_status_1 } }
+				owner = {
+					has_law = law_type:law_subjecthood
+				}
 			}
-
 			add = {
-				value = 0.3
-				desc = "DISCRIMINATION_LEVEL_violent_hostility"
+				value = 100
+				subtract = "owner.country_average_cultural_acceptance(scope:culture)"
+				divide = 200 # To get this on the level of the other laws
+				subtract = 0.10 # Compensate for religious acceptance, which is currently inaccessible from here
+				desc = "DISCRIMINATION_LEVEL_subjecthood"
 			}
 		}
-		else_if = {
-			limit = {
-				owner = { cultural_acceptance_base = { target = scope:culture value <= acceptance_status_2 } }
-			}
+		else = {
+			if = {
+				limit = {
+					owner = { cultural_acceptance_base = { target = scope:culture value <= acceptance_status_1 } }
+				}
 
-			add = {
-				value = 0.2
-				desc = "DISCRIMINATION_LEVEL_cultural_erasure"
+				add = {
+					value = 0.3
+					desc = "DISCRIMINATION_LEVEL_violent_hostility"
+				}
 			}
-		}
-		else_if = {
-			limit = {
-				owner = { cultural_acceptance_base = { target = scope:culture value <= acceptance_status_3 } }
-			}
+			else_if = {
+				limit = {
+					owner = { cultural_acceptance_base = { target = scope:culture value <= acceptance_status_2 } }
+				}
 
-			add = {
-				value = 0.1
-				desc = "DISCRIMINATION_LEVEL_open_prejudice"
+				add = {
+					value = 0.2
+					desc = "DISCRIMINATION_LEVEL_cultural_erasure"
+				}
+			}
+			else_if = {
+				limit = {
+					owner = { cultural_acceptance_base = { target = scope:culture value <= acceptance_status_3 } }
+				}
+
+				add = {
+					value = 0.1
+					desc = "DISCRIMINATION_LEVEL_open_prejudice"
+				}
 			}
 		}
 
@@ -978,7 +971,7 @@ movement_cultural_minority = {
 				}
 			}
 			add = {
-				desc = "INSURRECTIONARY_MOVEMENTS"
+				desc = "SIMULTANEOUS_INSURRECTIONARY_MOVEMENTS"
 				owner = {
 					every_political_movement = {
 						limit = {

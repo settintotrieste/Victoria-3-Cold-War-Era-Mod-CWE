@@ -577,7 +577,7 @@ ai_power_bloc_identity_score = {
 	### Trade League
 	if = {
 		limit = {
-			scope:source_country.power_bloc ?= {
+			scope:actor.power_bloc ?= {
 				has_identity = identity:identity_trade_league
 			}
 		}
@@ -594,15 +594,15 @@ ai_power_bloc_identity_score = {
 		### Trade: increase with mutual trade value
 		if = {
 			limit = {
-				"mutual_trade_value_with_country(scope:source_country)" > 0
+				"mutual_trade_value_with_country(scope:actor)" > 0
 			}
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_MUTUAL_TRADE_VALUE"
-				value = "mutual_trade_value_with_country(scope:source_country)"
+				value = "mutual_trade_value_with_country(scope:actor)"
 				multiply = 50000
 				divide = { # We modulate this value by GDP, clamped to a range to ensure it remains relevant for very small/very large economies
 					value = gdp
-					max = scope:source_country.gdp # We use whichever GDP is smaller
+					max = scope:actor.gdp # We use whichever GDP is smaller
 					min = 1000000
 				}
 				max = 50
@@ -611,11 +611,11 @@ ai_power_bloc_identity_score = {
 		### Economic Dependence: increase if high, decrease if low
 		if = {
 			limit = {
-				"economic_dependence(scope:source_country)" > 1
+				"economic_dependence(scope:actor)" > 1
 			}
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_HIGH_ECONOMIC_DEPENDENCE"
-				value = "economic_dependence(scope:source_country)"
+				value = "economic_dependence(scope:actor)"
 				subtract = 1
 				multiply = 25
 				max = 50
@@ -623,11 +623,11 @@ ai_power_bloc_identity_score = {
 		}
 		else_if = {
 			limit = {
-				"economic_dependence(scope:source_country)" < 1
+				"economic_dependence(scope:actor)" < 1
 			}
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_LOW_ECONOMIC_DEPENDENCE"
-				value = "economic_dependence(scope:source_country)"
+				value = "economic_dependence(scope:actor)"
 				subtract = 1
 				multiply = 50
 				min = -50
@@ -637,7 +637,7 @@ ai_power_bloc_identity_score = {
 	### Sovereign Empire
 	else_if = {
 		limit = {
-			scope:source_country.power_bloc ?= {
+			scope:actor.power_bloc ?= {
 				has_identity = identity:identity_sovereign_empire
 			}
 		}
@@ -656,7 +656,7 @@ ai_power_bloc_identity_score = {
 		if = {
 			limit = {
 				has_powerful_protectors = {
-					ACTOR_SCOPE = scope:source_country
+					ACTOR_SCOPE = scope:actor
 				}
 			}
 			add = {
@@ -668,29 +668,29 @@ ai_power_bloc_identity_score = {
 	### Ideological Union
 	else_if = {
 		limit = {
-			scope:source_country.power_bloc ?= {
+			scope:actor.power_bloc ?= {
 				has_identity = identity:identity_ideological_union
 			}
 		}
 		### Strong weight for ideological opinion
 		if = {
 			limit = {
-				"ai_ideological_opinion(scope:source_country)" > 0
+				"ai_ideological_opinion(scope:actor)" > 0
 			}
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
-				value = "ai_ideological_opinion(scope:source_country)"
+				value = "ai_ideological_opinion(scope:actor)"
 				multiply = 0.5
 				max = 50
 			}
 		}
 		else_if = {
 			limit = {
-				"ai_ideological_opinion(scope:source_country)" < 0
+				"ai_ideological_opinion(scope:actor)" < 0
 			}
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
-				value = "ai_ideological_opinion(scope:source_country)"
+				value = "ai_ideological_opinion(scope:actor)"
 				multiply = 0.5
 				min = -50
 			}
@@ -719,7 +719,7 @@ ai_power_bloc_identity_score = {
 	### Military Treaty
 	else_if = {
 		limit = {
-			scope:source_country.power_bloc ?= {
+			scope:actor.power_bloc ?= {
 				has_identity = identity:identity_military_treaty_organization
 			}
 		}
@@ -776,14 +776,14 @@ ai_power_bloc_identity_score = {
 	### Religious homogeneity
 	else_if = {
 		limit = {
-			scope:source_country.power_bloc ?= {
+			scope:actor.power_bloc ?= {
 				has_identity = identity:identity_religious
 			}
 		}
 		### Same religion
 		if = {
 			limit = {
-				religion = scope:source_country.religion
+				religion = scope:actor.religion
 			}
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_SAME_RELIGION"
@@ -795,7 +795,7 @@ ai_power_bloc_identity_score = {
 			if = {
 				limit = {
 					religion = {
-						shares_heritage_trait_with_state_religion = scope:source_country
+						shares_heritage_trait_with_state_religion = scope:actor
 					}
 				}
 				add = {
@@ -818,7 +818,7 @@ ai_power_bloc_principle_score = {
 	### Sovereign Empire: additional penalty if subject exploitation principle is selected
 	if = {
 		limit = {
-			scope:source_country.power_bloc ?= {
+			scope:actor.power_bloc ?= {
 				has_principle_group = principle_group:principle_group_exploit_members
 			}
 		}
@@ -840,8 +840,8 @@ ai_accept_join_request_score = {
 		### Joining country has Isolationism - ignore
 		if = {
 			limit = {
-				exists = scope:source_country
-				scope:source_country = {
+				exists = scope:actor
+				scope:actor ?= {
 					modifier:country_disallow_trade_bool = yes
 				}
 			}
@@ -855,16 +855,16 @@ ai_accept_join_request_score = {
 			### Trade: increase with mutual trade value
 			if = {
 				limit = {
-					exists = scope:source_country
-					"mutual_trade_value_with_country(scope:source_country)" > 0
+					exists = scope:actor
+					"mutual_trade_value_with_country(scope:actor)" > 0
 				}
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_MUTUAL_TRADE_VALUE"
-					value = "mutual_trade_value_with_country(scope:source_country)"
+					value = "mutual_trade_value_with_country(scope:actor)"
 					multiply = 50000
 					divide = { # We modulate this value by GDP, clamped to a range to ensure it remains relevant for very small/very large economies
 						value = gdp
-						max = scope:source_country.gdp # We use whichever GDP is smaller
+						max = scope:actor.gdp # We use whichever GDP is smaller
 						min = 1000000
 					}
 					max = 50
@@ -873,12 +873,12 @@ ai_accept_join_request_score = {
 			### Economic Dependence: increase if high, decrease if low
 			if = {
 				limit = {
-					exists = scope:source_country
-					"scope:source_country.economic_dependence(root)" > 1
+					exists = scope:actor
+					"scope:actor.economic_dependence(root)" > 1
 				}
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_HIGH_ECONOMIC_DEPENDENCE_FIRST"
-					value = "scope:source_country.economic_dependence(root)"
+					value = "scope:actor.economic_dependence(root)"
 					subtract = 1
 					multiply = 25
 					max = 50
@@ -886,12 +886,12 @@ ai_accept_join_request_score = {
 			}
 			else_if = {
 				limit = {
-					exists = scope:source_country
-					"scope:source_country.economic_dependence(root)" < 1
+					exists = scope:actor
+					"scope:actor.economic_dependence(root)" < 1
 				}
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_LOW_ECONOMIC_DEPENDENCE_FIRST"
-					value = "scope:source_country.economic_dependence(root)"
+					value = "scope:actor.economic_dependence(root)"
 					subtract = 1
 					multiply = 50
 					min = -50
@@ -922,7 +922,7 @@ ai_accept_join_request_score = {
 		### Strong weight for ideological opinion
 		add = {
 			desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
-			value = "scope:source_country.ai_ideological_opinion(root)"
+			value = "scope:actor.ai_ideological_opinion(root)"
 			multiply = 0.5
 			max = 50
 			min = -50
@@ -938,7 +938,7 @@ ai_accept_join_request_score = {
 		### Military spending - check the military spending of the joining country
 		if = {
 			limit = {
-				scope:source_country ?= {
+				scope:actor ?= {
 					OR = {
 						military_expenses_share < 0.25
 						military_expenses < 2000
@@ -955,7 +955,7 @@ ai_accept_join_request_score = {
 		}
 		else_if = {
 			limit = {
-				scope:source_country ?= {
+				scope:actor ?= {
 					military_expenses_share > 0.3
 					military_expenses > 5000
 				}
@@ -979,8 +979,8 @@ ai_accept_join_request_score = {
 		### Same religion
 		if = {
 			limit = {
-				scope:source_country = {
-					religion = scope:source_country.religion
+				scope:actor ?= {
+					religion = root.religion
 				}
 			}
 			add = {
@@ -992,7 +992,7 @@ ai_accept_join_request_score = {
 			### If you share a religious discrimination trait
 			if = {
 				limit = {
-					scope:source_country = {
+					scope:actor ?= {
 						religion = {
 							shares_heritage_trait_with_state_religion = root
 						}
