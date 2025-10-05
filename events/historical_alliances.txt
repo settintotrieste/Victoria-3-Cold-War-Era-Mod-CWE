@@ -2709,3 +2709,192 @@ historical_alliances_system.28 = {
     }
 
 }
+
+# ANZUS
+historical_alliances_system.29 = {
+    type = country_event
+	placement = c:AST
+
+    title = USA_ANZUS_form.t 									# Title of the event; ADD LOCALISATION
+    desc = USA_ANZUS_form.d 									# Description of the event; ADD LOCALISATION
+    #flavor = USA_ANZUS_form.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this
+		game_date >= 1951.9.1									# START DATE: Date colony became self governing ****
+		game_date < 1961.9.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		country_rank >= rank_value:great_power
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_ANZUS_form_hae }				# CHANGE ****
+		
+		#Conditions
+		exists = c:USA
+		c:USA ?= { 
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			is_not_neutral = yes
+		}
+		exists = c:AST
+		c:AST ?= { 
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			is_not_neutral = yes
+		}
+		exists = c:NZL
+		c:NZL ?= { 
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			is_not_neutral = yes
+		}
+		
+		#Cold War conditions
+		cold_war_ongoing = yes
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_ANZUS_form_hae						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1				# Accept
+        highlighted_option = yes
+		
+		every_country = {
+			limit = { 
+				OR = { 
+					c:AST ?= this
+					c:NZL ?= this
+				}
+			}
+			trigger_event = { id = historical_alliances_system.30 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# ANZUS
+historical_alliances_system.30 = {
+    type = country_event
+
+    title = USA_ANZUS_form.t 									# Title of the event; ADD LOCALISATION
+    desc = USA_ANZUS_form.d 									# Description of the event; ADD LOCALISATION
+    #flavor = USA_ANZUS_form.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#SOV will protect this country through a defensive pact
+		every_country = { 
+			limit = { 
+				NOT = { THIS = ROOT }
+				OR = { 
+					c:USA ?= this
+					c:AST ?= this
+					c:NZL ?= this
+				}
+				NOR = { any_scope_treaty = { binds = ROOT any_scope_article = { has_type = defensive_pact } } any_scope_treaty = { binds = ROOT any_scope_article = { has_type = alliance } } }
+			}
+			save_scope_as = ANZUS_member
+			change_relations = {
+				country = ROOT
+				value = 100
+			}
+			create_treaty = {
+				name = treaty_name_ANZUS_alliance
+				first_country = scope:ANZUS_member
+				second_country = ROOT
+
+				is_draft = no
+				binding_period = { years = 25 }
+
+				articles_to_create = {
+					{
+						article = defensive_pact
+					}
+					{
+						article = foreign_investment_rights
+						source_country = ROOT
+						target_country = scope:ANZUS_member
+					}
+					{
+						article = foreign_investment_rights
+						source_country = scope:ANZUS_member
+						target_country = ROOT
+					}
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		change_relations = {
+			country = c:USA
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+
+}

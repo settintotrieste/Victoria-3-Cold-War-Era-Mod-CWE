@@ -146,3 +146,94 @@ JAP_gov_changes.2 = {
     }
 
 }
+
+# The 1955 System
+JAP_gov_changes.3 = {
+    type = country_event
+	placement = c:JAP
+
+    title = JAP_1955_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = JAP_1955_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = JAP_1955_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:JAP ?= this
+		game_date >= 1955.2.27									# START DATE: Date colony became self governing ****
+		game_date < 1965.2.27									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_parliamentary_elective_system = yes
+		is_sufficiently_independent = yes
+		is_at_war = no
+		
+		right_wing_ruling_coalition = yes
+		
+		has_law_or_variant = law_type:law_parties_allowed
+		
+		# Event has not been fired before
+		NOT = { has_variable = JAP_1955_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = JAP_1955_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		activate_law = law_type:law_dominant_party_state
+		activate_law = law_type:law_jefferson_system
+		effect_increase_corruption = yes
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_trade_unions
+			value = very_large_radicals
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_landowners
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_industrialists
+			value = very_large_radicals
+		}
+		add_modifier = {
+			name = weakened_government_authority
+			years = 5
+			is_decaying = yes
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

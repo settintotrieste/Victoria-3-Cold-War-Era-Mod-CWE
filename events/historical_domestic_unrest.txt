@@ -9351,3 +9351,143 @@ historical_domestic_unrest.97 = {
     }
 
 }
+
+# Anpo Protests
+historical_domestic_unrest.98 = {
+    type = country_event
+
+    title = JAP_protest_1960.t 								# Title of the event; ADD LOCALISATION
+    desc = JAP_protest_1960.d 									# Description of the event; ADD LOCALISATION
+    #flavor = JAP_protest_1960.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_police_breaking_door.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:JAP ?= this											# Change TAG of the overlord ****
+		game_date >= 1960.6.15									# START DATE: Date colony became self governing ****
+		game_date < 1970.6.15									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		owns_entire_state_region = STATE_KANTO
+		
+		#Causes
+		exists = c:USA
+		c:USA ?= {
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+		}
+		OR = {
+			is_subject_of = c:USA
+			any_scope_treaty = { binds = c:USA any_scope_article = { has_type = defensive_pact } }
+			any_scope_treaty = { binds = ROOT any_scope_article = { has_type = alliance } }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = JAP_protest_1960_hdu }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = JAP_protest_1960_hdu						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		
+		#Income Doubling Plan
+		activate_law = law_type:law_public_schools
+		activate_law = law_type:law_public_health_insurance
+		activate_law = law_type:law_compulsory_primary_school
+		activate_law = law_type:law_high_social_security
+		activate_law = law_type:law_taxation_5
+		activate_law = law_type:law_expansionary_monetary_policy
+		activate_law = law_type:law_worker_protections
+		activate_law = law_type:law_pro_industry_regulations
+		activate_law = law_type:law_weak_financial_regulations
+		activate_law = law_type:law_globalist_fp
+		activate_law = law_type:law_full_foreign_investment_policy
+		activate_law = law_type:law_mercantilism
+		
+		#Hayato Ikeda
+		create_character = {
+			first_name = "Hayato_Ikeda_first_name"
+			last_name = "Hayato_Ikeda_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1899.12.3
+			interest_group = ig_industrialists
+			ideology = ideology_elitist
+			culture = cu:japanese
+			religion = rel:shinto
+			traits = {
+				innovative
+				imperious
+				ambitious
+			}
+		}
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_trade_unions
+			value = very_large_radicals
+		}
+		if = {
+			limit = { NOT = { any_political_movement = { is_political_movement_type = movement_communist } } }
+			create_political_movement = { type = movement_communist }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2				# No
+		default_option = yes
+		
+		#Remove Satellite status
+		if = {
+			limit = { is_subject = yes }
+			make_independent = yes
+		}
+		set_relations = { 
+			country = c:USA 
+			value = -100 
+		}
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_landowners
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_industrialists
+			value = very_large_radicals
+		}
+		add_modifier = {
+			name = weakened_government_authority
+			years = 5
+			is_decaying = yes
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
