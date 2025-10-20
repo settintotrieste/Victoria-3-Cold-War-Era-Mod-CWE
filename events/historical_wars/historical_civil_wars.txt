@@ -5921,3 +5921,169 @@ historical_civil_wars.34 = {
     }
 
 }
+
+#Casamance Conflict
+historical_civil_wars.35 = {
+    type = country_event
+
+    title = Casamance_war.SEN.t 									# Title of the event; ADD LOCALISATION
+    desc = Casamance_war.SEN.d 										# Description of the event; ADD LOCALISATION
+    #flavor = Casamance_war.SEN.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SEN ?= this
+		game_date >= 1983.12.18
+		game_date < 1993.12.18
+		
+		NOT = { is_a_democracy = yes }									# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		is_at_war = no													# war = no
+		
+		#Owns country to release
+		NOT = { 														# Colony to be released must not already exist on the map
+			exists = c:CME												# Change TAG of the colony ****
+		}
+		p:x30EF40.state.owner = {
+			THIS = ROOT
+		}
+		p:xD633FE.state.owner = {
+			THIS = ROOT
+		}
+		p:xF8E5E2.state.owner = {
+			THIS = ROOT
+		}
+		p:xCD9D60.state.owner = {
+			THIS = ROOT
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = Casamance_war_SEN_hccw }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = Casamance_war_SEN_hccw							# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = CME										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			province = p:x30EF40
+			province = p:xD633FE
+			province = p:xF8E5E2
+			province = p:xCD9D60
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_nationalist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_military_ruling_coalition = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:CME }
+			create_diplomatic_play = {
+				name = cabinda_war
+				type = dp_annex_war_historical
+				target_country = c:CME
+				#war = yes
+			}
+			hidden_effect = {
+				set_secret_goal = {
+					country = c:CME
+					secret_goal = conquer
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Release country
+		create_country = {
+			tag = CME										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			province = p:x30EF40
+			province = p:xD633FE
+			province = p:xF8E5E2
+			province = p:xCD9D60
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_nationalist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+				effect_military_ruling_coalition = yes
+				
+			}
+			
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
+		}
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

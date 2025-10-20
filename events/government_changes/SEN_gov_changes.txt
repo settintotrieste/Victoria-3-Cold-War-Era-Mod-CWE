@@ -1,0 +1,387 @@
+namespace = SEN_gov_changes
+
+# Léopold Sédar Senghor, 1960
+SEN_gov_changes.1 = {
+    type = country_event
+
+    title = SEN_1960_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = SEN_1960_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SEN_1960_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SEN ?= this
+		game_date >= 1960.9.6									# START DATE: Date colony became self governing ****
+		game_date < 1970.9.6									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = SEN_1960_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SEN_1960_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Correct gov type
+		if = {
+			limit = { NOT = { has_government_type = gov_semi_presidential_democracy } }
+			effect_starting_politics_semi_presidential_republic = yes
+		}
+		
+		#Léopold Sédar Senghor
+		create_character = {
+			first_name = "Leopold_Sedar_Senghor_first_name"
+			last_name = "Leopold_Sedar_Senghor_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1906.10.9
+			interest_group = ig_rural_folk
+			ideology = ideology_autocratic
+			culture = cu:senegalese
+			religion = rel:catholic
+			traits = {
+				erudite
+				charismatic
+				ambitious
+			}
+			on_created = { set_variable = Leopold_Sedar_Senghor }
+		}
+		
+		#Mamadou Dia
+		create_character = {
+			first_name = "Mamadou_Dia_first_name"
+			last_name = "Mamadou_Dia_last_name"
+			ig_leader = yes historical = yes
+			birth_date = 1910.7.18
+			interest_group = ig_trade_unions
+			ideology = ideology_democratic
+			culture = cu:senegalese
+			religion = rel:sunni
+			traits = {
+				erudite
+				honorable
+				inept
+			}
+			on_created = { set_variable = Mamadou_Dia }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Attempted Coup of Mamadou Dia, 1962
+SEN_gov_changes.2 = {
+    type = country_event
+
+    title = SEN_1962_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = SEN_1962_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SEN_1962_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SEN ?= this
+		game_date >= 1962.12.1									# START DATE: Date colony became self governing ****
+		game_date < 1972.12.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		ruler ?= { has_variable = Leopold_Sedar_Senghor }
+		
+		# Event has not been fired before
+		NOT = { has_variable = SEN_1962_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SEN_1962_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_dictatorship = yes
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#New ruler
+		if = {
+			limit = { NOT = { any_scope_character = { has_variable = Mamadou_Dia } } }
+			random_scope_character = {
+				limit = { has_variable = Mamadou_Dia }
+				set_character_as_ruler = yes
+			}
+		}
+		else = {
+			#Mamadou Dia
+			create_character = {
+				first_name = "Mamadou_Dia_first_name"
+				last_name = "Mamadou_Dia_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1910.7.18
+				interest_group = ig_trade_unions
+				ideology = ideology_democratic
+				culture = cu:senegalese
+				religion = rel:sunni
+				traits = {
+					erudite
+					honorable
+					inept
+				}
+				on_created = { set_variable = Mamadou_Dia }
+			}
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = lower_strata
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Partial Liberalisation, 1975
+SEN_gov_changes.3 = {
+    type = country_event
+
+    title = SEN_1975_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = SEN_1975_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SEN_1975_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SEN ?= this
+		game_date >= 1975.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1985.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_regime = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		OR = { 
+			ruler ?= { has_variable = Leopold_Sedar_Senghor }
+			has_global_variable = historical_railroading_active
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SEN_1975_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SEN_1975_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_regime = yes
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Return of Democracy, 1980
+SEN_gov_changes.4 = {
+    type = country_event
+
+    title = SEN_1980_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = SEN_1980_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SEN_1980_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SEN ?= this
+		game_date >= 1980.12.31									# START DATE: Date colony became self governing ****
+		game_date < 1990.12.31									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_regime = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		ruler ?= { has_variable = Leopold_Sedar_Senghor }
+		
+		# Event has not been fired before
+		NOT = { has_variable = SEN_1980_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SEN_1980_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_democratic = yes
+		
+		#Abdou Diouf
+		create_character = {
+			first_name = "Abdou_Diouf_first_name"
+			last_name = "Abdou_Diouf_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1935.9.7
+			interest_group = ig_trade_unions
+			ideology = ideology_democratic
+			culture = cu:senegalese
+			religion = rel:sunni
+			traits = {
+				ambitious
+				charismatic
+				tactful
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
