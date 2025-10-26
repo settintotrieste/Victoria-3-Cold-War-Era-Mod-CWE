@@ -1,0 +1,187 @@
+namespace = JOR_gov_changes
+
+# Assassination of Abdullah I of Jordan
+JOR_gov_changes.1 = {
+    type = country_event
+
+    title = JOR_1951_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = JOR_1951_revolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = JOR_1951_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { video = "gfx/event_pictures/southamerica_public_figure_assassination.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:JOR ?= this
+		game_date >= 1951.7.20									# START DATE: Date colony became self governing ****
+		game_date < 1961.7.20									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_regime_monarchy = yes								# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		ruler ?= { has_variable = Abdullah_I }
+		
+		#Cause
+		NOT = { exists = c:PAL }
+		exists = c:ISR
+		
+		# Event has not been fired before
+		NOT = { has_variable = JOR_1951_revolution_hgc }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = JOR_1951_revolution_hgc					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Become independent
+		if = {
+			limit = { is_subject = yes }
+			make_independent = yes
+		}
+		
+		#Leader dies
+		ruler ?= { kill_character = yes }
+		
+		#New Heir
+		create_character = {
+			first_name = "Hussein_bin_Talal_first_name"
+			last_name = "Hussein_bin_Talal_last_name"
+			heir = yes historical = yes
+			birth_date = 1935.11.14
+			interest_group = ig_landowners
+			ideology = ideology_elitist
+			religion = rel:sunni
+			traits = {
+				tactful
+				ambitious
+				expensive_tastes
+			}
+			on_created = {
+				set_variable = Hussein_bin_Talal
+				set_variable = is_married
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Abdication of Talal of Jordan
+JOR_gov_changes.2 = {
+    type = country_event
+
+    title = JOR_1952_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = JOR_1952_revolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = JOR_1952_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:JOR ?= this
+		game_date >= 1952.8.11									# START DATE: Date colony became self governing ****
+		game_date < 1962.8.11									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		has_government_type = gov_semi_constitutional_monarchy
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		ruler ?= { has_variable = Talal_bin_Abdullah }
+		
+		# Event has not been fired before
+		NOT = { has_variable = JOR_1951_revolution_hgc }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = JOR_1951_revolution_hgc					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Leader is removed
+		ruler ?= { 
+			save_scope_as = retiring_monarch 
+			custom_tooltip = {
+				text = retire_monarch
+				kill_character = { hidden = yes }
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

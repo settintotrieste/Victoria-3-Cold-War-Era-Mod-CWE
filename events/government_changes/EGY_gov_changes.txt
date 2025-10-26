@@ -5,8 +5,8 @@ EGY_gov_changes.1 = {
     type = country_event
 
     title = EGY_1952_revolution.t 							# Title of the event; ADD LOCALISATION
-    desc = EGY_1952_revolution.d 							# Description of the event; ADD LOCALISATION
-    #flavor = EGY_1952_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+    desc = EGY_1952_revolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = EGY_1952_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
 
     event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
 
@@ -18,8 +18,7 @@ EGY_gov_changes.1 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:EGY
-		this = c:EGY											# Change TAG of the overlord ****
+		c:EGY ?= this
 		game_date >= 1952.7.23									# START DATE: Date colony became self governing ****
 		game_date < 1962.7.23									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -27,17 +26,17 @@ EGY_gov_changes.1 = {
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
-		NOT = { left_wing_ruling_coalition = yes }				# Correct Ruling Coalition
+		ruler ?= { has_variable = farouk_i }
 		
 		# Event has not been fired before
-		NOT = { has_variable = EGY_1952_hgc }					# CHANGE ****
+		NOT = { has_variable = EGY_1952_revolution_hgc }		# CHANGE ****
 		
     }
 	
 	immediate = {
 	
 		# Fire only once
-		set_variable = EGY_1952_hgc								# Change variable ****
+		set_variable = EGY_1952_revolution_hgc					# Change variable ****
 		
 	}
     
@@ -45,29 +44,49 @@ EGY_gov_changes.1 = {
         name = historical_gov_changes.option.1					# Accept
         highlighted_option = yes
 		
-		#Becomes independent
-		make_independent = yes
+		#Become independent
+		if = {
+			limit = { is_subject = yes }
+			make_independent = yes
+		}
 		
 		#Leader flees
-		ruler = { exile_character = yes }
+		ruler ?= { exile_character = yes }
 		
 		#Enact new regime
-		effect_starting_politics_nationalist_republic = yes
+		effect_starting_politics_constitutional_monarchy = yes
 		effect_starting_politics_dictatorship = yes
-		effect_starting_politics_war_policy_jingoism = yes
-		effect_starting_politics_economic_policy_state_capitalism = yes
-		effect_socialist_ruling_coalition = yes
 		
 		#Create new leader
 		create_character = {
+			first_name = "Mohamed_Naguib_first_name"
+			last_name = "Mohamed_Naguib_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			is_general = yes
+			commander_rank = commander_rank_5
+			birth_date = 1901.1.19
+			interest_group = ig_industrialists
+			ideology = ideology_elitist
+			culture = cu:egyptian
+			religion = rel:sunni
+			traits = {
+				honorable
+				brave
+				tactful
+			}
+			on_created = { set_variable = Mohamed_Naguib }
+		}
+		create_character = {
 			first_name = "Gamal_Abdel_Nasser_first_name"
 			last_name = "Gamal_Abdel_Nasser_last_name"
-			ruler = yes ig_leader = yes historical = yes
+			ig_leader = yes historical = yes
 			is_general = yes
 			commander_rank = commander_rank_5
 			birth_date = 1918.1.15
 			interest_group = ig_armed_forces
 			ideology = ideology_power_hungry
+			culture = cu:egyptian
+			religion = rel:sunni
 			traits = {
 				charismatic
 				ambitious
@@ -104,8 +123,195 @@ EGY_gov_changes.1 = {
 
 }
 
-# Anwar Sadat
+# Declaration of Republic
 EGY_gov_changes.2 = {
+    type = country_event
+
+    title = EGY_1953_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = EGY_1953_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = EGY_1953_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:EGY ?= this
+		game_date >= 1953.6.18									# START DATE: Date colony became self governing ****
+		game_date < 1963.6.18									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_constitutional_monarchy_regime = yes				# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = EGY_1953_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = EGY_1953_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Leader flees
+		random_scope_character = { 
+			limit = { has_variable = Fuad_II }
+			exile_character = yes 
+		}
+		
+		#Enact new regime
+		effect_starting_politics_semi_presidential_republic = yes
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Gamal Abdel
+EGY_gov_changes.3 = {
+    type = country_event
+
+    title = EGY_1954_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = EGY_1954_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = EGY_1954_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:EGY ?= this
+		game_date >= 1954.11.14									# START DATE: Date colony became self governing ****
+		game_date < 1964.11.14									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_regime = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		ruler ?= { has_variable = Mohamed_Naguib }
+		
+		# Event has not been fired before
+		NOT = { has_variable = EGY_1970_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = EGY_1970_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_nationalist_republic = yes
+		effect_starting_politics_dictatorship = yes
+		effect_starting_politics_war_policy_jingoism = yes
+		effect_starting_politics_economic_policy_state_capitalism = yes
+		effect_socialist_ruling_coalition = yes
+		
+		#Create new leader
+		if = {
+			limit = { any_scope_character = { has_variable = Gamal_Abdel_Nasser } }
+			random_scope_character = { 
+				limit = { has_variable = Gamal_Abdel_Nasser }
+				set_character_as_ruler = yes
+			}
+		}
+		else = {
+			create_character = {
+				first_name = "Gamal_Abdel_Nasser_first_name"
+				last_name = "Gamal_Abdel_Nasser_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				is_general = yes
+				commander_rank = commander_rank_5
+				birth_date = 1918.1.15
+				interest_group = ig_armed_forces
+				ideology = ideology_power_hungry
+				culture = cu:egyptian
+				religion = rel:sunni
+				traits = {
+					charismatic
+					ambitious
+					imposing
+				}
+				on_created = { set_variable = Gamal_Abdel_Nasser }
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Anwar Sadat
+EGY_gov_changes.4 = {
     type = country_event
 
     title = EGY_1970_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -122,8 +328,7 @@ EGY_gov_changes.2 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:EGY
-		this = c:EGY											# Change TAG of the overlord ****
+		c:EGY ?= this
 		game_date >= 1970.9.28									# START DATE: Date colony became self governing ****
 		game_date < 1980.9.28									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -210,7 +415,7 @@ EGY_gov_changes.2 = {
 }
 
 # Assassination of Anwar Sadat
-EGY_gov_changes.3 = {
+EGY_gov_changes.5 = {
     type = country_event
 
     title = EGY_1981_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -227,8 +432,7 @@ EGY_gov_changes.3 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:EGY
-		this = c:EGY											# Change TAG of the overlord ****
+		c:EGY ?= this
 		game_date >= 1981.10.6									# START DATE: Date colony became self governing ****
 		game_date < 1991.10.6									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -309,7 +513,7 @@ EGY_gov_changes.3 = {
 }
 
 # Egyptian coup d'état, 2013
-EGY_gov_changes.4 = {
+EGY_gov_changes.6 = {
     type = country_event
 
     title = EGY_2013_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -326,8 +530,7 @@ EGY_gov_changes.4 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:EGY
-		this = c:EGY											# Change TAG of the overlord ****
+		c:EGY ?= this
 		game_date >= 2013.7.3									# START DATE: Date colony became self governing ****
 		game_date < 2023.7.3									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
