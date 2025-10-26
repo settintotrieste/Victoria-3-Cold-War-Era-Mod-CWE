@@ -3032,3 +3032,93 @@ historical_diplomatic_incidents.31 = {
     }
 
 }
+
+# The Great Seal Bug
+historical_diplomatic_incidents.32 = {
+    type = country_event
+	placement = c:SOV
+
+    title = USA_SOV_Great_Seal_Bug.t 							# Title of the event; ADD LOCALISATION
+    desc = USA_SOV_Great_Seal_Bug.d 							# Description of the event; ADD LOCALISATION
+    #flavor = USA_SOV_Great_Seal_Bug.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_police_breaking_door.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/secret_police.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 1960.5.26									# START DATE: Date colony became self governing ****
+		game_date < 1970.5.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Cause of incident
+		exists = c:SOV
+		c:SOV ?= {
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			NOT = { is_subject_of = ROOT }
+		}
+		NOT = { is_subject_of = c:SOV }
+		has_diplomatic_pact = { who = c:SOV type = rivalry }
+		c:SOV ?= { has_diplomatic_pact = { who = ROOT type = conduct_hostile_espionage is_initiator = yes } }
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_SOV_Great_Seal_Bug_hdi }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_SOV_Great_Seal_Bug_hdi				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Damage relations
+		change_relations = { country = c:SOV value = -50 }
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2					# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
