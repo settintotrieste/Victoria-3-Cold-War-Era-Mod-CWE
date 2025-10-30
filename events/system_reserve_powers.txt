@@ -27,9 +27,17 @@ reserve_powers_system.1 = {
 		
 		any_scope_character = {
 			has_modifier = reserved_powers_holder
-			law_stance = {
-				law = owner.currently_enacting_law.type
-				value < neutral
+			OR = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+				interest_group = {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
 			}
 		}
 		
@@ -991,6 +999,609 @@ reserve_powers_system.8 = {
 						OR = {
 							has_ideology = ideology:ideology_democratic
 							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
+
+#Parliament's Veto
+reserve_powers_system.9 = {
+	type = country_event
+
+	title = {
+	
+		first_valid = {
+			triggered_desc = {
+				desc = national_parliament_veto_LH.t
+				trigger = {
+					has_lower_house_support_simple_majority = no
+				}
+			}
+			triggered_desc = {
+				desc = national_parliament_veto_UH.t
+				trigger = {
+					has_upper_house_support_simple_majority = no
+				}
+			}
+			triggered_desc = {
+				desc = national_parliament_veto_UH_LH.t
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	
+	}
+	
+	desc = {
+	
+		first_valid = {
+			triggered_desc = {
+				desc = national_parliament_veto_LH_super.d
+				trigger = {
+					is_enacting_a_constitutional_law = yes
+					has_lower_house_support_667 = no
+				}
+			}
+			triggered_desc = {
+				desc = national_parliament_veto_UH_super.d
+				trigger = {
+					is_enacting_a_constitutional_law = yes
+					has_upper_house_support_667 = no
+				}
+			}
+			triggered_desc = {
+				desc = national_parliament_veto_UH_LH_super.d
+				trigger = {
+					is_enacting_a_constitutional_law = yes
+				}
+			}
+			triggered_desc = {
+				desc = national_parliament_veto_LH.d
+				trigger = {
+					has_lower_house_support_simple_majority = no
+				}
+			}
+			triggered_desc = {
+				desc = national_parliament_veto_UH.d
+				trigger = {
+					has_upper_house_support_simple_majority = no
+				}
+			}
+			triggered_desc = {
+				desc = national_parliament_veto_UH_LH.d
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	
+	}
+	
+	flavor = national_parliament_veto.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_politicians_arguing.bk2"
+	}
+
+	icon = "gfx/interface/icons/law_icons/parliamentary_republic.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		enacting_any_law = yes
+		
+		#Constitutional Laws system (Requires more than 2/3s majority to amend constitutional laws)
+		trigger_if = {
+			limit = { is_enacting_a_constitutional_law = yes }
+			government_has_legislative_super_majority = no
+		}
+		trigger_if = {
+			limit = { is_enacting_a_constitutional_law = no }
+			government_has_legislative_simple_majority = no
+		}
+		
+		NOT = { has_variable = national_parliament_veto_overruled }
+		
+	}
+
+	immediate = {
+		
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		
+	}
+
+	option = {
+		name = national_parliament_veto_accept_option #Accept the veto
+		default_option = yes
+		
+		if = {
+			limit = { enacting_any_law = yes }
+			cancel_enactment = yes
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = national_parliament_veto_reject_option #Reject the veto
+		trigger = {
+		
+			#Can use Executive Order
+			has_law_or_variant = law_type:law_HOS_president
+			NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+			NOT = { has_modifier = executive_order_issued }
+			
+		}
+		
+		set_variable = national_parliament_veto_overruled
+		
+		#Effect of Executive Order
+		add_modifier = { name = executive_order_issued months = 6 is_decaying = yes }
+		effect_opposition_angry_with_government = yes
+		
+		if = {
+			limit = { 
+				enacting_any_law = yes
+				enactment_setback_count < 2 
+			}
+			add_enactment_setback = 1
+		}
+		else_if = {
+			limit = { 
+				enacting_any_law = yes
+			}
+			hidden_effect = {
+				remove_modifier = ruler_restrained
+			}
+			add_enactment_modifier = {
+				name = ruler_restrained
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = national_parliament_veto_coup_option # Self-Coup
+		trigger = {
+			
+			### Self-Coup ###
+			
+			#Sufficient government cohesion
+			government_legitimacy >= 60
+			
+			#Ruler's IG is in government and powerful
+			ruler.interest_group = { 
+				save_temporary_scope_as = ruler_interest_group
+			}
+			scope:ruler_interest_group ?= { 
+				is_powerful = yes
+				is_in_government = yes
+			}
+			
+			#Army OR Civil Service are in the Government & have autocratic ideologies
+			OR = {
+				ig:ig_armed_forces ?= { 
+					is_in_government = yes 
+					leader ?= { 
+						character_is_autocratic = yes 
+					} 
+				}
+				ig:ig_intelligentsia ?= { 
+					is_in_government = yes 
+					leader ?= { 
+						character_is_autocratic = yes 
+					} 
+				}
+			}
+			
+			#Ruler is autocratic
+			ruler ?= { character_is_autocratic = yes }
+			
+		}
+		
+		set_variable = national_parliament_veto_overruled
+		
+		#Enact dictatorship
+		activate_law = law_type:law_no_voting
+		activate_law = law_type:law_appointed_legislature
+		effect_increase_corruption = yes
+	
+		#Massive domestic unrest
+		effect_increase_opposition_radicals = yes
+		hidden_effect = {
+			remove_modifier = self_coup_recently
+		}
+		add_modifier = { 
+			name = self_coup_recently 
+			years = 5 
+			is_decaying = yes
+		}
+		effect_increase_government_loyalists = yes
+		
+		#Gain infamy
+		change_infamy = 20
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					exists = ruler
+					ruler = {
+						OR = {
+							has_ideology = ideology:ideology_elitist
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
+
+#Ruler's Veto
+reserve_powers_system.10 = {
+	type = country_event
+
+	title = national_ruler_veto.t
+	desc = national_ruler_veto.d
+	flavor = national_ruler_veto.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		enacting_any_law = yes
+		
+		NOT = { has_variable = national_ruler_veto_overruled }
+		
+		ruler ?= {
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value < neutral
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		ruler ?= {
+			save_scope_as = ceremonial_head_of_state
+			interest_group ?= { save_scope_as = ceremonial_head_of_state_ig }
+		}
+		
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		
+	}
+
+	option = {
+		name = national_ruler_veto_accept_option 	#Accept the Ruler's veto
+		default_option = yes
+		
+		if = {
+			limit = { enacting_any_law = yes }
+			cancel_enactment = yes
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					any_interest_group = {
+						is_powerful = yes
+						leader ?= {
+							is_ruler = no
+							OR = {
+								has_ideology = ideology:ideology_autocratic
+								has_ideology = ideology:ideology_power_hungry
+							}
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = national_ruler_veto_reject_option 	#Reject the Ruler's veto
+		trigger = {
+			government_has_legislative_super_majority = yes
+		}
+		
+		set_variable = national_ruler_veto_overruled
+		
+		if = {
+			limit = { 
+				enacting_any_law = yes
+				enactment_setback_count < 2 
+			}
+			add_enactment_setback = 1
+		}
+		else_if = {
+			limit = { 
+				enacting_any_law = yes
+			}
+			hidden_effect = {
+				remove_modifier = mired_in_court_intrigue
+			}
+			add_enactment_modifier = {
+				name = mired_in_court_intrigue
+			}
+		}
+		
+		#Ruler is weakened
+		ruler ?= {
+			hidden_effect = {
+				remove_modifier = politically_weakened_character
+			}
+			add_modifier = { name = politically_weakened_character years = 1 is_decaying = yes }
+		}
+		
+		#Ruler's IG is angry
+		if = {
+			limit = { exists = scope:ceremonial_head_of_state_ig }
+			add_radicals = {
+				value = large_radicals
+				interest_group = scope:ceremonial_head_of_state_ig
+			}
+			scope:ceremonial_head_of_state_ig ?= {
+				add_modifier = { name = ig_angry_with_government years = 2 is_decaying = yes }
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					any_interest_group = {
+						is_powerful = yes
+						leader ?= {
+							is_ruler = no
+							OR = { 
+								has_ideology = ideology:ideology_democratic
+								has_ideology = ideology:ideology_liberal
+							}
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
+
+#Cabinet Veto
+reserve_powers_system.11 = {
+	type = country_event
+
+	title = national_cabinet_veto.t
+	desc = national_cabinet_veto.d
+	flavor = national_cabinet_veto.f
+
+	event_image = {
+		video = "gfx/event_pictures/europenorthamerica_capitalists_meeting.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		enacting_any_law = yes
+		
+		NOT = { has_variable = national_cabinet_veto_overruled }
+		
+		any_scope_character = {
+			has_role = politician
+			OR = { 
+				has_modifier = cabinet_minister
+				interest_group = { has_modifier = cabinet_minister_ig }
+			}
+			OR = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+				interest_group = {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		random_scope_character = {
+			limit = {
+				has_role = politician
+				OR = { 
+					has_modifier = cabinet_minister
+					interest_group = { has_modifier = cabinet_minister_ig }
+				}
+				OR = {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+					interest_group = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < neutral
+						}
+					}
+				}
+			}
+			save_scope_as = ceremonial_head_of_state
+			interest_group = { save_scope_as = ceremonial_head_of_state_ig }
+		}
+		
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		
+	}
+
+	option = {
+		name = national_cabinet_veto_accept_option 	#Accept the Cabinet veto
+		default_option = yes
+		
+		if = {
+			limit = { 
+				enacting_any_law = yes
+				enactment_setback_count < 2 
+			}
+			add_enactment_setback = 1
+		}
+		else_if = {
+			limit = { 
+				enacting_any_law = yes
+			}
+			hidden_effect = {
+				remove_modifier = ruler_restrained
+			}
+			add_enactment_modifier = {
+				name = ruler_restrained
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					any_interest_group = {
+						is_powerful = yes
+						leader ?= {
+							is_ruler = no
+							OR = {
+								has_ideology = ideology:ideology_autocratic
+								has_ideology = ideology:ideology_power_hungry
+							}
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = national_cabinet_veto_reject_option 	#Reject the Cabinet veto
+		trigger = {
+			government_legitimacy >= 20
+		}
+		
+		set_variable = national_cabinet_veto_overruled
+		
+		#Cabinet member resigns
+		if = {
+			limit = { exists = scope:ceremonial_head_of_state }
+			scope:ceremonial_head_of_state ?= {
+				if = {
+					limit = { has_modifier = cabinet_minister }
+					remove_modifier = cabinet_minister
+				}
+			}
+		}
+		if = {
+			limit = { exists = scope:ceremonial_head_of_state_ig }
+			add_radicals = {
+				value = large_radicals
+				interest_group = scope:ceremonial_head_of_state_ig
+			}
+			scope:ceremonial_head_of_state_ig ?= {
+				remove_modifier = cabinet_minister_ig
+				hidden_effect = {
+					remove_modifier = ig_angry_with_government
+					remove_modifier = THIS_is_ruler
+				}
+				add_modifier = { name = ig_angry_with_government years = 2 is_decaying = yes }
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					any_interest_group = {
+						is_powerful = yes
+						leader ?= {
+							is_ruler = no
+							OR = { 
+								has_ideology = ideology:ideology_democratic
+								has_ideology = ideology:ideology_liberal
+							}
 						}
 					}
 				}
