@@ -1101,6 +1101,8 @@ reserve_powers_system.9 = {
 		
 		enacting_any_law = yes
 		
+		NOT = { has_variable = national_parliament_veto_overruled }
+		
 		#Constitutional Laws system (Requires more than 2/3s majority to amend constitutional laws)
 		trigger_if = {
 			limit = { is_enacting_a_constitutional_law = yes }
@@ -1111,8 +1113,6 @@ reserve_powers_system.9 = {
 			government_has_legislative_simple_majority = no
 		}
 		
-		NOT = { has_variable = national_parliament_veto_overruled }
-		
 	}
 
 	immediate = {
@@ -1121,6 +1121,22 @@ reserve_powers_system.9 = {
     		save_scope_as = current_law_scope
     	}
 		
+	}
+	
+	cancellation_trigger = {
+		OR = {
+			NOT = { 
+				trigger_if = {
+					limit = { is_enacting_a_constitutional_law = yes }
+					government_has_legislative_super_majority = no
+				}
+				trigger_if = {
+					limit = { is_enacting_a_constitutional_law = no }
+					government_has_legislative_simple_majority = no
+				}
+			}
+			NOT = { exists = scope:current_law_scope }
+		}
 	}
 
 	option = {
@@ -1332,6 +1348,20 @@ reserve_powers_system.10 = {
     	}
 		
 	}
+	
+	cancellation_trigger = {
+		OR = {
+			NOT = { 
+				ruler ?= {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
+			}
+			NOT = { exists = scope:current_law_scope }
+		}
+	}
 
 	option = {
 		name = national_ruler_veto_accept_option 	#Accept the Ruler's veto
@@ -1511,6 +1541,10 @@ reserve_powers_system.11 = {
     	}
 		
 	}
+	
+	cancellation_trigger = {
+		NOT = { exists = scope:current_law_scope }
+	}
 
 	option = {
 		name = national_cabinet_veto_accept_option 	#Accept the Cabinet veto
@@ -1589,6 +1623,440 @@ reserve_powers_system.11 = {
 				add_modifier = { name = ig_angry_with_government years = 2 is_decaying = yes }
 			}
 		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					any_interest_group = {
+						is_powerful = yes
+						leader ?= {
+							is_ruler = no
+							OR = { 
+								has_ideology = ideology:ideology_democratic
+								has_ideology = ideology:ideology_liberal
+							}
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
+
+#Overlord Veto
+reserve_powers_system.12 = {
+	type = country_event
+
+	hidden = yes
+
+	trigger = {
+		
+		NOT = { has_global_variable = overlord_veto_activated }
+		NOT = { has_variable = overlord_veto_target }
+		
+		enacting_any_law = yes
+		
+		NOT = { has_variable = overlord_veto_overruled }
+		
+		#Overlord opposes enactment
+		is_subject = yes
+		overlord ?= {
+			ruler ?= {
+				OR = {
+					law_stance = {
+						law = ROOT.currently_enacting_law.type
+						value < neutral
+					}
+					interest_group = {
+						law_stance = {
+							law = ROOT.currently_enacting_law.type
+							value < neutral
+						}
+					}
+				}
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		set_global_variable = { 
+			name = overlord_veto_activated
+			months = 2
+		}
+		
+		set_variable = {
+			name = overlord_veto_target
+			months = 2
+		}
+		
+		overlord ?= {
+			save_scope_as = overlord_country
+		}
+		
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		
+		#Overlord reaction
+		trigger_event = { id = reserve_powers_system.13 }
+		
+	}
+	
+}
+
+#Overlord Veto - overlord
+reserve_powers_system.13 = {
+	type = country_event
+
+	title = overlord_veto_overlord.t
+	desc = overlord_veto_overlord.d
+	flavor = overlord_veto_overlord.f
+
+	event_image = {
+		video = "gfx/event_pictures/africa_diplomats_negotiating.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		#Triggered by event
+		
+	}
+
+	immediate = {
+		
+		random_country = {
+			limit = {
+				has_variable = overlord_veto_target
+				is_direct_subject_of = ROOT
+			}
+			save_scope_as = subject_country
+		}
+		
+		remove_global_variable = overlord_veto_activated
+		
+		scope:subject_country ?= {
+			currently_enacting_law = {
+				save_scope_as = current_law_scope
+			}
+		}
+		
+	}
+	
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = scope:subject_country }
+			scope:subject_country ?= {
+				enacting_any_law = no
+			}
+		}
+	}
+
+	option = {
+		name = overlord_veto_overlord_accept_option 	#Accept the subject law
+		default_option = yes
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					OR = { 
+						infamy >= infamy_threshold:infamous
+						ruler ?= {
+							OR = {
+								has_ideology = ideology:ideology_autocratic
+								has_ideology = ideology:ideology_power_hungry
+							}
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = overlord_veto_overlord_reject_option 	#Reject the subject law
+		
+		#Reaction
+		scope:subject_country ?= {
+			trigger_event = { id = reserve_powers_system.14 popup = yes }
+			add_liberty_desire = 25
+			change_relations = { country = ROOT value = -25 }
+		}
+		if = {
+			limit = { exists = scope:subject_country }
+			create_incident = {
+				country = scope:subject_country
+				value = 10
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					OR = { 
+						infamy >= infamy_threshold:infamous
+						ruler ?= {
+							OR = {
+								has_ideology = ideology:ideology_democratic
+								has_ideology = ideology:ideology_liberal
+							}
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
+
+#Overlord Veto - subject
+reserve_powers_system.14 = {
+	type = country_event
+
+	title = overlord_veto_subject.t
+	desc = overlord_veto_subject.d
+	flavor = overlord_veto_subject.f
+
+	event_image = {
+		video = "gfx/event_pictures/africa_diplomats_negotiating.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		#Triggered by event
+		
+	}
+
+	immediate = {
+		
+		overlord ?= {
+			save_scope_as = overlord_country
+		}
+		
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		
+	}
+	
+	cancellation_trigger = {
+		OR = {
+			is_subject = no
+			NOT = { exists = scope:current_law_scope }
+		}
+	}
+
+	option = {
+		name = overlord_veto_subject_accept_option 	#Accept
+		default_option = yes
+		
+		if = {
+			limit = { 
+				is_sufficiently_independent = no
+				enacting_any_law = yes 
+			}
+			cancel_enactment = yes
+		}
+		
+		change_relations = { country = scope:overlord_country value = 25 }
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					any_interest_group = {
+						is_powerful = yes
+						leader ?= {
+							is_ruler = no
+							OR = {
+								has_ideology = ideology:ideology_autocratic
+								has_ideology = ideology:ideology_power_hungry
+							}
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = overlord_veto_subject_reject_option 	#Reject
+		
+		if = {
+			limit = { 
+				is_sufficiently_independent = yes
+				enacting_any_law = yes
+				enactment_setback_count < 2 
+			}
+			add_enactment_setback = 1
+		}
+		else_if = {
+			limit = { 
+				is_sufficiently_independent = yes
+				enacting_any_law = yes
+			}
+			hidden_effect = {
+				remove_modifier = ruler_restrained
+			}
+			add_enactment_modifier = {
+				name = ruler_restrained
+			}
+		}
+		else = {
+			#War
+			create_diplomatic_play = {
+				type = dp_independence
+				target_country = scope:overlord_country
+				add_war_goal = {
+					holder = scope:overlord_country
+					type = reduce_autonomy
+					target_country = ROOT
+				}
+				add_war_goal = {
+					holder = scope:overlord_country
+					type = regime_change
+					target_country = ROOT
+				}
+			}
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					any_interest_group = {
+						is_powerful = yes
+						leader ?= {
+							is_ruler = no
+							OR = { 
+								has_ideology = ideology:ideology_democratic
+								has_ideology = ideology:ideology_liberal
+							}
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
+
+#Constitutional Veto
+reserve_powers_system.15 = {
+	type = country_event
+
+	title = constitutional_veto.t
+	desc = constitutional_veto.d
+	flavor = constitutional_veto.f
+
+	event_image = {
+		video = "gfx/event_pictures/middleeast_courtroom_upheaval.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		enacting_any_law = yes
+		
+		NOT = { has_variable = constitutional_veto_overruled }
+		
+		has_journal_entry = ﻿je_judiciary
+		
+		enacting_law_is_unconstitutional = yes
+		
+	}
+
+	immediate = {
+		
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		
+	}
+	
+	cancellation_trigger = {
+		OR = {
+			NOT = { has_journal_entry = ﻿je_judiciary }
+			NOT = { exists = scope:current_law_scope }
+		}
+	}
+
+	option = {
+		name = constitutional_veto_accept_option 	#Accept the veto
+		default_option = yes
+		
+		if = {
+			limit = { 
+				enacting_any_law = yes 
+			}
+			cancel_enactment = yes
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					any_interest_group = {
+						is_powerful = yes
+						leader ?= {
+							is_ruler = no
+							OR = {
+								has_ideology = ideology:ideology_autocratic
+								has_ideology = ideology:ideology_power_hungry
+							}
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = constitutional_veto_reject_option 	#Reject the veto
+		trigger = {
+			government_has_legislative_super_majority = yes
+		}
+		
+		set_variable = constitutional_veto_overruled
+		
+		domestic_negative_reaction_to_judicial_interference = yes
 		
 		ai_chance = {
 			base = 50
