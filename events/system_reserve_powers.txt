@@ -79,6 +79,29 @@ reserve_powers_system.1 = {
     	}
 		
 	}
+	
+	cancellation_trigger = {
+		OR = {
+			NOT = { 
+				any_scope_character = {
+					has_modifier = reserved_powers_holder
+					OR = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < neutral
+						}
+						interest_group = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+						}
+					}
+				}
+			}
+			NOT = { exists = scope:current_law_scope }
+		}
+	}
 
 	option = {
 		name = reserve_powers_system_accept_option #Accept the presidential veto
@@ -261,6 +284,10 @@ reserve_powers_system.2 = {
     	}
 		
 	}
+	
+	cancellation_trigger = {
+		NOT = { exists = scope:current_law_scope }
+	}
 
 	option = {
 		name = paramilitary_group_system_accept_option 		#Accept the veto
@@ -406,6 +433,10 @@ reserve_powers_system.3 = {
 		}
 		
 	}
+	
+	cancellation_trigger = {
+		NOT = { exists = scope:current_law_scope }
+	}
 
 	option = {
 		name = sectoral_opposition_acknowledge.option 	#Gain 1 setback
@@ -478,6 +509,10 @@ reserve_powers_system.4 = {
 			save_scope_as = trade_union_ig
 		}
 		
+	}
+	
+	cancellation_trigger = {
+		NOT = { exists = scope:current_law_scope }
 	}
 
 	option = {
@@ -555,6 +590,10 @@ reserve_powers_system.5 = {
 			save_scope_as = industrialist_ig
 		}
 		
+	}
+	
+	cancellation_trigger = {
+		NOT = { exists = scope:current_law_scope }
 	}
 
 	option = {
@@ -779,6 +818,10 @@ reserve_powers_system.7 = {
     	}
 		
 	}
+	
+	cancellation_trigger = {
+		NOT = { exists = scope:current_law_scope }
+	}
 
 	option = {
 		name = institutional_veto_accept_option 		#Accept the institutional veto
@@ -961,6 +1004,10 @@ reserve_powers_system.8 = {
     		save_scope_as = current_law_scope
     	}
 		
+	}
+	
+	cancellation_trigger = {
+		NOT = { exists = scope:current_law_scope }
 	}
 
 	option = {
@@ -1824,7 +1871,7 @@ reserve_powers_system.12 = {
     	}
 		
 		#Overlord reaction
-		trigger_event = { id = reserve_powers_system.13 }
+		overlord ?= { trigger_event = { id = reserve_powers_system.13 } }
 		
 	}
 	
@@ -1842,7 +1889,7 @@ reserve_powers_system.13 = {
 		video = "gfx/event_pictures/africa_diplomats_negotiating.bk2"
 	}
 
-	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
@@ -1887,6 +1934,16 @@ reserve_powers_system.13 = {
 	option = {
 		name = overlord_veto_overlord_accept_option 	#Accept the subject law
 		default_option = yes
+		
+		#Elite discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
 		
 		ai_chance = {
 			base = 50
@@ -1959,7 +2016,7 @@ reserve_powers_system.14 = {
 		video = "gfx/event_pictures/africa_diplomats_negotiating.bk2"
 	}
 
-	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
@@ -1996,14 +2053,31 @@ reserve_powers_system.14 = {
 		default_option = yes
 		
 		if = {
-			limit = { 
-				is_sufficiently_independent = no
+			limit = {
 				enacting_any_law = yes 
 			}
 			cancel_enactment = yes
 		}
 		
-		change_relations = { country = scope:overlord_country value = 25 }
+		if = {
+			limit = { is_enacting_a_gov_type_law = yes }
+			add_radicals = {
+				value = very_large_radicals
+			}
+		}
+		else_if = {
+			limit = { is_enacting_a_constitutional_law = yes }
+			add_radicals = {
+				value = large_radicals
+			}
+		}
+		else = {
+			add_radicals = {
+				value = medium_radicals
+			}
+		}
+		
+		add_liberty_desire = 25
 		
 		ai_chance = {
 			base = 50
@@ -2036,6 +2110,7 @@ reserve_powers_system.14 = {
 				enactment_setback_count < 2 
 			}
 			add_enactment_setback = 1
+			change_relations = { country = scope:overlord_country value = -25 }
 		}
 		else_if = {
 			limit = { 
@@ -2048,6 +2123,7 @@ reserve_powers_system.14 = {
 			add_enactment_modifier = {
 				name = ruler_restrained
 			}
+			change_relations = { country = scope:overlord_country value = -25 }
 		}
 		else = {
 			#War
@@ -2064,6 +2140,24 @@ reserve_powers_system.14 = {
 					type = regime_change
 					target_country = ROOT
 				}
+			}
+		}
+		
+		if = {
+			limit = { is_enacting_a_gov_type_law = yes }
+			add_loyalists = {
+				value = very_large_radicals
+			}
+		}
+		else_if = {
+			limit = { is_enacting_a_constitutional_law = yes }
+			add_loyalists = {
+				value = large_radicals
+			}
+		}
+		else = {
+			add_loyalists = {
+				value = medium_radicals
 			}
 		}
 		
