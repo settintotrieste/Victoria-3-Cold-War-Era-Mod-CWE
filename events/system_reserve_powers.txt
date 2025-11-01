@@ -25,6 +25,25 @@ reserve_powers_system.1 = {
 		
 		NOT = { has_variable = ceremonial_head_of_state_veto_overruled }
 		
+		#After Ruler's Assent
+		enactment_phase = 2
+		trigger_if = {
+			limit = { is_enacting_a_constitutional_law = yes }
+			government_has_legislative_super_majority = yes
+		}
+		trigger_if = {
+			limit = { is_enacting_a_constitutional_law = no }
+			government_has_legislative_simple_majority = yes
+		}
+		NOT = { 
+			ruler ?= {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+			}
+		}
+		
 		any_scope_character = {
 			has_modifier = reserved_powers_holder
 			OR = {
@@ -180,6 +199,9 @@ reserve_powers_system.2 = {
 		enacting_any_law = yes
 		
 		NOT = { has_variable = paramilitary_group_veto_overruled }
+		
+		#During debate
+		enactment_phase = 1
 		
 		OR = {
 		
@@ -347,6 +369,9 @@ reserve_powers_system.3 = {
 		
 		enacting_any_law = yes
 		
+		#During debate
+		enactment_phase = 1
+		
 		#Powerful church
 		has_law_or_variant = law_type:law_state_religion
 		any_interest_group = {
@@ -415,6 +440,9 @@ reserve_powers_system.4 = {
 		
 		enacting_any_law = yes
 		
+		#During debate
+		enactment_phase = 1
+		
 		#Powerful Trade Unions
 		has_law_or_variant = law_type:law_full_trade_unions
 		any_interest_group = {
@@ -482,6 +510,9 @@ reserve_powers_system.5 = {
 		NOT = { has_variable = big_business_veto_overruled }
 		
 		enacting_any_law = yes
+		
+		#During debate
+		enactment_phase = 1
 		
 		#Powerful Industrialists
 		has_law_or_variant = law_type:law_laissez_faire
@@ -661,6 +692,9 @@ reserve_powers_system.7 = {
 		enacting_any_law = yes
 		
 		NOT = { has_variable = institutional_veto_overruled }
+		
+		#During debate
+		enactment_phase = 1
 		
 		is_a_dictatorship = yes
 		
@@ -883,6 +917,9 @@ reserve_powers_system.8 = {
 		
 		NOT = { has_variable = pm_veto_overruled }
 		
+		#During debate
+		enactment_phase = 1
+		
 		any_interest_group = {
 			leader = { has_modifier = prime_minister }
 			law_stance = {
@@ -1102,6 +1139,9 @@ reserve_powers_system.9 = {
 		enacting_any_law = yes
 		
 		NOT = { has_variable = national_parliament_veto_overruled }
+		
+		#During debate
+		enactment_phase = 2
 		
 		#Constitutional Laws system (Requires more than 2/3s majority to amend constitutional laws)
 		trigger_if = {
@@ -1327,6 +1367,20 @@ reserve_powers_system.10 = {
 		
 		NOT = { has_variable = national_ruler_veto_overruled }
 		
+		#During debate, after voting
+		enactment_phase = 2
+		
+		#Constitutional Laws system (Requires more than 2/3s majority to amend constitutional laws)
+		trigger_if = {
+			limit = { is_enacting_a_constitutional_law = yes }
+			government_has_legislative_super_majority = yes
+		}
+		trigger_if = {
+			limit = { is_enacting_a_constitutional_law = no }
+			government_has_legislative_simple_majority = yes
+		}
+		
+		#Ruler opposes
 		ruler ?= {
 			law_stance = {
 				law = owner.currently_enacting_law.type
@@ -1488,6 +1542,9 @@ reserve_powers_system.11 = {
 		
 		NOT = { has_variable = national_cabinet_veto_overruled }
 		
+		#During drafting
+		enactment_phase = 0
+		
 		any_scope_character = {
 			has_role = politician
 			OR = { 
@@ -1551,22 +1608,8 @@ reserve_powers_system.11 = {
 		default_option = yes
 		
 		if = {
-			limit = { 
-				enacting_any_law = yes
-				enactment_setback_count < 2 
-			}
-			add_enactment_setback = 1
-		}
-		else_if = {
-			limit = { 
-				enacting_any_law = yes
-			}
-			hidden_effect = {
-				remove_modifier = ruler_restrained
-			}
-			add_enactment_modifier = {
-				name = ruler_restrained
-			}
+			limit = { enacting_any_law = yes }
+			cancel_enactment = yes
 		}
 		
 		ai_chance = {
@@ -1597,6 +1640,25 @@ reserve_powers_system.11 = {
 		}
 		
 		set_variable = national_cabinet_veto_overruled
+		
+		if = {
+			limit = { 
+				enacting_any_law = yes
+				enactment_setback_count < 2 
+			}
+			add_enactment_setback = 1
+		}
+		else_if = {
+			limit = { 
+				enacting_any_law = yes
+			}
+			hidden_effect = {
+				remove_modifier = ruler_restrained
+			}
+			add_enactment_modifier = {
+				name = ruler_restrained
+			}
+		}
 		
 		#Cabinet member resigns
 		if = {
@@ -1661,6 +1723,42 @@ reserve_powers_system.12 = {
 		enacting_any_law = yes
 		
 		NOT = { has_variable = overlord_veto_overruled }
+		
+		#After all final vetos
+		enactment_phase = 2
+		trigger_if = {
+			limit = { is_enacting_a_constitutional_law = yes }
+			government_has_legislative_super_majority = yes
+		}
+		trigger_if = {
+			limit = { is_enacting_a_constitutional_law = no }
+			government_has_legislative_simple_majority = yes
+		}
+		NOT = { 
+			ruler ?= {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+			}
+		}
+		NOT = { 
+			any_scope_character = {
+				has_modifier = reserved_powers_holder
+				OR = {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+					interest_group = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < neutral
+						}
+					}
+				}
+			}
+		}
 		
 		#Overlord opposes enactment
 		is_subject = yes
@@ -1998,6 +2096,42 @@ reserve_powers_system.15 = {
 		has_journal_entry = ﻿je_judiciary
 		
 		enacting_law_is_unconstitutional = yes
+		
+		#After all final vetos
+		enactment_phase = 2
+		trigger_if = {
+			limit = { is_enacting_a_constitutional_law = yes }
+			government_has_legislative_super_majority = yes
+		}
+		trigger_if = {
+			limit = { is_enacting_a_constitutional_law = no }
+			government_has_legislative_simple_majority = yes
+		}
+		NOT = { 
+			ruler ?= {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+			}
+		}
+		NOT = { 
+			any_scope_character = {
+				has_modifier = reserved_powers_holder
+				OR = {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+					interest_group = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < neutral
+						}
+					}
+				}
+			}
+		}
 		
 	}
 
