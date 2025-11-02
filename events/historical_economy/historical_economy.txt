@@ -4110,3 +4110,150 @@ historical_economy.44 = {
     }
 
 }
+
+# Brunei-Singapore Economic Partnership
+historical_economy.45 = {
+    type = country_event
+
+    title = BRU_SGP_Reforms.t 								# Title of the event; ADD LOCALISATION
+    desc = BRU_SGP_Reforms.d 								# Description of the event; ADD LOCALISATION
+    #flavor = BRU_SGP_Reforms.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:BRU ?= this
+		game_date >= 1990.1.1									# START DATE: Date colony became self governing ****
+		game_date < 2000.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_monarchy = yes										# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_subject_type = subject_type_protectorate
+		
+		#Singapore
+		exists = c:MSY
+		exists = c:SGP
+		c:SGP ?= {
+			OR = {
+				is_a_parliamentary_republic = yes
+				is_a_presidential_republic = yes
+				is_a_constitutional_monarchy = yes
+			}
+			is_sufficiently_independent = yes						# is_vassal = no		
+			is_at_war = no											# war = no
+			is_direct_subject_of = c:MSY
+			NOT = { is_subject_of = ROOT }
+		}
+		NOT = { is_subject_of = c:SGP }
+		
+		#NOT isolationist
+		NOT = { has_law_or_variant = law_type:law_isolationism }
+		
+		# Event has not been fired before
+		NOT = { has_variable = BRU_SGP_Reforms_hee }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = BRU_SGP_Reforms_hee						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		c:SGP ?= { trigger_event = { id = historical_economy.46 } }
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Brunei-Singapore Economic Relationship
+historical_economy.46 = {
+    type = country_event
+
+    title = BRU_SGP_Reforms.t 								# Title of the event; ADD LOCALISATION
+    desc = BRU_SGP_Reforms.d 								# Description of the event; ADD LOCALISATION
+    #flavor = BRU_SGP_Reforms.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		c:BRU ?= {
+			make_independent = yes
+		}
+		
+		# Overlord create client state pact with colony
+		create_diplomatic_pact = {
+			country = c:BRU										# Change TAG ****
+			type = protectorate
+		}
+		create_diplomatic_pact = {
+			country = c:BRU										# Change TAG ****
+			type = currency_union
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		change_relations = { country = c:BRU value = -50 }
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
