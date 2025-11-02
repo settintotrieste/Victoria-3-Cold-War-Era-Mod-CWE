@@ -29,19 +29,25 @@ reserve_powers_system.1 = {
 		
 		#After Ruler's Assent
 		enactment_phase = 2
-		trigger_if = {
-			limit = { is_enacting_a_constitutional_law = yes }
-			government_has_legislative_super_majority = yes
+		OR = {
+			has_variable = national_parliament_veto_overruled
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = yes }
+				government_has_legislative_super_majority = yes
+			}
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = no }
+				government_has_legislative_simple_majority = yes
+			}
 		}
-		trigger_if = {
-			limit = { is_enacting_a_constitutional_law = no }
-			government_has_legislative_simple_majority = yes
-		}
-		NOT = { 
-			ruler ?= {
-				law_stance = {
-					law = owner.currently_enacting_law.type
-					value < neutral
+		OR = {
+			has_variable = national_ruler_veto_overruled
+			NOT = { 
+				ruler ?= {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
 				}
 			}
 		}
@@ -160,10 +166,10 @@ reserve_powers_system.1 = {
 				enacting_any_law = yes
 			}
 			hidden_effect = {
-				remove_modifier = ruler_restrained
+				remove_modifier = HOS_reserved_powers_opposes_law
 			}
 			add_enactment_modifier = {
-				name = ruler_restrained
+				name = HOS_reserved_powers_opposes_law
 			}
 		}
 		
@@ -1066,10 +1072,10 @@ reserve_powers_system.8 = {
 				enacting_any_law = yes
 			}
 			hidden_effect = {
-				remove_modifier = ruler_restrained
+				remove_modifier = HOG_PM_opposes_law
 			}
 			add_enactment_modifier = {
-				name = ruler_restrained
+				name = HOG_PM_opposes_law
 			}
 		}
 		
@@ -1298,10 +1304,10 @@ reserve_powers_system.9 = {
 				enacting_any_law = yes
 			}
 			hidden_effect = {
-				remove_modifier = ruler_restrained
+				remove_modifier = parliament_opposes_law
 			}
 			add_enactment_modifier = {
-				name = ruler_restrained
+				name = parliament_opposes_law
 			}
 		}
 		
@@ -1436,13 +1442,16 @@ reserve_powers_system.10 = {
 		enactment_phase = 2
 		
 		#Constitutional Laws system (Requires more than 2/3s majority to amend constitutional laws)
-		trigger_if = {
-			limit = { is_enacting_a_constitutional_law = yes }
-			government_has_legislative_super_majority = yes
-		}
-		trigger_if = {
-			limit = { is_enacting_a_constitutional_law = no }
-			government_has_legislative_simple_majority = yes
+		OR = {
+			has_variable = national_parliament_veto_overruled
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = yes }
+				government_has_legislative_super_majority = yes
+			}
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = no }
+				government_has_legislative_simple_majority = yes
+			}
 		}
 		
 		#Ruler opposes
@@ -1532,10 +1541,10 @@ reserve_powers_system.10 = {
 				enacting_any_law = yes
 			}
 			hidden_effect = {
-				remove_modifier = mired_in_court_intrigue
+				remove_modifier = ruler_opposes_law
 			}
 			add_enactment_modifier = {
-				name = mired_in_court_intrigue
+				name = ruler_opposes_law
 			}
 		}
 		
@@ -1720,10 +1729,10 @@ reserve_powers_system.11 = {
 				enacting_any_law = yes
 			}
 			hidden_effect = {
-				remove_modifier = ruler_restrained
+				remove_modifier = cabinet_opposes_law
 			}
 			add_enactment_modifier = {
-				name = ruler_restrained
+				name = cabinet_opposes_law
 			}
 		}
 		
@@ -1795,37 +1804,53 @@ reserve_powers_system.12 = {
 		
 		#After all final vetos
 		enactment_phase = 2
-		trigger_if = {
-			limit = { is_enacting_a_constitutional_law = yes }
-			government_has_legislative_super_majority = yes
-		}
-		trigger_if = {
-			limit = { is_enacting_a_constitutional_law = no }
-			government_has_legislative_simple_majority = yes
-		}
-		NOT = { 
-			ruler ?= {
-				law_stance = {
-					law = owner.currently_enacting_law.type
-					value < neutral
-				}
+		OR = {
+			has_variable = national_parliament_veto_overruled
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = yes }
+				government_has_legislative_super_majority = yes
+			}
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = no }
+				government_has_legislative_simple_majority = yes
 			}
 		}
-		NOT = { 
-			any_scope_character = {
-				has_modifier = reserved_powers_holder
-				OR = {
+		OR = {
+			has_variable = national_ruler_veto_overruled
+			NOT = { 
+				ruler ?= {
 					law_stance = {
 						law = owner.currently_enacting_law.type
 						value < neutral
 					}
-					interest_group = {
+				}
+			}
+		}
+		OR = {
+			has_variable = ceremonial_head_of_state_veto_overruled
+			NOT = { 
+				any_scope_character = {
+					has_modifier = reserved_powers_holder
+					OR = {
 						law_stance = {
 							law = owner.currently_enacting_law.type
 							value < neutral
 						}
+						interest_group = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+						}
 					}
 				}
+			}
+		}
+		OR = {
+			has_variable = constitutional_veto_overruled
+			NAND = {
+				has_journal_entry = ﻿je_judiciary
+				enacting_law_is_unconstitutional = yes
 			}
 		}
 		
@@ -2053,13 +2078,6 @@ reserve_powers_system.14 = {
 		default_option = yes
 		
 		if = {
-			limit = {
-				enacting_any_law = yes 
-			}
-			cancel_enactment = yes
-		}
-		
-		if = {
 			limit = { is_enacting_a_gov_type_law = yes }
 			add_radicals = {
 				value = very_large_radicals
@@ -2075,6 +2093,13 @@ reserve_powers_system.14 = {
 			add_radicals = {
 				value = medium_radicals
 			}
+		}
+		
+		if = {
+			limit = {
+				enacting_any_law = yes 
+			}
+			cancel_enactment = yes
 		}
 		
 		add_liberty_desire = 25
@@ -2118,10 +2143,10 @@ reserve_powers_system.14 = {
 				enacting_any_law = yes
 			}
 			hidden_effect = {
-				remove_modifier = ruler_restrained
+				remove_modifier = overlord_opposes_law
 			}
 			add_enactment_modifier = {
-				name = ruler_restrained
+				name = overlord_opposes_law
 			}
 			change_relations = { country = scope:overlord_country value = -25 }
 		}
@@ -2217,34 +2242,43 @@ reserve_powers_system.15 = {
 		
 		#After all final vetos
 		enactment_phase = 2
-		trigger_if = {
-			limit = { is_enacting_a_constitutional_law = yes }
-			government_has_legislative_super_majority = yes
-		}
-		trigger_if = {
-			limit = { is_enacting_a_constitutional_law = no }
-			government_has_legislative_simple_majority = yes
-		}
-		NOT = { 
-			ruler ?= {
-				law_stance = {
-					law = owner.currently_enacting_law.type
-					value < neutral
-				}
+		OR = {
+			has_variable = national_parliament_veto_overruled
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = yes }
+				government_has_legislative_super_majority = yes
+			}
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = no }
+				government_has_legislative_simple_majority = yes
 			}
 		}
-		NOT = { 
-			any_scope_character = {
-				has_modifier = reserved_powers_holder
-				OR = {
+		OR = {
+			has_variable = national_ruler_veto_overruled
+			NOT = { 
+				ruler ?= {
 					law_stance = {
 						law = owner.currently_enacting_law.type
 						value < neutral
 					}
-					interest_group = {
+				}
+			}
+		}
+		OR = {
+			has_variable = ceremonial_head_of_state_veto_overruled
+			NOT = { 
+				any_scope_character = {
+					has_modifier = reserved_powers_holder
+					OR = {
 						law_stance = {
 							law = owner.currently_enacting_law.type
 							value < neutral
+						}
+						interest_group = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
 						}
 					}
 				}
@@ -2326,6 +2360,309 @@ reserve_powers_system.15 = {
 					}
 				}
 				add = -100 
+			}
+		}
+		
+	}
+	
+}
+
+#Constitutional Monarch's Veto
+reserve_powers_system.16 = {
+	type = country_event
+
+	title = constitutional_monarch_veto.t
+	desc = constitutional_monarch_veto.d
+	flavor = constitutional_monarch_veto.f
+
+	event_image = {
+		video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2"
+	}
+
+	icon = "gfx/interface/icons/law_icons/monarchy.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		enacting_any_law = yes
+		
+		NOT = { has_variable = constitutional_monarch_veto_overruled }
+		
+		is_a_policy_type_law = no NOT = { has_journal_entry = je_law_imposition }
+		
+		#During debate, after voting
+		enactment_phase = 2
+		OR = {
+			has_variable = national_parliament_veto_overruled
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = yes }
+				government_has_legislative_super_majority = yes
+			}
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = no }
+				government_has_legislative_simple_majority = yes
+			}
+		}
+		OR = {
+			has_variable = national_ruler_veto_overruled
+			NOT = { 
+				ruler ?= {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
+			}
+		}
+		OR = {
+			has_variable = ceremonial_head_of_state_veto_overruled
+			NOT = { 
+				any_scope_character = {
+					has_modifier = reserved_powers_holder
+					OR = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < neutral
+						}
+						interest_group = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		#Constitutional Monarch opposes
+		OR = {
+			any_scope_character = {
+				has_modifier = monarch_character
+				OR = {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+					interest_group = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < neutral
+						}
+					}
+				}
+			}
+			AND = {
+				is_subject = yes
+				any_scope_character = {
+					has_modifier = viceroy_character
+				}
+				top_overlord ?= {
+					any_scope_character = {
+						has_modifier = monarch_character
+						OR = {
+							law_stance = {
+								law = ROOT.currently_enacting_law.type
+								value < neutral
+							}
+							interest_group = {
+								law_stance = {
+									law = ROOT.currently_enacting_law.type
+									value < neutral
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		if = {
+			limit = {
+				any_scope_character = {
+					has_modifier = monarch_character
+					OR = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < neutral
+						}
+						interest_group = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+						}
+					}
+				}
+			}
+			random_scope_character = {
+				limit = { 
+					has_modifier = monarch_character
+					OR = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < neutral
+						}
+						interest_group = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+						}
+					}
+				
+				}
+				save_scope_as = ceremonial_head_of_state
+				interest_group ?= { save_scope_as = ceremonial_head_of_state_ig }
+			}
+			save_scope_as = ceremonial_head_of_state_country
+		}
+		else_if = {
+			limit = {
+				is_subject = yes
+				any_scope_character = {
+					has_modifier = viceroy_character
+				}
+				top_overlord ?= {
+					any_scope_character = {
+						has_modifier = monarch_character
+						OR = {
+							law_stance = {
+								law = ROOT.currently_enacting_law.type
+								value < neutral
+							}
+							interest_group = {
+								law_stance = {
+									law = ROOT.currently_enacting_law.type
+									value < neutral
+								}
+							}
+						}
+					}
+				}
+			}
+			top_overlord ?= {
+				random_scope_character = {
+					limit = { 
+						has_modifier = monarch_character
+						OR = {
+							law_stance = {
+								law = ROOT.currently_enacting_law.type
+								value < neutral
+							}
+							interest_group = {
+								law_stance = {
+									law = ROOT.currently_enacting_law.type
+									value < neutral
+								}
+							}
+						}
+					}
+					save_scope_as = ceremonial_head_of_state
+					interest_group ?= { save_scope_as = ceremonial_head_of_state_ig }
+				}
+				save_scope_as = ceremonial_head_of_state_country
+			}
+		}
+		
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		
+	}
+	
+	cancellation_trigger = {
+		OR = {
+			NOR = {
+				any_scope_character = {
+					has_modifier = monarch_character
+					OR = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < neutral
+						}
+						interest_group = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+						}
+					}
+				}
+				AND = {
+					is_subject = yes
+					any_scope_character = {
+						has_modifier = viceroy_character
+					}
+					top_overlord ?= {
+						any_scope_character = {
+							has_modifier = monarch_character
+							OR = {
+								law_stance = {
+									law = ROOT.currently_enacting_law.type
+									value < neutral
+								}
+								interest_group = {
+									law_stance = {
+										law = ROOT.currently_enacting_law.type
+										value < neutral
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			NOT = { exists = scope:current_law_scope }
+		}
+	}
+
+	option = {
+		name = constitutional_monarch_veto_option 	#It is what it is
+		default_option = yes
+		
+		if = {
+			limit = { 
+				enacting_any_law = yes
+				enactment_setback_count < 2 
+			}
+			add_enactment_setback = 1
+		}
+		else_if = {
+			limit = { 
+				enacting_any_law = yes
+			}
+			hidden_effect = {
+				remove_modifier = constitutional_monarch_opposes_law
+			}
+			add_enactment_modifier = {
+				name = constitutional_monarch_opposes_law
+			}
+		}
+		
+		if = {
+			limit = { is_enacting_a_gov_type_law = yes }
+			add_radicals = {
+				value = very_large_radicals
+			}
+		}
+		else_if = {
+			limit = { is_enacting_a_constitutional_law = yes }
+			add_radicals = {
+				value = large_radicals
+			}
+		}
+		else = {
+			add_radicals = {
+				value = medium_radicals
 			}
 		}
 		
