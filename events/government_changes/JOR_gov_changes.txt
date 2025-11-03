@@ -322,8 +322,222 @@ JOR_gov_changes.3 = {
 
 }
 
-# Abdullah II, 1999
+# Purge of the Nasserists, 1957
 JOR_gov_changes.4 = {
+    type = country_event
+
+    title = JOR_1957_revolution.t 								# Title of the event; ADD LOCALISATION
+    desc = JOR_1957_revolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = JOR_1957_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { video = "gfx/event_pictures/middleeast_police_breaking_door.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_raiding.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:JOR ?= this
+		game_date >= 1957.4.13									# START DATE: Date colony became self governing ****
+		game_date < 1967.4.13									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		has_government_type = gov_semi_constitutional_monarchy
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		OR = { 
+			has_variable = Talal_bin_Abdullah_Abdicated
+			ruler ?= { has_variable = Hussein_bin_Talal }
+		}
+		
+		#EGY is Nasserist
+		exists = c:EGY
+		c:EGY ?= {
+			is_a_nationalist_government = yes						# Correct gov types
+			is_sufficiently_independent = yes						# is_vassal = no
+			ruler ?= { has_variable = Gamal_Abdel_Nasser }
+		}
+		
+		#Nasserists in the military
+		any_scope_character = {
+			OR = {
+				is_interest_group_type = ig_armed_forces
+				has_role = general
+				has_role = admiral
+			}
+			OR = {
+				has_variable = Ali_Abu_Nuwar
+				is_interest_group_type = ig_trade_unions
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = JOR_1957_revolution_hgc }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = JOR_1957_revolution_hgc					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_dictatorship = yes
+		
+		#Lose relation with EGY
+		change_relations = { country = c:EGY value = -50 }
+		create_incident = {
+			country = c:EGY
+			value = 10
+		}
+		
+		#Remove Nasserists from Jordan
+		every_scope_character = {
+			limit = { 
+				OR = {
+					is_interest_group_type = ig_armed_forces
+					has_role = general
+					has_role = admiral
+				}
+				OR = {
+					has_variable = Ali_Abu_Nuwar
+					is_interest_group_type = ig_trade_unions
+				}
+			}
+			exile_character = yes
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_constitutional_monarchy = yes
+		random_scope_character = {
+			limit = { 
+				has_variable = Ali_Abu_Nuwar
+			}
+			set_character_as_ruler = yes
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			strata = upper_strata
+		}
+		add_radicals = {
+			value = large_radicals
+			strata = middle_strata
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Jordanian protests, 1989
+JOR_gov_changes.5 = {
+    type = country_event
+
+    title = JOR_1989_revolution.t 								# Title of the event; ADD LOCALISATION
+    desc = JOR_1989_revolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = JOR_1989_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_protest.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:JOR ?= this
+		game_date >= 1989.5.30									# START DATE: Date colony became self governing ****
+		game_date < 1999.5.30									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_absolute_monarchy = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = JOR_1989_revolution_hgc }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = JOR_1989_revolution_hgc					# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_democratic = yes
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			strata = middle_strata
+		}
+		add_radicals = {
+			value = large_radicals
+			strata = lower_strata
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Abdullah II, 1999
+JOR_gov_changes.6 = {
     type = country_event
 
     title = JOR_1999_revolution.t 								# Title of the event; ADD LOCALISATION
