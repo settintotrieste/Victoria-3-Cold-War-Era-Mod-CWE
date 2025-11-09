@@ -80,8 +80,119 @@ PER_gov_changes.1 = {
 
 }
 
-# Iranian Coup of 1953
+# Mohammad Mosaddegh, 1952
 PER_gov_changes.2 = {
+    type = country_event
+
+    title = PER_1952_revolution.t 								# Title of the event; ADD LOCALISATION
+    desc = PER_1952_revolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = PER_1952_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:PER ?= this
+		game_date >= 1952.8.3									# START DATE: Date colony became self governing ****
+		game_date < 1962.8.3									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_regime_monarchy = yes								# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Socialist challenge
+		OR = { 
+			any_interest_group = { 
+				is_in_government = yes 
+				has_ideology = ideology:ideology_far_left_economy 
+			}
+			has_global_variable = historical_railroading_active
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = PER_1952_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = PER_1952_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_constitutional_monarchy = yes
+		effect_starting_politics_dictatorship = yes
+		
+		#Install new ruler
+		if = {
+			limit = { any_scope_character = { has_variable = Mohammad_Mosaddegh } }
+			random_scope_character = {
+				limit = { has_variable = Mohammad_Mosaddegh }
+				set_character_as_ruler = yes
+			}
+		}
+		else = {
+			create_character = {
+				first_name = "Mohammad_Mosaddegh_first_name"
+				last_name = "Mohammad_Mosaddegh_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1882.6.16
+				interest_group = ig_trade_unions
+				ideology = ideology_democratic
+				culture = cu:persian
+				religion = rel:shiite
+				traits = {
+					tactful
+					innovative
+					honorable
+				}
+				on_created = { set_variable = Mohammad_Mosaddegh }
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = lower_strata
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Iranian Coup of 1953
+PER_gov_changes.3 = {
     type = country_event
 
     title = PER_1953_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -102,21 +213,27 @@ PER_gov_changes.2 = {
 		game_date >= 1953.8.15									# START DATE: Date colony became self governing ****
 		game_date < 1963.8.15									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
-		is_a_regime_monarchy = yes								# Correct gov types
+		is_a_constitutional_monarchy_regime = yes				# Correct gov types
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
-		#Socialist challenge
-		OR = { 
-			any_interest_group = { 
-				is_in_government = yes 
-				has_ideology = ideology:ideology_far_left_economy 
-			}
-			has_global_variable = historical_railroading_active
+		ruler ?= { has_variable = Mohammad_Mosaddegh }
+		
+		#Cause
+		exists = c:USA
+		is_direct_subject_of = c:USA
+		c:USA ?= {
+			is_a_democracy = yes								# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no
+			is_at_war = no										# war = no
+			country_rank = rank_value:super_power
 		}
 		
 		# Event has not been fired before
 		NOT = { has_variable = PER_1953_hgc }					# CHANGE ****
+		
+		#Cold War
+		cold_war_ongoing = yes
 		
     }
 	
@@ -131,9 +248,8 @@ PER_gov_changes.2 = {
         name = historical_gov_changes.option.1					# Accept
         highlighted_option = yes
 		
-		#Enact new regime
-		effect_starting_politics_dictatorship = yes
-		effect_conservative_ruling_coalition = yes
+		#Choice for USA
+		c:USA ?= { trigger_event = { id = historical_diplomatic_incidents.33 } }
 		
 		ai_chance = { 
 			base = 90 
@@ -145,33 +261,44 @@ PER_gov_changes.2 = {
         name = historical_gov_changes.option.2				# Reject
 		default_option = yes
 		
-		#Becomes independent
-		make_independent = yes
-		
 		#Enact new regime
 		effect_starting_politics_parliamentary_republic = yes
-		effect_starting_politics_democratic = yes
+		effect_starting_politics_dictatorship = yes
 		
 		#Install new ruler
-		create_character = {
-			first_name = "Mohammad_Mosaddegh_first_name"
-			last_name = "Mohammad_Mosaddegh_last_name"
-			ruler = yes ig_leader = yes historical = yes
-			birth_date = 1882.6.16
-			interest_group = ig_trade_unions
-			ideology = ideology_democratic
-			culture = cu:persian
-			religion = rel:shiite
-			traits = {
-				tactful
-				innovative
-				honorable
+		if = {
+			limit = { any_scope_character = { has_variable = Mohammad_Mosaddegh } }
+			random_scope_character = {
+				limit = { has_variable = Mohammad_Mosaddegh }
+				set_character_as_ruler = yes
 			}
 		}
+		else = {
+			create_character = {
+				first_name = "Mohammad_Mosaddegh_first_name"
+				last_name = "Mohammad_Mosaddegh_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1882.6.16
+				interest_group = ig_trade_unions
+				ideology = ideology_democratic
+				culture = cu:persian
+				religion = rel:shiite
+				traits = {
+					tactful
+					innovative
+					honorable
+				}
+				on_created = { set_variable = Mohammad_Mosaddegh }
+			}
+		}
+		
+		#Choice for USA
+		c:USA ?= { trigger_event = { id = historical_diplomatic_incidents.34 } }
 		
 		#Major discontent
 		add_radicals = {
 			value = large_radicals
+			strata = upper
 		}
 		add_modifier = { 
 			name = stirrings_of_revolution
@@ -188,7 +315,7 @@ PER_gov_changes.2 = {
 }
 
 # Iranian Revolution of 1979
-PER_gov_changes.3 = {
+PER_gov_changes.4 = {
     type = country_event
 
     title = PER_1979_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -285,7 +412,7 @@ PER_gov_changes.3 = {
 }
 
 # Ali Khamenei
-PER_gov_changes.4 = {
+PER_gov_changes.5 = {
     type = country_event
 
     title = PER_1989_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -391,7 +518,7 @@ PER_gov_changes.4 = {
 }
 
 # The Quds Force
-PER_gov_changes.5 = {
+PER_gov_changes.6 = {
     type = country_event
 
     title = PER_1998_revolution.t 							# Title of the event; ADD LOCALISATION

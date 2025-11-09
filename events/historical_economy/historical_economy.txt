@@ -4139,10 +4139,8 @@ historical_economy.45 = {
 		game_date < 2000.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
 		is_a_monarchy = yes										# Correct gov types
-		is_sufficiently_independent = yes						# is_vassal = no		
+		is_sufficiently_independent_excluding_satellites = yes						# is_vassal = no		
 		is_at_war = no											# war = no
-		
-		is_subject_type = subject_type_protectorate
 		
 		#Singapore
 		exists = c:MSY
@@ -4254,6 +4252,132 @@ historical_economy.46 = {
 		default_option = yes
 		
 		change_relations = { country = c:BRU value = -50 }
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Nationalisation of the Iranian Oil Industry
+historical_economy.47 = {
+    type = country_event
+
+    title = PER_Oil_Nationalisation_1951.t 						# Title of the event; ADD LOCALISATION
+    desc = PER_Oil_Nationalisation_1951.d 						# Description of the event; ADD LOCALISATION
+    #flavor = PER_Oil_Nationalisation_1951.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:PER ?= this
+		game_date >= 1951.3.15									# START DATE: Date colony became self governing ****
+		game_date < 1961.3.15									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_monarchy = yes										# Correct gov types
+		is_sufficiently_independent_excluding_satellites = yes	# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#NOT isolationist
+		NOT = { has_law_or_variant = law_type:law_isolationism }
+		
+		# Event has not been fired before
+		NOT = { has_variable = PER_Oil_Nationalisation_1951_hee }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = PER_Oil_Nationalisation_1951_hee				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1						# Accept
+        highlighted_option = yes
+		
+		#Nationalisation
+		effect_starting_politics_trade_policy_mercantilism = yes
+		hidden_effect = { remove_monopoly = bt:building_oil_rig }
+		add_country_monopoly = bt:building_oil_rig
+		every_scope_treaty = {
+			limit = {
+				binds = ROOT
+				any_scope_article = {
+					OR = { 
+						has_type = acquire_monopoly_for_company
+						has_type = trade_privilege
+					}
+				}
+			}
+			withdraw = {
+				country = ROOT
+			}
+		}
+		
+		#New Prime Minister
+		create_character = {
+			first_name = "Mohammad_Mosaddegh_first_name"
+			last_name = "Mohammad_Mosaddegh_last_name"
+			ig_leader = yes historical = yes
+			birth_date = 1882.6.16
+			interest_group = ig_trade_unions
+			ideology = ideology_democratic
+			culture = cu:persian
+			religion = rel:shiite
+			traits = {
+				tactful
+				innovative
+				honorable
+			}
+			on_created = { set_variable = Mohammad_Mosaddegh }
+		}
+		
+		every_country = {
+			limit = { 
+				NOT = { THIS = ROOT }
+				OR = { 
+					any_scope_treaty = { binds = ROOT any_scope_article = { has_type = foreign_investment_rights } } 
+					has_subject_relation_with = ROOT
+				}
+			}
+			change_relations = { country = ROOT value = -50 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2						# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = medium_radicals
+			strata = middle
+		}
+		add_radicals = {
+			value = large_radicals
+			strata = lower
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
