@@ -47,7 +47,39 @@
 		}
 		
 		actor_can_break = {
-			#scope:target_country = { is_a_very_autonomous_subject = no }
+		
+			#Superstate Power Blocs can only invite same Superstate members / aspirants
+			trigger_if = {
+				limit = { 
+					scope:actor = { 
+						power_bloc ?= {
+							has_identity = identity:identity_superstate
+						}
+					}
+				}
+				OR = { 
+					custom_tooltip = { 
+						text = does_not_shares_same_superstate.tt
+						scope:target_country = { 
+							shares_same_superstate = no
+						}
+					}
+					scope:target_country = {
+						save_temporary_scope_as = THIS_scope
+						custom_tooltip = {
+							text = NOT_superstate_customs_union_TAG.tt
+							shares_same_superstate = yes
+							NAND = {
+								has_variable = superstate_customs_union
+								power_bloc ?= {
+									has_identity = identity:identity_superstate
+								}
+							}
+						}
+					}
+				}
+			}
+			
 		}
 		
 		manual_break_effect = {
@@ -121,6 +153,8 @@
 		}
 	
 		will_propose = {
+		
+			#General conditions
 			OR = { 
 				AND = { 
 					NOT = { is_adjacent_to_country = scope:target_country }
@@ -142,17 +176,39 @@
 					}
 				}
 			}
-			NAND = {
-				scope:actor = { OR = { c:MSY ?= this c:MLY ?= this } }
-				scope:target_country = { c:SGP ?= this }
+			
+			#Special cases
+			trigger_if = {
+				limit = {
+					OR = { c:MSY ?= this c:MLY ?= this c:SGP ?= this c:BRU ?= this }
+					OR = {
+						scope:actor = { is_adjacent_to_country = scope:target_country }
+						scope:target_country.capital = { is_isolated_from_market = no } 
+					}
+				}
+				NAND = {
+					scope:actor = { OR = { c:MSY ?= this c:MLY ?= this } }
+					scope:target_country = { c:SGP ?= this }
+				}
+				NAND = {
+					scope:actor = { OR = { c:MSY ?= this c:MLY ?= this c:SGP ?= this } }
+					scope:target_country = { c:BRU ?= this }
+				}
 			}
-			NAND = {
-				scope:actor = { OR = { c:MSY ?= this c:MLY ?= this c:SGP ?= this } }
-				scope:target_country = { c:BRU ?= this }
-			}
+			
 		}
 		
 		will_break = {
+		
+			#General conditions
+			OR = {
+				is_adjacent_to_country = scope:target_country
+				AND = {
+					supply_network_strength >= 0.75
+					has_port = yes
+					scope:target_country = { has_port = yes }
+				}
+			}
 			NAND = {
 				scope:target_country = { 
 					is_non_customs_union_subject = yes
@@ -176,19 +232,27 @@
 					}
 				}
 			}
-			OR = {
-				is_adjacent_to_country = scope:target_country
-				AND = {
-					supply_network_strength >= 0.75
-					has_port = yes
-					scope:target_country = { has_port = yes }
+			
+			#Special cases
+			trigger_if = {
+				limit = {
+					OR = { c:MSY ?= this c:MLY ?= this c:SGP ?= this c:BRU ?= this }
+					OR = {
+						scope:actor = { is_adjacent_to_country = scope:target_country }
+						scope:target_country.capital = { is_isolated_from_market = no }
+					}
+				}
+				NAND = {
+					scope:actor = { OR = { c:MSY ?= this c:MLY ?= this } }
+					scope:target_country = { c:SGP ?= this }
+				}
+				NAND = {
+					scope:actor = { OR = { c:MSY ?= this c:MLY ?= this c:SGP ?= this } }
+					scope:target_country = { c:BRU ?= this }
 				}
 			}
-			NAND = {
-				scope:actor = { OR = { c:MSY ?= this c:MLY ?= this } }
-				scope:target_country = { c:SGP ?= this }
-			}
-		}		
+			
+		}
 	}
 	
 }
