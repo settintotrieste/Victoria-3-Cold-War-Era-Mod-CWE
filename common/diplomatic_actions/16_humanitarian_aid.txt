@@ -1,4 +1,4 @@
-﻿bankroll = {
+﻿humanitarian_aid = {
 	groups= { general } requires_approval = yes
 	should_notify_third_parties = no
 
@@ -23,30 +23,37 @@
 			NOT = { is_country_type = decentralized }
 		}
 		
+		#TARGET HAS LOW SOL OR FAMINE
+		scope:target_country = { 
+			OR = { 
+				average_sol < 15
+				any_scope_state = {
+					has_famine = yes
+				}
+			}
+		}
+		
 	}
 	
 	possible = {
 	
-		NOT = { has_war_with = scope:target_country }
-		
-		custom_tooltip = {
-			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
-			scope:target_country.relations:root > relations_threshold:poor
+		country_rank > scope:target_country.country_rank
+	
+		has_diplomatic_relevance = scope:target_country
+	
+		scope:target_country = { 
+			NOT = { is_diplomatic_play_enemy_of = root }
 		}
 		
-		has_diplomatic_relevance = scope:target_country
-		
-		#has_healthy_economy = yes
 		in_default = no
-		
-		country_rank > scope:target_country.country_rank
 		
 	}
 	
 	pact = {	
-		cost = 10
-	
+		cost = 25
 		is_two_sided_pact = no
+		infamy_affects_maintenance = yes
+		
 		show_in_outliner = yes
 		can_be_used_in_sway_offers = yes
 		sway_maneuvers_cost = 10
@@ -58,9 +65,81 @@
 		max_paying_country_income_to_transfer = 0.10
 		second_country_gets_income_transfer = yes
 		income_transfer_based_on_second_country = yes
+		income_transfer_to_pops = {
+			allow_discriminated = yes
+			upper_strata_pops = {
+				value = 0
+				
+				if = {
+					limit = {
+						has_law_or_variant = law_type:law_very_low_anti_corruption
+					}
+					add = 0.80
+				}
+				else_if = {
+					limit = {
+						has_law_or_variant = law_type:law_low_anti_corruption
+					}
+					add = 0.40
+				}
+				else_if = {
+					limit = {
+						has_law_or_variant = law_type:law_medium_anti_corruption
+					}
+					add = 0.20
+				}
+				else_if = {
+					limit = {
+						has_law_or_variant = law_type:law_high_anti_corruption
+					}
+					add = 0.10
+				}
+				
+				max = 1
+				min = 0
+			}
+			lower_strata_pops = {
+				value = 0.0
+				
+				if = {
+					limit = {
+						has_law_or_variant = law_type:law_very_low_anti_corruption
+					}
+					add = 0.20
+				}
+				else_if = {
+					limit = {
+						has_law_or_variant = law_type:law_low_anti_corruption
+					}
+					add = 0.60
+				}
+				else_if = {
+					limit = {
+						has_law_or_variant = law_type:law_medium_anti_corruption
+					}
+					add = 0.80
+				}
+				else_if = {
+					limit = {
+						has_law_or_variant = law_type:law_high_anti_corruption
+					}
+					add = 0.90
+				}
+				else = {
+					add = 1
+				}
+
+				max = 1
+				min = 0				
+			}
+		}
+		
+		first_modifier = {
+			country_infamy_generation_mult = -0.01
+		}
 		
 		second_modifier = {
-			country_pact_leverage_generation_add = 200
+			country_pact_leverage_generation_add = 400
 		}
 		
 		weekly_effect = {
@@ -69,7 +148,7 @@
 					NOT = { scope:diplomatic_pact ?= { is_forced_pact = yes } }
 				}	
 				custom_tooltip = {
-					text = bankroll_weekly_obligation_effect
+					text = request_humanitarian_aid_weekly_obligation_effect
 					if = {
 						limit = {
 							root = {
@@ -99,17 +178,11 @@
 		}
 		
 		actor_can_break = {
-			NAND = { 
-				scope:actor = { has_modifier = imf_loan_creditor }
-				scope:target_country = { has_modifier = imf_loan_debtor }
-			}
+			always = yes
 		}
 		
 		target_can_break = {
-			NAND = { 
-				scope:actor = { has_modifier = imf_loan_creditor }
-				scope:target_country = { has_modifier = imf_loan_debtor }
-			}
+			always = yes
 		}
 
 		requirement_to_maintain = {
@@ -126,21 +199,6 @@
 				
 				NOT = { has_war_with = scope:target_country }
 				
-				OR = {
-				
-					custom_tooltip = {
-						text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS_NOT
-						scope:target_country.relations:root > relations_threshold:poor
-					}
-					
-					AND = { 
-						scope:actor = { has_modifier = imf_loan_creditor }
-						scope:target_country = { has_modifier = imf_loan_debtor }
-					}
-					
-				}
-				
-				#has_healthy_economy = yes
 				in_default = no
 				
 			} 
@@ -169,9 +227,6 @@
 			ANTI_AMOUNT = -1
 			FACTOR = appeasement_defensive_pact_formed
 		}
-	
-		#Gain relations incrementally
-		#change_relations = { country = scope:target_country value = 25 }
 		
 		#Notification
 		if = {
@@ -195,11 +250,11 @@
 					value = country_rank
 					multiply = 0.05
 				}				
-			}			
+			}
 		}
 		
-		# This is only used for determining the value of a bankroll in sways, so it follows different logic from normal action acceptance
-		# The format here is as if scope:actor was asking if root wants a bankroll
+		# This is only used for determining the value of a humanitarian_aid in sways, so it follows different logic from normal action acceptance
+		# The format here is as if scope:actor was asking if root wants a humanitarian_aid
 		accept_score = {
 			value = 0
 
@@ -225,6 +280,7 @@
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_GDP"
 				value = "scope:actor.ai_gdp_comparison(root)"
+				multiply = -1
 				max = 20
 				min = -20
 			}
@@ -251,8 +307,8 @@
 			}
 		}		
 	
-		# This is only used for determining the value of a bankroll in sways, so it follows different logic from normal action acceptance
-		# The format here is as if scope:actor was asking for a bankroll from root
+		# This is only used for determining the value of a humanitarian_aid in sways, so it follows different logic from normal action acceptance
+		# The format here is as if scope:actor was asking for a humanitarian_aid from root
 		junior_accept_score = {
 			value = 0
 
@@ -291,7 +347,7 @@
 				add = 2
 				multiply = -10
 				min = -100
-				max = 0
+				max = 100
 			}
 			
 			if = {
@@ -407,8 +463,8 @@
 		will_break = { 
 			NOT = {
 				AND = {
-					has_variable = forced_bankroll_time
-					var:forced_bankroll_time ?= scope:target_country
+					has_variable = forced_humanitarian_aid_time
+					var:forced_humanitarian_aid_time ?= scope:target_country
 				}
 			}
 			OR = {		
@@ -455,8 +511,8 @@
 						scope:target_country = { is_at_war = yes }
 					}			
 				}							
-				# Threshold for breaking off a bankroll is higher than for starting it
-				# We also don't look at weekly_net_fixed_income here since starting a bankroll changes it
+				# Threshold for breaking off a humanitarian_aid is higher than for starting it
+				# We also don't look at weekly_net_fixed_income here since starting a humanitarian_aid changes it
 				NOR = {
 					AND = {
 						income >= 40000
@@ -504,7 +560,7 @@
 	}
 }
 
-request_bankroll = {
+request_humanitarian_aid = {
 	groups= { general } requires_approval = yes
 	should_notify_third_parties = no
 
@@ -524,17 +580,38 @@ request_bankroll = {
 			NOT = { is_country_type = decentralized }
 		}
 		
-		scope:actor.scaled_debt >= 0
+		OR = { 
+			average_sol < 15
+			any_scope_state = {
+				has_famine = yes
+			}
+		}
 		
 	}
 	
 	possible = {
 		
-		any_scope_treaty = { binds = scope:target_country any_scope_article = { has_type = multilateral_development_bank } }
+		scope:target_country = {  
+			
+			country_rank > scope:actor.country_rank
+	
+			has_diplomatic_relevance = scope:actor
+		
+			NOT = { is_diplomatic_play_enemy_of = scope:actor }
+			
+			in_default = no
+			
+			#Country is independent
+			OR = { 
+				is_sufficiently_independent = yes
+				is_direct_subject_of = scope:actor
+			}
+			
+		}
 		
 	}
 	
-	reverse_pact = bankroll
+	reverse_pact = humanitarian_aid
 	
 	ai = {
 		check_acceptance_for_will_propose = yes
