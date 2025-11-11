@@ -23,21 +23,11 @@
 			NOT = { is_country_type = decentralized }
 		}
 		
-		#TARGET HAS LOW SOL OR FAMINE
-		scope:target_country = { 
-			OR = { 
-				average_sol < 15
-				any_scope_state = {
-					has_famine = yes
-				}
-			}
-		}
+		scope:actor.gdp > scope:target_country.gdp
 		
 	}
 	
 	possible = {
-	
-		country_rank > scope:target_country.country_rank
 	
 		has_diplomatic_relevance = scope:target_country
 	
@@ -139,7 +129,7 @@
 		}
 		
 		second_modifier = {
-			country_pact_leverage_generation_add = 400
+			country_pact_leverage_generation_add = 200
 		}
 		
 		weekly_effect = {
@@ -208,6 +198,22 @@
 		requirement_to_maintain = {
 		
 			trigger = {
+				#TARGET HAS LOW SOL OR FAMINE
+				scope:target_country = { 
+					OR = { 
+						average_sol < 20
+						any_scope_state = {
+							has_famine = yes
+						}
+					}
+				}
+			}
+			
+		}
+		
+		requirement_to_maintain = {
+		
+			trigger = {
 			
 				NOT = { has_modifier = imf_loan_debtor }
 				
@@ -260,20 +266,20 @@
 
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
-				value = 5
+				value = -5
 			}
 			
 			add = {
 				desc = "DIPLOMATIC_ACCEPTANCE_RANK"
 	
 				if = {
-					limit = { scope:actor = { country_rank < root.country_rank } }
+					limit = { scope:actor = { country_rank < scope:target_country.country_rank } }
 					value = -5
 				}
 				
 				if = {
-					limit = { scope:actor = { country_rank > root.country_rank } }
-					value = 5
+					limit = { scope:actor = { country_rank > scope:target_country.country_rank } }
+					value = 10
 				}				
 			}				
 			
@@ -286,11 +292,11 @@
 			}
 			
 			if = {
-				limit = { ROOT.scaled_debt >= 0.05 }
+				limit = { scope:target_country.scaled_debt >= 0.05 }
 				
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_DEBT"
-					value = ROOT.scaled_debt
+					value = scope:target_country.scaled_debt
 					multiply = 30	
 					min = 1
 				}					
@@ -303,8 +309,87 @@
 					value = ROOT.scaled_gold_reserves
 					multiply = 20
 					min = 1
-				}						
+					value = scope:target_country.scaled_gold_reserves
+					multiply = -20
+				}
 			}
+			
+			#TARGET has similar ideology as THIS
+			if = {
+				limit = {
+					scope:actor = {
+						NOR = {
+							AND = { 
+								is_some_kind_of_democracy = yes
+								scope:target_country = { is_some_kind_of_democracy = yes }
+							}
+							AND = { 
+								is_a_monarchy = yes
+								scope:target_country = { is_a_monarchy = yes }
+							}
+							AND = { 
+								is_a_communist_government = yes
+								scope:target_country = { is_a_communist_government = yes }
+							}
+							AND = { 
+								is_a_nationalist_government = yes
+								scope:target_country = { is_a_nationalist_government = yes }
+							}
+							AND = { 
+								is_a_theocratic_government = yes
+								scope:target_country = { is_a_theocratic_government = yes }
+							}
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
+					value = -25
+				}
+			}
+			else_if = {
+				limit = {
+					scope:actor = {
+						OR = {
+							AND = { 
+								is_some_kind_of_democracy = yes
+								scope:target_country = { is_some_kind_of_democracy = yes }
+							}
+							AND = { 
+								is_a_monarchy = yes
+								scope:target_country = { is_a_monarchy = yes }
+							}
+							AND = { 
+								is_a_communist_government = yes
+								scope:target_country = { is_a_communist_government = yes }
+							}
+							AND = { 
+								is_a_nationalist_government = yes
+								scope:target_country = { is_a_nationalist_government = yes }
+							}
+							AND = { 
+								is_a_theocratic_government = yes
+								scope:target_country = { is_a_theocratic_government = yes }
+							}
+						}
+						OR = {
+							AND = { 
+								left_wing_ruling_coalition = yes
+								scope:target_country = { left_wing_ruling_coalition = yes }
+							}
+							AND = { 
+								right_wing_ruling_coalition = yes
+								scope:target_country = { right_wing_ruling_coalition = yes }
+							}
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
+					value = 25
+				}
+			}
+			
 		}		
 	
 		# This is only used for determining the value of a humanitarian_aid in sways, so it follows different logic from normal action acceptance
@@ -321,13 +406,13 @@
 				desc = "DIPLOMATIC_ACCEPTANCE_RANK"
 
 				if = {
-					limit = { scope:actor = { country_rank > root.country_rank } }
-					value = -5
+					limit = { scope:actor = { country_rank > scope:target_country.country_rank } }
+					value = 10
 				}
 
 				if = {
-					limit = { scope:actor = { country_rank < root.country_rank } }
-					value = 5
+					limit = { scope:actor = { country_rank < scope:target_country.country_rank } }
+					value = -20
 				}				
 			}				
 
@@ -351,25 +436,101 @@
 			}
 			
 			if = {
-				limit = { scaled_debt >= 0.05 }
+				limit = { ROOT.scaled_debt >= 0.05 }
 				
 				subtract = {
 					desc = "DIPLOMATIC_ACCEPTANCE_DEBT"
-					value = scaled_debt
+					value = ROOT.scaled_debt
 					multiply = 100	
 					min = 1
 				}					
 			}
 			else_if = {
-				limit = { scaled_gold_reserves >= 0.05 }
+				limit = { ROOT.scaled_gold_reserves >= 0.05 }
 				
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_GOLD_RESERVES"				
-					value = scaled_gold_reserves
-					multiply = 25
-					min = 1
+					value = ROOT.scaled_gold_reserves
+					multiply = -25
 				}						
 			}
+			
+			#TARGET has similar ideology as THIS
+			if = {
+				limit = {
+					scope:actor = {
+						NOR = {
+							AND = { 
+								is_some_kind_of_democracy = yes
+								scope:target_country = { is_some_kind_of_democracy = yes }
+							}
+							AND = { 
+								is_a_monarchy = yes
+								scope:target_country = { is_a_monarchy = yes }
+							}
+							AND = { 
+								is_a_communist_government = yes
+								scope:target_country = { is_a_communist_government = yes }
+							}
+							AND = { 
+								is_a_nationalist_government = yes
+								scope:target_country = { is_a_nationalist_government = yes }
+							}
+							AND = { 
+								is_a_theocratic_government = yes
+								scope:target_country = { is_a_theocratic_government = yes }
+							}
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
+					value = -25
+				}
+			}
+			else_if = {
+				limit = {
+					scope:actor = {
+						OR = {
+							AND = { 
+								is_some_kind_of_democracy = yes
+								scope:target_country = { is_some_kind_of_democracy = yes }
+							}
+							AND = { 
+								is_a_monarchy = yes
+								scope:target_country = { is_a_monarchy = yes }
+							}
+							AND = { 
+								is_a_communist_government = yes
+								scope:target_country = { is_a_communist_government = yes }
+							}
+							AND = { 
+								is_a_nationalist_government = yes
+								scope:target_country = { is_a_nationalist_government = yes }
+							}
+							AND = { 
+								is_a_theocratic_government = yes
+								scope:target_country = { is_a_theocratic_government = yes }
+							}
+						}
+						OR = {
+							AND = { 
+								left_wing_ruling_coalition = yes
+								scope:target_country = { left_wing_ruling_coalition = yes }
+							}
+							AND = { 
+								right_wing_ruling_coalition = yes
+								scope:target_country = { right_wing_ruling_coalition = yes }
+							}
+						}
+					}
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
+					value = 25
+				}
+			}
+			
 		}
 	
 		propose_score = {
@@ -581,10 +742,22 @@ request_humanitarian_aid = {
 		}
 		
 		OR = { 
-			average_sol < 15
+			average_sol < 20
 			any_scope_state = {
 				has_famine = yes
 			}
+		}
+		
+		scope:target_country = {  
+			
+			scope:target_country.gdp > scope:actor.gdp
+			
+			#Country is independent
+			OR = { 
+				is_sufficiently_independent = yes
+				is_direct_subject_of = scope:actor
+			}
+			
 		}
 		
 	}
@@ -592,20 +765,12 @@ request_humanitarian_aid = {
 	possible = {
 		
 		scope:target_country = {  
-			
-			country_rank > scope:actor.country_rank
 	
 			has_diplomatic_relevance = scope:actor
 		
 			NOT = { is_diplomatic_play_enemy_of = scope:actor }
 			
 			in_default = no
-			
-			#Country is independent
-			OR = { 
-				is_sufficiently_independent = yes
-				is_direct_subject_of = scope:actor
-			}
 			
 		}
 		
