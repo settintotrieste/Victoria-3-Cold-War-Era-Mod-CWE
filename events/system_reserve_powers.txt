@@ -2750,3 +2750,195 @@ reserve_powers_system.16 = {
 	}
 	
 }
+
+#Ceremonial President's Replacement
+reserve_powers_system.17 = {
+	type = country_event
+
+	title = ceremonial_head_of_state_replace.t
+	desc = ceremonial_head_of_state_replace.d
+	flavor = ceremonial_head_of_state_replace.f
+
+	event_image = {
+		video = "gfx/event_pictures/asia_politician_parliament_motion.bk2"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		#Triggered by event
+		
+	}
+
+	immediate = {
+		
+		random_scope_character = {
+			limit = { 
+				has_modifier = reserved_powers_holder
+			}
+			save_scope_as = ceremonial_head_of_state
+			interest_group ?= { save_scope_as = ceremonial_head_of_state_ig }
+		}
+		
+	}
+	
+	cancellation_trigger = {
+		NOT = { exists = scope:ceremonial_head_of_state }
+	}
+
+	option = {
+		name = ceremonial_head_of_state.option.1 	#Follow Ruler's Ideology
+		default_option = yes
+		
+		#Replace
+		scope:ceremonial_head_of_state ?= {
+			retire_character_scripted_effect = yes
+		}
+		ruler ?= {
+			culture = { save_scope_as = reserved_powers_holder_culture_new }
+			religion = { save_scope_as = reserved_powers_holder_religion_new }
+			interest_group = { save_scope_as = reserved_powers_holder_IG_new }
+		}
+		if = {
+			limit = { 
+				exists = scope:reserved_powers_holder_culture_new
+				exists = scope:reserved_powers_holder_religion_new
+				exists = scope:reserved_powers_holder_IG_new
+			}
+			if = {
+				limit = { has_ideology = ideology:ideology_autocratic }
+				create_character = {
+					is_agitator = yes
+					ideology = ideology_autocratic
+					interest_group = scope:reserved_powers_holder_IG_new
+					religion = scope:reserved_powers_holder_religion_new
+					culture = scope:reserved_powers_holder_culture_new
+					on_created = { 
+						add_modifier = { name = reserved_powers_holder }
+						set_variable = { name = appointed_reserved_powers_holder months = 2 }
+					}
+				}
+			}
+			else_if = {
+				limit = { has_ideology = ideology:ideology_power_hungry }
+				create_character = {
+					is_agitator = yes
+					ideology = ideology_power_hungry
+					interest_group = scope:reserved_powers_holder_IG_new
+					religion = scope:reserved_powers_holder_religion_new
+					culture = scope:reserved_powers_holder_culture_new
+					on_created = { 
+						add_modifier = { name = reserved_powers_holder }
+						set_variable = { name = appointed_reserved_powers_holder months = 2 }
+					}
+				}
+			}
+			else_if = {
+				limit = { has_ideology = ideology:ideology_elitist }
+				create_character = {
+					is_agitator = yes
+					ideology = ideology_elitist
+					interest_group = scope:reserved_powers_holder_IG_new
+					religion = scope:reserved_powers_holder_religion_new
+					culture = scope:reserved_powers_holder_culture_new
+					on_created = { 
+						add_modifier = { name = reserved_powers_holder }
+						set_variable = { name = appointed_reserved_powers_holder months = 2 }
+					}
+				}
+			}
+			else_if = {
+				limit = { has_ideology = ideology:ideology_democratic }
+				create_character = {
+					is_agitator = yes
+					ideology = ideology_democratic
+					interest_group = scope:reserved_powers_holder_IG_new
+					religion = scope:reserved_powers_holder_religion_new
+					culture = scope:reserved_powers_holder_culture_new
+					on_created = { 
+						add_modifier = { name = reserved_powers_holder }
+						set_variable = { name = appointed_reserved_powers_holder months = 2 }
+					}
+				}
+			}
+			else_if = {
+				limit = { has_ideology = ideology:ideology_liberal }
+				create_character = {
+					is_agitator = yes
+					ideology = ideology_liberal
+					interest_group = scope:reserved_powers_holder_IG_new
+					religion = scope:reserved_powers_holder_religion_new
+					culture = scope:reserved_powers_holder_culture_new
+					on_created = { 
+						add_modifier = { name = reserved_powers_holder }
+						set_variable = { name = appointed_reserved_powers_holder months = 2 }
+					}
+				}
+			}
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			interest_group = scope:ceremonial_head_of_state_ig
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = ceremonial_head_of_state.option.2 #Leave it to chance
+		
+		#Remove character
+		random_scope_character = { 
+			limit = {
+				has_modifier = reserved_powers_holder
+				is_ruler = no
+			}
+			retire_character_scripted_effect = yes
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = medium_radicals
+			interest_group = scope:ceremonial_head_of_state_ig
+		}
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
