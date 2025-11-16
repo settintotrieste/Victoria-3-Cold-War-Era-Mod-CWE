@@ -3,7 +3,7 @@ namespace = HND_gov_changes
 # The State of Jammu and Kashmir
 HND_gov_changes.1 = {
     type = country_event
-	placement = scope:colonial_state
+	placement = c:KAS
 
     title = HND_1952_revolution.t 							# Title of the event; ADD LOCALISATION
     desc = HND_1952_revolution.d 							# Description of the event; ADD LOCALISATION
@@ -28,9 +28,14 @@ HND_gov_changes.1 = {
 		is_at_war = no											# war = no
 		
 		#Owns Kashmir
-		NOT = { exists = c:KAS }
-		has_state_in_state_region = STATE_KASHMIR
+		exists = c:KAS
+		c:KAS ?= {
+			is_direct_subject_of = ROOT
+			is_sufficiently_independent = no
+			NOT = { is_subject_type = subject_type_special_administrative_region }
+		}
 		
+		#Pressure from Pakistan
 		exists = c:PAK
 		c:PAK ?= {
 			has_state_in_state_region = STATE_KASHMIR
@@ -45,45 +50,26 @@ HND_gov_changes.1 = {
 	
 	immediate = {
 	
-		#Mark
-		random_scope_state = {
-			limit = {
-				state_region = { is_homeland = cu:kashmiri }	# Change homeland identity to match colony to be released ****
-			}
-			save_scope_as = colonial_state
-		}
-	
 		# Fire only once
 		set_variable = HND_1952_hgc								# Change variable ****
 		
 	}
     
     option = {
-        name = historical_gov_changes.option.1					# Accept
+        name = KAS_Special_Status.option.1						# Accept
         highlighted_option = yes
 		
-		#Release Kashmir as an SAR
-		create_country = {
-			tag = KAS										# Change TAG of country being released ****
-			origin = ROOT									# TAG where the created country takes tech from
-			state = scope:colonial_state
-
-			on_created = {									# Set government laws & rulers here
-	
-				# SET laws for colony ****
-				effect_starting_politics_presidential_republic = yes
-				effect_starting_politics_democratic = yes
-				effect_starting_politics_constitutional_unitary_state = yes
-				effect_starting_politics_war_policy_pro_military = yes
-				effect_starting_politics_economic_policy_interventionism = yes
-				effect_starting_politics_trade_policy_protectionism = yes
-				effect_starting_politics_anti_nuclear_policy = yes
-				
-				effect_starting_politics_specialisation_natural_resource = yes
-
-				effect_starting_politics_fiat_standard = yes
-				
-				#PM
+		#Reorder Kashmir
+		c:KAS ?= {
+			effect_starting_politics_parliamentary_republic = yes
+			if = {
+				limit = { any_scope_character = { has_variable = Sheikh_Abdullah } }
+				random_scope_character = { 
+					limit = { has_variable = Sheikh_Abdullah }
+					set_character_as_ruler = yes
+				}
+			}
+			else = {
 				create_character = {
 					first_name = "Sheikh_Abdullah_first_name"
 					last_name = "Sheikh_Abdullah_last_name"
@@ -100,12 +86,7 @@ HND_gov_changes.1 = {
 					}
 					on_created = { set_variable = Sheikh_Abdullah }
 				}
-	
-				# Set diplomatic recognition
-				set_country_type = unrecognized
-				
 			}
-	
 		}
 		if = {
 			limit = { exists = c:KAS }
@@ -148,7 +129,66 @@ HND_gov_changes.1 = {
     }
 	
 	option = {
-        name = historical_gov_changes.option.2					# Reject
+        name = KAS_Special_Status.option.2						# Accept
+		
+		#Reorder Kashmir
+		c:KAS ?= {
+		
+			#Domestic reaction
+			add_radicals = {
+				value = large_radicals
+				strata = middle
+			}
+			add_radicals = {
+				value = very_large_radicals
+				strata = lower
+			}
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:kashmiri }	# Change homeland identity to match colony to be released ****
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+		}
+		if = {
+			limit = { exists = c:KAS }
+			create_diplomatic_pact = { 
+				country = c:KAS
+				type = special_administrative_region 
+			}
+			create_diplomatic_pact = { 
+				country = c:KAS
+				type = legal_union
+			}
+			create_diplomatic_pact = { 
+				country = c:KAS
+				type = currency_union
+			}
+		}
+		
+		#Discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
+		}
+		
+    }
+	
+	option = {
+        name = KAS_Special_Status.option.3						# Reject
 		default_option = yes
 		
 		# Add Infamy
@@ -157,20 +197,25 @@ HND_gov_changes.1 = {
 			value = 20
 		}
 		
-		#Domestic reaction
-		every_scope_state = {
-			limit = {
-		 		state_region = { is_homeland = cu:kashmiri }	# Change homeland identity to match colony to be released ****
-		 	}
-			add_radicals_in_state = {
-				culture = cu:kashmiri							# Change culture ****
-				value = very_large_radicals
+		#Conquer
+		c:KAS ?= {
+			create_diplomatic_play = {
+				name = kashmir_war_of_independence
+				type = dp_independence
+				target_country = ROOT
+				
+				#war = yes
+				
+				add_war_goal = {
+					holder = ROOT
+					type = annex_country
+					target_country = c:KAS
+				}
 			}
-			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
 		}
 		
 		ai_chance = { 
-			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 }
 		}
 		
     }
