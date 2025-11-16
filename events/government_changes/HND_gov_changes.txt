@@ -1,7 +1,129 @@
 namespace = HND_gov_changes
 
-# The State of Jammu and Kashmir
+# Dismissal of Viceroy Wavell
 HND_gov_changes.1 = {
+    type = country_event
+	placement = c:HND
+
+    title = HND_1947_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = HND_1947_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = HND_1947_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		has_global_variable = 1946_start_date
+		
+		#Overlord conditions
+		c:GBR ?= this
+		game_date >= 1947.2.21									# START DATE: Date colony became self governing ****
+		game_date < 1957.2.21									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democratic_monarchy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Left wing government
+		ruler ?= { interest_group = { is_interest_group_type = ig_trade_unions } }
+		
+		# Event has not been fired before
+		NOT = { has_variable = HND_1947_hgc }					# CHANGE ****
+		
+		#British Raj
+		exists = c:HND
+		c:HND ?= {
+			is_a_colonial_government = yes							# Correct gov types
+			is_sufficiently_independent = no						# is_vassal = no		
+			is_at_war = no											# war = no
+			is_direct_subject_of = ROOT
+		}
+		
+		#Viceroy
+		c:HND ?= {
+			has_journal_entry = je_constitutional_monarchy
+			any_scope_character = {
+				has_variable = Archibald_Wavell
+				has_modifier = viceroy_character
+			}
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = HND_1947_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#British Conservatives hate this
+		add_radicals = {
+			value = very_large_radicals
+			strata = upper
+		}
+		
+		#Install new Viceroy
+		c:HND ?= {
+			random_scope_character = {
+				limit = { has_variable = Archibald_Wavell }
+				retire_character_scripted_effect = yes
+			}
+			set_variable = Archibald_Wavell_dismissed
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Socialists hate this
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		
+		#Consequences
+		c:HND ?= {
+			#Mark for AH
+			set_variable = Archibald_Wavell_option
+			
+			#Domestic reaction
+			add_radicals = {
+				value = very_large_radicals
+				strata = lower
+			}
+			add_modifier = { 
+				name = domestic_unrest
+				years = 5
+				is_decaying = yes 
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The State of Jammu and Kashmir
+HND_gov_changes.2 = {
     type = country_event
 	placement = c:KAS
 
@@ -224,7 +346,7 @@ HND_gov_changes.1 = {
 }
 
 # The Emergency
-HND_gov_changes.2 = {
+HND_gov_changes.3 = {
     type = country_event
 
     title = HND_1975_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -300,7 +422,7 @@ HND_gov_changes.2 = {
 }
 
 # End of the Emergency
-HND_gov_changes.3 = {
+HND_gov_changes.4 = {
     type = country_event
 
     title = HND_1977_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -371,7 +493,7 @@ HND_gov_changes.3 = {
 }
 
 # The Assassination of Indira Gandhi
-HND_gov_changes.4 = {
+HND_gov_changes.5 = {
     type = country_event
 
     title = HND_1984_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -455,7 +577,7 @@ HND_gov_changes.4 = {
 }
 
 # The Assassination of Rajiv Gandhi
-HND_gov_changes.5 = {
+HND_gov_changes.6 = {
     type = country_event
 
     title = HND_1991_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -537,7 +659,7 @@ HND_gov_changes.5 = {
 }
 
 # Direct Rule in Jammu and Kashmir
-HND_gov_changes.6 = {
+HND_gov_changes.7 = {
     type = country_event
 	placement = scope:colonial_state
 
