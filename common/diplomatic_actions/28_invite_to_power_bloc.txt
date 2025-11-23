@@ -39,19 +39,12 @@
 
 	possible = {
 	
-		scope:target_country = {
-			save_temporary_scope_as = THIS_scope
-			custom_tooltip = {
-				text = NOT_superstate_customs_union_TAG.tt
-				NAND = {
-					has_variable = superstate_customs_union
-					power_bloc ?= {
-						has_identity = identity:identity_superstate
-					}
-				}
-			}
+		# THIS has good relations with TARGET
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+			scope:target_country.relations:root >= relations_threshold:cordial
 		}
-	
+		
 		# Must not be able to immediately start a power struggle
 		custom_tooltip = {
 			text = "NO_POWER_STRUGGLE_BLOC_JOIN"		
@@ -61,26 +54,30 @@
 			}
 		}
 	
-		power_bloc = {
+		power_bloc ?= {
 			leverage_advantage = {
 				target = scope:target_country
 				value >= leverage_threshold_to_invite
 			}
-
 			NOT = {
 				any_power_bloc_member = {
 					is_diplomatic_play_enemy_of = scope:target_country
 				}
 			}
 		}
-		
-		custom_tooltip = {
-			# This effectively sets a 2 year cooldown on invites. This length needs to be updated both in loc and in the catalyst definition
-			text = invite_to_power_bloc_recently_declined
-			NOT = {
-				any_diplomatic_catalyst = {
-					is_diplomatic_catalyst_type = catalyst_declined_bloc_invite
-					target = scope:target_country
+	
+		scope:target_country = {
+			save_temporary_scope_as = THIS_scope
+			custom_tooltip = {
+				text = NOT_superstate_customs_union_TAG.tt
+				NAND = {
+					OR = { 
+						has_variable = superstate_customs_union
+						power_bloc ?= {
+							has_identity = identity:identity_superstate
+						}
+					}
+					shares_same_superstate = no
 				}
 			}
 		}
@@ -96,6 +93,18 @@
 				text = shares_same_superstate.tt
 				scope:target_country = { 
 					shares_same_superstate = yes
+				}
+			}
+		}
+		
+		#Timer
+		custom_tooltip = {
+			# This effectively sets a 2 year cooldown on invites. This length needs to be updated both in loc and in the catalyst definition
+			text = invite_to_power_bloc_recently_declined
+			NOT = {
+				any_diplomatic_catalyst = {
+					is_diplomatic_catalyst_type = catalyst_declined_bloc_invite
+					target = scope:target_country
 				}
 			}
 		}
