@@ -18,8 +18,7 @@ CAR_gov_changes.1 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:CAR
-		this = c:CAR											# Change TAG of the overlord ****
+		c:CAR ?= this
 		game_date >= 1965.12.31									# START DATE: Date colony became self governing ****
 		game_date < 1975.12.31									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -121,8 +120,7 @@ CAR_gov_changes.2 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:CAR
-		this = c:CAR											# Change TAG of the overlord ****
+		c:CAR ?= this
 		game_date >= 1976.12.4									# START DATE: Date colony became self governing ****
 		game_date < 1986.12.4									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -201,26 +199,7 @@ CAR_gov_changes.3 = {
 	
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
-		#Overlord conditions
-		exists = c:CAR
-		this = c:CAR											# Change TAG of the overlord ****
-		game_date >= 1979.4.21									# START DATE: Date colony became self governing ****
-		game_date < 1995.4.21									# END DATE: All historical events must not fire 10 years after the START DATE ****
-		
-		is_a_regime_monarchy = yes								# Correct gov types
-		is_sufficiently_independent = yes						# is_vassal = no		
-		is_at_war = no											# war = no
-		
-		#Organised by France
-		exists = c:FRA
-		c:FRA = {
-			is_a_democracy = yes
-			is_sufficiently_independent = yes
-			is_at_war = no
-		}
-		
-		# Event has not been fired before
-		NOT = { has_variable = CAR_1979_hgc }					# CHANGE ****
+		#Triggered by event
 		
     }
 	
@@ -234,9 +213,6 @@ CAR_gov_changes.3 = {
     option = {
         name = historical_gov_changes.option.1					# Accept
         highlighted_option = yes
-		
-		#Becomes independent
-		make_independent = yes
 		
 		#Enact new regime
 		effect_starting_politics_presidential_republic = yes
@@ -267,6 +243,23 @@ CAR_gov_changes.3 = {
 	option = {
         name = historical_gov_changes.option.2				# Reject
 		default_option = yes
+		
+		#Attacked by France
+		c:FRA ?= {
+			create_diplomatic_play = {
+				name = congolese_war
+				type = dp_regime_change
+				target_country = c:CAR
+				
+				#war = yes
+				
+				add_war_goal = {
+					holder = ROOT
+					type = humiliation
+					target_country = c:FRA
+				}
+			}
+		}
 		
 		#Major discontent
 		add_radicals = {

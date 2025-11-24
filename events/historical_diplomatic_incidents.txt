@@ -3593,3 +3593,104 @@ historical_diplomatic_incidents.36 = {
     }
 
 }
+
+# Operation Caban, 1979
+historical_diplomatic_incidents.37 = {
+    type = country_event
+	placement = c:CAR
+
+    title = Operation_Caban.t 									# Title of the event; ADD LOCALISATION
+    desc = Operation_Caban.d 									# Description of the event; ADD LOCALISATION
+    #flavor = Operation_Caban.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_battlefield_trenches.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:FRA ?= this											# Change TAG of the overlord ****
+		game_date >= 1979.9.19									# START DATE: Date colony became self governing ****
+		game_date < 1989.9.19									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_republican_government = yes
+		is_sufficiently_independent = yes
+		is_at_war = no
+		
+		country_rank >= rank_value:great_power
+		is_not_neutral = yes
+		
+		#Cause of unrest
+		exists = c:CAR
+		c:CAR ?= {
+			is_a_regime_monarchy = yes							# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no		
+			is_at_war = no										# war = no
+			OR = { is_subject_of = ROOT is_subject = no }
+		}
+		NOT = { is_subject_of = c:CAR }
+		
+		# Event has not been fired before
+		NOT = { has_variable = Operation_Caban_hdi }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = Operation_Caban_hdi						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#CAR to react
+		create_incident = {
+			country = c:CAR
+			value = 5
+		}
+		c:CAR ?= { trigger_event = { id = CAR_gov_changes.3 } }
+		
+		#Domestic reaction
+		add_loyalists = {
+			value = small_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2					# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
