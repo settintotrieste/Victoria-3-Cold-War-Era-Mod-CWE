@@ -724,3 +724,118 @@ CAM_gov_changes.6 = {
     }
 
 }
+
+# Hun Manet
+CAM_gov_changes.7 = {
+    type = country_event
+
+    title = CAM_2023_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = CAM_2023_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = CAM_2023_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:CAM ?= this
+		game_date >= 2023.8.22									# START DATE: Date colony became self governing ****
+		game_date < 2033.8.22									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_constitutional_monarchy_regime = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Father
+		ruler ?= { has_variable = Hun_Sen }
+		
+		# Event has not been fired before
+		NOT = { has_variable = CAM_2023_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = CAM_2023_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_dictatorship = yes
+		
+		#Hun Manet
+		if = {
+			limit = { any_scope_character = { has_variable = Hun_Manet } }
+			random_scope_character = {
+				limit = { has_variable = Hun_Manet }
+				set_character_as_ruler = yes
+				set_variable = dynastic_ruler_enabled
+			}
+		}
+		else = {
+			create_character = {
+				first_name = "Hun_Manet_first_name"
+				last_name = "Hun_Manet_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1977.10.20
+				interest_group = ig_landowners
+				ideology = ideology_autocratic
+				religion = rel:atheist
+				traits = {
+					direct
+					ambitious
+					erudite
+				}
+				on_created = { 
+					set_variable = Hun_Manet
+					set_variable = dynastic_ruler_enabled 
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#End dynastic republic
+		if = {
+			limit = { 
+				is_a_dynastic_government = yes
+			}
+			custom_tooltip = {
+				text = abolish_dynastic_republic.tt
+				ruler ?= { remove_variable = dynastic_ruler_enabled }
+				heir ?= { disinherit_character = yes }
+			}
+		}
+		
+		#Major discontent
+		add_modifier = { 
+			name = party_in_chaos_modifier
+			months = 12
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
