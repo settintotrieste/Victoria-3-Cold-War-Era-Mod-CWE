@@ -725,8 +725,86 @@ CAM_gov_changes.6 = {
 
 }
 
-# Hun Manet
+# Consolidation of Power by Hun Sen
 CAM_gov_changes.7 = {
+    type = country_event
+
+    title = CAM_2018_revolution.t 								# Title of the event; ADD LOCALISATION
+    desc = CAM_2018_revolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = CAM_2018_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:CAM ?= this
+		game_date >= 2018.7.29									# START DATE: Date colony became self governing ****
+		game_date < 2028.7.29									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_constitutional_monarchy_regime = yes
+		country_has_voting_franchise = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Correct ruler
+		ruler ?= { has_variable = Hun_Sen }
+		
+		# Event has not been fired before
+		NOT = { has_variable = CAM_2018_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = CAM_2018_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_dictatorship = yes
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = lower
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Hun Manet
+CAM_gov_changes.8 = {
     type = country_event
 
     title = CAM_2023_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -748,6 +826,7 @@ CAM_gov_changes.7 = {
 		game_date < 2033.8.22									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
 		is_a_constitutional_monarchy_regime = yes
+		country_has_voting_franchise = no
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
@@ -769,9 +848,6 @@ CAM_gov_changes.7 = {
     option = {
         name = historical_gov_changes.option.1					# Accept
         highlighted_option = yes
-		
-		#Enact new regime
-		effect_starting_politics_dictatorship = yes
 		
 		#Hun Manet
 		if = {
