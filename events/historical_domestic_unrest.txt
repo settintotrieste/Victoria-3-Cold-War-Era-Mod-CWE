@@ -9491,3 +9491,463 @@ historical_domestic_unrest.98 = {
     }
 
 }
+
+# Jamal Khashoggi, 2003
+historical_domestic_unrest.99 = {
+    type = country_event
+
+    title = NEJ_Jamal_Khashoggi_2003.t 							# Title of the event; ADD LOCALISATION
+    desc = NEJ_Jamal_Khashoggi_2003.d 							# Description of the event; ADD LOCALISATION
+    #flavor = NEJ_Jamal_Khashoggi_2003.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2" }
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:NEJ ?= this											# Change TAG of the overlord ****
+		game_date >= 2003.2.1									# START DATE: Date colony became self governing ****
+		game_date < 2013.2.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_regime_monarchy = yes								# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		#is_at_war = no											# war = no
+		
+		#Cause of unrest
+		OR = {
+			has_law_or_variant = law_type:law_outlawed_dissent
+			has_law_or_variant = law_type:law_censorship
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = NEJ_Jamal_Khashoggi_2003_hdu }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = NEJ_Jamal_Khashoggi_2003_hdu				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		
+		#Jamal Khashoggi
+		create_character = {
+			first_name = "Jamal_Khashoggi_first_name"
+			last_name = "Jamal_Khashoggi_last_name"
+			is_agitator = yes historical = yes
+			birth_date = 1958.10.13
+			interest_group = ig_petty_bourgeoisie
+			ideology = ideology_agitator_pro_human_rights
+            culture = cu:bedouin
+			religion = rel:sunni
+			traits = {
+				pious
+				direct
+				charismatic
+			}
+			on_created = { set_variable = Jamal_Khashoggi }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2				# No
+		default_option = yes
+		
+		#Reforms
+		activate_law = law_type:law_full_free_speech
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			strata = upper
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Assassination of Jamal Khashoggi
+historical_domestic_unrest.100 = {
+    type = country_event
+	placement = s:STATE_ISTANBUL
+
+    title = NEJ_Jamal_Khashoggi_2018.t 							# Title of the event; ADD LOCALISATION
+    desc = NEJ_Jamal_Khashoggi_2018.d 							# Description of the event; ADD LOCALISATION
+    #flavor = NEJ_Jamal_Khashoggi_2018.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_public_figure_assassination.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:NEJ ?= this											# Change TAG of the overlord ****
+		game_date >= 2018.10.2									# START DATE: Date colony became self governing ****
+		game_date < 2028.10.2									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_regime_monarchy = yes								# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = NEJ_Jamal_Khashoggi_2018_hdu }	# CHANGE ****
+		
+		#Cause of unrest
+		OR = {
+			has_law_or_variant = law_type:law_outlawed_dissent
+			has_law_or_variant = law_type:law_censorship
+		}
+		exists = c:TUR
+		c:TUR ?= {
+			OR = { 
+				is_a_republican_government = yes
+				is_a_democracy = yes
+			}
+			is_sufficiently_independent = yes
+			is_at_war = no
+			has_state_in_state_region = STATE_ISTANBUL
+		}
+		any_scope_character = {
+			has_role = agitator
+			has_variable = Jamal_Khashoggi
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = NEJ_Jamal_Khashoggi_2018_hdu				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		default_option = yes
+		
+		#Kill character
+		random_scope_character = {
+			limit = { has_variable = Jamal_Khashoggi }
+			kill_character = yes
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		
+		#International reaction
+		create_incident = {
+			value = 10
+			country = ROOT
+		}
+		every_country = {
+			limit = { 
+				OR = { c:TUR ?= this c:USA ?= this }
+				OR = { 
+					is_a_republican_government = yes
+					is_a_democracy = yes
+				}
+				is_sufficiently_independent = yes
+			}
+			change_relations = { country = ROOT value = -50 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2				# No
+		
+		#Domestic reaction
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_landowners
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Bloody May Day, 1952
+historical_domestic_unrest.101 = {
+    type = country_event
+
+    title = JAP_protest_1952.t 									# Title of the event; ADD LOCALISATION
+    desc = JAP_protest_1952.d 									# Description of the event; ADD LOCALISATION
+    #flavor = JAP_protest_1952.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:JAP ?= this											# Change TAG of the overlord ****
+		game_date >= 1952.5.1									# START DATE: Date colony became self governing ****
+		game_date < 1962.5.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democratic_constitutional_monarchy = yes			# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = JAP_protest_1952_hdu }			# CHANGE ****
+		
+		owns_entire_state_region = STATE_KANTO
+		
+		#Causes
+		right_wing_ruling_coalition = yes
+		OR = {
+			has_law_or_variant = law_type:law_restricted_trade_unions
+			has_law_or_variant = law_type:law_full_trade_unions
+		}
+		exists = c:USA
+		c:USA ?= {
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+		}
+		is_subject_of = c:USA
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = JAP_protest_1952_hdu						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		
+		#Increase policing on socialists
+		if = {
+			limit = { NOT = { has_law_or_variant = law_type:law_draconian_policing } }
+			activate_law = law_type:law_draconian_policing
+		}
+		if = {
+			limit = { has_law_or_variant = law_type:law_worker_protections }
+			activate_law = law_type:law_regulatory_bodies
+		}
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_trade_unions
+			value = very_large_radicals
+		}
+		if = {
+			limit = { NOT = { any_political_movement = { is_political_movement_type = movement_communist } } }
+			create_political_movement = { type = movement_communist }
+		}
+		
+		#Loss of support for Socialists
+		ig:ig_trade_unions ?= {
+			add_modifier = { 
+				name = politically_weakened_interest_group 
+				years = 5 
+				is_decaying = yes 
+			}
+		}
+		
+		#Growing liberty desire
+		add_liberty_desire = 25
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2				# No
+		default_option = yes
+		
+		#Socialist Republic
+		effect_starting_politics_communist_republic = yes
+		
+		#Independence
+		create_diplomatic_play = {
+			name = kashmir_insurgency_war
+			type = dp_independence
+			target_country = c:USA
+		
+			#war = yes
+			
+			add_war_goal = {
+				holder = c:USA
+				type = regime_change
+				target_country = ROOT
+			}
+		}
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_landowners
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_industrialists
+			value = very_large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Sunagawa Struggle, 1955
+historical_domestic_unrest.102 = {
+    type = country_event
+
+    title = JAP_protest_1955.t 									# Title of the event; ADD LOCALISATION
+    desc = JAP_protest_1955.d 									# Description of the event; ADD LOCALISATION
+    #flavor = JAP_protest_1955.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:JAP ?= this											# Change TAG of the overlord ****
+		game_date >= 1955.5.4									# START DATE: Date colony became self governing ****
+		game_date < 1965.5.4									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = JAP_protest_1955_hdu }			# CHANGE ****
+		
+		owns_entire_state_region = STATE_KANTO
+		
+		#Causes
+		exists = c:USA
+		c:USA ?= {
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+		}
+		OR = {
+			is_subject_of = c:USA
+			any_scope_treaty = { binds = c:USA any_scope_article = { has_type = defensive_pact } }
+			any_scope_treaty = { binds = ROOT any_scope_article = { has_type = alliance } }
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = JAP_protest_1955_hdu						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_trade_unions
+			value = very_large_radicals
+		}
+		if = {
+			limit = { NOT = { any_political_movement = { is_political_movement_type = movement_communist } } }
+			create_political_movement = { type = movement_communist }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2				# No
+		default_option = yes
+		
+		#Gain of support for Socialists
+		ig:ig_trade_unions ?= {
+			add_modifier = { 
+				name = politically_strengthened_modifier
+				years = 5 
+				is_decaying = yes 
+			}
+		}
+		
+		#Major discontent
+		add_radicals = {
+			interest_group = ig:ig_landowners
+			value = very_large_radicals
+		}
+		add_radicals = {
+			interest_group = ig:ig_industrialists
+			value = very_large_radicals
+		}
+		add_modifier = { 
+			name = domestic_unrest
+			years = 5
+			is_decaying = yes 
+		}
+		
+		#Lose relations with USA
+		change_relations = { 
+			country = c:USA
+			value = -100
+		}
+		
+		#Growing liberty desire
+		add_liberty_desire = 50
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
