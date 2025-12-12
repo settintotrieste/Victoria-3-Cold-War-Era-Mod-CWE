@@ -98,7 +98,7 @@
 				# Trigger for whether this tag is valid to used
 				# root = political movement
 				trigger = {
-					owner ?= { is_involved_in_journal_entry = je_acw_countdown }
+					owner ?= { has_journal_entry = je_acw_countdown }
 				}
 				# The weight for this tag to be picked over other valid option
 				weight = x
