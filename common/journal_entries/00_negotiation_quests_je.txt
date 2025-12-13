@@ -1,0 +1,826 @@
+﻿je_negotiate_army_quest = {
+    icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	group = je_group_internal_affairs
+
+    scripted_button = negotiation_go_away_button
+    scripted_button = negotiation_extension_button
+
+    immediate = {
+        random_interest_group = {
+            limit = {
+                has_variable = ig_new_quest_starting
+                has_variable = promise_quest_type
+                var:promise_quest_type = 1 #grow army
+            }
+            save_scope_as = ig
+            remove_variable = ig_new_quest_starting
+            #IG already has var:promise_quest_degree
+            #IG already has var:desired_army_size
+            #IG already has var:promise_quest_degree
+        }
+        scope:ig = {
+            set_variable = {
+                name = starting_army_amount
+                value = owner.army_power_projection
+            }
+            set_variable = {
+                name = current_army_amount
+                value = owner.army_power_projection
+            }
+        }
+    }
+
+    on_monthly_pulse = { #powers division of fail effects
+        effect = {
+            scope:ig = {
+                set_variable = {
+                    name = current_army_amount
+                    value = owner.army_power_projection
+                }
+            }
+        }
+    }
+
+    status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_negotiate_army_quest_status
+			}
+		}
+	}
+
+    complete = {
+        trigger_if = {
+            limit = { #grow army quest type
+                scope:ig.var:promise_quest_type = 1
+            }
+            army_power_projection > scope:ig.var:desired_army_size
+        }
+    }
+
+    on_complete = {
+        promise_quest_completed = yes           
+    }
+
+    fail = {
+        OR = {
+            is_promise_abandoned = yes
+            custom_tooltip = {
+                text = time_runs_out_tt
+                scope:journal_entry.journal_entry_age >= {
+                    value = 3650 # 5 years
+                    if = {
+                        limit = {
+                            scope:journal_entry = {
+                                has_variable = asked_for_extension_var
+                            }
+                        }
+                        add = 1095
+                    }
+                }
+            }
+        }
+    }
+
+    on_fail = {
+		promise_quest_failed = yes
+    }
+
+    invalid = {
+    }
+
+    on_timeout = {
+        hidden_effect = { #no need to repeat this on UI
+            promise_quest_failed = yes
+        }
+    }
+
+    on_invalid = {
+    }
+
+    timeout = {
+        value = 3650 # 5 years
+        if = {
+            limit = {
+                scope:journal_entry = {
+                    has_variable = asked_for_extension_var
+                }
+            }
+            add = 1095
+        }
+    }
+    # pinned to promise_grow_army_tt
+
+    weight = 1000
+
+    should_be_pinned_by_default = yes
+}
+
+je_government_petition_negotiation_version = {
+    icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+###MUST ALSO DUPLICATE ANY CHANGES TO THE BELOW VERSION2
+
+    group = je_group_internal_affairs
+
+    scripted_button = negotiation_go_away_button
+    scripted_button = negotiation_extension_button
+
+    immediate = {
+        je_government_petition_negotiation_immediate = yes
+        ##sets government_petition_law
+    }
+
+    status_desc = {
+        first_valid = {
+            triggered_desc = {
+                desc = je_government_petition_negotiation_months_passed
+                trigger = {
+                    is_enacting_law = scope:government_petition_law.type
+                }
+            }
+            triggered_desc = {
+                desc = je_government_petition_negotiation_version_status
+                trigger = {
+                    always = yes
+                }
+            }
+        }
+    }
+
+    on_monthly_pulse = { #powers division of fail effects
+        effect = {
+            je_government_petition_negotiation_monthly_pulse = yes
+        }
+    }
+
+    on_yearly_pulse = {
+        effect = {
+            je_government_petition_negotiation_yearly_pulse = yes
+        }
+    }
+
+    complete = {
+        exists = scope:government_petition_law
+        has_law = scope:government_petition_law.type
+    }
+
+    on_complete = {
+        promise_quest_completed = yes
+    }
+
+    fail = {
+        OR = {
+            is_promise_abandoned = yes
+            custom_tooltip = {
+                text = time_runs_out_tt
+                scope:journal_entry.journal_entry_age >= {
+                    value = 2555 # 7 years
+                    if = {
+                        limit = {
+                            scope:journal_entry = {
+                                has_variable = asked_for_extension_var
+                            }
+                        }
+                        add = 1095
+                    }
+                }
+            }
+        }
+    }
+
+    on_fail = {
+		promise_quest_failed = yes
+    }
+
+    invalid = {
+        OR = {
+            scope:ig ?= {
+                law_enactment_stance = {
+                    law = scope:government_petition_law.type
+                    value < approve
+                }
+            }
+            NOT = {
+                exists = scope:government_petition_law
+            }
+        }
+    }
+
+    on_timeout = {
+        hidden_effect = { #no need to repeat this on UI
+            promise_quest_failed = yes
+        }
+    }
+
+    on_invalid = {
+        quest_cleanup = yes
+    }
+
+    timeout = {
+        value = 2555 # 7 years
+        if = {
+            limit = {
+                scope:journal_entry = {
+                    has_variable = asked_for_extension_var
+                }
+            }
+            add = 1095
+        }
+    }
+
+    weight = 1000
+
+    should_be_pinned_by_default = yes
+}
+
+
+je_government_petition_negotiation_version_b = {
+    icon = "gfx/interface/icons/event_icons/tutorial_icon.dds"
+
+##A second version so player can have two promises at once, but no more!
+###MUST ALSO DUPLICATE ANY CHANGES TO THE ABOVE ORIGINAL
+
+    group = je_group_internal_affairs
+
+    scripted_button = negotiation_go_away_button
+    scripted_button = negotiation_extension_button
+
+    immediate = {
+        je_government_petition_negotiation_immediate = yes
+        ##sets government_petition_law
+    }
+
+    on_monthly_pulse = { #powers division of fail effects
+        effect = {
+            je_government_petition_negotiation_monthly_pulse = yes
+        }
+    }
+
+    on_yearly_pulse = {
+        effect = {
+            je_government_petition_negotiation_yearly_pulse = yes
+        }
+    }
+
+    status_desc = {
+        first_valid = {
+            triggered_desc = {
+                desc = je_government_petition_negotiation_months_passed
+                trigger = {
+                    is_enacting_law = scope:government_petition_law.type
+                }
+            }
+            triggered_desc = {
+                desc = je_government_petition_negotiation_version_status
+                trigger = {
+                    always = yes
+                }
+            }
+        }
+    }
+
+    complete = {
+        exists = scope:government_petition_law
+        has_law = scope:government_petition_law.type
+    }
+
+    on_complete = {
+        promise_quest_completed = yes
+    }
+
+    fail = {
+        OR = {
+            is_promise_abandoned = yes
+            custom_tooltip = {
+                text = time_runs_out_tt
+                scope:journal_entry.journal_entry_age >= {
+                    value = 4565 # 12.5 years
+                    if = {
+                        limit = {
+                            scope:journal_entry = {
+                                has_variable = asked_for_extension_var
+                            }
+                        }
+                        add = 1095
+                    }
+                }
+            }
+        }
+    }
+
+    on_fail = {
+		promise_quest_failed = yes
+    }
+
+    invalid = {
+        OR = {
+            scope:ig ?= {
+                law_enactment_stance = {
+                    law = scope:government_petition_law.type
+                    value < approve
+                }
+            }
+            NOT = {
+                exists = scope:government_petition_law
+            }
+        }
+    }
+
+    on_timeout = {
+        hidden_effect = { #no need to repeat this on UI
+            promise_quest_failed = yes
+        }
+    }
+
+    on_invalid = {
+        quest_cleanup = yes
+    }
+
+    timeout = {
+        value = 4565 # 12.5 years
+        if = {
+            limit = {
+                scope:journal_entry = {
+                    has_variable = asked_for_extension_var
+                }
+            }
+            add = 1095
+        }
+    }
+
+    weight = 1000
+
+    should_be_pinned_by_default = yes
+}
+
+
+je_negotiate_buildings = {
+    icon = "gfx/interface/icons/event_icons/event_trade.dds"
+
+    group = je_group_internal_affairs
+
+    scripted_button = negotiation_go_away_button
+    scripted_button = negotiation_extension_button
+
+    immediate = {
+        random_interest_group = {
+            limit = {
+                has_variable = ig_new_quest_starting
+                has_variable = promise_quest_type
+                var:promise_quest_type = 3 #buildings
+            }
+            save_scope_as = ig
+            remove_variable = ig_new_quest_starting
+            #IG already has var:promise_quest_degree
+            #IG already has var:building_level_increase
+            #IG already has var:promised_building_type
+        }
+        scope:ig = {
+            set_variable = {
+                name = starting_building_amount
+                value = scope:ig.building_levels_existing
+            }
+            set_variable = {
+                name = current_building_amount
+                value = scope:ig.building_levels_existing
+            }
+        }
+    }
+
+    on_monthly_pulse = { #powers division of fail effects
+        effect = {
+            scope:ig = {
+                set_variable = {
+                    name = current_building_amount
+                    value = scope:ig.building_levels_existing
+                }
+            }
+        }
+    }
+
+    status_desc = {
+        first_valid = {
+            triggered_desc = {
+                desc = je_negotiate_buildings_status
+            }
+        }
+    }
+
+    complete = {
+        trigger_if = {
+            limit = { #build
+                scope:ig.var:promise_quest_type = 3
+            }
+            country_has_building_type_levels = {
+                target = scope:ig.var:promised_building_type 
+                value >= scope:ig.var:building_level_increase
+            }
+        }
+    }
+
+    on_complete = {
+        promise_quest_completed = yes           
+    }
+
+    fail = {
+        OR = {
+            is_promise_abandoned = yes
+            custom_tooltip = {
+                text = time_runs_out_tt
+                scope:journal_entry.journal_entry_age >= {
+                    value = 3650 # 5 years
+                    if = {
+                        limit = {
+                            scope:journal_entry = {
+                                has_variable = asked_for_extension_var
+                            }
+                        }
+                        add = 1095
+                    }
+                }
+            }
+        }
+    }
+
+    on_fail = {
+		promise_quest_failed = yes
+    }
+
+    on_timeout = {
+        hidden_effect = { #no need to repeat this on UI
+            promise_quest_failed = yes
+        }
+    }
+
+    timeout = {
+        value = 3650 # 10 years
+        if = {
+            limit = {
+                scope:journal_entry = {
+                    has_variable = asked_for_extension_var
+                }
+            }
+            add = 1095
+        }
+    }
+
+    weight = 1000
+
+    should_be_pinned_by_default = yes
+}
+
+
+je_negotiate_building_group = {
+    icon = "gfx/interface/icons/event_icons/event_map.dds"
+
+    group = je_group_internal_affairs
+
+
+    scripted_button = negotiation_go_away_button
+    scripted_button = negotiation_extension_button
+
+    immediate = {
+        random_interest_group = {
+            limit = {
+                has_variable = ig_new_quest_starting
+                has_variable = promise_quest_type
+                var:promise_quest_type = 3
+                ##buildings group and buildings are same type
+            }
+            save_scope_as = ig
+            remove_variable = ig_new_quest_starting
+            #IG already has var:promise_quest_degree
+            #IG already has var:building_group_level_increase
+            #IG already has var:promised_building_group
+        }
+        scope:ig = {
+            set_variable = {
+                name = starting_building_amount
+                value = scope:ig.building_group_levels_existing
+            }
+            set_variable = {
+                name = current_building_amount
+                value = scope:ig.building_group_levels_existing
+            }
+        }
+    }
+
+    on_monthly_pulse = { #powers division of fail effects
+        effect = {
+            scope:ig = {
+                set_variable = {
+                    name = current_building_amount
+                    value = scope:ig.building_group_levels_existing
+                }
+            }
+        }
+    }
+
+    status_desc = {
+        first_valid = {
+            triggered_desc = {
+                desc = je_negotiate_building_group_status
+            }
+        }
+    }
+
+    complete = {
+        country_has_building_group_levels = {
+            type = scope:ig.var:promised_building_group
+            value >= scope:ig.var:building_group_level_increase
+        }
+    }
+
+    on_complete = {
+        promise_quest_completed = yes
+    }
+
+    fail = {
+        OR = {
+            is_promise_abandoned = yes
+            custom_tooltip = {
+                text = time_runs_out_tt
+                scope:journal_entry.journal_entry_age >= {
+                    value = 3650 # 5 years
+                    if = {
+                        limit = {
+                            scope:journal_entry = {
+                                has_variable = asked_for_extension_var
+                            }
+                        }
+                        add = 1095
+                    }
+                }
+            }
+        }
+    }
+
+    on_fail = {
+        promise_quest_failed = yes
+    }
+
+    on_timeout = {
+        hidden_effect = { #no need to repeat this on UI
+            promise_quest_failed = yes
+        }
+    }
+
+    timeout = {
+        value = 3650 # 10 years
+        if = {
+            limit = {
+                scope:journal_entry = {
+                    has_variable = asked_for_extension_var
+                }
+            }
+            add = 1095
+        }
+    }
+    # pinned to promise_build_tt
+
+    weight = 1000
+
+    should_be_pinned_by_default = yes
+}
+
+je_negotiate_taxes = {
+    icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+    group = je_group_internal_affairs
+
+    scripted_button = negotiation_go_away_button
+
+    status_desc = {
+        first_valid = {
+            triggered_desc = {
+                desc = je_negotiate_taxes_status
+            }
+        }
+    }
+
+    immediate = {
+        random_interest_group = {
+            limit = {
+                has_variable = ig_new_quest_starting
+                has_variable = promise_quest_type
+                var:promise_quest_type = 4 #taxes
+            }
+            save_scope_as = ig
+            remove_variable = ig_new_quest_starting
+            #IG already has var:promise_quest_degree
+        }
+        set_variable = { #scripted progress bar needs access to this variable, so copying to country scope
+            name = promise_quest_degree_country
+            value = scope:ig.var:promise_quest_degree
+        }
+        set_variable = { #scripted progress bar needs access to this variable, so copying to country scope
+            name = neg_taxes_remaining_months
+            value = {
+                add = 48 # Connected to max of neg_taxes_progress_bar, neg_taxes_remaining_months, and neg_quest_failure_degree
+                if = {
+                    limit = {
+                        scope:ig.var:promise_quest_degree <= 1
+                    }
+                    multiply = 0.5
+                }
+            }
+        }
+    }
+
+    on_monthly_pulse = { #powers division of fail effects
+        effect = {
+            if = {
+                limit = {
+                    OR = {
+                        AND = {
+                            scope:ig.var:promise_quest_degree <= 2
+                            tax_level <= low
+                        }
+                        tax_level = very_low
+                    }
+                }
+                change_variable = {
+                    name = neg_taxes_remaining_months
+                    subtract = 1
+                }
+            }
+        }
+    }
+
+    complete = {
+        custom_tooltip = {
+            text = neg_taxes_remain_low_tt
+            var:neg_taxes_remaining_months <= 0
+        }
+    }
+
+    on_complete = {
+        promise_quest_completed = yes
+    }
+
+    fail = {
+        OR = {
+            custom_tooltip = {
+                text = neg_taxes_change_level_tt
+                trigger_if = {
+                    limit = {
+                        scope:ig.var:promise_quest_degree <= 2
+                    }
+                    tax_level > low
+                }
+                trigger_else = {
+                    tax_level > very_low
+                }
+            }
+            is_promise_abandoned = yes
+        }
+    }
+
+    on_fail = {
+        promise_quest_failed = yes
+    }
+
+    weight = 1000
+
+    should_be_pinned_by_default = yes
+}
+
+
+je_negotiate_sol = {
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+    group = je_group_internal_affairs
+
+
+    scripted_button = negotiation_go_away_button
+    scripted_button = negotiation_extension_button
+
+    immediate = {
+        random_interest_group = {
+            limit = {
+                has_variable = ig_new_quest_starting
+                has_variable = promise_quest_type
+                var:promise_quest_type = 5 #sol
+                ##buildings group and buildings are same type
+            }
+            save_scope_as = ig
+            remove_variable = ig_new_quest_starting
+            #IG already has var:promise_quest_degree
+            #IG already has var:promised_sol_level
+        }
+        scope:ig = {
+            set_variable = {
+                name = starting_sol
+                value = root.average_sol
+            }
+            set_variable = {
+                name = current_sol
+                value = root.average_sol
+            }
+        }
+    }
+
+    on_monthly_pulse = { #powers division of fail effects
+        effect = {
+            scope:ig = {
+                set_variable = {
+                    name = current_sol
+                    value = root.average_sol
+                }
+            }
+        }
+    }
+
+    status_desc = {
+        first_valid = {
+            triggered_desc = {
+                desc = je_negotiate_sol_status
+            }
+        }
+    }
+
+    complete = {
+        root.average_sol >= scope:ig.var:promised_sol_level
+    }
+
+    on_complete = {
+        ruler ?= {
+            add_modifier = {
+                name = hero_of_the_people
+                days = very_long_modifier_time
+                multiplier = scope:ig.var:promise_quest_degree
+            }
+        }
+        scope:ig = { #reapply hero modifier 
+            hidden_effect = {
+                if = {
+                    limit = {
+                        has_modifier = heroes_of_the_people
+                    }
+                    remove_modifier = heroes_of_the_people
+                }
+            }
+            add_modifier = {
+                name = heroes_of_the_people
+                days = long_modifier_time
+                multiplier = scope:ig.var:promise_quest_degree
+            }
+        }
+        promise_quest_completed = yes
+    }
+
+    fail = {
+       OR = {
+            is_promise_abandoned = yes
+            custom_tooltip = {
+                text = time_runs_out_tt
+                scope:journal_entry.journal_entry_age >= {
+                    value = 3650 # 5 years
+                    if = {
+                        limit = {
+                            scope:journal_entry = {
+                                has_variable = asked_for_extension_var
+                            }
+                        }
+                        add = 1095
+                    }
+                }
+            }
+        }
+    }
+
+    on_fail = {
+        promise_quest_failed = yes
+    }
+
+    on_timeout = {
+        hidden_effect = { #no need to repeat this on UI
+            promise_quest_failed = yes
+        }
+    }
+
+
+    timeout = { ### If these values are changed, remember to update neg_sol_short_time_loc and neg_sol_long_time_loc strings 
+        value = 2738# 7.5 years
+        if = {
+            limit = {
+                scope:ig.var:promise_quest_degree = 4
+            }
+            add = 913 #2.5 years
+        }
+        if = {
+            limit = {
+                scope:journal_entry = {
+                    has_variable = asked_for_extension_var
+                }
+            }
+            add = 1095
+        }
+    }
+
+    weight = 1000
+
+    should_be_pinned_by_default = yes
+}

@@ -3,6 +3,13 @@
 
 	group = je_group_internal_affairs
 
+    scripted_button = je_government_petition_go_away_button
+    scripted_button = je_government_petition_extension_button
+
+    modifiers_while_active = {
+        modifier_active_government_petition
+    }
+
     immediate = {
         ROOT = {
             var:desired_law_var = {
@@ -32,7 +39,17 @@
 
     on_complete = {
         add_loyalists = {
-            value = medium_radicals
+            value = {
+                value = medium_radicals
+                 if = {
+                    limit = {
+                        scope:journal_entry ?= {
+                            has_variable = asked_for_extension_var
+                        }
+                    }
+                    divide = 2
+                }
+            }
             interest_group = scope:government_petition_ig
         }
         if = {
@@ -44,6 +61,17 @@
                 name = modifier_successfully_met_petition_legitimacy
                 days = long_modifier_time
                 is_decaying = yes
+                multiplier = {
+                    value = 1
+                    if = {
+                        limit = {
+                            scope:journal_entry ?= {
+                                has_variable = asked_for_extension_var
+                            }
+                        }
+                        divide = 2
+                    }
+                }
             }
         }
         if = {
@@ -54,7 +82,17 @@
             add_modifier = {
                 name = modifier_successfully_met_petition_legitimacy
                 days = long_modifier_time
-                multiplier = 0.5
+                multiplier = {
+                    value = 0.5
+                    if = {
+                        limit = {
+                            scope:journal_entry ?= {
+                                has_variable = asked_for_extension_var
+                            }
+                        }
+                        divide = 2
+                    }
+                }
                 is_decaying = yes
             }
             scope:government_petition_ig ?= {
@@ -62,6 +100,17 @@
                     name = modifier_reasserted_position_petition
                     days = long_modifier_time
                     is_decaying = yes
+                    multiplier = {
+                        value = 1
+                        if = {
+                            limit = {
+                                scope:journal_entry ?= {
+                                    has_variable = asked_for_extension_var
+                                }
+                            }
+                            divide = 2
+                        }
+                    }
                 }
             }
         }
@@ -73,7 +122,17 @@
             add_modifier = {
                 name = modifier_successfully_met_petition_legitimacy
                 days = long_modifier_time
-                multiplier = 0.5
+                multiplier = {
+                    value = 0.5
+                    if = {
+                        limit = {
+                            scope:journal_entry ?= {
+                                has_variable = asked_for_extension_var
+                            }
+                        }
+                        divide = 2
+                    }
+                }
                 is_decaying = yes
             }
             scope:government_petition_ig.leader ?= {
@@ -81,6 +140,17 @@
                     name = modifier_served_constituents_petition
                     days = long_modifier_time
                     is_decaying = yes
+                    multiplier = {
+                        value = 1
+                        if = {
+                            limit = {
+                                scope:journal_entry ?= {
+                                    has_variable = asked_for_extension_var
+                                }
+                            }
+                            divide = 2
+                        }
+                    }
                 }
             }
         }
@@ -103,8 +173,16 @@
     }
 
     fail = {
-        scope:government_petition_ig ?= {
-            is_in_government = no
+        OR = {
+            custom_tooltip = {
+                text = has_been_abandoned_tt
+                scope:journal_entry ?= {
+                    has_variable = has_been_abandoned
+                }
+            }
+            scope:government_petition_ig ?= {
+                is_in_government = no
+            }
         }
     }
 
@@ -179,7 +257,7 @@
 				name = modifier_failed_to_meet_petition
 				days = long_modifier_time
 				is_decaying = yes
-				multiplier = 2
+				multiplier = 1.5
 			}
 		}
         remove_variable = desired_law_var
@@ -191,7 +269,17 @@
         remove_variable = government_petition_variant
     }
 
-    timeout = 1825
+    timeout = {
+        value = 1825 # 5 years
+        if = {
+            limit = {
+                scope:journal_entry = {
+                    has_variable = asked_for_extension_var
+                }
+            }
+            add = 1095
+        }
+    }
 
     weight = 1000
 
