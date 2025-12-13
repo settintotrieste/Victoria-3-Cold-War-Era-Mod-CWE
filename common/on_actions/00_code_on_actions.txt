@@ -31,17 +31,68 @@ on_game_started = {
 # No root scope set
 on_game_started_after_lobby = {
 	effect = {
-		
+		# Game Rule: No Dynamic Naming
+		if = {
+			limit = {
+				has_game_rule = no_dynamic_naming
+			}
+			every_state = {
+				reset_state_name = yes
+			    reset_hub_names = yes
+			}
+		}
+		# Electoral Confidence
+		every_country = {
+			limit = {
+				country_has_voting_franchise = yes
+			}
+			if = {
+				limit = {
+					OR = {
+						c:GBR ?= this
+						c:SWI ?= this
+						c:NOR ?= this
+						c:BEL ?= this
+					}
+				}
+				set_electoral_confidence = 0.95
+			}
+			else_if = {
+				limit = {
+					OR = {
+						c:FRA ?= this
+						c:USA ?= this
+					}
+				}
+				set_electoral_confidence = 0.80
+			}
+			else_if = {
+				limit = {
+					c:NET ?= this
+				}
+				set_electoral_confidence = 0.70
+			}
+			else_if = {
+				limit = {
+					c:BRZ ?= this
+				}
+				set_electoral_confidence = 0.5
+			}
+			else = {
+				initialize_electoral_confidence = yes
+			}
+		}
 	}
 }
 
 # No root scope set
 on_monthly_pulse = {
 	effect = {
+	
 		every_character_in_exile_pool = {
 			limit = {
 				is_historical = no
-				popularity <= -100
+				popularity <= -25
 			}
 			kill_character = yes
 		}
@@ -70,6 +121,20 @@ on_monthly_pulse = {
 				remove_variable = prison_time_var
 			}
 		}
+		
+		### Scripted country lists
+
+		# Great Powers
+		clear_global_variable_list = great_power_country_list
+		every_country = {
+			limit = {
+				country_rank >= rank_value:great_power
+			}
+			add_to_global_variable_list = {
+				name = great_power_country_list
+				target = THIS
+			}
+		}
 
 	}
 }
@@ -90,11 +155,25 @@ on_monthly_pulse_country = {
 		# Set Hierarchy Events
 		set_hierarchy_event.1 # Sets British Indian Caste System
 		set_hierarchy_event.2 # Replaces British Indian Caste System with Default
+		
+		# Regency ending
+		regency.3
+		
+		unable_to_enact.1
 	}
+	
+	effect = {
+	
+		# USA Second Amendment check
+		second_amendment_remove_obsessions_effect = yes
+		
+	}
+	
 	on_actions = { # delay ensures events won't fire simultaneously
 		coup_monthly_events
 		delay = { days = 4 }
 		fund_lobbies_monthly_events
+		regency_monthly_events
 	}
 }
 
@@ -172,6 +251,19 @@ on_yearly_pulse_country = {
 			}
 		}
 		
+		if = {
+			limit = {
+				has_variable = recent_coup_or_revolution_var
+			}
+			change_variable = { name = recent_coup_or_revolution_var add = 1 }
+			if = {
+				limit = {
+					var:recent_coup_or_revolution_var >= 10
+				}
+				remove_variable = recent_coup_or_revolution_var
+			}
+		}
+		
 	}
 	on_actions = { # delay ensures events won't fire simultaneously
 		on_memento_mori # IG leader death
@@ -208,10 +300,8 @@ on_half_yearly_pulse_country = {
 	on_actions = { # delay ensures events won't fire simultaneously
 		on_half_yearly_events
 		delay = { days = 4 }
-		silkworm_half_yearly_events
-		delay = { days = 14 }
-		korea_half_yearly_events
-		delay = { days = 17 }
+		coup_aftermath_half_yearly_events
+		delay = { days = 10 }
 		lobbies_proposals_half_yearly_events
 		delay = { days = 20 }
 		movement_half_yearly_events
@@ -268,14 +358,46 @@ on_monthly_pulse_character = {
 			remove_trait = trait_child
 			add_random_trait = personality
 		}
+		if = { # Updates biannual unit share cache
+			limit = {
+				OR = {
+					has_role = admiral
+					has_role = general
+				}
+			}
+			set_variable = { name = monthly_cached_units_share value = this.num_units_share }
+			set_variable = { name = monthly_cached_commander_coup_strength value = this.commander_coup_strength }
+		}
 	}
 }
 on_yearly_pulse_character = {
 	on_actions = {
 		on_wounded
 	}
+	effect = {
+		if = {
+			limit = {
+				is_ruler = yes
+				owner = {
+					has_gov_regency = yes
+				}
+			}
+			if = {
+				limit = {
+					has_variable = regency_years
+				}
+				change_variable = { name = regency_years add = 1 } # Keeps track of how long one has been Regent
+			}
+			else = {
+				set_variable = { name = regency_years value = 0 } # In case all else fails
+			}
+		}
+	}
 }
-on_half_yearly_pulse_character = {}
+on_half_yearly_pulse_character = {
+	effect = {
+	}
+}
 on_five_year_pulse_character = {}
 on_decade_pulse_character = {}
 
@@ -352,7 +474,7 @@ on_battle_won = {
 # Same as above, but for battles that end with no units for one of the sides
 on_empty_battle_won = {
 	on_actions = {
-		carlist_war_battle_score
+		
 	}
 }
 
@@ -431,23 +553,14 @@ on_acquired_technology = {
 			if = {
 				limit = {
 					any_scope_state = {
-						OR = { 
-							has_potential_resource = bg_oil_extraction
-							has_potential_resource = bg_natural_gas_extraction
-						}
+						has_potential_resource = building_oil_rig
 					}
 				}
 				random_scope_state = {
 					limit = {
-						has_potential_resource = bg_oil_extraction
+						has_potential_resource = building_oil_rig
 					}
-					force_resource_discovery = bg_oil_extraction
-				}
-				random_scope_state = {
-					limit = {
-						has_potential_resource = bg_natural_gas_extraction
-					}
-					force_resource_discovery = bg_natural_gas_extraction
+					force_resource_discovery = building_oil_rig
 				}
 			}
 			else_if = {
@@ -455,10 +568,7 @@ on_acquired_technology = {
 					any_country = {
 						has_overlapping_interests = ROOT
 						any_scope_state = {
-							OR = { 
-								has_potential_resource = bg_oil_extraction
-								has_potential_resource = bg_natural_gas_extraction
-							}
+							has_potential_resource = building_oil_rig
 						}
 					}
 				}
@@ -466,38 +576,23 @@ on_acquired_technology = {
 					limit = {
 						has_overlapping_interests = ROOT
 						any_scope_state = {
-							OR = { 
-								has_potential_resource = bg_oil_extraction
-								has_potential_resource = bg_natural_gas_extraction
-							}
+							has_potential_resource = building_oil_rig
 						}
 					}
 					random_scope_state = {
 						limit = {
-							has_potential_resource = bg_oil_extraction
+							has_potential_resource = building_oil_rig
 						}
-						force_resource_discovery = bg_oil_extraction
-					}
-					random_scope_state = {
-						limit = {
-							has_potential_resource = bg_natural_gas_extraction
-						}
-						force_resource_discovery = bg_natural_gas_extraction
+						force_resource_discovery = building_oil_rig
 					}
 				}
 			}
 			else = {
 				random_state = {
 					limit = {
-						has_potential_resource = bg_oil_extraction
+						has_potential_resource = building_oil_rig
 					}
-					force_resource_discovery = bg_oil_extraction
-				}
-				random_state = {
-					limit = {
-						has_potential_resource = bg_natural_gas_extraction
-					}
-					force_resource_discovery = bg_natural_gas_extraction
+					force_resource_discovery = building_oil_rig
 				}
 			}
 		}
@@ -625,6 +720,16 @@ on_character_creation = {
 				}
 			}
 		}
+		if = { # Updates biannual unit share cache - just in case a commander spawns another way
+			limit = {
+				OR = {
+					has_role = admiral
+					has_role = general
+				}
+			}
+			set_variable = { name = monthly_cached_units_share value = this.num_units_share }
+			set_variable = { name = monthly_cached_commander_coup_strength value = this.commander_coup_strength }
+		}
 	}
 
 }
@@ -660,83 +765,19 @@ on_character_death = {
 			}
 		}
 		
-		#Enforce culture
-		if = {
+		if = { # Possibly generates replacement woman or minority IG leader
 			limit = {
 				has_role = politician
-
-				# Check that the character's country has a non-primary culture homeland or cultural community for a culture that is accepted by the country
-				accepted_cultural_minority_check_character_scope = yes
-
-				# cultural trends do not impact the monarchy's line of succession
-				is_heir = no
+				is_heir = no # cultural trends do not impact the monarchy's line of succession
 				NAND = {
 					is_ruler = yes
 					owner ?= {
-						has_law_or_variant = law_type:law_HOS_monarch
+						is_a_regime_monarchy = yes
 					}
 				}
-
-  				## the IG must be at least okay with the status quo regarding cultures in order to potentially accept a minority culture character as a leader, and not want to move things back
-  				OR = {
-  					AND = {
-  						ROOT.owner = { has_law_or_variant = law_type:law_national_supremacy }
-  						NOT = {
-							interest_group = {
-								law_stance = {
-									law = law_type:law_ethnostate
-									value >= approve
-								}
-			  				}
-		  				}
-	  				}
-  					AND = {
-  						ROOT.owner = { has_law_or_variant = law_type:law_racial_segregation }
-  						NOT = {
-							interest_group = {
-								law_stance = {
-									law = law_type:law_national_supremacy
-									value >= approve
-								}
-			  				}
-			  			}
-	  				}
-  					AND = {
-  						ROOT.owner = { has_law_or_variant = law_type:law_subjecthood }
-  						NOT = {
-							interest_group = {
-								law_stance = {
-									law = law_type:law_national_supremacy
-									value >= approve
-								}
-			  				}
-			  			}
-	  				}
-  					AND = {
-  						ROOT.owner = { has_law_or_variant = law_type:law_cultural_exclusion }
-  						NOT = {
-							interest_group = {
-								law_stance = {
-									law = law_type:law_racial_segregation
-									value >= approve
-								}
-			  				}
-			  			}
-	  				}
-  					AND = {
-  						ROOT.owner = { has_law_or_variant = law_type:law_multicultural }
-  						NOT = {
-							interest_group = {
-								law_stance = {
-									law = law_type:law_cultural_exclusion
-									value >= approve
-								}
-			  				}
-			  			}
-	  				}
-  				}
+				interest_group_is_not_less_tolerant_than_current_citizenship_law = yes ## the IG must be at least okay with the status quo regarding cultures in order to potentially accept a minority culture character as a leader, and not want to move things back
+				accepted_cultural_minority_check_character_scope = yes # Check that the character's country has a non-primary culture homeland or cultural community for a culture that is accepted by the country
 			}
-
 			# If the country and the IG support women's rights, do combinations of woman and/or minority culture for character generation
 			if = {
 				limit = {
@@ -750,7 +791,6 @@ on_character_death = {
 						}
 	  				}
 				}
-
 				# 40/10/20/5 chance of primary culture man/woman as leader or of accepted minority culture man/woman as leader
 				random_list = {
 					40 = {
@@ -766,6 +806,12 @@ on_character_death = {
 								create_character = {
 									ig_leader = yes
 									culture = scope:minority_culture
+									interest_group = ROOT.interest_group
+								}
+							}
+							else = { # Fallback in the case of no minorities
+								create_character = {
+									ig_leader = yes
 									interest_group = ROOT.interest_group
 								}
 							}
@@ -794,6 +840,13 @@ on_character_death = {
 									interest_group = ROOT.interest_group
 								}
 							}
+							else = { # Fallback in the case of no minorities
+								create_character = {
+									ig_leader = yes
+									female = yes
+									interest_group = ROOT.interest_group
+								}
+							}
 						}
 					}
 				}
@@ -814,6 +867,12 @@ on_character_death = {
 								create_character = {
 									ig_leader = yes
 									culture = scope:minority_culture
+									interest_group = ROOT.interest_group
+								}
+							}
+							else = { # Fallback in the case of no minorities
+								create_character = {
+									ig_leader = yes
 									interest_group = ROOT.interest_group
 								}
 							}
@@ -841,6 +900,7 @@ on_new_ruler = {
 						has_variable = hide_ruler_change_notification
 					}
 				}
+				age >= define:NCharacters|ADULT_AGE
 			}
 			post_notification = new_ruler
 		}
@@ -852,6 +912,22 @@ on_new_ruler = {
 				NOT = { religion = owner.religion }
 			}
 			change_character_religion = owner.religion
+		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_HOS_monarch
+					has_gov_regency = no
+				}
+				age < define:NCharacters|ADULT_AGE
+				NOT = { has_variable = regency_complete }
+			}
+			owner = {
+				trigger_event = {
+					id = regency.1
+					popup = yes
+				}
+			}
 		}
 	}
 }
@@ -1784,7 +1860,7 @@ on_law_checkpoint_success = {
 on_law_checkpoint_advance = {
 	random_events = {
 		10 = laws.1
-		10 = children_rights_events.1 
+		10 = children_rights_events.1
 		10 = free_speech_laws.1
 		10 = free_speech_laws.2
 		10 = labor_rights.1
@@ -1882,6 +1958,14 @@ on_law_checkpoint_advance = {
 		10 = land_ownership_law_events.16
 		10 = technocracy.2
 		100 = nihilism.13
+		10 = corporate_state.1
+		10 = corporate_state.4
+		50 = utilitarian.8
+		10 = labour_associations_events.2
+		10 = labour_associations_events.8
+		10 = labour_associations_events.9
+		10 = subjecthood_events.3
+		10 = subjecthood_events.4
 	}
 }
 
@@ -1890,7 +1974,6 @@ on_law_checkpoint_advance = {
 on_law_checkpoint_debate = {
 	random_events = {
 		10 = children_rights_events.2
-		10 = free_speech_laws.5
 		10 = labor_rights.2
 		10 = labor_rights.5
 		10 = children_rights_events.6
@@ -1942,8 +2025,15 @@ on_law_checkpoint_debate = {
 		10 = agitators_law_events.8
 		10 = agitators_law_events.9
 		10 = agitators_law_events.10
+		10 = agitators_law_events.11
+		10 = agitators_law_events.12
 		10 = agitators_law_events.13
+		10 = agitators_law_events.14
+		10 = agitators_law_events.15
+		10 = agitators_law_events.16
+		10 = agitators_law_events.17
 		10 = agitators_law_events.18
+		10 = agitators_law_events.19
 		10 = agitators_law_events.20
 		10 = state_atheism.1
 		10 = state_atheism.5
@@ -1962,16 +2052,6 @@ on_law_checkpoint_debate = {
 		10 = land_ownership_law_events.7
 		10 = luddite_law_events.2
 		10 = luddite_law_events.5
-		10 = agitators_law_events.11
-		10 = agitators_law_events.12
-		10 = agitators_law_events.13
-		10 = agitators_law_events.14
-		10 = agitators_law_events.15
-		10 = agitators_law_events.16
-		10 = agitators_law_events.17
-		10 = agitators_law_events.18
-		10 = agitators_law_events.19
-		10 = agitators_law_events.20
 		10 = land_ownership_law_events.12
 		10 = land_ownership_law_events.15
 		10 = agitator_legal_events.11
@@ -1985,6 +2065,12 @@ on_law_checkpoint_debate = {
 		10 = agitator_legal_events.19
 		10 = agitator_legal_events.20
 		10 = technocracy.3
+		10 = corporate_state.2
+		10 = corporate_state.5
+		10 = labour_associations_events.3
+		10 = labour_associations_events.6
+		10 = labour_associations_events.7
+		10 = subjecthood_events.2
 	}
 	events = {
 		tanzimat_events.1
@@ -2000,7 +2086,7 @@ on_law_checkpoint_stall = {
 		10 = children_rights_events.3
 		10 = free_speech_laws.3
 		10 = free_speech_laws.4
-		10 = labor_rights.3
+		50 = labor_rights.3
 		10 = labor_rights.6
 		10 = children_rights_events.5
 		10 = welfare_laws.3
@@ -2050,7 +2136,6 @@ on_law_checkpoint_stall = {
 		10 = state_atheism.3
 		10 = state_atheism.4
 		10 = exiles_more_events.2
-		2 = generic_laws.2
 		2 = generic_laws.5
 		2 = generic_laws.8
 		2 = generic_laws.11
@@ -2065,11 +2150,7 @@ on_law_checkpoint_stall = {
 		10 = luddite_law_events.6
 		10 = agitators_law_events.1
 		10 = agitators_law_events.2
-		10 = agitators_law_events.3
-		10 = agitators_law_events.4
 		10 = agitators_law_events.5
-		10 = agitators_law_events.6
-		10 = agitators_law_events.7
 		10 = agitators_law_events.8
 		10 = agitators_law_events.9
 		10 = agitators_law_events.10
@@ -2089,6 +2170,13 @@ on_law_checkpoint_stall = {
 		10 = agitator_legal_events.9
 		10 = agitator_legal_events.10
 		10 = technocracy.1
+		10 = corporate_state.3
+		10 = corporate_state.6
+		10 = labour_associations_events.1
+		10 = labour_associations_events.4
+		10 = labour_associations_events.5
+		10 = subjecthood_events.1
+		10 = subjecthood_events.5
 	}
 }
 
@@ -2217,6 +2305,9 @@ on_law_enactment_ended = {
 # enacted. Therefore using the `currently_enacting_law` link will return the
 # null law
 on_law_activated = {
+	effect = {
+		second_amendment_add_obsessions_effect = yes # Relevant if owner is Yankee or Dixie
+	}
 }
 
 # Root = Institution
@@ -2284,6 +2375,18 @@ on_revolution_start = {
 				}
 				leader = { set_character_as_ruler = yes }
 				add_ruling_interest_group = yes
+			}
+		}
+		
+		### Movement type variable setting
+		ROOT = {
+			random_civil_war = {
+				limit = {
+					is_civil_war_type = revolution
+				}
+				scope:target ?= {
+					set_variable = { name = civil_war_type_var value = prev.political_movement.type }
+				}
 			}
 		}
 		
@@ -2542,6 +2645,16 @@ on_wargoal_enforced = {
 				}
 			}
 		}
+		if = {
+			limit = {
+				owner ?= {
+					is_country_type = recognized
+				}
+			}
+			scope:target = {
+				set_variable = wargoal_enforced_by_recognized_power
+			}
+		}
 	}
 }
 
@@ -2552,11 +2665,20 @@ on_ig_resigned_government = {
 		if = {
 			limit = {
 				owner = {
-					has_journal_entry = je_coup
+					OR = { 
+						has_law_or_variant = law_type:law_single_party_state
+						has_law_or_variant = law_type:law_dominant_party_state
+					}
+					any_active_party = {
+						any_member = {
+							is_in_government = no
+							is_insurrectionary = yes
+						}
+					}
 				}
 			}
-			root = {
-				set_variable = resigned_from_gov_coup
+			owner = {
+				trigger_event = { id = government_collapse.1 popup = yes }
 			}
 		}
 	}
@@ -2602,7 +2724,19 @@ on_company_disbanded = {
 # Root = Character
 on_heir_born = {
 	effect = {
-		post_notification = heir_born_notification
+		
+		#Regency
+		if = {
+			limit = {
+				owner ?= {
+					has_gov_regency = no
+				}
+			}
+			post_notification = heir_born_notification
+		}
+		else = { # Regents should not produce heirs, TODO remove this hack once we have code support
+			this = { kill_character = { hidden = yes } }
+		}
 		
 		#Dynastic Republic
 		if = {
@@ -2619,6 +2753,7 @@ on_heir_born = {
 					set_variable = dynastic_ruler_enabled
 				}
 			}
+			post_notification = heir_born_notification
 		}
 		
 	}
@@ -2741,6 +2876,20 @@ on_harvest_condition_started_in_country = {
 		}
 		else = {
 			post_notification = harvest_condition_started_in_country
+		}
+		if = {
+			limit = {
+				scope:state.state_region = {
+					has_harvest_condition = earthquake
+				}
+			}
+			scope:state.state_region = {
+				start_earthquake_effect = yes
+				spawn_entity_effect = {
+					name = "earthquake_event_entity"
+					duration = 10
+				}
+			}
 		}
 	}
 }
@@ -2885,6 +3034,22 @@ on_party_disbanded = {
 on_election_campaign_start = {
 	effect = {
 		debug_log = "Election Campaign Started"
+		if = {
+			limit = {
+				active_law:lawgroup_distribution_of_power ?= {
+					has_amendment = amendment_tradition_of_free_elections
+				}
+			}
+			add_electoral_confidence = {
+				value = eagle_burger_freedom_index
+				divide = 10
+			}
+		}
+	}
+	events = {
+		caciquismo.1
+		caciquismo.2
+		coffee_with_milk.7
 	}
 }
 
@@ -2905,6 +3070,14 @@ on_election_campaign_end = {
 		if = {
 			limit = { has_journal_entry = je_lower_house }
 			calculate_lower_house_composition = yes
+		}
+		
+		#Coup
+		if = {
+			limit = {
+				has_modifier = modifier_government_recently_couped
+			}
+			remove_modifier = modifier_government_recently_couped
 		}
 		
 	}
@@ -3099,6 +3272,16 @@ on_repudiate_obligation = {
 # Root = Character
 on_character_recruitment = {
 	effect = {
+		if = {
+			limit = {
+				OR = {
+					has_role = admiral
+					has_role = general
+				}
+			}
+			set_variable = { name = monthly_cached_units_share value = this.num_units_share }
+			set_variable = { name = monthly_cached_commander_coup_strength value = this.commander_coup_strength }
+		}
 		owner = {
 			if = {
 				limit = {
