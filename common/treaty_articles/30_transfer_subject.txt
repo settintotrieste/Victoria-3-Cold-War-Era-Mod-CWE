@@ -1,22 +1,26 @@
-﻿state_transfer = {
+﻿transfer_subject = {
 	kind = directed
 	cost = 0
 
-	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/transfer_state.dds"
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/transfer_subject_treaties.dds"
 
 	flags = {
-		causes_state_transfer
 		giftable
+		target_subjects_as_input
 	}
 
-    required_inputs = {
-		state
-    }
+	usage_limit = once_per_side_with_same_inputs
 
+	maintenance_paid_by = target_country
+
+    required_inputs = {
+		country
+    }
+	
 	visible = {
 		is_not_revolutionary_or_decentralised = yes
 	}
-
+	
 	possible = {
 	
 		#AI does not use this on its own
@@ -55,33 +59,32 @@
 
 	can_ratify = {
 		scope:source_country = {
-			num_states >= 2
+			num_subjects >= 1
 		}
-
 		custom_tooltip = {
             text = DUPLICATE_ARTICLE_SAME_INPUTS
             scope:treaty ?= {
                 NOT = {
                     any_scope_article_option = {
                         count > 1
-                        has_type = state_transfer
+                        has_type = transfer_subject
                         source_country = scope:source_country
-                        input_state = root.input_state
+                        input_country = root.input_country
                     }
                 }
             }
         }
 	}
 
-	state_valid_trigger = {
+	country_valid_trigger = {
+		scope:other_country = {
+			can_transfer_subject = scope:input
+		}
 		scope:input = {
-			owner = root
-			is_capital = no
-			is_under_colonization = no
 			OR = {
-				scope:other_country = { is_adjacent_to_state = prev }
+				scope:other_country = { is_adjacent_to_country = prev }
 				AND = {
-					is_coastal = yes
+					has_port = yes
 					scope:other_country = { has_port = yes }
 				}
 			}
@@ -89,60 +92,24 @@
 	}
 
 	on_entry_into_force = {
-		scope:article_options = {
-			target_country = {
-				save_scope_as = state_taker
-			}
-			source_country = {
-				save_scope_as = state_giver
-			}
-
-			if = {
-				limit = { exists = input_state }
-				input_state = { set_state_owner = scope:state_taker }
-			}
-
-			scope:state_taker ?= {
-				if = {
-					limit = {
-						has_variable = recently_traded_states_counter
-					}
-					change_variable = {
-						name = recently_traded_states_counter
-						add = 1
+		if = {
+			limit = {
+				scope:article_options.input_country = {
+					OR = {
+						is_subject_type = subject_type_personal_union
+						is_subject_type = subject_type_crown_land
 					}
 				}
-				else_if = {
-					limit = {
-						NOT = { has_variable = recently_traded_states_counter }
-					}
-					set_variable = {
-						name = recently_traded_states_counter
-						value = 1
-					}
+				scope:article_options.target_country = {
+					NOT = { has_law_or_variant = law_type:law_monarchy }
 				}
 			}
-
-
-			scope:state_giver ?= {
-				if = {
-					limit = {
-						has_variable = recently_traded_states_counter
-					}
-					if = {
-						limit = {
-							var:recently_traded_states_counter > 1
-						}
-						change_variable = {
-							name = recently_traded_states_counter
-							subtract = 1
-						}
-					}
-					else = {
-						remove_variable = recently_traded_states_counter
-					}
-				}
+			scope:article_options.input_country = {
+				change_subject_type = subject_type_protectorate
 			}
+		}
+		scope:article_options.target_country = {
+			transfer_subject = scope:article_options.input_country
 		}
 	}
 
@@ -207,35 +174,26 @@
 				}
 
 				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_ALREADY_TRADED_STATE"
+					desc = "DIPLOMATIC_ACCEPTANCE_ALREADY_TRADED_SUBJECT"
 					value = -1000
 				}
 			}
 			else_if = {
 				limit = {
-					exists = scope:article.input_state
+					exists = scope:article.input_country
 					scope:source_country ?= this
 					NOT = { exists = scope:is_treaty_active }
-					scope:article.input_state.ai_state_value:root > 0
+					scope:article.input_country.ai_subject_value:root > 0
 				}
 				subtract = {
-					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_SOURCE"
-					value = scope:article.input_state.ai_state_value:root
-					min = 100
+					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_SUBJECT_SOURCE"
+					value = scope:article.input_country.ai_subject_value:root
+					add = 100
 
-					if = {
-						limit = {
-							scope:article.input_state = {
-								any_neighbouring_state = {
-									owner = scope:source_country
-									OR = {
-										is_incorporated = yes
-										ai_can_incorporate_state = yes
-									}
-								}
-							}
-						}
-						min = 200
+					add = {
+						value = scope:article.input_country.gdp
+						divide = 200000
+						max = 200
 					}
 
 					if = {
@@ -250,40 +208,26 @@
 						}
 					}
 				}
-
-				if = {
-					limit = {
-						exists = scope:target_country.var:recently_traded_states_counter
-						scope:target_country.var:recently_traded_states_counter > 0
-					}
-					add = {
-						desc = "DIPLOMATIC_ACCEPTANCE_RECENTLY_TRADED_STATES"
-
-						value = -50
-						multiply = scope:target_country.var:recently_traded_states_counter
-					}
-				}
 			}
 			else_if = {
 				limit = {
-					exists = scope:article.input_state
+					exists = scope:article.input_country
 					scope:target_country ?= this
 					NOT = { exists = scope:is_treaty_active }
-					scope:article.input_state.ai_state_value:root > 0
+					scope:article.input_country.ai_subject_value:root > 0
 				}
 				add = {
-					value = scope:article.input_state.ai_state_value:root
-					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_TARGET"
+					value = scope:article.input_country.ai_subject_value:root
+					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_SUBJECT_TARGET"
 				}
 			}
 			else_if = {
 				limit = { NOT = { exists = scope:is_treaty_active } }
 				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_REJECT"
+					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_SUBJECT_REJECT"
 					value = -300
 				}
 			}
 		}
 	}
-	
 }
