@@ -1,0 +1,693 @@
+﻿namespace = children_rights_events
+
+children_rights_events.1 = { #families hide their children so they won't have to work / advancement
+	type = country_event
+	placement = root
+	title = children_rights_events.1.t
+	desc = children_rights_events.1.d
+	flavor = children_rights_events.1.f
+
+	category = enactment
+
+	duration = 3
+
+	event_image = {
+		video = "southamerica_child_labor"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		OR = {
+			AND = {
+				has_law = law_type:law_child_labor_allowed
+				OR = {
+					is_enacting_law = law_type:law_child_labor_allowed
+					is_enacting_law = law_type:law_restricted_child_labor
+				}
+			}
+			AND = {
+				has_law = law_type:law_child_labor_allowed
+				is_enacting_law = law_type:law_restricted_child_labor
+			}
+		}
+		any_interest_group = {
+			ig_counts_as_marginal = no
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value < neutral
+			}
+		}
+		NOT = { has_modifier = hidden_children_modifier }
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				ig_counts_as_marginal = no
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+			}
+			save_scope_as = child_labor_yes_scope
+		}
+		random_scope_state = {
+			limit = {
+				is_capital = yes
+			}
+			save_scope_as = child_labor_state
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #look the other way
+		name = children_rights_events.1.a
+		default_option = yes
+		add_enactment_modifier = {
+			name = hidden_children_modifier
+		}
+	}
+
+	option = { #help them hide the children
+		name = children_rights_events.1.b
+		add_enactment_modifier = {
+			name = hidden_children_modifier
+		}
+		scope:child_labor_yes_scope = {
+			add_modifier = {
+				name = helped_hidden_children_modifier
+				days = short_modifier_time
+			}
+		}
+	}
+}
+
+children_rights_events.2 = { #families send their children to work anyway because they need the money / debate
+	type = country_event
+	placement = root
+	title = children_rights_events.2.t
+	desc = children_rights_events.2.d
+	flavor = children_rights_events.2.f
+
+	category = enactment
+
+	duration = 3
+
+	event_image = {
+		video = "southamerica_child_labor"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		OR = {
+			AND = {
+				has_law = law_type:law_child_labor_allowed
+				OR = {
+					is_enacting_law = law_type:law_child_labor_allowed
+					is_enacting_law = law_type:law_restricted_child_labor
+				}
+			}
+			AND = {
+				has_law = law_type:law_child_labor_allowed
+				is_enacting_law = law_type:law_restricted_child_labor
+			}
+		}
+		any_scope_pop = {
+			standard_of_living <= 10
+		}
+		any_interest_group = {
+			ig_counts_as_marginal = no
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value > neutral
+			}
+		}
+		any_interest_group = {
+			ig_counts_as_marginal = no
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value <= neutral
+			}
+		}
+		NOR = {
+			has_modifier = stopped_families_modifier
+			has_modifier = allowed_families_send_their_children_modifier
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				ig_counts_as_marginal = no
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value > neutral
+				}
+			}
+			save_scope_as = child_labor_no_scope
+		}
+		random_interest_group = {
+			limit = {
+				ig_counts_as_marginal = no
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value <= neutral
+				}
+			}
+			save_scope_as = child_labor_yes_scope
+		}
+		random_scope_state = {
+			limit = {
+				any_scope_pop = {
+					standard_of_living <= 10
+				}
+			}
+			save_scope_as = child_labor_state
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #tell them not to
+		name = children_rights_events.2.a
+		default_option = yes
+		random_list = {
+            1 = {
+                add_enactment_modifier = {
+                    name = stopped_families_modifier
+                }
+            }
+            1 = {
+				 add_enactment_modifier = {
+                    name = stopped_families_modifier
+					multiplier = 2
+                }
+            }
+        }
+		scope:child_labor_yes_scope = {
+			add_modifier = {
+				name = didnt_allow_families_send_their_children_modifier
+				days = normal_modifier_time
+			}
+		}
+		scope:child_labor_state = {
+			add_radicals_in_state = {
+				strata = lower
+				value = medium_radicals
+			}
+		}
+	}
+
+	option = { #they do what they need to do
+		name = children_rights_events.2.b
+		random_list = {
+            1 = {
+                add_enactment_modifier = {
+                    name = stopped_families_modifier
+                }
+            }
+            1 = {
+            }
+        }
+		scope:child_labor_no_scope = {
+			add_modifier = {
+				name = allowed_families_send_their_children_modifier
+				days = normal_modifier_time
+			}
+		}
+	}
+}
+
+children_rights_events.3 = { #adult men injure themselves trying to do children labor / stall
+	type = country_event
+	placement = root
+	title = children_rights_events.3.t
+	desc = children_rights_events.3.d
+	flavor = children_rights_events.3.f
+
+	category = enactment
+
+	duration = 3
+
+	event_image = {
+		video = "asia_factory_accident"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		NOR = {
+			has_law = law_type:law_worker_protections
+			has_law = law_type:law_regulatory_bodies
+		}
+		OR = {
+			AND = {
+				has_law = law_type:law_child_labor_allowed
+				OR = {
+					is_enacting_law = law_type:law_child_labor_allowed
+					is_enacting_law = law_type:law_restricted_child_labor
+				}
+			}
+			AND = {
+				has_law = law_type:law_child_labor_allowed
+				is_enacting_law = law_type:law_restricted_child_labor
+			}
+		}
+		NOT = { has_modifier = workers_appeased_modifier }
+		NOT = { has_modifier = confronted_workers_modifier }
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_scope_state = {
+			limit = {
+				is_capital = yes
+			}
+			save_scope_as = child_labor_state
+		}
+		ig:ig_trade_unions ?= {
+			save_scope_as = trade_unions_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #appease the workers
+		name = children_rights_events.3.a
+		default_option = yes
+		add_enactment_modifier = {
+			name = workers_appeased_modifier
+		}
+	}
+
+	option = { #children aren't coming back to that
+		name = children_rights_events.3.b
+		add_enactment_modifier = {
+			name = confronted_workers_modifier
+		}
+		scope:child_labor_state = {
+			add_radicals_in_state = {
+				pop_type = laborers
+				value = medium_radicals
+			}
+			add_radicals_in_state = {
+				pop_type = machinists
+				value = medium_radicals
+			}
+		}
+	}
+}
+
+children_rights_events.4 = { #ragged schools / advancement
+	type = country_event
+	placement = root
+	title = children_rights_events.4.t
+	desc = children_rights_events.4.d
+	flavor = children_rights_events.4.f
+
+	category = enactment
+
+	duration = 3
+
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		is_enacting_law = law_type:law_restricted_child_labor
+		OR = {
+			has_law = law_type:law_child_labor_allowed
+			has_law = law_type:law_child_labor_allowed
+		}
+		NOT = { has_modifier = ragged_schools_devout }
+		NOT = { has_modifier = modifier_no_ragged_schools }
+		ig:ig_devout ?= {
+			ig_counts_as_marginal = no
+		}
+		ig:ig_petty_bourgeoisie ?= {
+			ig_counts_as_marginal = no
+		}
+		NOT = {
+			currently_enacting_law = {
+				has_amendment = amendment_ragged_schools
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_scope_state = {
+			limit = {
+				is_capital = yes
+			}
+			save_scope_as = child_labor_state
+		}
+		ig:ig_devout ?= {
+			save_scope_as = devout_scope
+		}
+		ig:ig_petty_bourgeoisie ?= {
+			save_scope_as = intelligentsia_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #advances but church gains lots of influence
+		name = children_rights_events.4.a
+		default_option = yes
+		add_enactment_modifier = {
+			name = ragged_schools_modifier
+		}
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_ragged_schools
+				sponsor = scope:devout_scope
+				cooldown = 120
+			}
+		}
+		ig:ig_devout ?= {
+			add_modifier = {
+				name = ragged_schools_devout
+				days = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #dont build them
+		name = children_rights_events.4.b
+		ig:ig_devout ?= {
+			add_modifier = {
+				name = modifier_no_ragged_schools
+				days = normal_modifier_time
+			}
+		}
+		ig:ig_petty_bourgeoisie ?= {
+			add_modifier = {
+				name = modifier_no_ragged_schools
+				days = normal_modifier_time
+			}
+		}
+	}
+}
+
+children_rights_events.5 = { #pay for your school supplies / stall
+	type = country_event
+	placement = root
+	title = children_rights_events.5.t
+	desc = children_rights_events.5.d
+	flavor = children_rights_events.5.f
+
+	category = enactment
+
+	duration = 3
+
+	event_image = {
+		video = "europenorthamerica_rich_and_poor"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		OR = {
+			is_enacting_law = law_type:law_restricted_child_labor
+			is_enacting_law = law_type:law_religious_schools
+			is_enacting_law = law_type:law_public_schools
+		}
+		OR = {
+			has_law = law_type:law_child_labor_allowed
+			has_law = law_type:law_child_labor_allowed
+			has_law = law_type:law_no_schools
+		}
+		NOT = { has_modifier = school_supplies_modifier }
+		NOT = { has_modifier = no_school_supplies_modifier }
+		NOT = {
+			currently_enacting_law = {
+				OR = {
+					has_amendment = amendment_provided_school_supplies
+					has_amendment = amendment_unfunded_school_supplies
+				}
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_scope_state = {
+			limit = {
+				is_capital = yes
+			}
+			save_scope_as = child_labor_state
+		}
+		random_interest_group = {
+			limit = {
+				is_in_government = yes
+			}
+			save_scope_as = school_supplies_ig
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #we can fund them
+		name = children_rights_events.5.a
+		add_enactment_modifier = {
+			name = school_supplies_modifier
+		}
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_provided_school_supplies
+				sponsor = scope:school_supplies_ig
+				cooldown = 60
+			}
+		}
+	}
+
+	option = { #theyll need to pay
+		name = children_rights_events.5.b
+		default_option = yes
+		add_enactment_modifier = {
+			name = no_school_supplies_modifier
+		}
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_unfunded_school_supplies
+				sponsor = scope:school_supplies_ig
+				cooldown = 60
+			}
+		}
+	}
+}
+
+children_rights_events.6 = { #gatekeeping education / debate
+	type = country_event
+	placement = root
+	title = children_rights_events.6.t
+	desc = children_rights_events.6.d
+	flavor = children_rights_events.6.f
+
+	category = enactment
+
+	duration = 3
+
+	event_image = {
+		video = "europenorthamerica_rich_and_poor"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		OR = {
+			is_enacting_law = law_type:law_restricted_child_labor
+			is_enacting_law = law_type:law_public_schools
+			is_enacting_law = law_type:law_religious_schools
+		}
+		OR = {
+			has_law = law_type:law_child_labor_allowed
+			has_law = law_type:law_child_labor_allowed
+			has_law = law_type:law_no_schools
+		}
+		NOT = { has_modifier = no_gatekeeping }
+		any_interest_group = {
+			ig_counts_as_marginal = no
+			OR = {
+				has_ideology = ideology:ideology_progressive
+				has_ideology = ideology:ideology_communitarian
+			}
+			NOR = {
+				is_interest_group_type = ig_landowners
+				is_interest_group_type = ig_petty_bourgeoisie
+				is_interest_group_type = ig_industrialists
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_scope_state = {
+			limit = {
+				is_capital = yes
+			}
+			save_scope_as = child_labor_state
+		}
+		if = {
+			limit = {
+				ig:ig_landowners ?= {
+					is_powerful = yes
+				}
+			}
+			ig:ig_landowners ?= {
+				save_scope_as = gatekeeper_ig
+			}
+		}
+		else_if = {
+			limit = {
+				ig:ig_petty_bourgeoisie ?= {
+					is_powerful = yes
+				}
+			}
+			ig:ig_petty_bourgeoisie ?= {
+				save_scope_as = gatekeeper_ig
+			}
+		}
+		else_if = {
+			limit = {
+				ig:ig_industrialists ?= {
+					is_powerful = yes
+				}
+			}
+			ig:ig_industrialists ?= {
+				save_scope_as = gatekeeper_ig
+			}
+		}
+		else = {
+			ig:ig_landowners ?= {
+				save_scope_as = gatekeeper_ig
+			}
+		}
+		random_interest_group = {
+			limit = {
+				ig_counts_as_marginal = no
+				OR = {
+					has_ideology = ideology:ideology_progressive
+					has_ideology = ideology:ideology_communitarian
+				}
+				NOR = {
+					is_interest_group_type = ig_landowners
+					is_interest_group_type = ig_petty_bourgeoisie
+					is_interest_group_type = ig_industrialists
+				}
+			}
+			save_scope_as = school_ig
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #we shall continue with this
+		name = children_rights_events.6.a
+		default_option = yes
+		add_enactment_modifier = {
+			name = no_gatekeeping
+		}
+		scope:gatekeeper_ig = {
+			add_modifier = {
+				name = gatekeeping_education_no
+				days = normal_modifier_time
+				multiplier = -1
+			}
+		}
+		scope:school_ig = {
+			add_modifier = {
+				name = gatekeeping_education_no
+				days = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #lie to them
+		name = children_rights_events.6.b
+		trigger = {
+			OR = {
+				has_law = law_type:law_secret_police
+				scope:school_ig = {
+					is_interest_group_type = ig_petty_bourgeoisie
+					is_powerful = yes
+				}
+			}
+		}
+		add_enactment_modifier = {
+			name = no_gatekeeping
+		}
+	}
+
+	option = { #ask for private donations
+		name = children_rights_events.6.c
+		random_list = {
+			1 = {
+				root = {
+					add_enactment_modifier = {
+						name = no_gatekeeping
+						multiplier = 2
+					}
+				}
+			}
+			3 = {
+			}
+		}
+	}
+}

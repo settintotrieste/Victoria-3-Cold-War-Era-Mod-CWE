@@ -1,0 +1,740 @@
+﻿namespace = negotiation
+
+###Negotiation Documentation
+
+##Welcome to negotiations! These are designed to be completely modular. At the time of writing it is designed as a single event. But don't be deceived, there are many variations within.
+
+##Event loc and the events image are pulled from a random list, with 3 possibilities for each level, based on whether negotiations are Collaborative, Pragmatic, or Tense. It is possible to add more images and loc simply by adjusting the set_negotiation_loc scripted effect, in 04_neg_event_options_scripted_effects...  This can be done either independently or synced with the options, so art, loc.
+
+##Then then the event options are generated in he set_neg_options scripted effect, also in 04_neg_event_options_scripted_effects. Note there are other files for the other more practical negotiations scripted effects, triggers, and script values.
+
+##Options are chosen from this random list in the immediate, with each option having triggers, and some with modified chances (e.g. making more likely to be chosen by a certain IG). Some have effects run in the immediate. A big gotcha here is that scopes cannot be saved here, since its all in a random list which does not save permanent scopes (at the time of writing). Use temporary scopes and save as variables instead.
+
+##Finally, the options themselves have effects. Most of these are multiplied by GDP at some point, and also by the severity of the negotiations. Tense Negotiations have multipliers of 4, Pragmatic negotiations of 2, and Collaborative of 1.
+
+##Many options then start a corresponding Journal Entry. The Journal entry effects are also multiplied by the level of negotiations. Negotiation journal entries are designed to be punishing if players fail, but don't offer great rewards. This is because players have already received their award upfront when they got the boost on the enacted law.
+
+##Scripted effects are used extensively to keep negotiations consistent and aid in adjusting balance. To ensure a value (like the amount of buildings the player is promising to build) remains consistent in the event option's localisation and in the promise journal entries, all these tend to be saved as variables on the interest group. E.g. var:promise_quest_degree saves the degree of negotiations (tense, etc), var:promised_building_type is the building type, var:building_level_increase is the amount promised to reach, var:promise_quest_type powers the script value which adjusts the failure effects based on how close the player gets to fulfilling the goal, based on the quest type - all these are saved on the IG.
+
+##The Promise Journal entries have some logic which grabs the right interest group and then sets up the journal entry based on these variables, carrying right to the end of the JE, where they are finally cleared in the quest_cleanup scripted effect so they do not interfere with any future negotiations. (Don't forget that.)
+
+##However, it is possible to skip this whole system and go ahead and create a entirely new negotiation event, with specific triggers, options, loc and art. The main reason you wouldn't want to do this is, by simply adding triggered loc and options in the existing system, the existing set of options can be reused. If you want to create entirely new options for a very specific event, then it is a good case to make a separate event - though make sure an appropriately long cooldown is used to ensure balance.
+
+##To do this, simply add the event to the list on the on_negotiate_with on-action (you'll see negotiation.1 there) and ensure it contains is_popup = yes. You may want to look at the immediate of the original event and at the negotiation_end scripted trigger, especially with the finish_negotiation effect. Another essential scripted effect is improve_law_stance, which does some of the heavy lifting and tooltip work on top of the raw improve_stance from code, ensuring it works as intended when making the Interest group swap stances to stop stalling or start supporting the law.
+
+##Last of all, remember to set appropriate AI weights for each option.
+
+# Master Event
+negotiation.1 = {
+	type = country_event
+	placement = root
+
+	title = negotiation.1.t
+
+	desc = { #Variety. First 3 are difficult, then 3 middle, then 3 friendly.
+		first_valid = {
+			triggered_desc = {
+				desc = negotiation.1.d
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 1
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.d2
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 2
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.d3
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 3
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.d4
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 4
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.d5
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 5
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.d6
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 6
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.d7
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 7
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.d8
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 8
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.d9
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 9
+				}
+			}
+		}
+	}
+
+	flavor  = { #Variety. First 3 are difficult, then 3 middle, then 3 friendly.
+		first_valid = {
+			triggered_desc = {
+				desc = negotiation.1.f
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 1
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.f2
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 2
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.f3
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 3
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.f4
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 4
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.f5
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 5
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.f6
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 6
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.f7
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 7
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.f8
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 8
+				}
+			}
+			triggered_desc = {
+				desc = negotiation.1.f9
+				trigger = {
+					has_variable = negotiation_variant
+					var:negotiation_variant = 9
+				}
+			}
+		}
+	}
+
+	##Event Images
+	##Variety. First 3 are difficult, then 3 middle, then 3 friendly.
+	event_image = {
+		trigger = {
+			var:negotiation_variant = 1
+		}
+		video = "middleeast_courtroom_upheaval"
+	}
+	event_image = {
+		trigger = {
+			var:negotiation_variant = 2
+		}
+		video =  "asia_union_leader"
+	}
+	event_image = {
+		trigger = {
+			var:negotiation_variant = 3
+		}
+		video = "africa_leader_arguing"
+	}
+	event_image = {
+		trigger = {
+			var:negotiation_variant = 4
+		}
+		video =  "southamerica_aristocrats"
+	}
+	event_image = {
+		trigger = {
+			var:negotiation_variant = 5
+		}
+		video = "ep1_clandestine_meeting"
+	}
+	event_image = {
+		trigger = {
+			var:negotiation_variant = 6
+		}
+		video = "asia_politician_parliament_motion"
+	}
+	event_image = {
+		trigger = {
+			var:negotiation_variant = 7
+		}
+		video = "middleeast_middleclass_cafe"
+	}
+	event_image = {
+		trigger = {
+			var:negotiation_variant = 8
+		}
+		video = "africa_diplomats_negotiating"
+	}
+	event_image = {
+		trigger = {
+			var:negotiation_variant = 9
+		}
+		video = "europenorthamerica_capitalists_meeting"
+	}
+	##extras:
+	##video = "ep1_power_blocs"
+	##video = "unspecific_signed_contract"
+	##video = "asia_farmers_market"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	duration = 3
+
+	is_popup = yes
+
+	immediate = { ##scope:negotiating_interest_group is automatically saved for all negotiation events.
+		## Set Scopes
+		scope:negotiating_interest_group = {
+			save_scope_as = ig
+		}
+		currently_enacting_law = {
+			save_scope_as = law
+		}
+		scope:law = {
+			random_possible_amendment_type = {
+				limit = {
+					amendment_banned_from_enactment = no
+					scope:ig = { would_sponsor_amendment = prev }
+				}
+				save_scope_as = amendment_type
+			}
+		}
+		scope:ig = {
+			set_variable = {
+				name = promise_quest_degree
+				value = scope:ig.amenability_level
+			}
+			set_promised_building_type = yes #this must be done here as it powers neg_option_5_trigger
+			set_promised_building_group = yes #likewise
+		}
+		## Set loc variables
+		set_negotiation_loc = yes
+		## Set option variables. Do this last.
+		set_neg_options = yes
+	}
+
+	after = {
+		negotiation_end = yes
+	}
+
+	cancellation_trigger = {
+		currently_enacting_law != scope:law
+	}
+
+	option = { #bribe
+		name = negotiation.1.o1
+		trigger = {
+			OR = {
+				var:negotiation_option_a = 1
+				var:negotiation_option_b = 1
+				var:negotiation_option_c = 1
+			}
+		}
+		ai_chance = {
+			base = 10
+			modifier = {
+				trigger = {
+					OR = {
+						tax_level < high
+						net_total_income > neg_bribe_amount
+					}
+				}
+				add = 35
+			}
+			modifier = { #don't do if broke
+				trigger = {
+					AND = {
+						net_total_income < 0
+						tax_level >= high
+					}
+				}
+				add = -50
+			}
+		}
+
+		add_modifier = {
+			name = negotiation_bribes
+			multiplier = neg_bribe_amount
+			days = long_modifier_time
+			is_decaying = yes
+		}
+		scope:ig = {
+			finish_negotiation = "negotiation.1.o1"
+			add_modifier = {
+				name = bribed_ig_benefits
+				days = long_modifier_time
+				multiplier = scope:ig.amenability_level
+				is_decaying = yes
+			}
+			improve_law_stance = yes
+		}
+		if = {
+			limit = {
+				has_law = law_type:law_protected_speech
+			}
+			random_list = {
+				80 = {
+					#DO NOTHING
+				}
+				20 = {
+					trigger_event = {
+						id = generic_laws.2
+						popup = yes
+						days = 300
+					}
+				}
+			}
+		}
+		else = {
+			random_list = {
+				90 = {
+					#DO NOTHING
+				}
+				10 = {
+					trigger_event = {
+						id = generic_laws.2
+						popup = yes
+						days = 300
+					}
+				}
+			}
+		}
+	}
+
+	option = { #bureaucracy
+		name = negotiation.1.o2
+		trigger = {
+			OR = {
+				var:negotiation_option_a = 2
+				var:negotiation_option_b = 2
+				var:negotiation_option_c = 2
+			}
+		}
+
+		ai_chance = {
+			base = 5
+			modifier = {
+				trigger = {
+					produced_bureaucracy > {
+						value = bureaucracy_usage
+						multiply = {
+							value = 0.05
+							multiply = scope:ig.amenability_level
+							add = 1
+						}
+					}
+				}
+				add = 25
+			}
+			modifier = { #don't do if behind on bureaucracy
+				trigger = {
+					produced_bureaucracy <  bureaucracy_usage
+				}
+				add = -50
+			}
+		}
+
+		add_modifier =  {
+			name = negotiation_bureaucracy
+			multiplier = scope:ig.amenability_level
+			days = long_modifier_time
+			is_decaying = yes
+		}
+		scope:ig = {
+			finish_negotiation = "negotiation.1.o2"
+			add_modifier = {
+				name = bureaucracy_ig_benefits
+				days = long_modifier_time
+				multiplier = scope:ig.amenability_level
+				is_decaying = yes
+			}
+			improve_law_stance = yes
+		}
+	}
+
+	option = { #promise to increase army size
+		name = negotiation.1.o3
+		trigger = {
+			OR = {
+				var:negotiation_option_a = 3
+				var:negotiation_option_b = 3
+				var:negotiation_option_c = 3
+			}
+		}
+
+		ai_chance = {
+			base = 20
+			modifier = {
+				trigger = {
+					army_size < {
+						value = wanted_army_size_script_value
+						multiply = 0.90
+					}
+				}
+				add = 50
+			}
+		}
+
+		custom_tooltip = {
+			text = promise_grow_army_tt
+		}
+		scope:ig = {
+			finish_negotiation = "negotiation.1.o3"
+			set_variable = {
+				name = promise_quest_type
+				value = 1 #grow army
+			}
+		}
+		promise_quest = yes
+		add_journal_entry = { #must do this last
+			type = je_negotiate_army_quest
+		}
+
+	}
+
+	option = { #promise to pass law
+		name = negotiation.1.o4
+		trigger = {
+			OR = {
+				var:negotiation_option_a = 4
+				var:negotiation_option_b = 4
+				var:negotiation_option_c = 4
+			}
+		}
+
+		ai_chance = {
+			base = 0
+			modifier = { #note: medium promise laws are within 20 enactment chance at worst case scenario.
+				trigger = { #wants the law at all
+					scope:ig.var:desired_law_var.type = {
+						law_is_valid_for_ig_petition = yes #AI would want this law
+					}
+				}
+				add = 5
+			}
+			modifier = {
+				trigger = { #wants the law and is decent chance of passing
+					scope:ig.var:desired_law_var.type = {
+						law_is_valid_for_ig_petition = yes #AI would want this law
+						law_estimated_enactment_chance > {
+				            add = law_estimated_stall_chance
+				            add = -10
+				        }
+					}
+				}
+				add = 25
+			}
+			modifier = { #accumulates with above, promised law is easy to pass and wanted
+				trigger = {
+					scope:ig.var:desired_law_var.type = {
+						law_is_valid_for_ig_petition = yes #AI would want this law
+						law_estimated_enactment_chance > law_estimated_stall_chance
+					}
+				}
+				add = 50
+			}
+		}
+
+		custom_tooltip = { #also resets petition cooldown
+			text = promise_pass_law_tt
+			set_variable = { name = gov_petition_cooldown years = 15 }
+			set_variable = { name = gov_petition_fired months = 3 }
+		}
+		custom_tooltip = promise_pass_law_extra_help_tt
+		scope:ig = {
+			finish_negotiation = "negotiation.1.o4"
+			set_variable = {
+				name = promise_quest_type
+				value = 2 #law
+			}
+		}
+		promise_quest = yes
+		if = { #must do this last to ensure variables set.
+			limit = {
+				has_journal_entry = je_government_petition_negotiation_version
+			}
+			add_journal_entry = { #add duplicate version for 2nd law promise
+				type = je_government_petition_negotiation_version_b
+			}
+		}
+		else = {
+			add_journal_entry = {
+				type = je_government_petition_negotiation_version
+			}
+		}
+	}
+
+	option = { #Promise to build specific buildings
+		name = negotiation.1.o5
+		trigger = {
+			OR = {
+				var:negotiation_option_a = 5
+				var:negotiation_option_b = 5
+				var:negotiation_option_c = 5
+			}
+		}
+
+		ai_chance = { #AI should never do this
+			base = 0
+		}
+
+
+		custom_tooltip = {
+			text = promise_build_tt
+		}
+		scope:ig = {
+			finish_negotiation = "negotiation.1.o5"
+			set_variable = {
+				name = promise_quest_type
+				value = 3 #buildings
+			}
+		}
+		promise_quest = yes
+		construction_balance_effects = yes
+		add_journal_entry = { #must do this last
+			type = je_negotiate_buildings
+		}
+	}
+
+	option = { #Promise to build group
+		name = negotiation.1.o6
+		trigger = {
+			OR = {
+				var:negotiation_option_a = 6
+				var:negotiation_option_b = 6
+				var:negotiation_option_c = 6
+			}
+		}
+		custom_tooltip = {
+			text = promise_building_group_tt
+		}
+		scope:ig = {
+			finish_negotiation = "negotiation.1.o6"
+			set_variable = {
+				name = promise_quest_type
+				value = 3 #buildings
+			}
+		}
+		promise_quest = yes
+		construction_balance_effects = yes
+		add_journal_entry = { #must do this last
+			type = je_negotiate_building_group
+		}
+	}
+
+	option = { #Promise to build group
+		name = negotiation.1.o7
+		trigger = {
+			OR = {
+				var:negotiation_option_a = 7
+				var:negotiation_option_b = 7
+				var:negotiation_option_c = 7
+			}
+		}
+
+		ai_chance = { #AI should never do this
+			base = 0
+		}
+
+		custom_tooltip = promise_lower_taxes_tt
+		scope:ig = {
+			finish_negotiation = "negotiation.1.o7"
+			set_variable = {
+				name = promise_quest_type
+				value = 4 #taxes
+			}
+		}
+		promise_quest = yes
+		if = {
+			limit = {
+				scope:ig.var:promise_quest_degree <= 2
+			}
+			set_tax_level = low
+		}
+		else = {
+			set_tax_level = very_low
+		}
+		add_journal_entry = { #must do this last
+			type = je_negotiate_taxes
+		}
+	}
+
+	option = { #amendments
+		name = negotiation.1.o8
+		trigger = {
+			OR = {
+				var:negotiation_option_a = 8
+				var:negotiation_option_b = 8
+				var:negotiation_option_c = 8
+			}
+		}
+
+		ai_chance = { #AI should always do this, on the rare occasions it's available
+			base = 100
+		}
+
+		scope:law = {
+			add_amendment = {
+				type = scope:ig.var:amendment_type
+				sponsor = scope:ig
+				cooldown = 120
+			}
+		}
+		scope:ig = {
+			finish_negotiation = "negotiation.1.o8"
+			improve_law_stance = yes
+		}
+	}
+
+
+	option = { #SOL
+		name = negotiation.1.o9
+		trigger = {
+			OR = {
+				var:negotiation_option_a = 9
+				var:negotiation_option_b = 9
+				var:negotiation_option_c = 9
+			}
+		}
+
+		ai_chance = {
+			base = 5
+			modifier = { #less than 5% in debt, good sign
+				trigger = {
+					principal < {
+						add = credit
+						multiply = 0.05
+					}
+				}
+				add = 50
+			}
+			modifier = { #don't do if in serious debt
+				trigger = {
+					principal > {
+						add = credit
+						multiply = 0.15
+					}
+				}
+				add = -200
+			}
+			modifier = { #if investment pool is good, that's sign things are gonna improve
+				trigger = {
+					investment_pool_net_income > {
+						add = root.income
+						multiply = 0.15
+					}
+				}
+				add = 10
+			}
+			modifier = { #if investment pool is bad, trouble
+				trigger = {
+					investment_pool_net_income < {
+						add = root.income
+						multiply = 0.05
+					}
+				}
+				add = -20
+			}
+			modifier = { #pragmatic promise tends to complete itself
+				trigger = {
+					scope:ig.var:promise_quest_degree = 2
+				}
+				add = 15
+			}
+		}
+
+		custom_tooltip = {
+			text = promise_higher_sol_tt
+		}
+		scope:ig = {
+			finish_negotiation = "negotiation.1.o9"
+			set_variable = {
+				name = promise_quest_type
+				value = 5 #SOL
+			}
+			add_modifier = {
+				name = heroes_of_the_people
+				days = long_modifier_time
+				multiplier = scope:ig.var:promise_quest_degree
+			}
+		}
+		promise_quest = yes
+		add_journal_entry = { #must do this last
+			type = je_negotiate_sol
+		}
+	}
+
+	#### This Option must be at the bottom
+	option = { #cancel
+		name = negotiation.1.cancel
+		default_option = yes
+
+		ai_chance = { #do if no other option looks good
+			base = 1
+		}
+
+		scope:ig = {
+			finish_negotiation = "negotiation.1.cancel"
+			add_modifier = {
+				name = failed_negotiations_ig
+				days = normal_modifier_time
+			}
+		}
+	}
+	#### The Cancel Option must be at the bottom
+}
+

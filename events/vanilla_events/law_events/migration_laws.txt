@@ -156,8 +156,15 @@ migration_laws.2 = {
 	option = {
 		name = migration_laws.2.b
 		default_option = yes
-		add_enactment_modifier = {
-			name = considering_religious_immigration_restrictions
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_migration_religious_restrictions
+				sponsor = scope:devout_ig
+				cooldown = 120
+			}
+		}
+		scope:devout_ig = {
+			improve_law_stance = yes
 		}
 	}
 }
@@ -182,7 +189,7 @@ migration_laws.3 = {
 
 	icon = "gfx/interface/icons/event_icons/event_default.dds"
 
-	cooldown = { days = normal_modifier_time }
+	cooldown = { days = long_modifier_time }
 
 	trigger = {
 		OR = {
@@ -197,7 +204,17 @@ migration_laws.3 = {
 		}
 		NOT = { has_modifier = free_movement_of_labor }
 		NOT = { has_modifier = welfare_for_all }
-		NOT = { has_modifier = limiting_workforce_migration }
+		any_interest_group = {
+			law_stance = {
+				law = law_type:law_closed_borders
+				value > neutral
+			}
+		}
+		NOT = {
+			currently_enacting_law = {
+				has_amendment = amendment_nativist_labour_market
+			}
+		}
 	}
 
 	immediate = {
@@ -209,6 +226,15 @@ migration_laws.3 = {
 				average_sol < 15
 			}
 			save_scope_as = improverished_state
+		}
+		random_interest_group = {
+			limit = {
+				law_stance = {
+					law = law_type:law_closed_borders
+					value > neutral
+				}
+			}
+			save_scope_as = closed_borders_ig
 		}
 	}
 
@@ -254,9 +280,12 @@ migration_laws.3 = {
 	option = {
 		name = migration_laws.3.c
 		default_option = yes
-
-		add_enactment_modifier = {
-			name = limiting_workforce_migration
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_nativist_labour_market
+				sponsor = scope:closed_borders_ig
+				cooldown = 60
+			}
 		}
 	}
 }
@@ -366,11 +395,33 @@ migration_laws.5 = {
 		NOT = { has_law_or_variant = law_type:law_isolationism }
 		NOT = { has_modifier = trade_restrictions_considered }
 		NOT = { has_modifier = trade_restrictions_rejected }
+		any_interest_group = {
+			ig_counts_as_marginal = no
+			law_stance = {
+				law = law_type:law_isolationism
+				value < neutral
+			}
+		}
+		NOT = {
+			currently_enacting_law = {
+				has_amendment = amendment_migration_tariff_exemptions
+			}
+		}
 	}
 
 	immediate = {
 		currently_enacting_law = {
 			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				ig_counts_as_marginal = no
+				law_stance = {
+					law = law_type:law_isolationism
+					value < neutral
+				}
+			}
+			save_scope_as = anti_isolationism_ig
 		}
 	}
 
@@ -380,9 +431,6 @@ migration_laws.5 = {
 
 	option = {
 		name = migration_laws.5.a
-		add_enactment_modifier = {
-			name = trade_restrictions_considered
-		}
 		every_interest_group = {
 			limit = {
 				law_stance = {
@@ -402,6 +450,13 @@ migration_laws.5 = {
 		default_option = yes
 		add_enactment_modifier = {
 			name = trade_restrictions_rejected
+		}
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_migration_tariff_exemptions
+				sponsor = scope:anti_isolationism_ig
+				cooldown = 120
+			}
 		}
 	}
 }
