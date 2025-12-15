@@ -5,7 +5,7 @@ regency.1 = {
 	type = country_event
 	placement = root
 
-	duration = 3
+	duration = 1
 
 	title = regency.1.t
 	desc = regency.1.d
@@ -22,11 +22,27 @@ regency.1 = {
 	### No cooldown
 
 	trigger = {
+	
 		# Is a monarchy, ruler is undr age of majority
+		is_a_regime_monarchy = yes
+		is_a_regency_government = no
+		has_gov_regency = no
+		ruler ?= {
+			age < define:NCharacters|ADULT_AGE
+			NOT = { has_variable = regency_complete }
+		}
+		
 	}
 
 	cancellation_trigger = {
-
+		OR = {
+			is_a_regime_monarchy = no
+			ruler ?= { age >= define:NCharacters|ADULT_AGE }
+			AND = { 
+				is_a_regency_government = yes
+				has_gov_regency = yes
+			}
+		}
 	}
 
 	immediate = {
@@ -95,6 +111,11 @@ regency.1 = {
 		ruler ?= {
 			save_scope_as = monarch_scope
 		}
+		#Clean up all monarchs
+		every_scope_character = {
+			limit = { has_modifier = monarch_character }
+			remove_modifier = monarch_character
+		}
 	}
 
 	option = {
@@ -112,6 +133,7 @@ regency.1 = {
 					set_character_immortal = yes
 				}
 			}
+			add_modifier = { name = regent_character }
 		}
 		set_heir = scope:monarch_scope
 		add_regency_modifier = yes
@@ -134,6 +156,7 @@ regency.1 = {
 					set_character_immortal = yes
 				}
 			}
+			add_modifier = { name = regent_character }
 		}
 		set_heir = scope:monarch_scope
 		add_regency_modifier = yes
@@ -156,6 +179,7 @@ regency.1 = {
 					set_character_immortal = yes
 				}
 			}
+			add_modifier = { name = regent_character }
 		}
 		set_heir = scope:monarch_scope
 		add_regency_modifier = yes
@@ -178,6 +202,7 @@ regency.1 = {
 					set_character_immortal = yes
 				}
 			}
+			add_modifier = { name = regent_character }
 		}
 		set_heir = scope:monarch_scope
 		add_regency_modifier = yes
@@ -205,21 +230,31 @@ regency.2 = {
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 
 	trigger = {
-		has_gov_regency = yes
+		is_a_regency_government = yes
 		ruler ?= {
 			OR = {
-				age >= 75
-				has_trait = psychological_affliction
-				has_trait = cancer
-				has_trait = senile
+				#Regent is too old
+				AND = { 
+					has_modifier = regent_character
+					OR = {
+						age >= 75
+						has_trait = psychological_affliction
+						has_trait = cancer
+						has_trait = senile
+					}
+				}
+				#Regent has already died
+				NOT = { has_modifier = regent_character }
 			}
+			#Heir can only take over to abolish the regency if of age
+			age >= define:NCharacters|ADULT_AGE
 		}
 	}
 
-	cooldown = { months = short_modifier_time }
+	#cooldown = { months = short_modifier_time }
 
 	cancellation_trigger = {
-
+		
 	}
 
 	immediate = {
@@ -301,9 +336,10 @@ regency.2 = {
 						set_character_immortal = yes
 					}
 				}
+				add_modifier = { name = regent_character }
 			}
 		}
-		scope:regent_scope = {
+		scope:regent_scope ?= {
 			hidden_effect = {
 				if = {
 					limit = {
@@ -334,8 +370,9 @@ regency.2 = {
 					set_character_immortal = yes
 				}
 			}
+			add_modifier = { name = regent_character }
 		}
-		scope:regent_scope = {
+		scope:regent_scope ?= {
 			hidden_effect = {
 				if = {
 					limit = {
@@ -366,8 +403,9 @@ regency.2 = {
 					set_character_immortal = yes
 				}
 			}
+			add_modifier = { name = regent_character }
 		}
-		scope:regent_scope = {
+		scope:regent_scope ?= {
 			hidden_effect = {
 				if = {
 					limit = {
@@ -398,8 +436,9 @@ regency.2 = {
 					set_character_immortal = yes
 				}
 			}
+			add_modifier = { name = regent_character }
 		}
-		scope:regent_scope = {
+		scope:regent_scope ?= {
 			hidden_effect = {
 				if = {
 					limit = {
@@ -420,7 +459,7 @@ regency.3 = {
 	type = country_event
 	placement = root
 
-	duration = 3
+	duration = 1
 
 	title = regency.3.t
 	desc = regency.3.d
@@ -438,14 +477,34 @@ regency.3 = {
 	cooldown = { days = 100 }
 
 	trigger = {
-		has_gov_regency = yes
-		heir ?= {
-			age >= define:NCharacters|ADULT_AGE
+		is_a_regency_government = yes
+		OR = {
+			#Heirs comes of age while regent is still alive
+			AND = {
+				ruler ?= { has_modifier = regent_character }
+				heir ?= { age >= define:NCharacters|ADULT_AGE }
+			}
+			#Regent died but heir is of age
+			ruler ?= { 
+				NOT = { has_modifier = regent_character }
+				age >= define:NCharacters|ADULT_AGE
+			}
+			ruler ?= { age < define:NCharacters|ADULT_AGE }
 		}
 	}
 
 	cancellation_trigger = {
-
+		is_a_regency_government = no
+		NAND = {
+			ruler ?= { has_modifier = regent_character }
+			heir ?= { age >= define:NCharacters|ADULT_AGE }
+		}
+		NOT = {
+			ruler ?= { 
+				NOT = { has_modifier = regent_character } 
+				age >= define:NCharacters|ADULT_AGE
+			}
+		}
 	}
 
 	immediate = {
@@ -454,6 +513,12 @@ regency.3 = {
 		}
 		heir ?= {
 			save_scope_as = monarch_scope
+		}
+		if = {
+			limit = { ruler ?= { age < define:NCharacters|ADULT_AGE } }
+			ruler ?= {
+				save_scope_as = monarch_scope
+			}
 		}
 	}
 
@@ -470,10 +535,21 @@ regency.3 = {
 					set_character_immortal = no
 				}
 			}
+			remove_modifier = regent_character
 		}
 		scope:monarch_scope ?= {
 			set_character_as_ruler = yes
 			set_variable = regency_complete
+			set_character_as_monarch = yes
+		}
+		if = {
+			limit = { 
+				scope:monarch_scope ?= { 
+					has_variable = regency_complete 
+					age < define:NCharacters|ADULT_AGE
+				}
+			}
+			scope:monarch_scope ?= { remove_variable = regency_complete }
 		}
 	}
 }
