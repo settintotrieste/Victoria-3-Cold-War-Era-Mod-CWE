@@ -5,8 +5,8 @@ REPLACE_OR_CREATE:ip4_coup_victory_government_effects = {
 				is_a_regime_monarchy = no
 				has_gov_regency = yes
 			}
-			glorious_revolution_coup_trigger = no
-			dynastic_coup_trigger = no
+			#glorious_revolution_coup_trigger = no
+			#dynastic_coup_trigger = no
 		}
 		hidden_effect = {
 			if = {
@@ -168,6 +168,229 @@ REPLACE_OR_CREATE:ip4_coup_victory_effect_interaction_display = {
 		owner ?= {
 			call_election = {
 				months = 3
+			}
+		}
+	}
+}
+
+REPLACE_OR_CREATE:ip4_coup_victory_law_effects = {
+	if = {
+		limit = {
+			exists = currently_enacting_law
+			scope:golpista_ig ?= {
+				law_enactment_stance = {
+					law = owner.currently_enacting_law.type
+					value <= neutral # Will halt enactment unless they approve of the law
+				}
+			}
+		}
+		cancel_enactment = yes
+	}
+	if = {
+		limit = {
+			exists = scope:coup_desired_law
+		}
+		activate_law = scope:coup_desired_law.type
+	}
+	else_if = { # In case
+		limit = {
+			scope:golpista_ig ?= {
+				any_preferred_law = {
+					law_is_available = yes
+					law_is_valid_for_ig_petition = yes
+					NOT = {
+						ROOT = {
+							has_law = prev.type
+						}
+					}
+				}
+			}
+		}
+		scope:golpista_ig ?= {
+			ordered_preferred_law = {
+				limit = {
+					law_is_available = yes
+					law_is_valid_for_ig_petition = yes
+					NOT = {
+						ROOT = {
+							has_law = prev.type
+						}
+					}
+				}
+				position = 0
+				check_range_bounds = no
+				ROOT = {
+					activate_law = prev.type
+				}
+			}
+		}
+	}
+}
+
+REPLACE_OR_CREATE:initialise_caciquismo_effect = {
+	set_variable = caciquismo_var
+	if = {
+		limit = {
+			OR = {
+				active_law:lawgroup_distribution_of_power ?= {
+					OR = {
+						has_amendment = amendment_chamber_of_procurators
+						has_amendment = amendment_chamber_of_gentleman_deputies
+					}
+				}
+				has_law_or_variant = law_type:law_rigged_voting
+				has_law_or_variant = law_type:law_gerrymandered_voting
+				has_law_or_variant = law_type:law_harassment_voting
+				has_law_or_variant = law_type:law_fair_voting
+			}
+		}
+		active_law:lawgroup_distribution_of_power ?= {
+			add_amendment = {
+				type = amendment_electoral_clientelism
+				sponsor = PREV.ig:ig_landowners
+				cooldown = 1200
+			}
+		}
+	}
+}
+
+REPLACE_OR_CREATE:inherit_free_elections_effect = {
+	if = {
+		limit = {
+			has_variable = free_elections_var
+		}
+		scope:relevant_voting_law ?= {
+			add_amendment = {
+				type = amendment_tradition_of_free_elections
+				sponsor = PREV.ig:ig_petty_bourgeoisie
+				cooldown = 1200
+			}
+		}
+	}
+}
+
+REPLACE_OR_CREATE:remove_electoral_fraud_effect = {
+	remove_variable = caciquismo_var
+	remove_variable = electoral_fraud_abolish_var
+	if = {
+		limit ={
+			active_law:lawgroup_distribution_of_power ?= {
+				has_amendment = amendment_electoral_clientelism
+			}
+		}
+		active_law:lawgroup_distribution_of_power ?= {
+			random_scope_amendment = {
+				limit = {
+					type = amendment_type:amendment_electoral_clientelism
+				}
+				remove_amendment = yes
+			}
+		}
+	}
+	set_variable = free_elections_var
+	active_law:lawgroup_distribution_of_power ?= {
+		add_amendment = {
+			type = amendment_tradition_of_free_elections
+			sponsor = PREV.ig:ig_petty_bourgeoisie
+		}
+	}
+}
+
+REPLACE_OR_CREATE:transfer_character_of_unknown_status_to_country_and_make_ruler_effects = { # Requires summoned_character_scope, occurs within this scope, scope:summoning_country is the summoning country
+	if = {
+		limit = {
+			is_in_void = yes
+		}
+		hidden_effect = {
+			free_character_from_void = yes
+		}
+	}
+	if = {
+		limit = {
+			is_in_exile_pool = yes
+		}
+		transfer_character = scope:summoning_country
+		set_variable = exile_to_ruler_var
+		set_variable = {
+			name = memento_mori_immunity
+			months = 60
+		}
+		hidden_effect = {
+			free_from_exile_effect = yes
+		}
+	}
+	if = {
+		limit = {
+			NOT = { owner ?= scope:summoning_country }
+		}
+		owner = {
+			save_scope_as = yoink_country
+		}
+		if = { # Surely this won't cause any utterly insane Personal Unions
+			limit = {
+				AND = {
+					scope:summoning_country ?= {
+						has_law = law_type:law_HOS_monarch
+					}
+					scope:summoned_character_scope ?= {
+						is_ruler = yes
+						owner ?= {
+							has_law = law_type:law_HOS_monarch
+							has_gov_regency = no
+						}
+					}
+				}
+			}
+			if = {
+				limit = {
+					scope:summoning_country.prestige >= scope:yoink_country.prestige
+				}
+				custom_tooltip = {
+					text = summoning_country_becomes_senior_in_personal_union_with_owner_tt
+					scope:summoned_character_scope ?= {
+						transfer_character = scope:summoning_country
+						set_character_as_ruler = yes
+					}
+					scope:summoning_country ?= {
+						create_diplomatic_pact = {
+							country = scope:yoink_country
+							type = personal_union
+						}
+					}
+				}
+			}
+			else = {
+				custom_tooltip = {
+					text = summoning_country_becomes_junior_in_personal_union_with_owner_tt
+					scope:yoink_country ?= {
+						create_diplomatic_pact = {
+							country = scope:summoning_country
+							type = personal_union
+						}
+					}
+				}
+			}
+		}
+		else = {
+			owner = {
+				post_notification = summoned_character_leaves_country
+			}
+			transfer_character = scope:summoning_country
+			scope:summoning_country ?= {
+				# Make monarch
+				if = {
+					limit = {
+						owner = scope:summoning_country
+						is_ruler = yes
+					}
+					custom_tooltip = summoned_character_becomes_monarch_tt
+				}
+				else = {
+					hidden_effect = {
+						cleanup_ruler_character_roles = yes
+					}
+					set_character_as_ruler = yes
+				}
 			}
 		}
 	}
