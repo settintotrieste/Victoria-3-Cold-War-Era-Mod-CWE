@@ -23,8 +23,55 @@ ip4_coup.1 = {
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 
 	trigger = {
+	
+		#Not already fired
 		NOT = { has_journal_entry = je_ip4_coup }
 		NOT = { has_free_government_reform = yes } # Election grace period
+		
+		#Pre-requisites
+		OR = {
+		
+			#Institutional coup
+			AND = {
+				has_law_or_variant = law_type:law_secret_police
+				ig:ig_intelligentsia ?= { 
+					is_in_government = no 
+					ig_approval <= unhappy
+				}
+			}
+			AND = {
+				OR = { 
+					has_law_or_variant = law_type:law_professional_army
+					has_law_or_variant = law_type:law_mass_conscription
+				}
+				ig:ig_armed_forces ?= { 
+					is_in_government = no 
+					ig_approval <= unhappy
+				}
+			}
+			has_law_or_variant = law_type:law_politicised_armed_forces
+			has_law_or_variant = law_type:law_semi_politicised_armed_forces
+			
+			#Self coup
+			any_scope_character = {
+				is_ruler = no 
+				has_role = politician
+				character_is_autocratic = yes
+				interest_group = {
+					is_powerful = yes
+					ig_approval <= define:NPolitics|APPROVAL_THRESHOLD_ANGRY
+				}
+			}
+			
+			#External coup
+			any_interest_group = {
+				is_powerful = yes
+				ig_approval <= define:NPolitics|APPROVAL_THRESHOLD_ANGRY
+			}
+			
+		}
+		
+		#Coup character
 		any_scope_character = {
 			OR = {
 				has_role = general
@@ -38,8 +85,11 @@ ip4_coup.1 = {
 				multiply = 0.9
 			}
 		}
+		
+		#Not already fired
 		NOT = { has_variable = coup_event_active }
 		NOT = { has_variable = coup_cooldown_var }
+		
 	}
 
 	cancellation_trigger = {
