@@ -199,7 +199,7 @@ take_state = {
 			}
 			is_diplomatic_play_committed_participant = no 
 			is_revolutionary = no
-			liberty_desire < define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_THRESHOLD
+			liberty_desire < 50
 		}
 	}
 	
@@ -226,15 +226,70 @@ take_state = {
 					min = 20
 				}				
 			}
-			create_incident = {
-				country = scope:target_country
+			change_infamy = {
 				value = {
-					value = "scope:second_state.ai_state_value(scope:target_country)"
-					divide = 10
-					max = 15
+					add = 5
+
+					multiply = {
+						value = scope:second_state.state_population
+						divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+						multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+						add = 1
+						max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_PER_STATE
+					}
+
+					multiply = {
+						value = 1
+						if = {
+							limit = {
+								scope:second_state = {
+									is_homeland_of_country_cultures = root
+								}
+							}
+							add = define:NDiplomacy|WAR_GOAL_INFAMY_HOMELAND_FACTOR
+						}
+					}
+
+					multiply = {
+						value = 1
+						if = {
+							limit = {
+								scope:second_state = {
+									is_incorporated = no
+								}
+							}
+							add = define:NDiplomacy|WAR_GOAL_INFAMY_UNINCORPORATED_FACTOR
+						}
+					}
+
+					multiply = {
+						value = 1
+						if = {
+							limit = {
+								scope:target_country = {
+									is_country_type = unrecognized
+								}
+							}
+							add = modifier:country_infamy_generation_against_unrecognized_mult
+						}
+					}
+
+					multiply = {
+						value = 1
+						if = {
+							limit = {
+								scope:target_country = {
+									is_subject_of = root
+									liberty_desire < define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_THRESHOLD
+								}
+							}
+							multiply = define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_SUBJECT_MULT
+						}
+					}
+
 					min = 5
 				}
-			}					
+			}				
 			scope:second_state = { set_state_owner = root }		
 		}
 	}

@@ -87,6 +87,9 @@ on_game_started_after_lobby = {
 
 # No root scope set
 on_monthly_pulse = {
+	on_actions = {
+		exile_pool_culling_on_action
+	}
 	effect = {
 	
 		every_character_in_exile_pool = {
@@ -344,7 +347,20 @@ on_decade_pulse_country = {
 
 # Only fires for countries with Elections enabled
 on_monthly_pulse_country_elections = {
-	
+	effect = {
+		if = {
+			limit = {
+				NOT = {
+					has_variable = electoral_confidence_initialized
+				}
+			}
+			initialize_electoral_confidence = yes
+		}
+	}
+
+	on_actions = {
+		elections_monthly_events
+	}
 }
 
 # Root = Character
@@ -2289,7 +2305,8 @@ on_law_enactment_ended = {
 
 }
 
-# Root owner Country of the Law
+# owner = owner country of the Law
+# root = law
 # executed when the law is activated for any reason. It's usually because it
 # has been enacted, but script can activate laws directly without going through
 # the enactment process. Normally, it's immediately preceded by
@@ -2304,6 +2321,17 @@ on_law_enactment_ended = {
 on_law_activated = {
 	effect = {
 		second_amendment_add_obsessions_effect = yes # Relevant if owner is Yankee or Dixie
+		owner = {
+			if = { # If a currently enacting law is invalidated by an activated law, stop enacting it
+				limit = {
+					exists = currently_enacting_law
+					currently_enacting_law ?= {
+						law_is_available = no
+					}
+				}
+				cancel_enactment = yes
+			}
+		}
 	}
 }
 
@@ -3034,7 +3062,7 @@ on_election_campaign_start = {
 		if = {
 			limit = {
 				active_law:lawgroup_distribution_of_power ?= {
-					has_amendment = amendment_tradition_of_free_elections
+					has_amendment = amendment_type:amendment_type:amendment_tradition_of_free_elections
 				}
 			}
 			add_electoral_confidence = {
@@ -3439,17 +3467,5 @@ on_national_awakening_started = {
 # Root = Country
 # scope:amendment = amendment being repealed
 on_amendment_repealed = {
-	effect = {
-		if = {
-			limit = {
-				scope:amendment.type ?= amendment_type:amendment_american_second_amendment
-				cu:anglo_american = {
-					has_cultural_obsession = small_arms
-				}
-			}
-			cu:anglo_american = {
-				remove_cultural_obsession = small_arms
-			}
-		}
-	}
+	effect = {}
 }
