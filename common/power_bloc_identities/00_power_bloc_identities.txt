@@ -859,3 +859,180 @@ identity_religious = {
 		}		
 	}
 }
+
+identity_cultural = {
+	power_bloc_modifier = {
+		power_bloc_leader_can_spread_culture_to_pb_bool = yes
+		power_bloc_mandate_progress_per_great_power_member_add = 10
+		power_bloc_mandate_progress_per_major_power_member_add = 5
+		power_bloc_mandate_progress_per_minor_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_major_power_member_add = 2
+		power_bloc_mandate_progress_per_unrecognized_regional_power_member_add = 1
+		power_bloc_cohesion_per_member_add = -2
+	}
+
+	leader_modifier = {
+		country_can_impose_same_lawgroup_citizenship_in_power_bloc_bool = yes
+	}
+
+	non_leader_modifier = {
+	}
+
+	possible = {
+		NOT = {
+			has_law_or_variant = law_type:law_multicultural
+		}
+		custom_tooltip = { text = "is_not_a_superstate_eligible_country" is_a_superstate_eligible_country = no }
+	}
+
+	member_modifier = {
+		
+	}
+
+	can_leave = {
+		OR = {
+			is_power_bloc_leader = yes
+			power_bloc = {
+				leverage_advantage = {
+					target = root
+					value <= 30
+				}
+			}
+		}
+	}
+
+	icon = "gfx/interface/icons/central_identity_pillars_icons/cultural.dds"
+	background = "gfx/interface/power_blocs/backgrounds/pb_background_generic.dds"
+
+	visible = {
+		#has_dlc_feature = ip4_content
+	}
+
+	mandate_progress = power_bloc_mandate_progress_by_rank
+
+	on_created = { relations_hit_with_power_bloc_leaders = yes }
+
+	cohesion = {
+		add = {
+			add = 0.3
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_BASE
+		}
+
+		add = {
+			value = ig:ig_petty_bourgeoisie.ig_clout
+			add = ig:ig_intelligentsia.ig_clout
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			subtract = 20
+			desc = POWER_BLOC_COHESION_INTELLIGENTSIA_OR_PB_IG_CLOUT
+		}
+
+		if = {
+			limit = {
+				AND = {
+					ig:ig_petty_bourgeoisie ?= {
+						is_in_government = no
+					}
+					ig:ig_intelligentsia ?= {
+						is_in_government = no
+					}
+				}
+			}
+			add = {
+				add = -15
+				desc = POWER_BLOC_COHESION_INTELLIGENTSIA_AND_PB_IG_NOT_IN_GOVERNMENT
+			}
+		}
+
+		add = {
+			if = {
+				limit = { exists = scope:with_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_with(scope:with_country)"
+			}
+			else_if = {
+				limit = { exists = scope:without_country }
+				add = "scope:power_bloc.power_bloc_worst_leader_relations_without(scope:without_country)"
+			}
+			else = {
+				add = scope:power_bloc.power_bloc_worst_leader_relations
+			}
+			divide = define:NDiplomacy|MIN_RELATIONS
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			multiply = -1
+			max = 0
+			desc = POWER_BLOC_COHESION_WORST_LEADER_RELATIONS
+		}
+
+		add = {
+			value = scope:power_bloc.power_bloc_average_homogeneity
+			subtract = 50
+			multiply = 2
+			max = 75
+			min = -25
+			desc = POWER_BLOC_COHESION_AVERAGE_ACCEPTANCE_VALUE
+		}
+
+		add = {
+			scope:power_bloc = {
+				every_power_bloc_member = {
+					if = {
+						limit = {
+							has_law_or_variant = law_type:law_multicultural
+						}
+						add = -0.1
+					}
+				}
+			}
+			if = {
+				limit = {
+					exists = scope:with_country
+					scope:with_country ?= {
+						has_law_or_variant = law_type:law_multicultural
+					}
+				}
+				add = -0.1
+			}
+			else_if = {
+				limit = {
+					exists = scope:without_country
+					scope:without_country ?= {
+						has_law_or_variant = law_type:law_multicultural
+					}
+				}
+				add = 0.1
+			}
+			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+			desc = POWER_BLOC_COHESION_CITIZENSHIP_INCOMPATIBILITY
+		}
+	}
+
+	ai_weight = {
+		value = 50
+
+		if = {
+			limit = {
+				OR = {
+					ig:ig_intelligentsia ?= { is_in_government = yes }
+					ig:ig_petty_bourgeoisie ?= { is_in_government = yes }
+				}
+			}
+			add = 100
+		}
+
+		if = {
+			limit = {
+				any_primary_culture = {
+					OR = { # More likely for countries with large global diasporas and the like
+						has_discrimination_trait = language_hispanophone
+						has_discrimination_trait = language_lusophone
+						has_discrimination_trait = language_east_slavic
+						has_discrimination_trait = language_anglophone
+						has_discrimination_trait = language_arabic
+					}
+				}
+			}
+			add = 150
+		}
+		
+	}
+}

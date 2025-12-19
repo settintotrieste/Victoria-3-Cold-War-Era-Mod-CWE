@@ -1,0 +1,555 @@
+﻿namespace = regency
+
+# Start of the regency
+regency.1 = {
+	type = country_event
+	placement = root
+
+	duration = 1
+
+	title = regency.1.t
+	desc = regency.1.d
+	flavor = regency.1.f
+
+    event_image = {
+		video = "votp_monarch_holding_court"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	### No cooldown
+
+	trigger = {
+	
+		# Is a monarchy, ruler is undr age of majority
+		is_a_regime_monarchy = yes
+		is_a_regency_government = no
+		has_gov_regency = no
+		ruler ?= {
+			age < define:NCharacters|ADULT_AGE
+			NOT = { has_variable = regency_complete }
+		}
+		
+	}
+
+	cancellation_trigger = {
+		OR = {
+			is_a_regime_monarchy = no
+			scope:monarch_scope.age >= define:NCharacters|ADULT_AGE
+			AND = { 
+				is_a_regency_government = yes
+				has_gov_regency = yes
+			}
+		}
+	}
+
+	immediate = {
+		ordered_interest_group = { # Just the most notable IG in government
+			limit = {
+				is_in_government = yes
+			}
+			order_by = ig_clout
+			position = 0
+			check_range_bounds = no
+			save_scope_as = ig_candidate_1
+		}
+		ordered_interest_group = { # Any pro-monarchy IG
+			limit = {
+				NOT = {
+					scope:ig_candidate_1 ?= this
+				}
+				law_stance = {
+					law = law_type::law_HOS_monarch
+					value >= approve
+				}
+				ig_counts_as_marginal = no
+			}
+			order_by = ig_clout
+			position = 0
+			check_range_bounds = no
+			save_scope_as = ig_candidate_2
+		}
+		ordered_interest_group = {
+			limit = {
+				NOR = {
+					scope:ig_candidate_1 ?= this
+					scope:ig_candidate_2 ?= this
+				}
+				law_stance = {
+					law = law_type::law_HOS_monarch
+					value >= neutral
+				}
+				ig_counts_as_marginal = no
+				is_insurrectionary = no
+			}
+			order_by = ig_clout
+			position = 0
+			check_range_bounds = no
+			save_scope_as = ig_candidate_3
+		}
+		ordered_interest_group = {
+			limit = {
+				NOR = {
+					scope:ig_candidate_1 ?= this
+					scope:ig_candidate_2 ?= this
+					scope:ig_candidate_3 ?= this
+				}
+				law_stance = {
+					law = law_type::law_HOS_monarch
+					value >= neutral
+				}
+				ig_counts_as_marginal = no
+				is_insurrectionary = no
+			}
+			order_by = this.leader.popularity
+			position = 0
+			check_range_bounds = no
+			save_scope_as = ig_candidate_4
+		}
+		ruler ?= {
+			save_scope_as = monarch_scope
+		}
+		#Clean up all monarchs
+		every_scope_character = {
+			limit = { has_modifier = monarch_character }
+			remove_modifier = monarch_character
+		}
+	}
+
+	option = {
+		name = regency.1.a
+		default_option = yes
+		set_variable = { name = hide_ruler_change_notification days = 3 }
+		scope:ig_candidate_1.leader = {
+			set_character_as_ruler = yes
+			set_variable = { name = regency_years value = 0 }
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = no
+					}
+					set_character_immortal = yes
+				}
+			}
+			add_modifier = { name = regent_character }
+		}
+		set_heir = scope:monarch_scope
+		add_regency_modifier = yes
+	}
+
+	option = {
+		name = regency.1.b
+		trigger = {
+			exists = scope:ig_candidate_2
+		}
+		set_variable = { name = hide_ruler_change_notification days = 3 }
+		scope:ig_candidate_2.leader = {
+			set_character_as_ruler = yes
+			set_variable = { name = regency_years value = 0 }
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = no
+					}
+					set_character_immortal = yes
+				}
+			}
+			add_modifier = { name = regent_character }
+		}
+		set_heir = scope:monarch_scope
+		add_regency_modifier = yes
+	}
+
+	option = {
+		name = regency.1.c
+		trigger = {
+			exists = scope:ig_candidate_3
+		}
+		set_variable = { name = hide_ruler_change_notification days = 3 }
+		scope:ig_candidate_3.leader = {
+			set_character_as_ruler = yes
+			set_variable = { name = regency_years value = 0 }
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = no
+					}
+					set_character_immortal = yes
+				}
+			}
+			add_modifier = { name = regent_character }
+		}
+		set_heir = scope:monarch_scope
+		add_regency_modifier = yes
+	}
+
+	option = {
+		name = regency.1.e
+		trigger = {
+			exists = scope:ig_candidate_4
+		}
+		set_variable = { name = hide_ruler_change_notification days = 3 }
+		scope:ig_candidate_4.leader = {
+			set_character_as_ruler = yes
+			set_variable = { name = regency_years value = 0 }
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = no
+					}
+					set_character_immortal = yes
+				}
+			}
+			add_modifier = { name = regent_character }
+		}
+		set_heir = scope:monarch_scope
+		add_regency_modifier = yes
+	}
+}
+
+# New regent - for cases in which the current regent is immortal, but clearly needs to die.
+regency.2 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = regency.2.t
+	desc = regency.2.d
+	flavor = regency.2.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:regent_scope
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/2Characters"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	trigger = {
+		is_a_regency_government = yes
+		ruler ?= {
+			OR = {
+				#Regent is too old
+				AND = { 
+					has_modifier = regent_character
+					OR = {
+						age >= 75
+						has_trait = psychological_affliction
+						has_trait = cancer
+						has_trait = senile
+					}
+				}
+				#Regent has already died
+				NOT = { has_modifier = regent_character }
+			}
+			#Heir can only take over to abolish the regency if of age
+			age >= define:NCharacters|ADULT_AGE
+		}
+	}
+
+	#cooldown = { months = short_modifier_time }
+
+	cancellation_trigger = {
+		
+	}
+
+	immediate = {
+		ruler ?= {
+			save_scope_as = regent_scope
+			interest_group = {
+				save_scope_as = ig_candidate_1
+			}
+		}
+		ordered_interest_group = { # Just the most notable IG in government
+			limit = {
+				NOT = {
+					scope:ig_candidate_1 ?= this
+				}
+				is_in_government = yes
+				ig_counts_as_marginal = no
+			}
+			order_by = ig_clout
+			position = 0
+			check_range_bounds = no
+			save_scope_as = ig_candidate_2
+		}
+		ordered_interest_group = { # Any pro-monarchy IG
+			limit = {
+				NOR = {
+					scope:ig_candidate_1 ?= this
+					scope:ig_candidate_2 ?= this
+				}
+				law_stance = {
+					law = law_type::law_HOS_monarch
+					value >= approve
+				}
+				ig_counts_as_marginal = no
+			}
+			order_by = ig_clout
+			position = 0
+			check_range_bounds = no
+			save_scope_as = ig_candidate_3
+		}
+		ordered_interest_group = {
+			limit = {
+				NOR = {
+					scope:ig_candidate_1 ?= this
+					scope:ig_candidate_2 ?= this
+					scope:ig_candidate_3 ?= this
+				}
+				law_stance = {
+					law = law_type::law_HOS_monarch
+					value >= neutral
+				}
+				is_insurrectionary = no
+				ig_counts_as_marginal = no
+			}
+			order_by = this.leader.popularity
+			position = 0
+			check_range_bounds = no
+			save_scope_as = ig_candidate_4
+		}
+		heir ?= {
+			save_scope_as = monarch_scope
+		}
+	}
+
+	option = {
+		name = regency.2.a
+		default_option = yes
+		create_character = {
+			culture = primary_culture
+			ig_leader = yes
+			interest_group = scope:ig_candidate_1
+			on_created = {
+				set_character_as_ruler = yes
+				set_variable = { name = regency_years value = 0 }
+				hidden_effect = {
+					if = {
+						limit = {
+							is_immortal = no
+						}
+						set_character_immortal = yes
+					}
+				}
+				add_modifier = { name = regent_character }
+			}
+		}
+		scope:regent_scope ?= {
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = yes
+					}
+					set_character_immortal = no
+				}
+				kill_character = {
+					hidden = yes
+				}
+			}
+		}
+	}
+
+	option = {
+		name = regency.2.b
+		trigger = {
+			exists = scope:ig_candidate_2
+		}
+		scope:ig_candidate_2.leader = {
+			set_character_as_ruler = yes
+			set_variable = { name = regency_years value = 0 }
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = no
+					}
+					set_character_immortal = yes
+				}
+			}
+			add_modifier = { name = regent_character }
+		}
+		scope:regent_scope ?= {
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = yes
+					}
+					set_character_immortal = no
+				}
+				kill_character = {
+					hidden = yes
+				}
+			}
+		}
+	}
+
+	option = {
+		name = regency.2.c
+		trigger = {
+			exists = scope:ig_candidate_3
+		}
+		scope:ig_candidate_3.leader = {
+			set_character_as_ruler = yes
+			set_variable = { name = regency_years value = 0 }
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = no
+					}
+					set_character_immortal = yes
+				}
+			}
+			add_modifier = { name = regent_character }
+		}
+		scope:regent_scope ?= {
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = yes
+					}
+					set_character_immortal = no
+				}
+				kill_character = {
+					hidden = yes
+				}
+			}
+		}
+	}
+
+	option = {
+		name = regency.2.e
+		trigger = {
+			exists = scope:ig_candidate_4
+		}
+		scope:ig_candidate_4.leader = {
+			set_character_as_ruler = yes
+			set_variable = { name = regency_years value = 0 }
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = no
+					}
+					set_character_immortal = yes
+				}
+			}
+			add_modifier = { name = regent_character }
+		}
+		scope:regent_scope ?= {
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = yes
+					}
+					set_character_immortal = no
+				}
+				kill_character = {
+					hidden = yes
+				}
+			}
+		}
+	}
+}
+
+# End of the regency
+regency.3 = {
+	type = country_event
+	placement = root
+
+	duration = 1
+
+	title = regency.3.t
+	desc = regency.3.d
+	flavor = regency.3.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:monarch_scope
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/2Characters"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { days = 100 }
+
+	trigger = {
+		is_a_regency_government = yes
+		OR = {
+			#Heirs comes of age while regent is still alive
+			AND = {
+				ruler ?= { has_modifier = regent_character }
+				heir ?= { age >= define:NCharacters|ADULT_AGE }
+			}
+			#Regent died but heir is of age
+			ruler ?= { 
+				NOT = { has_modifier = regent_character }
+				age >= define:NCharacters|ADULT_AGE
+			}
+			ruler ?= { age < define:NCharacters|ADULT_AGE }
+		}
+	}
+
+	cancellation_trigger = {
+		is_a_regency_government = no
+		NAND = {
+			ruler ?= { has_modifier = regent_character }
+			heir ?= { age >= define:NCharacters|ADULT_AGE }
+		}
+		NOT = {
+			ruler ?= { 
+				NOT = { has_modifier = regent_character } 
+				age >= define:NCharacters|ADULT_AGE
+			}
+		}
+	}
+
+	immediate = {
+		ruler ?= {
+			save_scope_as = regent_scope
+		}
+		heir ?= {
+			save_scope_as = monarch_scope
+		}
+		if = {
+			limit = { ruler ?= { age < define:NCharacters|ADULT_AGE } }
+			ruler ?= {
+				save_scope_as = monarch_scope
+			}
+		}
+	}
+
+	option = {
+		name = regency.3.a
+		default_option = yes
+		remove_regency_modifier = yes
+		scope:regent_scope ?= {
+			hidden_effect = {
+				if = {
+					limit = {
+						is_immortal = yes
+					}
+					set_character_immortal = no
+				}
+			}
+			remove_modifier = regent_character
+		}
+		scope:monarch_scope ?= {
+			set_character_as_ruler = yes
+			set_variable = regency_complete
+			set_character_as_monarch = yes
+		}
+		if = {
+			limit = { 
+				scope:monarch_scope ?= { 
+					has_variable = regency_complete 
+					age < define:NCharacters|ADULT_AGE
+				}
+			}
+			scope:monarch_scope ?= { remove_variable = regency_complete }
+		}
+	}
+}

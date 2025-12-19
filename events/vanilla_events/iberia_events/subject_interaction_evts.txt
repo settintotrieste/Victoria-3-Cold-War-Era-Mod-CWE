@@ -1,0 +1,565 @@
+﻿namespace = subject_interactions
+
+# Appointing a governor
+subject_interactions.1 = {
+	type = country_event
+	placement = scope:gubernatorial_candidate_capital
+	title = subject_interactions.1.t
+	desc = subject_interactions.1.d
+	flavor = subject_interactions.1.f
+
+	duration = 3
+
+	event_image = {
+		video = "ip4_colonial_exploitation_going_well"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	immediate = {
+		random_subject_or_below = {
+			limit = {
+				has_variable = gubernatorial_candidate
+			}
+			capital = {
+				save_scope_as = gubernatorial_candidate_capital
+			}
+			ruler = {
+				save_scope_as = relevant_character
+			}
+			random_primary_culture = {
+				save_scope_as = primary_culture_scope
+			}
+			if = {
+				limit = { # BIC governors are company men
+					c:BIC ?= this
+				}
+				ig:ig_industrialists ?= {
+					save_scope_as = business_ig_scope
+					save_scope_as = plantation_ig_scope
+					save_scope_as = extraction_ig_scope
+				}
+			}
+			else = {
+				ig:ig_landowners ?= {
+					save_scope_as = plantation_ig_scope
+				}
+				ig:ig_petty_bourgeoisie ?= {
+					save_scope_as = business_ig_scope
+				}
+				ig:ig_industrialists ?= {
+					save_scope_as = extraction_ig_scope
+				}	
+			}
+			save_scope_as = relevant_country
+		}
+		random_primary_culture = {
+			save_scope_as = overlord_primary_culture
+		}
+		religion = {
+			save_scope_as = overlord_religion
+		}
+		scope:relevant_country = {
+			# Plantation Man
+			create_character = {
+				template = character_template_colonial_governor_plantation		
+				on_created = {
+					place_character_in_void = 6
+					set_variable = { name = colonial_governor_term value = 0 }
+				}
+			}
+			random_character_in_void = {
+				limit = {
+					has_trait = special_character_colonial_plantation
+					culture = scope:overlord_primary_culture
+				}
+				save_scope_as = colonial_governor_plantation_scope
+			}
+			# Local Man
+			create_character = {
+				template = character_template_colonial_governor_local
+				on_created = {
+					place_character_in_void = 6
+					set_variable = { name = colonial_governor_term value = 0 }
+				}
+			}
+			random_character_in_void = {
+				limit = {
+					has_trait = special_character_colonial_local
+					culture = scope:primary_culture_scope
+				}
+				save_scope_as = colonial_governor_local_scope
+			}
+			# Extraction Man
+			create_character = {
+				template = character_template_colonial_governor_extraction
+				on_created = {
+					place_character_in_void = 6
+					set_variable = { name = colonial_governor_term value = 0 }
+				}
+			}
+			random_character_in_void = {
+				limit = {
+					has_trait = special_character_colonial_extraction
+					culture = scope:overlord_primary_culture
+				}
+				save_scope_as = colonial_governor_extraction_scope
+			}
+			# Business Man
+			create_character = {
+				template = character_template_colonial_governor_business
+				on_created = {
+					place_character_in_void = 6
+					set_variable = { name = colonial_governor_term value = 0 }
+				}
+			}
+			random_character_in_void = {
+				limit = {
+					has_trait = special_character_colonial_business
+					culture = scope:overlord_primary_culture
+				}
+				save_scope_as = colonial_governor_business_scope
+			}
+			# Military Man
+			create_character = {
+				template = character_template_colonial_governor_military
+				on_created = {
+					place_character_in_void = 6
+					set_variable = { name = colonial_governor_term value = 0 }
+				}
+			}
+			random_character_in_void = {
+				limit = {
+					has_trait = special_character_colonial_military
+					culture = scope:overlord_primary_culture
+				}
+				save_scope_as = colonial_governor_military_scope
+			}
+		}
+	}
+
+	option = {
+		name = subject_interactions.1.a
+		default_option = yes
+		scope:relevant_country = {
+			scope:colonial_governor_plantation_scope = {
+				hidden_effect = {
+					free_character_from_void = yes
+				}
+				set_character_as_ruler = yes
+				root = {
+					random_interest_group = {
+						limit = {
+							type = scope:colonial_governor_plantation_scope.interest_group_type
+						}
+						add_modifier = {
+							name = modifier_appointed_favourite
+							days = normal_modifier_time
+						}
+					}
+				}
+
+				hidden_effect = {
+					remove_character_role = general
+				}
+			}
+			remove_variable = gubernatorial_candidate
+		}
+	}
+	option = {
+		name = subject_interactions.1.b
+		trigger = {
+			NOT = { # BIC governors don't get to be local men
+				scope:relevant_country = {
+					c:BIC ?= this
+				}
+			}
+		}
+		scope:relevant_country = {
+			scope:colonial_governor_local_scope = {
+				hidden_effect = {
+					free_character_from_void = yes
+				}
+				set_character_as_ruler = yes
+				root = {
+					random_interest_group = {
+						limit = {
+							type = scope:colonial_governor_local_scope.interest_group_type
+						}
+						add_modifier = {
+							name = modifier_appointed_favourite
+							days = normal_modifier_time
+						}
+					}
+				}
+				hidden_effect = {
+					random_list = {
+						1 = {
+							remove_character_role = general
+						}
+						1 = {
+						}
+					}
+				}
+			}
+			remove_variable = gubernatorial_candidate
+		}
+		ai_chance = {
+			base = 25
+			modifier = {
+				trigger = {
+					ruler = {
+						has_trait = bigoted
+					}
+				}
+				add = -25
+			}
+			modifier = {
+				trigger = {
+					ruler = {
+						has_trait = tactful
+					}
+				}
+				add = 25
+			}
+		}
+	}
+
+	option = {
+		name = subject_interactions.1.c
+		scope:relevant_country = {
+			scope:colonial_governor_extraction_scope = {
+				hidden_effect = {
+					free_character_from_void = yes
+				}
+				set_character_as_ruler = yes
+				root = {
+					random_interest_group = {
+						limit = {
+							type = scope:colonial_governor_extraction_scope.interest_group_type
+						}
+						add_modifier = {
+							name = modifier_appointed_favourite
+							days = normal_modifier_time
+						}
+					}
+				}
+				hidden_effect = {
+					remove_character_role = general
+				}
+			}
+			remove_variable = gubernatorial_candidate
+		}
+	}
+	option = {
+		name = subject_interactions.1.e
+		scope:relevant_country = {
+			scope:colonial_governor_business_scope = {
+				hidden_effect = {
+					free_character_from_void = yes
+				}
+				set_character_as_ruler = yes
+
+				root = {
+					random_interest_group = {
+						limit = {
+							type = scope:colonial_governor_business_scope.interest_group_type
+						}
+						add_modifier = {
+							name = modifier_appointed_favourite
+							days = normal_modifier_time
+						}
+					}
+				}
+				hidden_effect = {
+					remove_character_role = general
+				}
+			}
+			remove_variable = gubernatorial_candidate
+		}
+	}
+	option = {
+		name = subject_interactions.1.g
+		scope:relevant_country = {
+			scope:colonial_governor_military_scope = {
+				hidden_effect = {
+					free_character_from_void = yes
+				}
+				set_character_as_ruler = yes
+				root = {
+					random_interest_group = {
+						limit = {
+							type = scope:colonial_governor_military_scope.interest_group_type
+						}
+						add_modifier = {
+							name = modifier_appointed_favourite
+							days = normal_modifier_time
+						}
+					}
+				}
+			}
+			remove_variable = gubernatorial_candidate
+		}
+	}
+}
+
+# Requesting a governor
+subject_interactions.3 = {
+	type = country_event
+	placement = root
+	title = subject_interactions.3.t
+	desc = subject_interactions.3.d
+	flavor = subject_interactions.3.f
+
+	duration = 3
+
+	event_image = {
+		video = "ip4_colonial_exploitation_going_well"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	immediate = {
+		ruler = {
+			save_scope_as = relevant_character
+		}
+		random_primary_culture = {
+			save_scope_as = primary_culture_scope
+		}
+		top_overlord = {
+			save_scope_as = relevant_country
+			random_primary_culture = {
+				save_scope_as = overlord_primary_culture
+			}
+			religion = {
+				save_scope_as = overlord_religion
+			}
+		}
+		if = {
+			limit = { # BIC governors are company men
+				c:BIC ?= this
+			}
+			ig:ig_industrialists ?= {
+				save_scope_as = business_ig_scope
+				save_scope_as = plantation_ig_scope
+				save_scope_as = extraction_ig_scope
+			}
+		}
+		else = {
+			ig:ig_landowners ?= {
+				save_scope_as = plantation_ig_scope
+			}
+			ig:ig_petty_bourgeoisie ?= {
+				save_scope_as = business_ig_scope
+			}
+			ig:ig_industrialists ?= {
+				save_scope_as = extraction_ig_scope
+			}	
+		}
+		# Plantation Man
+		create_character = {
+			template = character_template_colonial_governor_plantation		
+			on_created = {
+				place_character_in_void = 6
+				set_variable = { name = colonial_governor_term value = 0 }
+			}
+		}
+		random_character_in_void = {
+			limit = {
+				has_trait = special_character_colonial_plantation
+				culture = scope:overlord_primary_culture
+			}
+			save_scope_as = colonial_governor_plantation_scope
+		}
+		# Local Man
+		create_character = {
+			template = character_template_colonial_governor_local
+			on_created = {
+				place_character_in_void = 6
+				set_variable = { name = colonial_governor_term value = 0 }
+			}
+		}
+		random_character_in_void = {
+			limit = {
+				has_trait = special_character_colonial_local
+				culture = scope:primary_culture_scope
+			}
+			save_scope_as = colonial_governor_local_scope
+		}
+		# Extraction Man
+		create_character = {
+			template = character_template_colonial_governor_extraction
+			on_created = {
+				place_character_in_void = 6
+				set_variable = { name = colonial_governor_term value = 0 }
+			}
+		}
+		random_character_in_void = {
+			limit = {
+				has_trait = special_character_colonial_extraction
+				culture = scope:overlord_primary_culture
+			}
+			save_scope_as = colonial_governor_extraction_scope
+		}
+		# Business Man
+		create_character = {
+			template = character_template_colonial_governor_business
+			on_created = {
+				place_character_in_void = 6
+				set_variable = { name = colonial_governor_term value = 0 }
+			}
+		}
+		random_character_in_void = {
+			limit = {
+				has_trait = special_character_colonial_business
+				culture = scope:overlord_primary_culture
+			}
+			save_scope_as = colonial_governor_business_scope
+		}
+		# Military Man
+		create_character = {
+			template = character_template_colonial_governor_military
+			on_created = {
+				place_character_in_void = 6
+				set_variable = { name = colonial_governor_term value = 0 }
+			}
+		}
+		random_character_in_void = {
+			limit = {
+				has_trait = special_character_colonial_military
+				culture = scope:overlord_primary_culture
+			}
+			save_scope_as = colonial_governor_military_scope
+		}
+	}
+
+	option = {
+		name = subject_interactions.3.a
+		default_option = yes
+		scope:colonial_governor_plantation_scope = {
+			hidden_effect = {
+				free_character_from_void = yes
+			}
+			set_character_as_ruler = yes
+
+			interest_group = {
+				add_modifier = {
+					name = modifier_appointed_favourite
+					days = normal_modifier_time
+				}
+			}
+			hidden_effect = {
+				remove_character_role = general
+			}
+		}
+		remove_variable = gubernatorial_candidate
+	}
+	option = {
+		name = subject_interactions.3.b
+		trigger = {
+			NOT = { # BIC governors don't get to be local men
+				c:BIC ?= this
+			}
+		}
+		scope:colonial_governor_local_scope = {
+			hidden_effect = {
+				free_character_from_void = yes
+			}
+			set_character_as_ruler = yes
+			interest_group = {
+				add_modifier = {
+					name = modifier_appointed_favourite
+					days = normal_modifier_time
+				}
+			}
+			hidden_effect = {
+				random_list = {
+					1 = {
+						remove_character_role = general
+					}
+					1 = {
+					}
+				}
+			}
+		}
+		remove_variable = gubernatorial_candidate
+		ai_chance = {
+			base = 25
+			modifier = {
+				trigger = {
+					ruler = {
+						has_trait = bigoted
+					}
+				}
+				add = -25
+			}
+			modifier = {
+				trigger = {
+					ruler = {
+						has_trait = tactful
+					}
+				}
+				add = 25
+			}
+		}
+	}
+
+	option = {
+		name = subject_interactions.3.c
+		scope:colonial_governor_extraction_scope = {
+			hidden_effect = {
+				free_character_from_void = yes
+			}
+			set_character_as_ruler = yes
+			interest_group = {
+				add_modifier = {
+					name = modifier_appointed_favourite
+					days = normal_modifier_time
+				}
+			}
+			hidden_effect = {
+				remove_character_role = general
+			}
+		}
+		remove_variable = gubernatorial_candidate
+	}
+	option = {
+		name = subject_interactions.3.e
+		scope:colonial_governor_business_scope = {
+			hidden_effect = {
+				free_character_from_void = yes
+			}
+			set_character_as_ruler = yes
+			interest_group = {
+				add_modifier = {
+					name = modifier_appointed_favourite
+					days = normal_modifier_time
+				}
+			}
+			hidden_effect = {
+				remove_character_role = general
+			}
+		}
+		remove_variable = gubernatorial_candidate
+	}
+	option = {
+		name = subject_interactions.3.g
+		scope:colonial_governor_military_scope = {
+			hidden_effect = {
+				free_character_from_void = yes
+			}
+			set_character_as_ruler = yes
+			interest_group = {
+				add_modifier = {
+					name = modifier_appointed_favourite
+					days = normal_modifier_time
+				}
+			}
+		}
+		remove_variable = gubernatorial_candidate
+	}
+}

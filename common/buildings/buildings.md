@@ -1,5 +1,5 @@
     building_key = {
-        building_group = bg_key								# *reference to building group, building groups define some common properties of similar buildings*
+        aliases = { } building_group = bg_key								# *reference to building group, building groups define some common properties of similar buildings*
         icon = "path/to/texture"							# building icon
     
         buildable = yes/no									# can this building be built? ( can otherwise be created via history or script or autoplace ), default yes

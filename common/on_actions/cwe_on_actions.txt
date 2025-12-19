@@ -51,9 +51,7 @@ on_monthly_pulse_country = {
 						}
 					}
 				}
-				kill_character = {
-					hidden = yes
-				}
+				retire_character = yes
 			}
 		}
 		
@@ -160,7 +158,7 @@ on_monthly_pulse_country = {
 			limit = { 
 				NOT = { has_journal_entry = je_civil_defence }
 			}
-			add_journal_entry = je_civil_defence
+			add_journal_entry = { type = je_civil_defence }
 		}
 		
 		#Always have bad relations with countries at war with THIS
@@ -233,6 +231,49 @@ on_monthly_pulse_country = {
 				}
 			}
 		}
+		
+		#Failsafe for Regency System
+		if = {
+			limit = { is_a_regency_government = yes }
+			every_scope_character = {
+				limit = { 
+					has_modifier = regent_character
+					is_ruler = no 
+				}
+				remove_modifier = regent_character
+			}
+			ruler ?= {
+				if = {
+					limit = { NOT = { has_modifier = regent_character } }
+					add_modifier = { name = regent_character }
+				}
+				if = {
+					limit = { has_modifier = monarch_character }
+					remove_modifier = monarch_character
+				}
+			}
+		}
+		else = {
+			every_scope_character = {
+				limit = { 
+					has_modifier = regent_character
+				}
+				remove_modifier = regent_character
+			}
+		}
+		
+		#Failsafe for negotiations
+		#if = {
+		#	limit = { 
+		#		enacting_any_law = yes 
+		#		any_interest_group = { 
+		#			is_negotiating = yes 
+		#			has_negotiated = no
+		#		}
+		#		NOT = { has_variable = negotiation_event_fired_timer }
+		#	}
+		#	trigger_event = { id = negotiation.1 popup = yes }
+		#}
 		
 	}
 	
@@ -1661,9 +1702,9 @@ on_yearly_pulse_country = {
 			every_scope_state = {
 				if = {
 					limit = {
-						has_building = building_barracks
+						has_building = building_barrack
 					}
-					remove_building = building_barracks
+					remove_building = building_barrack
 				}
 			}
 		}

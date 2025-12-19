@@ -26,7 +26,7 @@ generic_laws.1 = {
 	trigger = {
 		enacting_any_law = yes
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value > neutral
@@ -39,7 +39,7 @@ generic_laws.1 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value > neutral
@@ -85,7 +85,7 @@ generic_laws.1 = {
 	}
 }
 
-# Stall event
+# Kidnapped event for negotiations. 
 # Corrupt Connections uncovered - IG in favour of passing law cought in corruption scandal. 
 generic_laws.2 = {
 	type = country_event
@@ -106,16 +106,12 @@ generic_laws.2 = {
 	
 	duration = 3
 
-	cooldown = { days = normal_modifier_time }
+	cooldown = { days = long_modifier_time }
 
 	trigger = {
 		enacting_any_law = yes
 		any_interest_group = {
-			is_marginal = no
-			law_stance = {
-				law = owner.currently_enacting_law.type
-				value > neutral
-			}
+			has_modifier = bribed_ig_benefits
 		}
 	}
 	immediate = {
@@ -124,11 +120,7 @@ generic_laws.2 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
-				law_stance = {
-					law = owner.currently_enacting_law.type
-					value > neutral
-				}
+				has_modifier = bribed_ig_benefits
 			}
 			save_scope_as = corrupt_ig_scope
 			leader = {
@@ -158,31 +150,42 @@ generic_laws.2 = {
 
 	option = {
 		name = generic_laws.2.b 							# negative effects mitigated somewhat, but at a cost to bureaucracy
-
 		add_enactment_modifier = {
 			name = corrupt_connections_exposed_minor 
+			multiplier = 0.5
 		}
-			add_modifier = {
-				name = dealing_with_corruption
-				days = normal_modifier_time
-			}
+		add_modifier = {
+			name = dealing_with_corruption
+			days = normal_modifier_time
+		}
 	}
 	
 	option = {
 		name = generic_laws.2.c 		# Corruption is actually very good.
 		trigger = {
 			enactment_setback_count < max_setbacks_minus_one
+			has_modifier = negotiation_bribes
 		}
 		highlighted_option = yes
 		add_enactment_modifier = {
 			name = modifier_benefiting_from_corruption 
 		}
-		add_enactment_setback = 1
+		add_enactment_modifier = {
+			name = corrupt_connections_exposed_minor
+			multiplier = 0.5
+		}
+		if = {
+			limit = {
+				has_modifier = negotiation_bribes
+			}
+			remove_modifier = negotiation_bribes
+		}
 		add_modifier = {
 			name = dealing_with_corruption
 			days = normal_modifier_time
-			multiplier = 0.5
+			multiplier = 2
 		}
+		add_enactment_setback = 1
 	}
 }
 
@@ -213,14 +216,14 @@ generic_laws.3 = {
 	trigger = {
 		enacting_any_law = yes
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value < neutral
 			}
 		}
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value > neutral
@@ -233,7 +236,7 @@ generic_laws.3 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value < neutral
@@ -243,7 +246,7 @@ generic_laws.3 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value > neutral
@@ -263,6 +266,13 @@ generic_laws.3 = {
 
 		add_enactment_modifier = {
 			name = cross_bench_support	
+		}
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_generic_sponsor_polstr_increase
+				sponsor = scope:opposition_demands_ig_scope
+				cooldown = 60
+			}
 		}
 		scope:opposition_demands_supporting_ig_scope = {
 			add_modifier = {
@@ -295,6 +305,13 @@ generic_laws.3 = {
 		add_enactment_phase = 1
 		add_enactment_modifier = {
 			name = modifier_short_term_benefit 
+		}
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_generic_sponsor_polstr_increase
+				sponsor = scope:opposition_demands_ig_scope
+				cooldown = 60
+			}
 		}
 		scope:opposition_demands_supporting_ig_scope = {
 			add_modifier = {
@@ -332,7 +349,7 @@ generic_laws.4 = {
 	trigger = {
 		enacting_any_law = yes
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value > neutral
@@ -356,7 +373,7 @@ generic_laws.4 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value > neutral
@@ -501,29 +518,9 @@ generic_laws.6 = {
 		enacting_any_law = yes
 		exists = currently_enacting_law.type
 		ruler = {
-			OR = {
-				law_stance = {
-					law = owner.currently_enacting_law.type
-					value < neutral
-				}
-				AND = {	
-					law_stance = {
-						law = owner.currently_enacting_law.type
-						value > strongly_approve # Equals 'count'
-					}
-					interest_group = {
-						law_stance = {
-							law = owner.currently_enacting_law.type
-							value < neutral
-						}
-						NOT = {
-							law_stance = {
-								law = owner.currently_enacting_law.type
-								value > strongly_approve # Equals 'count'
-							}
-						}
-					}
-				}
+			law_enactment_stance = {
+				law = owner.currently_enacting_law.type
+				value > neutral
 			}
 		}
 	}
@@ -549,7 +546,7 @@ generic_laws.6 = {
 		add_enactment_phase = 1
 		every_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				OR = {
 					has_ideology = ideology:ideology_republican
 					leader = {
@@ -583,7 +580,7 @@ generic_laws.6 = {
 		}
 		every_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				OR = {
 					has_ideology = ideology:ideology_republican
 					leader = {
@@ -642,7 +639,7 @@ generic_laws.7 = {
 	trigger = {
 		enacting_any_law = yes
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value > neutral
@@ -665,7 +662,7 @@ generic_laws.7 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value > neutral
@@ -758,7 +755,7 @@ generic_laws.8 = {
 	trigger = {
 		enacting_any_law = yes
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value > neutral
@@ -775,7 +772,7 @@ generic_laws.8 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value > neutral
@@ -870,7 +867,7 @@ generic_laws.9 = {
 	trigger = {
 		law_can_hurt_minorities = yes 	# laws that in some way or form could hit minority worse than majority
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value > neutral
@@ -889,7 +886,7 @@ generic_laws.9 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value > neutral
@@ -988,14 +985,14 @@ generic_laws.10 = {
 	trigger = {
 		enacting_any_law = yes
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value = neutral
 			}
 		}
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value > neutral
@@ -1009,7 +1006,7 @@ generic_laws.10 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value = neutral
@@ -1019,7 +1016,7 @@ generic_laws.10 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value > neutral
@@ -1094,7 +1091,7 @@ generic_laws.11 = {
 	trigger = {
 		enacting_any_law = yes
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value > neutral
@@ -1107,7 +1104,7 @@ generic_laws.11 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value > neutral
@@ -1197,14 +1194,14 @@ generic_laws.12 = {
 	trigger = {
 		enacting_any_law = yes
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value < neutral
 			}
 		}
 		any_interest_group = {
-			is_marginal = no
+			ig_counts_as_marginal = no
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value > neutral
@@ -1218,7 +1215,7 @@ generic_laws.12 = {
 		}
 		every_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value < neutral
@@ -1228,7 +1225,7 @@ generic_laws.12 = {
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				ig_counts_as_marginal = no
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value > neutral

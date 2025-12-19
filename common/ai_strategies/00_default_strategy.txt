@@ -17,7 +17,7 @@ ai_strategy_default = {
 	min_tax_level = low
 	
 	# The AI will avoid getting this much infamy unless it's a wargoal it really wants
-	# Using a different value in a strategy will override this value
+	# Using a different value in a strategy will function multiplicatively
 	undesirable_infamy_level = {
 		value = 50
 	}
@@ -45,6 +45,43 @@ ai_strategy_default = {
 	min_law_chance_to_pass = {
 		value = 50
 	}
+	
+	# The chance that the AI will negotiate with an IG when trying to enact a specific law, 1 = 100%
+	# Using this value in other strategies will function additively
+	# root = country
+	# scope:law = law type being enacted
+	# scope:interest_group = IG to negotiate with
+	# scope:amenability = IG amenability to negotiation divided by MAX_AMENABILITY (ie, if MAX_AMENABILITY is 100 and IG amenability is 50, this value will be 0.5)
+	# scope:advance_chance = Chance to advance law enactment
+	# scope:stall_chance = Chance for law enactment to stall
+	negotiation_chance = {
+		value = 0
+
+		if = {
+			limit = {
+				scope:interest_group ?= {
+					amenability_level != 4
+				}
+			}
+			value = scope:amenability
+
+			add = scope:stall_chance
+
+			if = {
+				limit = {
+					ai_has_reasons_to_not_oppose_law = yes
+				}
+				multiply = 2
+			}
+
+			subtract = {
+				value = scope:advance_chance
+				multiply = 2
+			}
+		}
+
+		max = 1
+	}
 
 	# How progressive is the AI willing to be when passing laws
 	# Using a different value in a strategy will override this value
@@ -68,6 +105,12 @@ ai_strategy_default = {
 	# NOTE: You need to include a description when adding values here so there are correct tooltips, this is different from most of ai strategy data!
 	diplomatic_play_support = {
 		value = 0
+		
+		add = {
+			value = "scope:country.modifier:country_diplomatic_reputation_add"
+			desc = "DIPLOMATIC_REPUTATION_REASON"
+		}
+		
 	}
 	
 	# Added to base neutrality in diplomatic plays	
@@ -1377,6 +1420,31 @@ ai_strategy_default = {
 	wanted_construction_output = {
 		value = 10 # Accounts for the 10 free construction from base modifiers
 
+		# Accounts for the 2-10 free construction from base modifiers
+		if = {
+			limit = {
+				OR = {
+					has_game_rule = free_construction_unscaled
+					AND = { # for when AI is enabled for player country via console
+						is_ai = no
+						has_game_rule = free_construction_scaled_player_exemption
+					}
+				}
+			}
+			add = 10
+		}
+		else = {
+			add = {
+				value = 2
+				add = {
+					value = gdp
+					divide = 2000000
+					multiply = 8
+				}
+				max = 10
+			}
+		}
+
 		add = {
 			value = investment_pool_income
 			subtract = 75000 # So small nations don't overshoot early on
@@ -1385,7 +1453,7 @@ ai_strategy_default = {
 		}
 		
 		add = {
-			value = income
+			value = fixed_income
 			
 			divide = 50000 # 1 construction output per this much income
 
@@ -1468,261 +1536,18 @@ ai_strategy_default = {
 		value = 0.0
 	}
 	
-	# How many levels of barracks should the AI have
-	# Using this value in other strategies will function additively
 	wanted_army_size = {
-		value = 0
-		
-		# To increase base army size for small countries, capped at 1 million population
-		add = {
-			value = cached_ai_incorporated_population
-			divide = 100000 # 1 level of barracks per 100k incorporated population	
-			
-			max = 10
-		}	
-	
-		add = {
-			value = cached_ai_incorporated_population
-			divide = 250000 # 1 level of barracks per 250k incorporated population
-
-			max = 100	
-		}
-
-		add = {
-			value = cached_ai_unincorporated_population
-			divide = 1000000 # 1 level of barracks per 1 million unincorporated population	
-
-			max = 100
-		}
-
-		# Coastal population reduces spending on army as that spending is needed for navy too
-		subtract = {
-			value = cached_ai_incorporated_coastal_population
-			divide = 1000000 
-
-			max = 100
-		}		
-		
-		subtract = {
-			value = cached_ai_unincorporated_coastal_population
-			divide = 4000000 
-
-			max = 100
-		}
-
-		save_temporary_value_as = pre_overseas_empire_value
-	
-		# Countries with a huge overseas subject population should focus more on navy
-		subtract = {
-			value = cached_ai_overseas_subject_population
-			divide = 20000000
-			max = {
-				value = scope:pre_overseas_empire_value
-				divide = 2
-			}
-		}
-		
-		if = {
-			limit = {
-				cached_ai_incorporated_population > 0
-				cached_ai_incorporated_coastal_population > 0
-			}
-			add = {
-				value = income
-				multiply = {
-					value = 1
-					subtract = { # Coastal population reduces spending on army as that spending is needed for navy too
-						value = cached_ai_incorporated_coastal_population
-						divide = cached_ai_incorporated_population
-						divide = 2
-					}		
-				}
-				divide = 25000 # 1 level of barracks per 25k income					
-			}	
-		}
-		
-		max = 100 # No more than 100 from population & rank
-		
-		add = {
-			value = income
-			divide = 10000 # 1 barraks per this much income
-			
-			max = 1500 # Above a certain point more government income isn't going to lead to more AI armies
-		}
-
-		# Factor in strategies
-		if = {
-			limit = { 
-				OR = {
-					has_strategy = ai_strategy_territorial_expansion 
-					has_strategy = ai_strategy_unify_germany
-					has_strategy = ai_strategy_unify_italy
-					has_strategy = ai_strategy_unify_ethiopia
-					has_strategy = ai_strategy_unify_china
-				}
-			}
-			multiply = 1.25
-		}
-		
-		# Scale army size to rank
-		#if = {
-		#	limit = { country_rank = rank_value:super_power }
-		#	multiply = 2
-		#}
-		if = {
-			limit = { country_rank >= rank_value:great_power }
-			multiply = 0.80
-		}
-		if = {
-			limit = { country_rank = rank_value:major_power }
-			multiply = 0.60
-		}
-		if = {
-			limit = { country_rank = rank_value:minor_power }
-			multiply = 0.40
-		}
-		if = {
-			limit = { country_rank < rank_value:minor_power }
-			multiply = 0.20
-		}
-		
-		#Revolutionary Governments
-		if = {
-			limit = { 
-				is_a_dictatorship = yes
-			}
-			multiply = 2
-		}
-		
-		#Neutrality
-		if = {
-			limit = { is_neutral = yes }
-			multiply = 0.1
-		}
-		
-		#AI does not bankrupt itself
-		if = {
-			limit = { 
-				is_at_war = no
-				has_healthy_economy = no
-			}
-			multiply = 0.25
-		}
-
-		max = 10000
-		min = 1
+		value = wanted_army_size_script_value
+		# moved to script_values so this can be called outside of AI.
+		# How many levels of barracks should the AI have
+		# Using this value in other strategies will function additively
 	}
-	
-	# How many levels of naval base should the AI have
-	# Using this value in other strategies will function additively
+
 	wanted_navy_size = {
-		value = 0
-	
-		# 1 level of naval base per 500k coastal incorporated population
-		add = {
-			value = cached_ai_incorporated_coastal_population
-			divide = 500000
-		}
-
-		# 1 level of naval base per 2 million coastal unincorporated population
-		add = {
-			value = cached_ai_unincorporated_coastal_population
-			divide = 2000000
-		}
-
-		# 1 level of naval base per 10 million population in direct overseas subjects
-		add = {
-			value = cached_ai_overseas_subject_population
-			divide = 10000000
-		}
-
-		max = 100 # No more than 100 from population
-
-		# 1 level of naval base per 25k income, multiplied by relative incorporated coastal population to total incorporated population
-		if = {
-			limit = {
-				cached_ai_incorporated_population > 0
-				cached_ai_incorporated_coastal_population > 0
-			}
-
-			add = {
-				value = income
-				divide = cached_ai_incorporated_population
-				multiply = cached_ai_incorporated_coastal_population
-				divide = 25000
-			}
-		}
-		
-		# More advanced navies are expensive and should be smaller relative to population
-		if = {
-			limit = { has_technology_researched = tech_military_naval_forces_3 }
-			multiply = 0.75
-		}
-
-		if = {
-			limit = { has_technology_researched = tech_military_naval_forces_5 }
-			multiply = 0.75
-		}
-
-		if = {
-			limit = { has_technology_researched = tech_military_naval_forces_7 }
-			multiply = 0.75
-		}
-
-		# Factor in strategies
-		if = {
-			limit = { 
-				OR = {
-					has_strategy = ai_strategy_colonial_expansion 
-					has_strategy = ai_strategy_economic_imperialism
-				}
-			}
-			multiply = 1.5
-		}
-		if = {
-			limit = { has_strategy = ai_strategy_armed_isolationism }
-			multiply = 0.75
-		}
-		if = {
-			limit = { has_strategy = ai_strategy_maintain_mandate_of_heaven }
-			multiply = 0.25
-		}
-		
-		# GPs and MPs should want to maintain a bit of a navy
-		if = {
-			limit = { country_rank = rank_value:super_power }
-			multiply = 2
-		}
-		if = {
-			limit = { country_rank >= rank_value:great_power }
-			multiply = 1.50
-		}
-		if = {
-			limit = { country_rank = rank_value:minor_power }
-			multiply = 0.50
-		}
-		if = {
-			limit = { country_rank < rank_value:minor_power }
-			multiply = 0.25
-		}
-
-		#Neutrality
-		if = {
-			limit = { is_neutral = yes }
-			multiply = 0.1
-		}
-
-		#AI does not bankrupt itself
-		if = {
-			limit = { 
-				is_at_war = no
-				has_healthy_economy = no
-			}
-			multiply = 0.25
-		}
-
-		max = 1000
-		min = 1
+		value = wanted_navy_size_script_value
+		# moved to script_values so this can be called outside of AI.
+		# How many levels of naval base should the AI have
+		# Using this value in other strategies will function additively
 	}		
 	
 	# Set the weights for combat unit groups, this determines the ratio that the AI aims to have of each, and thus what unit types it adds to formations
@@ -3339,14 +3164,21 @@ ai_strategy_default = {
 			
 			if = {
 				limit = {
-					country_rank >= rank_value:major_power					
+					country_rank >= rank_value:major_power
 					OR = {
 						has_diplomatic_pact = {
 							who = scope:target_country.top_overlord
 							type = rivalry
-						}	
-						"ai_ideological_opinion(scope:target_country)" <= -25	
+						}
+						AND = {
+							is_power_bloc_leader = yes
+							is_in_same_power_bloc = scope:target_country
+							power_bloc ?= {
+								has_identity = identity:identity_ideological_union
+							}
+						}
 					}
+					"ai_ideological_opinion(scope:target_country)" <= -50
 				}
 				add = 10
 			}
