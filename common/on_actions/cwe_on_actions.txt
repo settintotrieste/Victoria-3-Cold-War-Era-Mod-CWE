@@ -105,62 +105,6 @@ on_monthly_pulse_country = {
 			}
 		}
 		
-		#Fix missing laws
-		if = {
-			limit = { 
-				NOR = {
-					has_law_or_variant = law_type:law_no_voting
-					has_law_or_variant = law_type:law_rigged_voting
-					has_law_or_variant = law_type:law_gerrymandered_voting
-					has_law_or_variant = law_type:law_harassment_voting
-					has_law_or_variant = law_type:law_fair_voting
-				}
-			}
-			if = {
-				limit = { has_law_or_variant = law_type:law_technocratic_legislature }
-				activate_law = law_type:law_rigged_voting
-			}
-			else_if = {
-				limit = { has_law_or_variant = law_type:law_democratic_legislature }
-				activate_law = law_type:law_fair_voting
-			}
-			else = {
-				activate_law = law_type:law_no_voting
-			}
-		}
-		if = {
-			limit = { 
-				NOR = {
-					has_law_or_variant = law_type:law_appointed_legislature
-					has_law_or_variant = law_type:law_technocratic_legislature
-					has_law_or_variant = law_type:law_democratic_legislature
-				}
-			}
-			activate_law = law_type:law_technocratic_legislature
-		}
-		if = {
-			limit = { 
-				NOR = {
-					has_law_or_variant = law_type:law_unicameralism
-					has_law_or_variant = law_type:law_hybrid_chamber
-					has_law_or_variant = law_type:law_bicameralism
-				}
-			}
-			if = {
-				limit = { is_a_democracy = yes }
-				activate_law = law_type:law_bicameralism
-			}
-			else = {
-				activate_law = law_type:law_hybrid_chamber
-			}
-		}
-		if = {
-			limit = { 
-				NOT = { has_journal_entry = je_civil_defence }
-			}
-			add_journal_entry = { type = je_civil_defence }
-		}
-		
 		#Always have bad relations with countries at war with THIS
 		if = {
 			limit = { is_at_war = yes }
@@ -262,18 +206,72 @@ on_monthly_pulse_country = {
 			}
 		}
 		
-		#Failsafe for negotiations
-		#if = {
-		#	limit = { 
-		#		enacting_any_law = yes 
-		#		any_interest_group = { 
-		#			is_negotiating = yes 
-		#			has_negotiated = no
-		#		}
-		#		NOT = { has_variable = negotiation_event_fired_timer }
-		#	}
-		#	trigger_event = { id = negotiation.1 popup = yes }
-		#}
+		#Sensible seasons
+		if = {
+			limit = { 
+				NOR = { 
+					month = 11
+					month = 12
+					month = 1
+					month = 2
+				}
+				any_scope_state = { 
+					state_region = {
+						OR = {
+							has_harvest_condition = frost
+							has_harvest_condition = hailstorm
+						}
+					}
+				}
+			}
+			every_scope_state = {
+				limit = { 
+					state_region = {
+						has_harvest_condition = frost
+					}
+				}
+				state_region = { finish_harvest_condition = frost }
+			}
+			every_scope_state = {
+				limit = { 
+					state_region = {
+						has_harvest_condition = hailstorm
+					}
+				}
+				state_region = { finish_harvest_condition = hailstorm }
+			}
+		}
+		if = {
+			limit = { 
+				OR = { 
+					month = 11
+					month = 12
+					month = 1
+					month = 2
+				}
+				any_scope_state = { 
+					is_vulnerable_to_frosts = yes
+					state_region = {
+						NOR = {
+							has_harvest_condition = frost
+							has_harvest_condition = hailstorm
+						}
+					}
+				}
+			}
+			every_scope_state = {
+				limit = { 
+					is_vulnerable_to_frosts = yes
+					state_region = {
+						NOR = {
+							has_harvest_condition = frost
+							has_harvest_condition = hailstorm
+						}
+					}
+				}
+				state_region = { start_harvest_condition = frost }
+			}
+		}
 		
 	}
 	
