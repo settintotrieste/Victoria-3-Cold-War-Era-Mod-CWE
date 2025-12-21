@@ -140,49 +140,51 @@ grant_leadership_to_agitator = {
 	}
 
 	possible = {
+	
+		#Age restrictions
+		age >= define:NCharacters|ADULT_AGE
+	
+		#Government restrictions
 		interest_group ?= {
 			is_in_government = yes
 		}
+		
+		#Cultural restrictions
 		trigger_if = {
 			limit = {
 				scope:actor ?= {
-					AND = {
-						has_law_or_variant = law_type:law_multicultural
-						has_law_or_variant = law_type:law_total_separation
-					}
+					has_law_or_variant = law_type:law_multicultural
 				}
 			}
 			character_acceptance = { # In light of the Multiculturalism nerf
 				target = scope:actor
-				value >= acceptance_status_3
-			}
-		}
-		trigger_if = {
-			limit = { owner ?= { has_law_or_variant = law_type:law_state_atheism } }
-			OR = {
-				religion = rel:atheist
-				root.owner ?= {
-					country_average_cultural_acceptance = {
-						target = root.culture
-						value >= acceptance_status_4
-					}
-				}
+				value >= acceptance_status_4
 			}
 		}
 		trigger_else = {
-			character_acceptance = { target = scope:actor value >= acceptance_status_4 }
+			character_acceptance = { target = scope:actor value >= acceptance_status_5 }
 		}
+		
+		#Religious restrictions
+		trigger_if = {
+			limit = { owner ?= { has_law_or_variant = law_type:law_state_atheism } }
+			religion = rel:atheist
+		}
+		
+		#Gender restrictions
 		OR = {
 			is_female = no
 			scope:actor ?= { has_law_or_variant = law_type:law_full_womens_rights }
 		}
+		
+		#Political restrictions
 		custom_tooltip = {
 			text = grant_leadership_must_be_pressured_ig
 			political_movement ?= {
 				any_influenced_interest_group = {
 					this = root.interest_group
 				}
-			}		
+			}
 		}
 		
 	}
@@ -260,19 +262,46 @@ grant_command_to_agitator = {
 	}
 
 	possible = {
-		age >= define:NCharacters|ADULT_AGE
-		is_female = no
+		
+		#HQ exists
 		exists = owner.capital.land_hq
 		
-		#Foreigners cannot be military leaders unless the country is multicultural
-		scope:actor ?= {
-			has_law_or_variant = law_type:law_multicultural
+		#Age restrictions
+		age >= define:NCharacters|ADULT_AGE
+		
+		#Government restrictions
+		interest_group ?= {
+			is_in_government = yes
 		}
 		
-		# Cannot give leadership if character is a culturally discriminated exile
-		NOT = {
-			culture = {
-				culture_is_discriminated_in = scope:actor
+		#Cultural restrictions
+		trigger_if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_multicultural
+				}
+			}
+			character_acceptance = { # In light of the Multiculturalism nerf
+				target = scope:actor
+				value >= acceptance_status_4
+			}
+		}
+		trigger_else = {
+			character_acceptance = { target = scope:actor value >= acceptance_status_5 }
+		}
+		
+		#Religious restrictions
+		trigger_if = {
+			limit = { owner ?= { has_law_or_variant = law_type:law_state_atheism } }
+			religion = rel:atheist
+		}
+		
+		#Gender restrictions
+		OR = {
+			is_female = no
+			AND = { 
+				scope:actor ?= { has_law_or_variant = law_type:law_full_womens_rights }
+				is_interest_group_type = ig_armed_forces
 			}
 		}
 		
