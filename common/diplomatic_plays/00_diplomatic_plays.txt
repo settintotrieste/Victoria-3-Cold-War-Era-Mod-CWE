@@ -1355,6 +1355,70 @@ dp_un_peacekeeping = {
 	
 }
 
+dp_remove_wmd = {
+	war_goal = remove_wmd
+	
+	texture = "gfx/interface/icons/lens_toolbar_icons/demand_nuclear_weapons_removal.dds"
+	
+	possible = {
+	
+		#TARGET has WMDs
+		scope:target_country = {
+			country_has_wmd = yes
+		}
+		
+		aggressive_diplomatic_plays_permitted = yes
+		
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#THIS and TARGET are not revolutionary
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no } 
+		
+		#THIS is not a subject
+		is_sufficiently_independent = yes
+		scope:target_country = { is_sufficiently_independent = yes }
+		NOT = { is_subject_of = scope:target_country }
+		scope:target_country = { NOT = { is_subject_of = root } }
+		
+		#Standard checks
+		diplo_play_war_check_cwe = yes
+		
+	}
+
+	additional_involvement_trigger = {
+	
+		aggressive_diplomatic_plays_permitted = yes
+		
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#THIS and TARGET are not revolutionary
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no } 
+		
+		#THIS is not a subject
+		is_sufficiently_independent = yes
+		scope:target_country = { is_sufficiently_independent = yes }
+		NOT = { is_subject_of = scope:target_country }
+		scope:target_country = { NOT = { is_subject_of = root } }
+		
+		#Standard checks
+		diplo_play_war_check_cwe = yes
+		
+	}
+	
+	ai_acceptance_max = 100 on_weekly_pulse = {}
+
+	on_war_begins = {}
+
+	on_war_end = {}
+	
+}
+
 dp_join_power_bloc = {
 	war_goal = join_power_bloc
 	texture = "gfx/interface/icons/war_goals/join_power_bloc.dds"
@@ -1528,6 +1592,82 @@ dp_native_uprising = {
 	
 	possible = {
 		is_country_type = decentralized
+	}
+	
+	additional_involvement_trigger = {
+		
+		#Potential participant is willing to get involved in other's affairs
+		NOT = { is_country_type = decentralized }
+		aggressive_diplomatic_plays_permitted = yes
+		OR = { 
+			diplo_play_additional_involvement_check_cwe = yes
+			scope:target_country = { is_subject_of = ROOT }
+			scope:initiator = { is_subject_of = ROOT }
+		}
+	
+		#Has an interest in the area
+		scope:initiator = {
+			capital = {
+				region = {
+					save_temporary_scope_as = initiator_capital_region
+				}
+			}
+		}
+		OR = {
+			has_interest_marker_in_region = scope:initiator_capital_region
+			is_home_country_for = scope:initiator
+		}
+		
+	}
+	
+	ai_acceptance_max = 100 on_weekly_pulse = {}
+	
+	on_war_begins = {}
+
+	on_war_end = {}
+}
+
+dp_assisted_unification = {
+	war_goal = assisted_unification
+	
+	texture = "gfx/interface/icons/lens_toolbar_icons/request_unification.dds"
+	
+	#selectable_in_lens = {
+	#	always = no
+	#}
+	
+	possible = {
+		
+		aggressive_diplomatic_plays_permitted = yes
+		
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#THIS and TARGET are not revolutionary
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no } 
+		
+		#THIS is not a subject
+		is_sufficiently_independent = yes
+		scope:target_country = { is_sufficiently_independent = yes }
+		NOT = { is_subject_of = scope:target_country }
+		scope:target_country = { NOT = { is_subject_of = root } }
+		
+		#Standard checks
+		diplo_play_war_check_cwe = yes
+		
+		#Is capable of unification
+		any_country = {
+			capital ?= { is_homeland_of_country_cultures = scope:target_country }
+			any_primary_culture = {
+				OR = { 
+					is_primary_culture_of = scope:target_country
+					shares_non_heritage_trait_with_any_primary_culture = scope:target_country
+				}
+			}
+		}
+		
 	}
 	
 	additional_involvement_trigger = {

@@ -1,34 +1,57 @@
-﻿annex_country = {
-	icon = "gfx/interface/icons/war_goals/annex_country.dds"
+﻿assisted_unification = {
+	icon = "gfx/interface/icons/lens_toolbar_icons/request_unification.dds"
 
-	kind = annex_country
+	kind = custom
 
 	settings = {
 		require_target_be_part_of_war
-		can_add_for_other_country
-		annexes_entire_country
-		skip_build_list
 
 		# Validation
 		validate_conflicts_war_goals_all
-		validate_conflicts_annex_country
+		conflicts_with_annex_country
 	}
 
-	execution_priority = 80
+	execution_priority = 100
 
-	contestion_type = control_target_country_capital
+	contestion_type = control_any_target_country_state
 
 	target_type = country
 
 	possible = {
 		# trigger to determine if a goal with its target data is listed when selecting a war goal in the diplo play panel
 		# scopes: root = holder, creator_country, diplomatic_play, target_country, target_state, stakeholder, target_region, article_options
-		always = no
+		
+		#Not a civil war country
+		ROOT = { is_revolutionary = no is_secessionist = no }
+		scope:target_country = { is_revolutionary = no is_secessionist = no } 
+		
+		#Eligible unification candidates
+		any_country = {
+			capital ?= { is_homeland_of_country_cultures = scope:target_country }
+			any_primary_culture = {
+				OR = { 
+					is_primary_culture_of = scope:target_country
+					shares_non_heritage_trait_with_any_primary_culture = scope:target_country
+				}
+			}
+		}
+		
 	}
 
 	valid = {
 		# trigger in addition to some basic validation code-side
 		# scopes: root = holder, creator_country, diplomatic_play, target_country, target_state, stakeholder, target_region, article_options
+		
+		#Eligible unification candidates
+		any_country = {
+			any_primary_culture = {
+				OR = { 
+					is_primary_culture_of = scope:target_country
+					shares_non_heritage_trait_with_any_primary_culture = scope:target_country
+				}
+			}
+		}
+		
 	}
 
 	maneuvers = {
@@ -140,65 +163,19 @@
 	on_enforced = {
 		# script effect on top of the predefined code effect
 		
-		#Monarchy flees
-		if = {
-			limit = { 
-				scope:target_country ?= {
-					any_scope_character = {
-						has_modifier = monarch_character
+		#Annexation by eligible unification candidate
+		random_country = {
+			limit = {
+				NOT = { THIS = scope:target_country }
+				capital ?= { is_homeland_of_country_cultures = scope:target_country }
+				any_primary_culture = {
+					OR = { 
+						is_primary_culture_of = scope:target_country
+						shares_non_heritage_trait_with_any_primary_culture = scope:target_country
 					}
 				}
 			}
-			ordered_country = {
-				limit = {
-					is_subject_of = scope:target_country
-					OR = {
-						is_subject_type = subject_type_personal_union
-						is_subject_type = subject_type_dominion
-					}
-					any_primary_culture = { shares_heritage_and_other_trait_with_any_primary_culture = scope:target_country }
-				}
-				order_by = country_rank
-				position = 0
-				check_range_bounds = no
-				save_scope_as = monarchy_flee_target_nation
-			}
-			if = {
-				limit = { exists = scope:monarchy_flee_target_nation }
-				scope:target_country ?= { 
-					every_scope_character = {
-						limit = { has_modifier = monarch_character }
-						transfer_character = scope:monarchy_flee_target_nation 
-					}
-				}
-				every_country = {
-					limit = { 
-						NOT = { THIS = scope:monarchy_flee_target_nation }
-						is_subject_of = scope:target_country
-						OR = {
-							is_subject_type = subject_type_personal_union
-							is_subject_type = subject_type_dominion
-						}
-					}
-					save_scope_as = new_personal_union_country
-					make_independent = yes
-					scope:monarchy_flee_target_nation ?= {
-						create_diplomatic_pact = {
-							country = scope:new_personal_union_country
-							type = personal_union
-						}
-					}
-					set_variable = { name = exempt_from_subject_loss months = 1 }
-				}
-			}
-		}
-		every_country = {
-			limit = { 
-				is_subject_of = scope:target_country 
-				is_sufficiently_independent = yes
-				NOT = { has_variable = exempt_from_subject_loss }
-			}
-			make_independent = yes
+			annex = scope:target_country
 		}
 		
 	}
