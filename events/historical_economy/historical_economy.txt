@@ -5781,3 +5781,134 @@ historical_economy.62 = {
     }
 
 }
+
+# Hainan Free Trade Port
+historical_economy.63 = {
+    type = country_event
+	placement = scope:china_transferee_state
+
+    title = CHI_Hainan_SAR.t 									# Title of the event; ADD LOCALISATION
+    desc = CHI_Hainan_SAR.d 									# Description of the event; ADD LOCALISATION
+    #flavor = CHI_Hainan_SAR.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		OR = {
+			c:CHI ?= this
+			c:PRC ?= this
+		}
+		game_date >= 2025.12.18									# START DATE: Date colony became self governing ****
+		game_date < 2035.12.18									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_socialist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = CHI_Hainan_SAR_hee }				# CHANGE ****
+		
+		#Owns Hainan
+		NOT = { exists = c:HIN }
+		p:xA92B88.state.owner = { THIS = ROOT }
+		p:xCB457A.state.owner = { THIS = ROOT }
+		p:x156AC0.state.owner = { THIS = ROOT }
+		p:x62BF42.state.owner = { THIS = ROOT }
+		p:x156AC0.state.owner = { THIS = ROOT }
+		p:xDC137A.state.owner = { THIS = ROOT }
+		p:x30B0E0.state.owner = { THIS = ROOT }
+		
+    }
+	
+	immediate = {
+	
+		#Mark state
+		random_scope_state = {
+			limit = {
+				state_region = s:STATE_GUANGDONG
+			}
+			save_scope_as = china_transferee_state
+		}
+	
+		# Fire only once
+		set_variable = CHI_Hainan_SAR_hee						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Create SAR
+		create_country = {
+			tag = HIN											# Change TAG of country being released ****
+			origin = ROOT										# TAG where the created country takes tech from
+			province = p:xA92B88
+			province = p:xCB457A
+			province = p:x156AC0
+			province = p:x62BF42
+			province = p:x156AC0
+			province = p:xDC137A
+			province = p:x30B0E0
+			
+			on_created = { 
+				
+				# Laws
+				effect_starting_politics_communist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_laissez_faire = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_services = yes
+				
+				effect_starting_politics_fiat_standard = yes
+				
+				set_variable = Hainan_SAR_tag
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+				
+			}
+		}
+		random_country = {
+			limit = { has_variable = Hainan_SAR_tag }
+			save_scope_as = Hainan_SAR
+			ROOT = {
+				create_diplomatic_pact = {
+					country = scope:Hainan_SAR
+					type = special_administrative_region
+				}
+				create_diplomatic_pact = {
+					country = scope:Hainan_SAR
+					type = grant_own_market
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}

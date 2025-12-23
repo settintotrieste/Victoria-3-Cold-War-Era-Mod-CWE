@@ -6181,3 +6181,194 @@ historical_civil_wars.36 = {
     }
 
 }
+
+### Sudanese Civil War 2023 ###
+
+historical_civil_wars.37 = {
+    type = country_event
+	placement = scope:state_to_release
+
+    title = sudan_civil_war_2023.t 										# Title of the event; ADD LOCALISATION
+    desc = sudan_civil_war_2023.d 										# Description of the event; ADD LOCALISATION
+    #flavor = sudan_civil_war_2023.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SUD ?= this
+		game_date >= 2023.4.15											# START DATE: Date colony became self governing ****
+		game_date < 2024.6.1											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_regime = yes
+		is_sufficiently_independent = yes								# is_vassal = no
+		is_at_war = no													# war = no
+		
+		#Correct ruler
+		ruler ?= { has_variable = Abdel_Fattah_al_Burhan }
+		
+		#Owns relevant states
+		OR = { 
+			has_state_in_state_region = STATE_DARFUR
+			has_state_in_state_region = STATE_KORDOFAN
+		}
+		capital ?= { 
+			NOR = { 
+				state_region = s:STATE_DARFUR
+				state_region = s:STATE_KORDOFAN
+			} 
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = sudan_civil_war_2023_hccw }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		#Mark states to release
+		every_scope_state = {
+			limit = { 
+				OR = { 
+					state_region = s:STATE_MOSUL 
+					state_region = s:STATE_DEIR_EZ_ZOR
+				} 
+				is_capital = no
+			}
+			set_variable = { name = state_to_cede_RSF months = 1 }
+			save_scope_as = state_to_release
+		}
+	
+		# Fire only once
+		set_variable = sudan_civil_war_2023_hccw						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1							# Declare war!
+        highlighted_option = yes
+		
+		#Release RSF
+		create_dynamic_country = {
+			origin = ROOT
+			country_type = unrecognized
+			tier = city_state
+			capital = scope:state_to_release
+			cede_state_trigger = {
+				has_variable = state_to_cede_RSF
+			}
+			on_created = { 
+			
+				every_scope_state = {
+					remove_variable = state_to_cede_RSF
+				}
+				
+				set_variable = dynamic_decolonisation_country
+				
+				# Laws
+				effect_starting_politics_nationalist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_jingoism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+				
+				effect_starting_politics_semi_gold_system = yes
+				
+				# Ruler
+				create_character = {
+					first_name = "Hemedti_first_name"
+					last_name = "Hemedti_last_name"
+					ruler = yes ig_leader = yes historical = yes
+					birth_date = 1974.1.1
+					interest_group = ig_armed_forces
+					ideology = ideology_autocratic
+					culture = cu:sudanese
+					religion = rel:sunni
+					traits = {
+						ambitious
+						cruel
+						grifter
+					}
+				}
+				
+				set_variable = RSF_tag
+				
+			}
+		}
+		
+		random_country = {
+			limit = { has_variable = RSF_tag }
+			create_diplomatic_play = {
+				name = isis_war
+				type = dp_annex_war_historical
+				target_country = ROOT
+				
+				#war = yes
+				
+				add_war_goal = {
+					holder = ROOT
+					type = annex_country
+					target_country = THIS
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2						# Peace option
+		default_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_nationalist_republic = yes
+		effect_starting_politics_dictatorship = yes
+		effect_increase_corruption = yes
+		
+		# Ruler
+		create_character = {
+			first_name = "Hemedti_first_name"
+			last_name = "Hemedti_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1974.1.1
+			interest_group = ig_armed_forces
+			ideology = ideology_autocratic
+			culture = cu:sudanese
+			religion = rel:sunni
+			traits = {
+				ambitious
+				cruel
+				grifter
+			}
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
