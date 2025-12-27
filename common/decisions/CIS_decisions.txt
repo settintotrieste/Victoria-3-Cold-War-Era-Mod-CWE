@@ -118,10 +118,7 @@ join_CIS_decision = {
 			has_modifier = CIS_leader
 			OR = { 
 				has_subject_relation_with = ROOT
-				has_attitude = {
-					who = ROOT
-					attitude >= protective
-				}
+				relations:root >= relations_threshold:friendly
 			}
 			NOT = { has_attitude = { who = ROOT attitude <= antagonistic } }
 		}
@@ -163,7 +160,65 @@ join_CIS_decision = {
 	}
 
 	ai_chance = {
-		value = 100
+		value = 0
+		
+		if = {
+		
+			limit = {
+			
+				OR = { 
+				
+					#There is a hostile country with rank greater than THIS
+					any_country = {
+						country_rank > root.country_rank
+						can_go_to_war = yes
+			
+						OR = { 
+							has_attitude = {
+								who = ROOT
+								attitude <= antagonistic
+							}
+							relations:root < relations_threshold:poor
+						}
+					}
+				
+					#There is a neigbouring country that is hostile against THIS
+					any_neighbouring_state = {
+						owner = {
+							can_go_to_war = yes
+			
+							OR = { 
+								has_attitude = {
+									who = ROOT
+									attitude <= antagonistic
+								}
+								relations:root < relations_threshold:poor
+							}
+						}
+					}
+					
+					#Allied with the leader of supra-national alliance
+					any_country = {
+						has_modifier = CIS_leader
+						any_scope_treaty = {
+							binds = ROOT
+							any_scope_article = {
+								OR = { 
+									has_type = defensive_pact
+									has_type = alliance
+								}
+							}
+						}
+					}
+				
+				}
+				
+			}
+			
+			add = 100
+			
+		}
+
 	}
 	
 }
