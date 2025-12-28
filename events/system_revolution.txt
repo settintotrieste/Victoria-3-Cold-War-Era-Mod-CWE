@@ -962,7 +962,7 @@ revolution_system.11 = {
 # Install New Royal Dynasty
 revolution_system.12 = {
     type = country_event
-	placement = scope:target_country_rc
+	placement = scope:target_country
 
     title = install_new_royal_dynasty.t 							# Title of the event; ADD LOCALISATION
     desc = install_new_royal_dynasty.d 								# Description of the event; ADD LOCALISATION
@@ -986,26 +986,12 @@ revolution_system.12 = {
 		random_country = {
 			limit = { has_variable = target_country_marker }
 			remove_variable = target_country_marker
-			save_scope_as = target_country_rc
+			save_scope_as = target_country
 		}
 		
 		root.ruler ?= {
 			culture ?= { save_scope_as = ruler_culture_scope }
 			religion ?= { save_scope_as = ruler_religion_scope }
-		}
-		
-		scope:target_country_rc ?= {
-			random_interest_group = {
-				limit = { 
-					is_same_interest_group_type = root.ruler.interest_group 
-				}
-				add_ruling_interest_group = yes
-				save_scope_as = ruler_ig_scope
-			}
-			every_interest_group = {
-				limit = { NOT = { is_same_interest_group_type = root.ruler.interest_group } }
-				remove_ruling_interest_group = yes
-			}
 		}
 		
 	}
@@ -1014,28 +1000,46 @@ revolution_system.12 = {
 		
 		OR = { 
 			NOT = { has_law_or_variant = law_type:law_HOS_monarch }
-			scope:target_country_rc ?= { NOT = { has_law_or_variant = law_type:law_HOS_monarch } }
-			NOT = { exists = scope:target_country_rc }
+			scope:target_country ?= { NOT = { has_law_or_variant = law_type:law_HOS_monarch } }
+			NOT = { exists = scope:target_country }
+			scope:target_country = { 
+				AND = { 
+					is_subject_of = ROOT
+					shares_same_monarch = yes
+				}
+			}
 		}
 		
 	}
     
 	option = {
         name = install_new_royal_dynasty.option.1					# PU with victor
+		trigger = { 
+			OR = { 
+				is_a_democratic_monarchy = no 
+				is_a_regime_monarchy = yes
+			}
+			scope:target_country ?= { 
+				OR = { 
+					is_subject = no
+					is_subject_of = ROOT
+				}
+			}
+		}
 		highlighted_option = yes
 		
 		change_infamy = 20
 		
 		#Create PU
 		if = {
-			limit = { scope:target_country_rc ?= { NOT = { is_subject_of = ROOT } } }
+			limit = { scope:target_country ?= { NOT = { is_subject_of = ROOT } } }
 			create_diplomatic_pact = {
-                country = scope:target_country_rc
+                country = scope:target_country
                 type = personal_union
             }
 			hidden_effect = {
 				create_diplomatic_pact = {
-					country = scope:target_country_rc
+					country = scope:target_country
 					type = grant_own_market
 				}
 			}
@@ -1049,18 +1053,8 @@ revolution_system.12 = {
 				exists = scope:ruler_religion_scope
 			}
 			
-			#Clear interest groups
-			scope:target_country_rc ?= {
-				random_interest_group = {
-					limit = { 
-						is_same_interest_group_type = root.ruler.interest_group 
-					}
-					hidden_effect = { add_ruling_interest_group = yes }
-				}
-			}
-			
 			#Install Viceroy
-			scope:target_country_rc = {
+			scope:target_country = {
 				if = {
 					limit = { 
 						root.ruler ?= { has_ideology = ideology:ideology_autocratic } 
@@ -1150,16 +1144,6 @@ revolution_system.12 = {
         name = install_new_royal_dynasty.option.2					# Keep indigenous monarchy
 		default_option = yes
 		
-		#Clear interest groups
-		scope:target_country_rc ?= {
-			random_interest_group = {
-				limit = { 
-					is_same_interest_group_type = root.ruler.interest_group 
-				}
-				hidden_effect = { add_ruling_interest_group = yes }
-			}
-		}
-		
 		ai_chance = { 
 			base = 80
 		}
@@ -1168,19 +1152,13 @@ revolution_system.12 = {
 	
 	option = {
         name = install_new_royal_dynasty.option.3					# Create Republic
+		trigger = { 
+			is_a_democratic_monarchy = yes 
+		}
+		highlighted_option = yes
 		
 		#Republic
-		scope:target_country_rc ?= { activate_law = law_type:law_HOS_president }
-		
-		#Clear interest groups
-		scope:target_country_rc ?= {
-			random_interest_group = {
-				limit = { 
-					is_same_interest_group_type = root.ruler.interest_group 
-				}
-				hidden_effect = { add_ruling_interest_group = yes }
-			}
-		}
+		scope:target_country ?= { activate_law = law_type:law_HOS_president }
 		
 		ai_chance = { 
 			base = 10
