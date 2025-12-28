@@ -1,0 +1,154 @@
+﻿regime_change = {
+	icon = "gfx/interface/icons/war_goals/regime_change.dds"
+
+	kind = regime_change
+
+	settings = {
+		require_target_be_part_of_war
+
+		# Validation
+		validate_conflicts_war_goals_all
+		validate_regime_change
+
+		debug
+	}
+
+	execution_priority = 20
+
+	contestion_type = control_target_country_capital
+
+	target_type = country
+
+	possible = {
+		# trigger to determine if a goal with its target data is listed when selecting a war goal in the diplo play panel
+		# scopes: root = holder, creator_country, diplomatic_play, target_country, target_state, stakeholder, target_region, article_options
+	}
+
+	valid = {
+		# trigger in addition to some basic validation code-side
+		# scopes: root = holder, creator_country, diplomatic_play, target_country, target_state, stakeholder, target_region, article_options
+	}
+
+	maneuvers = {
+		value = 0
+
+		add = {
+			desc = "MANEUVERS_BASE_VALUE"
+			value = 10
+		}
+	}
+
+	infamy = {
+		value = 0
+
+		add = {
+			desc = "INFAMY_BASE_VALUE"
+			value = 0.5
+		}
+
+		scope:target_country = {
+			multiply = {
+				desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
+				add = {
+					every_scope_state = {
+						add = {
+							value = state_population
+							divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+							multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+							multiply = {
+								if = {
+									limit = {
+										is_incorporated = no
+									}
+									value = 1
+									add = define:NDiplomacy|WAR_GOAL_INFAMY_UNINCORPORATED_FACTOR
+								}
+							}
+							max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_PER_STATE
+						}
+					}
+				}
+				add = 1
+				max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+			}
+		}
+
+		multiply = {
+			desc = "country_infamy_generation_against_unrecognized_mult"
+			value = 1
+			if = {
+				limit = {
+					scope:target_country = {
+						is_country_type = unrecognized
+					}
+				}
+				add = modifier:country_infamy_generation_against_unrecognized_mult
+			}
+		}
+
+		multiply = {
+			desc = "INFAMY_FROM_LOYAL_SUBJECT"
+			value = 1
+
+			if = {
+				limit = {
+					scope:target_country = {
+						is_subject_of = root
+						liberty_desire < define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_THRESHOLD
+					}
+				}
+				multiply = define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_SUBJECT_MULT
+			}
+		}
+
+		multiply = {
+			desc = "INFAMY_FROM_REBELLIOUS_SUBJECT" # Rebellious as in they are the aggressor in the play
+			value = 1
+
+			if = {
+				limit = {
+					scope:target_country = {
+						is_subject_of = root
+						is_diplomatic_play_enemy_of = root
+						scope:diplomatic_play ?= {
+							initiator_is = scope:target_country
+						}
+					}
+				}
+				multiply = define:NDiplomacy|WAR_GOAL_INFAMY_REBELLING_SUBJECT_MULT
+			}
+		}
+
+		min = {
+			desc = "INFAMY_MINIMUM_VALUE"
+			value = 0.5
+		}
+	}
+
+	on_enforced = {
+		# script effect on top of the predefined code effect
+		
+		#Impose PU if installing monarchy
+		if = {
+			limit = { 
+				has_law_or_variant = law_type:law_HOS_monarch
+			}
+			scope:target_country = { set_variable = { name = target_country_marker months = 1 } }
+			trigger_event = { id = revolution_system.12 }
+		}
+		#Clear interest groups
+		scope:target_country ?= {
+			random_interest_group = {
+				limit = { 
+					is_same_interest_group_type = root.ruler.interest_group 
+				}
+				hidden_effect = { add_ruling_interest_group = yes }
+			}
+		}
+		
+	}
+
+	ai = {
+		is_significant_demand = no
+	}
+}

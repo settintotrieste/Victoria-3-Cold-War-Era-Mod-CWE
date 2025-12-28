@@ -958,3 +958,234 @@ revolution_system.11 = {
     }
 
 }
+
+# Install New Royal Dynasty
+revolution_system.12 = {
+    type = country_event
+	placement = scope:target_country_rc
+
+    title = install_new_royal_dynasty.t 							# Title of the event; ADD LOCALISATION
+    desc = install_new_royal_dynasty.d 								# Description of the event; ADD LOCALISATION
+    flavor = install_new_royal_dynasty.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		random_country = {
+			limit = { has_variable = target_country_marker }
+			remove_variable = target_country_marker
+			save_scope_as = target_country_rc
+		}
+		
+		root.ruler ?= {
+			culture ?= { save_scope_as = ruler_culture_scope }
+			religion ?= { save_scope_as = ruler_religion_scope }
+		}
+		
+		scope:target_country_rc ?= {
+			random_interest_group = {
+				limit = { 
+					is_same_interest_group_type = root.ruler.interest_group 
+				}
+				add_ruling_interest_group = yes
+				save_scope_as = ruler_ig_scope
+			}
+			every_interest_group = {
+				limit = { NOT = { is_same_interest_group_type = root.ruler.interest_group } }
+				remove_ruling_interest_group = yes
+			}
+		}
+		
+	}
+	
+	cancellation_trigger = {
+		
+		OR = { 
+			NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+			scope:target_country_rc ?= { NOT = { has_law_or_variant = law_type:law_HOS_monarch } }
+			NOT = { exists = scope:target_country_rc }
+		}
+		
+	}
+    
+	option = {
+        name = install_new_royal_dynasty.option.1					# PU with victor
+		highlighted_option = yes
+		
+		change_infamy = 20
+		
+		#Create PU
+		if = {
+			limit = { scope:target_country_rc ?= { NOT = { is_subject_of = ROOT } } }
+			create_diplomatic_pact = {
+                country = scope:target_country_rc
+                type = personal_union
+            }
+			hidden_effect = {
+				create_diplomatic_pact = {
+					country = scope:target_country_rc
+					type = grant_own_market
+				}
+			}
+		}
+		
+		#Install Ruler
+		if = {
+			limit = { 
+				exists = scope:ruler_culture_scope
+				exists = scope:ruler_ig_scope
+				exists = scope:ruler_religion_scope
+			}
+			
+			#Clear interest groups
+			scope:target_country_rc ?= {
+				random_interest_group = {
+					limit = { 
+						is_same_interest_group_type = root.ruler.interest_group 
+					}
+					hidden_effect = { add_ruling_interest_group = yes }
+				}
+			}
+			
+			#Install Viceroy
+			scope:target_country_rc = {
+				if = {
+					limit = { 
+						root.ruler ?= { has_ideology = ideology:ideology_autocratic } 
+					}
+					create_character = {
+						is_agitator = yes
+						#interest_group = scope:ruler_ig_scope
+						ideology = ideology_autocratic
+						culture = scope:ruler_culture_scope
+						religion = scope:ruler_religion_scope
+						on_created = { 
+							set_character_as_viceroy = yes
+						}
+					}
+				}
+				else_if = {
+					limit = { 
+						root.ruler ?= { has_ideology = ideology:ideology_power_hungry } 
+					}
+					create_character = {
+						is_agitator = yes
+						#interest_group = scope:ruler_ig_scope
+						ideology = ideology_power_hungry
+						culture = scope:ruler_culture_scope
+						religion = scope:ruler_religion_scope
+						on_created = { 
+							set_character_as_viceroy = yes
+						}
+					}
+				}
+				else_if = {
+					limit = { 
+						root.ruler ?= { has_ideology = ideology:ideology_elitist } 
+					}
+					create_character = {
+						is_agitator = yes
+						#interest_group = scope:ruler_ig_scope
+						ideology = ideology_elitist
+						culture = scope:ruler_culture_scope
+						religion = scope:ruler_religion_scope
+						on_created = { 
+							set_character_as_viceroy = yes
+						}
+					}
+				}
+				else_if = {
+					limit = { 
+						root.ruler ?= { has_ideology = ideology:ideology_democratic } 
+					}
+					create_character = {
+						is_agitator = yes
+						#interest_group = scope:ruler_ig_scope
+						ideology = ideology_democratic
+						culture = scope:ruler_culture_scope
+						religion = scope:ruler_religion_scope
+						on_created = { 
+							set_character_as_viceroy = yes
+						}
+					}
+				}
+				else_if = {
+					limit = { 
+						root.ruler ?= { has_ideology = ideology:ideology_liberal } 
+					}
+					create_character = {
+						is_agitator = yes
+						#interest_group = scope:ruler_ig_scope
+						ideology = ideology_liberal
+						culture = scope:ruler_culture_scope
+						religion = scope:ruler_religion_scope
+						on_created = { 
+							set_character_as_viceroy = yes
+						}
+					}
+				}
+			}
+			
+		}
+		
+		ai_chance = { 
+			base = 5
+		}
+		
+    }
+	
+	option = {
+        name = install_new_royal_dynasty.option.2					# Keep indigenous monarchy
+		default_option = yes
+		
+		#Clear interest groups
+		scope:target_country_rc ?= {
+			random_interest_group = {
+				limit = { 
+					is_same_interest_group_type = root.ruler.interest_group 
+				}
+				hidden_effect = { add_ruling_interest_group = yes }
+			}
+		}
+		
+		ai_chance = { 
+			base = 80
+		}
+		
+    }
+	
+	option = {
+        name = install_new_royal_dynasty.option.3					# Create Republic
+		
+		#Republic
+		scope:target_country_rc ?= { activate_law = law_type:law_HOS_president }
+		
+		#Clear interest groups
+		scope:target_country_rc ?= {
+			random_interest_group = {
+				limit = { 
+					is_same_interest_group_type = root.ruler.interest_group 
+				}
+				hidden_effect = { add_ruling_interest_group = yes }
+			}
+		}
+		
+		ai_chance = { 
+			base = 10
+		}
+		
+    }
+
+}
