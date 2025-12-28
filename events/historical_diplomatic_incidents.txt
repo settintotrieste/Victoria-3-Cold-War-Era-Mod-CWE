@@ -3694,3 +3694,175 @@ historical_diplomatic_incidents.37 = {
     }
 
 }
+
+# The Rainbow Warrior Incident - FRA
+historical_diplomatic_incidents.38 = {
+    type = country_event
+	placement = c:NZL
+
+    title = FRA_NZL_Rainbow_Warrior_Incident.t 							# Title of the event; ADD LOCALISATION
+    desc = FRA_NZL_Rainbow_Warrior_Incident.d 							# Description of the event; ADD LOCALISATION
+    #flavor = FRA_NZL_Rainbow_Warrior_Incident.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/event_fire.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:FRA ?= this													# Change TAG of the overlord ****
+		game_date >= 1985.7.10											# START DATE: Date colony became self governing ****
+		game_date < 1995.7.10											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes								# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		is_at_war = no													# war = no
+		
+		#French nuclear programme
+		enacting_any_law = no
+		has_modifier = nuclear_capability
+		
+		#François Mitterrand
+		ruler ?= { 
+			character_is_autocratic = yes 
+			interest_group = { is_interest_group_type = ig_trade_unions } 
+		}
+		
+		#Cause
+		exists = c:NZL
+		c:NZL ?= { 														# Change TAG of the colony ****
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			
+			NOT = { is_direct_subject_of = ROOT }
+		}
+		NOT = { is_direct_subject_of = c:NZL }
+		
+		# Event has not been fired before
+		NOT = { has_variable = FRA_NZL_Rainbow_Warrior_Incident_hdi }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = FRA_NZL_Rainbow_Warrior_Incident_hdi				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1					# Yes
+        highlighted_option = yes
+		
+		#Choice for NZL
+		c:NZL ?= {
+			trigger_event = { id = historical_diplomatic_incidents.39 }
+		}
+		
+		#Infamy
+		change_infamy = 5
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		#Ban WMD
+		start_enactment = law_type:law_wmd_banned
+		
+		#Domestic effects
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_modifier = {
+			name = weakened_government_authority
+			years = 10
+			is_decaying = yes
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# The Rainbow Warrior Incident - NZL
+historical_diplomatic_incidents.39 = {
+    type = country_event
+
+    title = FRA_NZL_Rainbow_Warrior_Incident.t 							# Title of the event; ADD LOCALISATION
+    desc = FRA_NZL_Rainbow_Warrior_Incident.d 							# Description of the event; ADD LOCALISATION
+    #flavor = FRA_NZL_Rainbow_Warrior_Incident.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_battlefield_trenches.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1					# Yes
+        highlighted_option = yes
+		
+		# Lose relations with FRA
+		change_relations = { 
+			country = c:FRA
+			value = -100
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2					# No
+		default_option = yes
+		
+		#Domestic effects
+		add_modifier = {
+			name = domestic_unrest
+			years = 5
+			is_decaying = yes
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
