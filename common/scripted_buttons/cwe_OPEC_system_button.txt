@@ -239,3 +239,139 @@ je_OPEC_decrease_oil_quota_button = {
 	}
 	
 }
+
+je_OPEC_ignore_oil_quota_button = {
+	name = "je_OPEC_ignore_oil_quota_button"
+	desc = "je_OPEC_ignore_oil_quota_button_desc"
+
+	visible = { 
+		
+		#Not a leader of OPEC
+		NOT = { has_modifier = OPEC_leader }
+		
+		#Not currently ignoring OPEC quota
+		NOT = { has_variable = OPEC_oil_quota_defiance }
+		
+		#Has quotas
+		hidden_trigger = { 
+			OR = {
+				has_global_variable = very_high_OPEC_oil_quota
+				has_global_variable = high_OPEC_oil_quota
+				has_global_variable = medium_OPEC_oil_quota
+				has_global_variable = low_OPEC_oil_quota
+				has_global_variable = very_low_OPEC_oil_quota
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#No timer
+		custom_tooltip = {
+			text = OPEC_oil_quota_defiance_timer.tt
+			NOT = { has_variable = OPEC_oil_quota_defiance_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		#Always clear everything
+		if = { limit = { has_modifier = very_low_OPEC_oil_quota } remove_modifier = very_low_OPEC_oil_quota }
+		if = { limit = { has_modifier = low_OPEC_oil_quota } remove_modifier = low_OPEC_oil_quota }
+		if = { limit = { has_modifier = medium_OPEC_oil_quota } remove_modifier = medium_OPEC_oil_quota }
+		if = { limit = { has_modifier = high_OPEC_oil_quota } remove_modifier = high_OPEC_oil_quota }
+		if = { limit = { has_modifier = very_high_OPEC_oil_quota } remove_modifier = very_high_OPEC_oil_quota }
+		
+		#Marker
+		set_variable = OPEC_oil_quota_defiance
+		
+		#Timer
+		set_variable = { name = OPEC_oil_quota_defiance_timer months = 12 }
+		
+		#Antagonise OPEC members
+		every_country = {
+			limit = { 
+				OR = { 
+					has_modifier = OPEC_leader 
+					has_modifier = OPEC_member 
+				} 
+			}
+			change_relations = {
+				country = ROOT
+				value = -25
+			}
+		}
+		
+		#Add infamy because doing this is a breach of international treaty obligations
+		change_infamy = 2
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		modifier = { 
+			trigger = {
+				OR = { 
+					has_healthy_economy = no
+					in_default = yes
+				}
+			}
+			add = 10 
+		}
+	}
+	
+}
+
+je_OPEC_restore_oil_quota_button = {
+	name = "je_OPEC_restore_oil_quota_button"
+	desc = "je_OPEC_restore_oil_quota_button_desc"
+
+	visible = { 
+		
+		#Not a leader of OPEC
+		NOT = { has_modifier = OPEC_leader }
+		
+		#Currently ignoring OPEC quota
+		has_variable = OPEC_oil_quota_defiance
+		
+	}
+
+	possible = {
+		
+		#No timer
+		custom_tooltip = {
+			text = OPEC_oil_quota_defiance_timer.tt
+			NOT = { has_variable = OPEC_oil_quota_defiance_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		#Reimpose quotas
+		set_OPEC_quota_modifiers = yes
+		
+		#Remove marker
+		remove_variable = OPEC_oil_quota_defiance
+		
+		#Timer
+		set_variable = { name = OPEC_oil_quota_defiance_timer months = 12 }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		modifier = { 
+			trigger = {
+				NOR = { 
+					has_healthy_economy = no
+					in_default = yes
+				}
+			}
+			add = 10 
+		}
+	}
+	
+}
