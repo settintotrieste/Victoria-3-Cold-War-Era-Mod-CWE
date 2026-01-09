@@ -1176,3 +1176,97 @@ revolution_system.12 = {
     }
 
 }
+
+#No atheist theocracies
+revolution_system.13 = {
+	type = country_event
+	hidden = yes
+	
+	trigger = {
+	
+		#Is a theocracy
+		has_law_or_variant = law_type:law_HOS_religious_leader
+		
+		#Is atheist
+		country_has_state_religion = rel:atheist
+		
+	}
+	
+	immediate = {
+		
+		#Set state religion
+		set_appropriate_state_religion = yes
+		
+	}
+	
+}
+
+#No atheist ig_devout politicians
+revolution_system.14 = {
+	type = country_event
+	hidden = yes
+	
+	trigger = {
+	
+		#Identify Character
+		any_scope_character = {
+			interest_group = { is_interest_group_type = ig_devout }
+			religion = rel:atheist
+		}
+		
+	}
+	
+	immediate = {
+		
+		#Convert religion
+		random_scope_character = {
+			limit = {
+				interest_group = { is_interest_group_type = ig_devout }
+				religion = rel:atheist
+			}
+			if = {
+				limit = { 
+					owner = {
+						exists = root.country_definition.religion
+					}
+				}
+				change_character_religion = root.country_definition.religion
+			}
+			else = {
+				owner = {
+					random_scope_state = {
+						limit = { is_capital = yes }
+						random_scope_pop = {
+							limit = {
+								pop_acceptance >= acceptance_status_5
+								NOT = { religion = rel:atheist }
+							}
+							religion = { save_scope_as = religion_to_release }
+						}
+					}
+				}
+				if = {
+					limit = { exists = scope:religion_to_release }
+					change_character_religion = scope:religion_to_release
+				}
+				else = {
+					owner = {
+						random_scope_pop = {
+							limit = { 
+								pop_acceptance >= acceptance_status_4
+								NOT = { religion = rel:atheist }
+							}
+							religion = { save_scope_as = religion_to_release }
+						}
+					}
+					if = {
+						limit = { exists = scope:religion_to_release }
+						change_character_religion = scope:religion_to_release
+					}
+				}
+			}
+		}
+		
+	}
+	
+}
