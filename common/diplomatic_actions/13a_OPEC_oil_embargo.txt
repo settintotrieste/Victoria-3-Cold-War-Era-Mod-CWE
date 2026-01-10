@@ -7,12 +7,13 @@
 		#THIS is an OPEC leader OR there is an OPEC leader targeting TARGET
 		OR = { 
 		
+			#THIS is an OPEC Leader
 			has_modifier = OPEC_leader
 			
+			#Following OPEC Leader's lead
 			AND = {
 				has_modifier = OPEC_member
-				any_country = {
-					has_modifier = OPEC_leader
+				scope:target_country = {
 					any_scope_diplomatic_pact = { is_diplomatic_action_type = OPEC_oil_embargo }
 				}
 			}
@@ -26,27 +27,6 @@
 	}
 	
 	possible = {
-	
-		#THIS is interested in the TARGET
-		has_diplomatic_relevance = scope:target_country
-		
-		#THIS must have poor relations with TARGET
-		custom_tooltip = {
-			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
-			scope:target_country.relations:root <= relations_threshold:poor
-		}
-		
-		#OPEC leader must have good relations with fellow OPEC members OR THIS is an OPEC member
-		custom_tooltip = {
-			text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_LESS_OPEC
-			OR = {
-				has_modifier = OPEC_member
-				any_country = {
-					has_modifier = OPEC_member
-					relations:root >= relations_threshold:cordial
-				}
-			}
-		}
 		
 		#THIS & TARGET are not in a customs union OR cannot evade an embargo with a treaty port
 		is_junior_in_customs_union = no
@@ -58,6 +38,24 @@
 				has_modifier = OPEC_member
 				has_modifier = OPEC_leader
 			} 
+		}
+		
+		#THIS must have poor relations with TARGET
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+			scope:target_country.relations:root <= relations_threshold:poor
+		}
+		
+		#OPEC leader must have good relations with fellow OPEC members OR THIS is an OPEC member
+		trigger_if = {
+			limit = { has_modifier = OPEC_leader }
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_HIGHER_OPEC
+				any_country = {
+					has_modifier = OPEC_member
+					relations:root >= relations_threshold:cordial
+				}
+			}
 		}
 		
 	}
@@ -72,20 +70,17 @@
 		}
 		
 		#Mark TARGET as a OPEC Embargo target
-		scope:target_country = { set_variable = oil_embargo_target }
+		scope:target_country = { set_variable = { name = oil_embargo_target months = 1 } }
 		
 		#Invite all OPEC members to join in on the embargo
 		every_country = {
 			limit = { 
 				has_modifier = OPEC_member
 				is_junior_in_customs_union = no
-				NOT = { any_scope_diplomatic_pact = { is_diplomatic_action_type = OPEC_oil_embargo } }
+				NOT = { has_diplomatic_pact = { who = scope:target_country type = OPEC_oil_embargo } }
 			}
 			hidden_effect = { trigger_event = { id = OPEC_system.9 } }
 		}
-		
-		#Timer
-		set_variable = { name = oil_embargo_timer months = 1 }
 		
 	}
 	
@@ -106,53 +101,34 @@
 		actor_can_break = {
 			
 			#OPEC members cannot stop the embargo unless the OPEC leader also does so
-			NOT = { 
-				any_country = {
-					NOT = { THIS = ROOT }
-					has_modifier = OPEC_leader
-					any_scope_diplomatic_pact = { is_diplomatic_action_type = OPEC_oil_embargo }
+			trigger_if = {
+				limit = { NOT = { has_modifier = OPEC_leader } }
+				NOT = {
+					any_country = {
+						NOT = { THIS = ROOT }
+						has_modifier = OPEC_leader
+						has_diplomatic_pact = { who = scope:target_country type = OPEC_oil_embargo }
+					}
 				}
 			}
-			
-			#Cannot break oil embargo too quickly
-			NOT = { has_variable = oil_embargo_timer }
 			
 		}
 		
 		requirement_to_maintain = { 
 		
-			trigger = { 
-
-				#THIS is an OPEC leader OR there is an OPEC leader targeting TARGET
-				OR = { 
+			trigger = {
 				
-					has_modifier = OPEC_leader
-					
-					AND = {
+				#Cannot embargo fellow OPEC members
+				scope:target_country = { 
+					NOR = { 
 						has_modifier = OPEC_member
-						any_country = {
-							has_modifier = OPEC_leader
-							any_scope_diplomatic_pact = { is_diplomatic_action_type = OPEC_oil_embargo }
-						}
-					}
-					
+						has_modifier = OPEC_leader
+					} 
 				}
 				
 				#THIS or TARGET are not decentralized
 				NOR = { is_country_type = decentralized }
 				scope:target_country = { NOR = { is_country_type = decentralized } }
-				
-				#OPEC leader must have good relations with fellow OPEC members OR THIS is an OPEC member
-				custom_tooltip = {
-					text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_LESS_OPEC
-					OR = {
-						has_modifier = OPEC_member
-						any_country = {
-							has_modifier = OPEC_member
-							relations:root >= relations_threshold:cordial
-						}
-					}
-				}
 				
 				#THIS & TARGET are not in a customs union OR cannot evade an embargo with a treaty port
 				is_junior_in_customs_union = no
