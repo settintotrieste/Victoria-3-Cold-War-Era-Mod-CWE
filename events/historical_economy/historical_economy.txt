@@ -6021,3 +6021,153 @@ historical_economy.64 = {
     }
 
 }
+
+# Maldives-India Economic Partnership
+historical_economy.65 = {
+    type = country_event
+
+    title = MLD_HND_Reforms.t 								# Title of the event; ADD LOCALISATION
+    desc = MLD_HND_Reforms.d 								# Description of the event; ADD LOCALISATION
+    #flavor = MLD_HND_Reforms.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:MLD ?= this
+		game_date >= 1981.4.31										# START DATE: Date colony became self governing ****
+		game_date < 1991.4.31										# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		OR = {
+			is_a_parliamentary_republic = yes
+			is_a_presidential_republic = yes
+			is_a_constitutional_monarchy = yes
+		}
+		is_sufficiently_independent_excluding_satellites = yes		# is_vassal = no		
+		is_at_war = no												# war = no
+		
+		#India
+		exists = c:HND
+		c:HND ?= {
+			OR = {
+				is_a_parliamentary_republic = yes
+				is_a_presidential_republic = yes
+				is_a_constitutional_monarchy = yes
+			}
+			is_sufficiently_independent = yes						# is_vassal = no		
+			is_at_war = no											# war = no
+			NOT = { is_subject_of = ROOT }
+		}
+		NOT = { is_subject_of = c:HND }
+		
+		#NOT isolationist
+		NOT = { has_law_or_variant = law_type:law_isolationism }
+		
+		# Event has not been fired before
+		NOT = { has_variable = MLD_HND_Reforms_hee }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = MLD_HND_Reforms_hee						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		c:HND ?= { trigger_event = { id = historical_economy.66 } }
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
+
+# Maldives-India Economic Relationship
+historical_economy.66 = {
+    type = country_event
+
+    title = MLD_HND_Reforms.t 								# Title of the event; ADD LOCALISATION
+    desc = MLD_HND_Reforms.d 								# Description of the event; ADD LOCALISATION
+    #flavor = MLD_HND_Reforms.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/southamerica_factory_opening.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Becomes independent
+		c:MLD ?= {
+			if = { 
+				limit = { is_subject = yes }
+				make_independent = yes
+			}
+		}
+		
+		# Overlord create client state pact with colony
+		create_diplomatic_pact = {
+			country = c:MLD										# Change TAG ****
+			type = protectorate
+		}
+		create_diplomatic_pact = {
+			country = c:MLD										# Change TAG ****
+			type = currency_union
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		change_relations = { country = c:MLD value = -50 }
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { has_global_variable = historical_railroading_active } add = -100 } 
+		}
+		
+    }
+
+}
