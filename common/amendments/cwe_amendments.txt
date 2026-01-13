@@ -50,3 +50,81 @@ amendment_symbolic_monarchy = {
 	}
 
 }
+
+amendment_rotating_presidency = {
+	parent = law_HOS_president
+
+	allowed_laws = {
+		law_HOS_president
+		law_HOS_religious_leader
+		law_HOS_nationalist_leader
+		law_HOS_communist_leader
+	}
+
+	modifier = {
+		state_loyalists_from_political_movements_mult = 0.10
+	}
+
+	possible = {
+	
+		#Presidential system
+		OR = { 
+			is_a_presidential_democracy = yes
+			is_a_nationalist_government = yes
+			is_a_theocratic_government = yes
+			is_a_communist_government = yes
+		}
+		
+		#Has Term Limit
+		#has_law_or_variant = law_type:law_federal_state
+		has_law_or_variant = law_type:law_yes_term_limit
+		
+	}
+	
+	would_sponsor = {
+	
+		scope:approval > 0
+	
+	}
+
+	can_repeal = { 
+		government_has_legislative_super_majority = yes
+		legitimacy >= legitimacy_to_repeal_amendment
+	}
+
+	amendment_activism_multiplier = 1.0
+
+	# Effect will trigger when amendment is added to an active law 
+	on_activate = {
+		
+		#Ruler will oppose this
+		ruler ?= {
+			interest_group = { save_scope_as = ig_scope }
+			owner = {
+				add_radicals = {
+					value = large_radicals
+					interest_group = scope:ig_scope
+				}
+			}
+		}
+		
+	}
+
+	# Effect will trigger when amendment is repealed from an active law 
+	on_deactivate = {
+		
+		#Opposition will oppose this
+		every_interest_group = {
+			limit = { is_in_government = no }
+			save_scope_as = ig_scope
+			owner = {
+				add_radicals = {
+					value = large_radicals
+					interest_group = scope:ig_scope
+				}
+			}
+		}
+		
+	}
+
+}
