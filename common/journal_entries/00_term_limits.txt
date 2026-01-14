@@ -3,6 +3,17 @@
 
 	group = je_group_political_organs
 
+	scripted_button = je_create_collective_presidency_button
+
+	is_shown_when_inactive = {
+		NOR = {
+			has_journal_entry = je_term_limits_swiss
+			has_journal_entry = je_term_limits_yugoslav
+			has_journal_entry = je_term_limits_collective_HOS
+		}
+		has_law_or_variant = law_type:law_yes_term_limit
+	}
+
 	possible = {
 		
 		#Not a special case
@@ -13,7 +24,7 @@
 		}
 		
 		#Not for monarchs
-		NOT = { is_a_regime_monarchy = yes } 
+		NOT = { is_a_regime_monarchy = yes }
 		
 		#There is a term limit
 		has_law_or_variant = law_type:law_yes_term_limit
@@ -89,16 +100,16 @@
 	
 		OR = {
 		
-			is_a_regime_monarchy = yes
-		
-			NOT = { has_law_or_variant = law_type:law_yes_term_limit }
-			
-			custom_tooltip = {
-				text = je_term_limits.3.tt
-				has_journal_entry = je_term_limits_swiss
+			active_law:lawgroup_governance_principles ?= {
+				has_amendment = amendment_type:amendment_rotating_presidency
 			}
 			
-			NOT = { exists = scope:the_current_president_scope }
+			#Not for monarchs
+			is_a_regime_monarchy = yes
+			
+			NOT = { has_law_or_variant = law_type:law_yes_term_limit }
+			
+			NOT = { exists = ruler }
 			
 		}
 	
@@ -206,21 +217,34 @@
 	progressbar = yes
 }
 
-# Special Terms #
-je_term_limits_swiss = {
-	icon = "gfx/interface/icons/event_icons/swiss_federal_council.dds"
+je_term_limits_collective_HOS = {
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 
 	group = je_group_political_organs
 
+	is_shown_when_inactive = {
+		NOR = {
+			has_journal_entry = je_term_limits_swiss
+			has_journal_entry = je_term_limits_yugoslav
+			has_journal_entry = je_term_limits
+		}
+		has_law_or_variant = law_type:law_yes_term_limit
+	}
+
 	possible = {
-	
-		c:SWI ?= this
 		
 		#Is a special case
 		active_law:lawgroup_governance_principles ?= {
 			has_amendment = amendment_type:amendment_rotating_presidency
 		}
 		
+		#No conflict
+		NOR = {
+			has_journal_entry = je_term_limits_swiss
+			has_journal_entry = je_term_limits_yugoslav
+		}
+		
+		#Ruler exists
 		exists = ruler
 		
 	}
@@ -296,7 +320,221 @@ je_term_limits_swiss = {
 				}
 			}
 			
+			hidden_trigger = { has_journal_entry = je_term_limits_swiss }
+			hidden_trigger = { has_journal_entry = je_term_limits_yugoslav }
+			
 			hidden_trigger = { has_journal_entry = je_term_limits }
+			
+			NOT = { exists = ruler }
+			
+		}
+	}
+	
+	on_invalid = {
+	
+		#Regenerate this JE to reset term limit
+		remove_variable = ig_industrialists_president
+		remove_variable = ig_petty_bourgeoisie_president
+		remove_variable = ig_trade_unions_president
+		remove_variable = ig_landowners_president
+		remove_variable = ig_devout_president
+		remove_variable = ig_rural_folk_president
+		remove_variable = ig_intelligentsia_president
+		remove_variable = ig_armed_forces_president
+		
+		#Reset Term Limits
+		remove_variable = term_limit_var
+		
+	}
+
+	current_value = {
+		value =	root.var:term_limit_var
+	}
+
+	goal_add_value = {
+		add = 12
+	}
+
+	on_monthly_pulse = {
+		
+		#Add term ticker
+		effect = {
+		
+			change_variable = {
+				name = term_limit_var
+				add = 1
+			}
+			
+		}
+		
+	}
+
+	complete = {
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+	}
+	
+	on_complete = {
+	
+		#President's term has ended so he shall retire
+		custom_tooltip = {
+			text = je_term_limits.tt
+			ruler = { kill_character = yes }
+		
+			remove_variable = ig_industrialists_president
+			remove_variable = ig_petty_bourgeoisie_president
+			remove_variable = ig_trade_unions_president
+			remove_variable = ig_landowners_president
+			remove_variable = ig_devout_president
+			remove_variable = ig_rural_folk_president
+			remove_variable = ig_intelligentsia_president
+			remove_variable = ig_armed_forces_president
+		
+			#Reset Term Limits
+			remove_variable = term_limit_var
+		}
+		
+	}
+
+	#Failsafe by timing out JE
+	#timeout = 2920
+	
+	#on_timeout = {
+	#
+	#	#President's term has ended so he shall retire
+	#	custom_tooltip = {
+	#		text = je_term_limits.tt
+	#		ruler = { kill_character = yes }
+	#	
+	#		remove_variable = ig_industrialists_president
+	#		remove_variable = ig_petty_bourgeoisie_president
+	#		remove_variable = ig_trade_unions_president
+	#		remove_variable = ig_landowners_president
+	#		remove_variable = ig_devout_president
+	#		remove_variable = ig_rural_folk_president
+	#		remove_variable = ig_intelligentsia_president
+	#		remove_variable = ig_armed_forces_president
+	#	
+	#		#Reset Term Limits
+	#		remove_variable = term_limit_var
+	#	}
+	#	
+	#}
+
+	weight = 100
+
+	should_be_pinned_by_default = no
+
+	transferable = no
+
+	progressbar = yes
+}
+
+# Special Cases #
+je_term_limits_swiss = {
+	icon = "gfx/interface/icons/event_icons/swiss_federal_council.dds"
+
+	group = je_group_political_organs
+
+	is_shown_when_inactive = {
+		c:SWI ?= this
+		has_law_or_variant = law_type:law_yes_term_limit
+	}
+
+	possible = {
+	
+		c:SWI ?= this
+		
+		#Is a special case
+		active_law:lawgroup_governance_principles ?= {
+			has_amendment = amendment_type:amendment_rotating_presidency
+		}
+		
+		#Historical conditions
+		has_law_or_variant = law_type:law_federal_state
+		
+		#Ruler exists
+		exists = ruler
+		
+	}
+
+	immediate = {
+		set_variable = {
+			name = term_limit_var
+			value = 0
+		}
+		ruler ?= {
+			save_scope_as = the_current_president_scope
+			interest_group = {
+				save_scope_as = the_current_president_ig_scope
+			}
+		}
+		
+		#Markdown president
+		custom_tooltip = {
+			text = je_term_limits.1.tt
+			if = { limit = { ruler ?= { interest_group = { is_interest_group_type = ig_industrialists } } } set_variable = ig_industrialists_president }
+			if = { limit = { ruler ?= { interest_group = { is_interest_group_type = ig_petty_bourgeoisie } } } set_variable = ig_petty_bourgeoisie_president }
+			if = { limit = { ruler ?= { interest_group = { is_interest_group_type = ig_trade_unions } } } set_variable = ig_trade_unions_president }
+			if = { limit = { ruler ?= { interest_group = { is_interest_group_type = ig_landowners } } } set_variable = ig_landowners_president }
+			if = { limit = { ruler ?= { interest_group = { is_interest_group_type = ig_devout } } } set_variable = ig_devout_president }
+			if = { limit = { ruler ?= { interest_group = { is_interest_group_type = ig_rural_folk } } } set_variable = ig_rural_folk_president }
+			if = { limit = { ruler ?= { interest_group = { is_interest_group_type = ig_intelligentsia } } } set_variable = ig_intelligentsia_president }
+			if = { limit = { ruler ?= { interest_group = { is_interest_group_type = ig_armed_forces } } } set_variable = ig_armed_forces_president }
+		}
+	}
+	
+	fail = {
+	
+		#President was changed along the way
+		custom_tooltip = {
+			text = je_term_limits.2.tt
+			NOR = {
+				AND = { ruler = { interest_group = { is_interest_group_type = ig_industrialists } } has_variable = ig_industrialists_president }
+				AND = { ruler = { interest_group = { is_interest_group_type = ig_petty_bourgeoisie } } has_variable = ig_petty_bourgeoisie_president }
+				AND = { ruler = { interest_group = { is_interest_group_type = ig_trade_unions } } has_variable = ig_trade_unions_president }
+				AND = { ruler = { interest_group = { is_interest_group_type = ig_landowners } } has_variable = ig_landowners_president }
+				AND = { ruler = { interest_group = { is_interest_group_type = ig_devout } } has_variable = ig_devout_president }
+				AND = { ruler = { interest_group = { is_interest_group_type = ig_rural_folk } } has_variable = ig_rural_folk_president }
+				AND = { ruler = { interest_group = { is_interest_group_type = ig_intelligentsia } } has_variable = ig_intelligentsia_president }
+				AND = { ruler = { interest_group = { is_interest_group_type = ig_armed_forces } } has_variable = ig_armed_forces_president }
+			}
+		}
+		
+	}
+	
+	on_fail = {
+		
+		#Regenerate this JE to reset term limit
+		remove_variable = ig_industrialists_president
+		remove_variable = ig_petty_bourgeoisie_president
+		remove_variable = ig_trade_unions_president
+		remove_variable = ig_landowners_president
+		remove_variable = ig_devout_president
+		remove_variable = ig_rural_folk_president
+		remove_variable = ig_intelligentsia_president
+		remove_variable = ig_armed_forces_president
+		
+		#Reset Term Limits
+		remove_variable = term_limit_var
+		
+	}
+	
+	invalid = {
+		OR = {
+		
+			NOT = { 
+				active_law:lawgroup_governance_principles ?= {
+					has_amendment = amendment_type:amendment_rotating_presidency
+				}
+			}
+			
+			NOT = { has_law_or_variant = law_type:law_federal_state }
+			
+			hidden_trigger = { has_journal_entry = je_term_limits }
+			
+			NOT = { exists = ruler }
 			
 		}
 	}
@@ -407,6 +645,11 @@ je_term_limits_yugoslav = {
 
 	group = je_group_political_organs
 
+	is_shown_when_inactive = {
+		c:YUG ?= this
+		has_law_or_variant = law_type:law_yes_term_limit
+	}
+
 	possible = {
 	
 		c:YUG ?= this
@@ -417,8 +660,9 @@ je_term_limits_yugoslav = {
 		}
 		
 		#Other historical requirements
-		has_law_or_variant = law_type:law_multicultural
 		is_a_communist_government = yes
+		has_law_or_variant = law_type:law_federal_state
+		has_law_or_variant = law_type:law_multicultural
 		
 		#Ruler exists
 		exists = ruler
@@ -496,7 +740,13 @@ je_term_limits_yugoslav = {
 				}
 			}
 			
+			NOT = { is_a_communist_government = yes }
+			NOT = { has_law_or_variant = law_type:law_federal_state }
+			NOT = { has_law_or_variant = law_type:law_multicultural }
+			
 			hidden_trigger = { has_journal_entry = je_term_limits }
+			
+			NOT = { exists = ruler }
 			
 		}
 	}
