@@ -4,6 +4,7 @@ je_constitutional_monarchy = {
 	group = je_group_political_organs
 
 	scripted_button = je_enact_symbolic_monarchy_button
+	scripted_button = je_enact_elective_monarchy_button
 	scripted_button = je_force_abdication_button
 
 	is_shown_when_inactive = {
@@ -115,7 +116,7 @@ je_constitutional_monarchy = {
 						has_modifier = viceroy_character
 						NOT = { has_variable = viceroy_character_term_limit }
 					}
-					retire_monarch_character_scripted_effect = yes
+					retire_character = yes
 				}
 				generate_viceroy_for_country = yes
 			}
@@ -170,22 +171,10 @@ je_constitutional_monarchy = {
 		remove_variable = elective_monarchy_system_timer
 		remove_variable = female_monarch_var
 		
-		#Historical elective monarchies
-		if = {
-			limit = { 
-				OR = { 
-					c:MSY ?= this 
-					c:MLY ?= this
-					c:UAE ?= this 
-				}
-			}
-			set_variable = elective_monarchy_system
-		}
-		
 		#Elective Monarchy
 		if = {
 			limit = { 
-				has_variable = elective_monarchy_system
+				active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy }
 			}
 			set_variable = { 
 				name = elective_monarchy_system_timer
@@ -244,7 +233,13 @@ je_constitutional_monarchy = {
 		#Remove all viceroys
 		hidden_effect = {
 			if = {
-				limit = { is_a_foreign_regime_monarchy = no }
+				limit = { 
+					is_a_foreign_regime_monarchy = no
+					NAND = {
+						is_subject = yes
+						shares_same_monarch = yes
+					}
+				}
 				every_scope_character = {
 					limit = { 
 						has_modifier = viceroy_character

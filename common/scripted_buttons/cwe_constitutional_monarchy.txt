@@ -88,7 +88,7 @@ je_force_abdication_button = {
 		
 		NOT = { shares_same_monarch = yes }
 		
-		NOT = { has_variable = elective_monarchy_system }
+		NOT = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy } }
 		
 		any_scope_character = {
 			has_modifier = monarch_character
@@ -304,19 +304,18 @@ je_enact_symbolic_monarchy_button = {
 			}
 		}
 		
-	}
-
-	possible = {
-	
 		#Cannot weaken overlord monarchy
 		trigger_if = {
 			limit = { is_subject = yes }
-			NOT = {
-				overlord ?= {
-					is_a_monarchy = yes
-				}
+			NAND = {
+				overlord ?= { is_a_monarchy = yes }
+				shares_same_monarch = yes
 			}
 		}
+		
+	}
+
+	possible = {
 	
 		#Legal requirements
 		government_has_legislative_super_majority = yes
@@ -341,6 +340,71 @@ je_enact_symbolic_monarchy_button = {
 		#AI will only do this if monarch is disliked
 		modifier = { 
 			trigger = { 
+				any_scope_character = {
+					has_modifier = monarch_character
+					popularity <= -50
+				}
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_enact_elective_monarchy_button = {
+	name = "je_enact_elective_monarchy_button"
+	desc = "je_enact_elective_monarchy_button_desc"
+
+	visible = { 
+		
+		#Does not have Symbolic Monarchy
+		NOT = { 
+			active_law:lawgroup_governance_principles ?= {
+				has_amendment = amendment_type:amendment_elective_monarchy
+			}
+		}
+		
+		#Federal states only
+		has_law_or_variant = law_type:law_federal_state
+		
+		#Cannot weaken overlord monarchy
+		trigger_if = {
+			limit = { is_subject = yes }
+			NAND = {
+				overlord ?= { is_a_monarchy = yes }
+				shares_same_monarch = yes
+			}
+		}
+		
+	}
+
+	possible = {
+	
+		#Legal requirements
+		government_has_legislative_super_majority = yes
+		
+	}
+
+	effect = {
+	
+		#Add Amendment
+		active_law:lawgroup_governance_principles ?= {
+			add_amendment = {
+				type = amendment_elective_monarchy
+				sponsor = PREV.ig:ig_petty_bourgeoisie 
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if monarch is disliked
+		modifier = { 
+			trigger = { 
+				NOT = { historical_railroading_active = yes }
 				any_scope_character = {
 					has_modifier = monarch_character
 					popularity <= -50
