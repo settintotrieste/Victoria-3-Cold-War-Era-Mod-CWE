@@ -2011,11 +2011,54 @@ conduct_hostile_espionage_8 = {
 		scope:target_country = { save_scope_as = coup_target }
 		custom_tooltip = {
 			text = sponsor_coup_diplo_action.tt
-			scope:target_country = { trigger_event = { id = ip4_coup.1 popup = yes } }
+			scope:target_country = {
+				set_variable = { name = coup_event_active days = 90 }
+				ordered_scope_character = {
+					limit = {
+						OR = {
+							has_role = general
+							has_role = admiral
+						}
+						interest_group = {
+							#ig_approval <= define:NPolitics|APPROVAL_THRESHOLD_ANGRY
+						}
+						#commander_coup_strength >= { # Commander can plausibly coup the government with help
+						#	value = owner.country_coup_resistance
+						#	multiply = 0.9
+						#}
+					}
+					order_by = popularity
+					position = 0
+					check_range_bounds = no
+					set_variable = golpista_var
+					set_variable = { name = monthly_cached_units_share value = this.num_units_share } # Updates at start of coup
+					set_variable = { name = monthly_cached_commander_coup_strength value = this.commander_coup_strength }
+					save_scope_as = golpista_general
+					interest_group = {
+						set_variable = golpista_ig_var
+						save_scope_as = golpista_ig
+					}
+				}
+				generate_2_common_name = {
+					CULTURE_1 = primary_culture
+					CULTURE_2 = primary_culture
+				}
+				add_journal_entry = { type = je_ip4_coup }
+				scope:golpista_general ?= {
+					add_modifier = {
+						name = coup_supported
+						days = short_modifier_time
+					}
+				}
+				clear_generated_names = yes
+			}
 		}
 		
 		#Gain infamy
-		change_infamy = 10
+		create_incident = {
+			value = 10
+			country = scope:target_country
+		}
 		
 	}
 	
