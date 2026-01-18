@@ -1842,7 +1842,7 @@ conduct_hostile_espionage_7 = {
 	
 }
 
-#Manipulate Politics
+#Instigate Coup
 conduct_hostile_espionage_8 = {
 	groups= { general } requires_approval = no
 	should_notify_third_parties = no
@@ -1867,27 +1867,22 @@ conduct_hostile_espionage_8 = {
 	
 	possible = {
 		
-		#TARGET is an independent country
+		#TARGET has an open media to exploit
 		scope:target_country = { 
-			NOT = { is_subject_of = scope:actor }
-			NOT = { has_war_with = scope:actor }
+			country_has_an_open_media = yes 
 		}
 		
-		#TARGET politics is suceptible to manipulation
-		scope:target_country = {
-			OR = { 
-				is_a_democracy = yes
-				has_modifier = power_vacuum_modifier
-				has_modifier = domestic_unrest
-				has_modifier = stirrings_of_revolution
-			}
+		#Has diplomats
+		NOR = { 
+			has_diplomats_expelled = scope:target_country
+			scope:target_country = { has_diplomats_expelled = scope:actor }
 		}
 		
 		#Has enough action points
 		custom_tooltip = {
-			text = secret_police_action_50_points.tt
+			text = secret_police_action_25_points.tt
 			has_variable = secret_police_action_points
-			root.var:secret_police_action_points > 50
+			root.var:secret_police_action_points > 25
 		}
 		
 		#Cooldown
@@ -1902,12 +1897,12 @@ conduct_hostile_espionage_8 = {
 		
 		#Subtract action points
 		custom_tooltip = {
-			text = secret_police_action_subtract_50_points.tt
+			text = secret_police_action_subtract_25_points.tt
 			if = {
 				limit = { has_variable = secret_police_action_points }
 				change_variable = { 
 					name = secret_police_action_points
-					add = -50
+					add = -25
 				}
 			}
 		}
@@ -1926,128 +1921,17 @@ conduct_hostile_espionage_8 = {
 			}
 		}
 		
+		#Increase appeasement of both sides
+		add_lobby_appeasement_from_diplomacy_unidirectional = { 
+			FIRST = scope:target_country
+			SECOND = root
+			PRO_AMOUNT = 2
+			ANTI_AMOUNT = 2
+			FACTOR = appeasement_embargo_declared
+		}
+		
 		#Gain infamy
 		change_infamy = 5
-		
-		#Reduce Relations
-		save_scope_as = manipulator_country
-		scope:target_country = { save_scope_as = manipulated_country }
-		custom_tooltip = manipulating_government.tt
-		change_relations = { country = scope:target_country value = -50 }
-		
-	}
-	
-	pact = {	
-		cost = 200
-		is_two_sided_pact = no
-		infamy_affects_maintenance = yes
-		
-		income_transfer = 0.01
-		max_paying_country_income_to_transfer = 0.05
-		second_country_gets_income_transfer = yes
-		income_transfer_based_on_second_country = yes
-		
-		### Validation requirements ###
-		
-		requirement_to_maintain = { 
-		
-			trigger = { 
-			
-				hidden_trigger = { has_journal_entry = je_secret_police_system }
-	
-				#THIS has spies in TARGET
-				has_diplomatic_pact = {
-					who = scope:target_country
-					type = conduct_hostile_espionage
-					is_initiator = yes
-				}
-				
-				#TARGET is an independent country
-				scope:target_country = { 
-					NOT = { is_subject_of = scope:actor }
-					NOT = { has_war_with = scope:actor }
-				}
-				
-				#TARGET politics is suceptible to manipulation
-				scope:target_country = { 
-					OR = { 
-						is_a_democracy = yes
-						has_modifier = power_vacuum_modifier
-						has_modifier = domestic_unrest
-						has_modifier = stirrings_of_revolution
-					}
-				}
-				
-			}
-			
-		}
-		
-		### Yearly Effect ###
-		
-		yearly_effect = {
-			
-			#Event to start enactment of law
-			ruler ?= {
-				interest_group = {
-					save_scope_as = manipulator_country_IG
-				}
-			}
-			scope:target_country = {
-				if = {
-					limit = { exists = scope:manipulator_country_IG }
-					random_interest_group = {
-						limit = { is_same_interest_group_type = scope:manipulator_country_IG }
-						save_scope_as = target_interest_group
-						random_preferred_law = {
-							limit = { can_be_enacted = yes }
-							save_scope_as = law_to_be_enacted
-						}
-					}
-				}
-				if = {
-					limit = { 
-						exists = scope:law_to_be_enacted
-						enacting_any_law = no 
-						NOT = { has_variable = manipulate_politics_timer }
-					}
-					if = {
-						limit = { NOT = { has_law_or_variant = law_type:law_secret_police } }
-						random_list = {
-							1 = { 
-								trigger_event = { id = reserve_powers_system.6 } 
-								set_variable = {
-									name = manipulate_politics_timer
-									months = 1
-								}
-							}
-							1 = { }
-						}
-					}
-					else = {
-						random_list = {
-							1 = { 
-								trigger_event = { id = reserve_powers_system.6 } 
-								set_variable = {
-									name = manipulate_politics_timer
-									months = 1
-								}
-							}
-							4 = { }
-						}
-					}
-				}
-			}
-			
-		}
-		
-		# Break effects
-		manual_break_effect = {
-			change_infamy = -5
-		}
-		
-		auto_break_effect = {
-			change_infamy = -5
-		}
 		
 	}
 	
@@ -2067,6 +1951,7 @@ conduct_hostile_espionage_8 = {
 				has_attitude = { who = scope:target_country attitude = antagonistic }
 				has_attitude = { who = scope:target_country attitude = belligerent }
 				has_attitude = { who = scope:target_country attitude = domineering }
+				has_diplomatic_pact = { who = scope:target_country type = rivalry }
 				scope:target_country.relations:root < relations_threshold:poor
 			}
 		}
