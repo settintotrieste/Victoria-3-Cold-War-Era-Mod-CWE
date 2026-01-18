@@ -5,7 +5,7 @@
 	should_notify_third_parties = yes
 	show_effect_in_tooltip = yes
 
-	texture = "gfx/interface/icons/diplomatic_action_icons/da_appoint_colonial_governor.dds"
+	texture = "gfx/interface/icons/diplomatic_action_icons/da_appoint_subject_ruler.dds"
 	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_04_appoint_governor_benign"
 	selectable = {
 		is_revolutionary = no is_secessionist = no
@@ -15,10 +15,7 @@
 		scope:target_country = {
 			NOT = { has_variable = gubernatorial_candidate }
 			NOT = { is_diplomatic_play_enemy_of = root }
-			NOR = {
-				is_a_colonial_subject_gov = yes
-				is_subject_type = subject_type_special_administrative_region
-			}
+			NOT = { ruler_is_governor_general = yes }
 		}
 	}
 	
@@ -37,20 +34,18 @@
 				is_sufficiently_independent = no
 				AND = {
 					is_sufficiently_independent = yes
-					OR = {
-						AND = { 
+					trigger_if = {
+						limit = { 
 							is_a_monarchy = yes 
 							shares_same_monarch = yes
-							any_scope_character = {
-								has_modifier = viceroy_character
-								interest_group = { is_same_interest_group_type = ROOT.ruler.interest_group }
-							}
 						}
-						AND = { 
-							is_a_monarchy = no
-							shares_same_monarch = no
-							has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement }
+						any_scope_character = {
+							has_modifier = viceroy_character
+							interest_group = { is_same_interest_group_type = ROOT.ruler.interest_group }
 						}
+					}
+					trigger_else = {
+						scope:actor = { has_diplomatic_pact = { who = scope:target_country type = military_cooperation_agreement is_initiator = yes } }
 					}
 				}
 			}
@@ -64,7 +59,7 @@
 				name = gubernatorial_candidate_timed
 				days = normal_modifier_time
 			}
-			post_notification = appointed_new_governor_notification
+			post_notification = appointed_new_subject_ruler_notification
 		}
 		trigger_event = { id = subject_interactions.1 popup = yes }
 	}
