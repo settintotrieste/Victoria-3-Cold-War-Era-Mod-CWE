@@ -1270,3 +1270,105 @@ revolution_system.14 = {
 	}
 	
 }
+
+# Coup leading to war with Overlord
+revolution_system.15 = {
+    type = country_event
+	placement = scope:target_country
+
+    title = coup_subject_war_with_overlord.t 						# Title of the event; ADD LOCALISATION
+    desc = coup_subject_war_with_overlord.d 						# Description of the event; ADD LOCALISATION
+    flavor = coup_subject_war_with_overlord.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_carlist_beret.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		#Mark couped state
+		random_country = {
+			limit = { has_variable = target_country_marker }
+			remove_variable = target_country_marker
+			save_scope_as = target_country
+		}
+		
+	}
+	
+	cancellation_trigger = {
+		
+		OR = {
+			is_sufficiently_independent = no
+			NOT = { exists = scope:target_country }
+			NOT = { scope:target_country ?= { is_subject_of = ROOT } }
+		}
+		
+	}
+    
+	option = {
+        name = coup_subject_war_with_overlord.option.1				# War!
+		highlighted_option = yes
+		
+		#War!
+		scope:target_country ?= {
+			create_diplomatic_play = {
+				type = dp_independence
+				target_country = overlord
+				add_war_goal = {
+					holder = overlord
+					type = regime_change
+					target_country = ROOT
+				}
+			}
+		}
+		
+		#International relations
+		if = {
+			limit = { exists = scope:target_country }
+			create_incident = {
+				value = 10
+				country = scope:target_country
+			}
+		}
+		
+		ai_chance = { 
+			base = 10
+			modifier = { trigger = { ruler ?= { character_is_democratic = yes } } add = -100 }
+		}
+		
+    }
+	
+	option = {
+        name = coup_subject_war_with_overlord.option.2				# Peace
+		default_option = yes
+		
+		#Release FROM
+		if = {
+			limit = { scope:target_country ?= { is_subject_of = ROOT } }
+			scope:target_country ?= { make_independent = yes }
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 90
+			modifier = { trigger = { ruler ?= { character_is_autocratic = yes } } add = -100 }
+		}
+		
+    }
+
+}
