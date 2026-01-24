@@ -3866,3 +3866,122 @@ historical_diplomatic_incidents.39 = {
     }
 
 }
+
+# The Donroe Doctrine
+historical_diplomatic_incidents.40 = {
+    type = country_event
+
+    title = USA_Donroe_Doctrine_2026.t 									# Title of the event; ADD LOCALISATION
+    desc = USA_Donroe_Doctrine_2026.d 									# Description of the event; ADD LOCALISATION
+    #flavor = USA_Donroe_Doctrine_2026.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/africa_diplomats_negotiating.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this													# Change TAG of the overlord ****
+		game_date >= 2025.1.8											# START DATE: Date colony became self governing ****
+		game_date < 2035.1.8											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes								# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		is_at_war = no													# war = no
+		
+		#Causes
+		ruler ?= { has_variable = Donald_Trump }
+		country_rank = rank_value:super_power
+		NOT = { has_law_or_variant = law_type:law_offensive_war }
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_Donroe_Doctrine_2026_hdi }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_Donroe_Doctrine_2026_hdi						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1					# Yes
+        highlighted_option = yes
+		
+		#Gain jingoism
+		if = {
+			limit = { NOT = { has_law_or_variant = law_type:law_offensive_war } }
+			activate_law = law_type:law_offensive_war
+		}
+		if = {
+			limit = { NOT = { has_law_or_variant = law_type:law_offensive_espionage } }
+			activate_law = law_type:law_offensive_espionage
+		}
+		
+		#Obsessions
+		if = {
+			limit = { exists = c:GRN }
+			set_secret_goal = {
+				country = c:GRN
+				secret_goal = conquer
+			}		
+		}
+		if = {
+			limit = { exists = c:VNZ }
+			set_secret_goal = {
+				country = c:VNZ
+				secret_goal = conquer
+			}		
+		}
+		if = {
+			limit = { exists = c:PER }
+			set_secret_goal = {
+				country = c:PER
+				secret_goal = conquer
+			}
+		}
+		if = {
+			limit = { exists = c:PNM }
+			set_secret_goal = {
+				country = c:PNM
+				secret_goal = conquer
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		#Domestic effects
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
