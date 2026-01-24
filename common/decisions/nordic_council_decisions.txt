@@ -1,0 +1,213 @@
+form_nordic_council_decision = {
+
+	is_shown = {
+		
+		game_date >= 1953.2.12
+		
+		#Historical founder
+		OR = {
+			c:SWE ?= this
+			c:NOR ?= this
+			c:DEN ?= this
+			c:ICL ?= this
+			c:FIN ?= this
+		}
+		
+		#Nordic Council does not already exist
+		NOR = { has_modifier = nordic_council_member has_modifier = nordic_council_leader }
+		NOT = { any_country = { OR = { has_modifier = nordic_council_member has_modifier = nordic_council_leader } } }
+		
+		#THIS is a democracy
+		is_a_democracy = yes
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no is_secessionist = no
+		
+	}
+
+	possible = {
+	
+		#THIS is at least a Great Power
+		OR = { 
+			country_rank >= rank_value:major_power
+			is_power_bloc_leader = yes
+		}
+		
+		#Country is independent
+		is_sufficiently_independent = yes
+	
+		#Country is not at war
+		is_at_war = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+		#There is someone to create Nordic Council with
+		any_country = {
+			any_primary_culture = { has_discrimination_trait = heritage_nordic }
+			is_a_democracy = yes
+			is_revolutionary = no is_secessionist = no
+			relations:root >= relations_threshold:amicable
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS forms Nordic Council by being the first member & leader
+		add_modifier = { name = nordic_council_leader }
+		
+	}
+
+	ai_chance = {
+		value = 100		
+	}
+	
+}
+
+join_nordic_council_decision = {
+
+	is_shown = {
+		
+		#Only nordic countries
+		any_primary_culture = { has_discrimination_trait = heritage_nordic }
+	
+		#Is not currently applying for nordic_council membership
+		NOT = { has_variable = nordic_council_application_timer }
+		NOT = { has_global_variable = nordic_council_application_quota_reached }
+		
+		#Not already in Nordic Council
+		NOT = { has_modifier = nordic_council_leader }
+		NOT = { has_modifier = nordic_council_member }
+		
+		#Nordic Council does already exists
+		any_country = { has_modifier = nordic_council_leader }
+		
+		#THIS is a democracy
+		is_a_democracy = yes
+		
+		#THIS must not be a revolutionary
+		is_revolutionary = no is_secessionist = no
+		
+		#Nordic Council Leader is higher rank than THIS
+		any_country = {
+			has_modifier = nordic_council_leader
+			country_rank > root.country_rank
+		}
+		
+	}
+
+	possible = {
+	
+		#Did not leave Nordic Council recently
+		NOT = { has_variable = left_nordic_council_var }
+	
+		#Country is independent
+		is_sufficiently_independent = yes
+	
+		#Country is not at war
+		is_at_war = no
+		
+		#THIS is not a pariah
+		infamy < infamy_threshold:pariah
+		
+		#Friendly with Nordic Council leader
+		any_country = {
+			has_modifier = nordic_council_leader
+			relations:root >= relations_threshold:amicable
+		}
+		
+		#Timer
+		custom_tooltip = {
+			text = international_organisation_application_cooldown.tt
+			NOT = { 
+				has_variable = nordic_council_application_cooldown
+			}
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS applies for Nordic Council
+		set_variable = {
+			name = nordic_council_application_var
+			years = 1
+		}
+		set_variable = {
+			name = nordic_council_application_timer
+			years = 5
+		}
+		
+		#Choice for Nordic Council leader to accpet or decline
+		random_country = { 
+			limit = { has_modifier = nordic_council_leader }
+			trigger_event = { id = nordic_council_system.4 }
+		}
+		
+		#Timer
+		set_variable = {
+			name = nordic_council_application_cooldown
+			years = 10
+		}
+		set_global_variable = {
+			name = nordic_council_application_quota_reached
+			months = 1
+		}
+		
+	}
+
+	ai_chance = {
+		value = 100
+	}
+	
+}
+
+leave_nordic_council_decision = {
+
+	is_shown = {
+		
+		#THIS is in Nordic Council
+		OR = { has_modifier = nordic_council_member has_modifier = nordic_council_leader }
+		
+	}
+
+	possible = {
+	
+		#Conditions to leave nordic_council
+		OR = {
+		
+			is_a_communist_government = yes
+		
+			NOT = { is_sufficiently_independent = yes }
+			
+			any_country = {
+				has_modifier = nordic_council_leader
+				relations:root < relations_threshold:poor
+			}
+			
+			is_player = yes
+			
+		}
+		
+	}
+	
+	when_taken = {
+	
+		#THIS leaves Nordic Council
+		remove_modifier = nordic_council_member
+		remove_modifier = nordic_council_leader
+		
+		#Block reapplication for 5 years
+		set_variable = {
+			name = left_nordic_council_var
+			months = 60
+		}
+		
+	}
+
+	ai_chance = {
+		value = 100		
+	}
+	
+}

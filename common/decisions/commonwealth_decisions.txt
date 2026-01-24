@@ -16,6 +16,7 @@ form_commonwealth_decision = {
 		
 		#THIS must not be a revolutionary
 		is_revolutionary = no is_secessionist = no
+		
 	}
 
 	possible = {
@@ -35,7 +36,10 @@ form_commonwealth_decision = {
 		#There is someone to create Commonwealth with
 		any_country = {
 			is_a_democracy = yes
-			is_in_our_personal_union = yes
+			OR = {
+				is_in_our_personal_union = yes
+				any_primary_culture = { has_discrimination_trait = heritage_british }
+			}
 			is_revolutionary = no is_secessionist = no
 			relations:root >= relations_threshold:amicable
 		}
@@ -58,6 +62,19 @@ form_commonwealth_decision = {
 join_commonwealth_decision = {
 
 	is_shown = {
+	
+		#British related countries only
+		OR = { 
+			any_primary_culture = { has_discrimination_trait = heritage_british }
+			any_country = {
+				has_modifier = commonwealth_leader
+				OR = {
+					has_diplomatic_pact = { who = ROOT type = personal_union }
+					has_diplomatic_pact = { who = ROOT type = dominion }
+					has_diplomatic_pact = { who = ROOT type = protectorate }
+				}
+			}
+		}
 	
 		#Is not currently applying for commonwealth membership
 		NOT = { has_variable = commonwealth_application_timer }
@@ -98,23 +115,10 @@ join_commonwealth_decision = {
 		#THIS is not a pariah
 		infamy < infamy_threshold:pariah
 		
-		#THIS is a colony
-		#country_is_in_europe = no
-		
 		#Friendly with Commonwealth leader
 		any_country = {
 			has_modifier = commonwealth_leader
-			
-			OR = {
-				has_diplomatic_pact = { who = ROOT type = personal_union }
-				has_diplomatic_pact = { who = ROOT type = dominion }
-				has_diplomatic_pact = { who = ROOT type = protectorate }
-				
-				#any_primary_culture = { shares_non_heritage_trait_with_any_primary_culture = ROOT }
-			}
-			
 			relations:root >= relations_threshold:amicable
-			NOT = { has_attitude = { who = ROOT attitude <= antagonistic } }
 		}
 		
 		#Timer
@@ -183,9 +187,7 @@ leave_commonwealth_decision = {
 			
 			any_country = {
 				has_modifier = commonwealth_leader
-			
 				relations:root < relations_threshold:poor
-				has_attitude = { who = ROOT attitude <= antagonistic }
 			}
 			
 			is_player = yes

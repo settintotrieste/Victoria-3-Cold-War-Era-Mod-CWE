@@ -1,0 +1,337 @@
+namespace = nordic_council_system
+
+#Set Nordic Council leader
+nordic_council_system.1 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = {
+		
+			#No Nordic Council leader and there is an eligible one
+			AND = { 
+				NOT = { any_country = { has_modifier = nordic_council_leader } }
+				any_country = { 
+					has_modifier = nordic_council_member 
+				}
+			}
+			
+			#Nordic Council leader is wrong
+			AND = { 
+				has_modifier = nordic_council_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					is_a_communist_government = yes
+					any_country = { has_modifier = nordic_council_member NOT = { has_modifier = nordic_council_leader } country_rank > root.country_rank }
+				}
+			}
+			
+			#Overlapping modifiers
+			any_country = { has_modifier = nordic_council_leader has_modifier = nordic_council_member }
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Clear Nordic Council leader
+		every_country = {
+			limit = { has_modifier = nordic_council_leader }
+			remove_modifier = nordic_council_leader
+			if = { 
+				limit = { NOT = { has_modifier = nordic_council_member } }
+				add_modifier = { name = nordic_council_member }
+			}
+		}
+	
+		#Set Nordic Council leader
+		if = {
+			limit = { 
+				NOT = { any_country = { has_modifier = nordic_council_leader } }
+				any_country = { 
+					has_modifier = nordic_council_member
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = nordic_council_member
+					NOT = { 
+						any_country = {
+							has_modifier = nordic_council_member
+							country_rank > this.country_rank
+						}
+					}
+				}
+				add_modifier = { name = nordic_council_leader }
+			}
+		}
+		else_if = {
+			limit = {
+				has_modifier = nordic_council_leader
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					is_a_communist_government = yes
+					any_country = { has_modifier = nordic_council_member NOT = { has_modifier = nordic_council_leader } country_rank > root.country_rank }
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = nordic_council_member
+					country_rank > root.country_rank
+				}
+				add_modifier = { name = nordic_council_leader }
+			}
+		}
+		
+		#Clean up memberships
+		if = { 
+			limit = { has_modifier = nordic_council_leader has_modifier = nordic_council_member }
+			remove_modifier = nordic_council_member
+		}
+		
+	}
+
+}
+
+#Dissolve Nordic Council
+nordic_council_system.2 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = { 
+		
+			#THIS is the sole member of Nordic Council
+			AND = { 
+				OR = { has_modifier = nordic_council_member has_modifier = nordic_council_leader }
+				NOT = { any_country = { has_modifier = nordic_council_member } }
+			}
+			
+			#No Nordic Council leader
+			AND = { 
+				NOT = { has_modifier = nordic_council_leader }
+				NOT = { any_country = { has_modifier = nordic_council_leader } }
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Everyone leaves Nordic Council
+		remove_modifier = nordic_council_member
+		remove_modifier = nordic_council_leader
+		
+		every_country = {
+			remove_modifier = nordic_council_member
+			remove_modifier = nordic_council_leader
+		}
+		
+	}
+
+}
+
+#Kick ineligible countries out of Nordic Council
+nordic_council_system.3 = {
+	type = country_event
+	title = nordic_council_expulsion.t 					# Title of the event; ADD LOCALISATION
+    desc = nordic_council_expulsion.d 					# Description of the event; ADD LOCALISATION
+    flavor = nordic_council_expulsion.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/diplo_icons/nordic_council_member.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		OR = { 
+			has_modifier = nordic_council_member
+			has_modifier = nordic_council_leader
+			has_variable = nordic_council_application_var
+		}
+		
+		OR = { 
+			NOT = { is_sufficiently_independent = yes }
+			NOT = { infamy < infamy_threshold:pariah }
+			is_a_communist_government = yes
+		}
+		
+	}
+
+	immediate = {
+	
+		#THIS leaves Nordic Council
+		remove_modifier = nordic_council_member
+		remove_modifier = nordic_council_leader
+		
+		#Terminate any applications
+		remove_variable = nordic_council_application_var
+		
+		#Block reapplication for 5 years
+		set_variable = {
+			name = left_nordic_council_var
+			months = 60
+		}
+		
+	}
+	
+	option = {
+        name = nordic_council_application_rejection.1				# Unfortunate
+		
+    }
+
+}
+
+#Option for Nordic Council leader to accept or reject application for membership
+nordic_council_system.4 = {
+	title = nordic_council_application_choice.t 					# Title of the event; ADD LOCALISATION
+    desc = nordic_council_application_choice.d 					# Description of the event; ADD LOCALISATION
+    #flavor = nordic_council_application_choice.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/diplo_icons/nordic_council_member.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		has_modifier = nordic_council_leader
+		
+		any_country = {
+			has_variable = nordic_council_application_var
+			
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		
+	}
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_variable = nordic_council_application_var }
+			save_scope_as = nordic_council_applicant
+		}
+		
+		ROOT = {
+			save_scope_as = nordic_council_leader
+		}
+		
+	}
+
+	option = {
+        name = nordic_council_application_choice.option.1			# Accept application from PREV
+        highlighted_option = yes
+		
+		#Accept FROM into Nordic Council
+		scope:nordic_council_applicant = {
+			#FROM joins Nordic Council
+			add_modifier = { name = nordic_council_member }
+			remove_variable = nordic_council_application_var
+		}
+		
+		#Inform applicant of successful outcome
+		scope:nordic_council_applicant = { trigger_event = { id = nordic_council_system.6 } }
+		
+		#FROM is happy with THIS
+		change_relations = {
+			country = scope:nordic_council_applicant
+			value = 25
+		}
+		
+		ai_chance = { 
+			base = 99
+		}
+		
+    }
+	
+	option = {
+        name = nordic_council_application_choice.option.2 # Refuse application from PREV
+		default_option = yes
+		
+		#Inform applicant of unsuccessful outcome
+		scope:nordic_council_applicant = { 
+			trigger_event = { id = nordic_council_system.5 } 
+			remove_variable = nordic_council_application_var
+		}
+		
+		#FROM is angry!
+		change_relations = {
+			country = scope:nordic_council_applicant
+			value = -25
+		}
+		
+		ai_chance = { 
+			base = 1
+		}
+		
+    }
+
+}
+
+#Notification of rejection
+nordic_council_system.5 = {
+	title = nordic_council_application_rejection.t 				# Title of the event; ADD LOCALISATION
+    desc = nordic_council_application_rejection.d 				# Description of the event; ADD LOCALISATION
+    #flavor = nordic_council_application_rejection.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/diplo_icons/nordic_council_member.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = nordic_council_leader }
+			save_scope_as = nordic_council_leader
+		}
+		
+	}
+
+	option = {
+        name = nordic_council_application_rejection.1				# Unfortunate
+		
+    }
+
+}
+
+#Notification of acceptance
+nordic_council_system.6 = {
+	title = nordic_council_application_acceptance.t 				# Title of the event; ADD LOCALISATION
+    desc = nordic_council_application_acceptance.d 				# Description of the event; ADD LOCALISATION
+    #flavor = nordic_council_application_acceptance.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/diplo_icons/nordic_council_member.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = nordic_council_leader }
+			save_scope_as = nordic_council_leader
+		}
+		
+	}
+
+	option = {
+        name = nordic_council_application_acceptance.1				# Fortunate
+		
+    }
+
+}
