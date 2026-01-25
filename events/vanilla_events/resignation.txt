@@ -67,94 +67,548 @@ resignation.1 = {
 	}
 
 	immediate = {
-		ruler = {
+	
+		ruler ?= {
 			save_scope_as = resigning_politician
 			interest_group = {
 				save_scope_as = resignation_ig
 			}
 		}
+		
+		#Create candidates
+		create_character = {
+			ideology = ideology_autocratic
+			interest_group = scope:resignation_ig
+			on_created = {
+				place_character_in_void = 6
+				save_scope_as = replacement_ruler_autocratic
+			}
+		}
+		create_character = {
+			ideology = ideology_power_hungry
+			interest_group = scope:resignation_ig
+			on_created = {
+				place_character_in_void = 6
+				save_scope_as = replacement_ruler_power_hungry
+			}
+		}
+		create_character = {
+			ideology = ideology_elitist
+			interest_group = scope:resignation_ig
+			on_created = {
+				place_character_in_void = 6
+				save_scope_as = replacement_ruler_elitist
+			}
+		}
+		create_character = {
+			ideology = ideology_democratic
+			interest_group = scope:resignation_ig
+			on_created = {
+				place_character_in_void = 6
+				save_scope_as = replacement_ruler_democratic
+			}
+		}
+		create_character = {
+			ideology = ideology_liberal
+			interest_group = scope:resignation_ig
+			on_created = {
+				place_character_in_void = 6
+				save_scope_as = replacement_ruler_liberal
+			}
+		}
+		
 	}
-
-	option = { # Support successor
-		name = resignation.1.a
+	
+	cancellation_trigger = {
+		
+		OR = {
+			NOT = { exists = scope:resignation_ig }
+			NOT = { exists = scope:resigning_politician }
+		}
+	
+	}
+	
+	option = { # Autocratic successor
+		name = resignation_1.1.a
 		default_option = yes
 		trigger = {
-			NOR = {
-				scope:resignation_ig = {
-					OR = {
-						ig_approval <= angry
-						ig_counts_as_marginal = yes
+			exists = scope:replacement_ruler_autocratic
+			OR = { 
+				has_variable = very_radical_party
+				ruler ?= { has_ideology = ideology:ideology_autocratic }
+				is_a_dictatorship = yes
+			}
+		}
+		
+		#Legacy of previous ruler
+		if = {
+			limit = {
+				NOR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician = {
+						popularity <= -50
 					}
 				}
+			}
+			add_modifier = {
+				name = modifier_best_of_luck
+				days = normal_modifier_time
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician = {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_disastrous_administration
+				days = normal_modifier_time
+			}
+			add_loyalists = {
+				value = small_radicals
+			}
+			custom_tooltip = {
+				text = leader_resigns_from_office_tt
 				scope:resigning_politician = {
-					popularity <= -50
+					retire_character = yes
 				}
 			}
 		}
-		add_modifier = {
-			name = modifier_best_of_luck
-			days = normal_modifier_time
+		
+		#Appoint ruler
+		scope:replacement_ruler_autocratic ?= {
+			hidden_effect = {
+				free_character_from_void = yes
+			}
+			set_character_as_ruler = yes 
+			owner = { remove_all_government_ig = yes ruler ?= { interest_group = { save_scope_as = ruler_ig_type } } scope:ruler_ig_type ?= { add_ruling_interest_group = yes } }
 		}
 		custom_tooltip = {
 			text = leader_resigns_from_office_tt
 			scope:resigning_politician = {
-				kill_character = {
-					hidden = yes
-				}
+				retire_character = yes
 			}
 		}
+		
+		#Call snap elections where applicable
+		if = {
+			limit = { 
+				OR = { 
+					is_a_presidential_democracy = yes 
+					is_a_parliamentary_democracy = yes
+				}
+			}
+			call_election = {
+				months = 3
+			}
+		}
+		
 	}
-
-	option = { # Disastrous regime
-		name = resignation.1.b
+	
+	option = { # Radical successor
+		name = resignation_1.2.a
 		default_option = yes
 		trigger = {
-			OR = {
-				scope:resignation_ig = {
-					OR = {
-						ig_approval <= angry
-						ig_counts_as_marginal = yes
+			exists = scope:replacement_ruler_power_hungry
+			OR = { 
+				has_variable = radical_party
+				ruler ?= { has_ideology = ideology:ideology_power_hungry }
+				is_a_dictatorship = yes
+			}
+		}
+		
+		#Legacy of previous ruler
+		if = {
+			limit = {
+				NOR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician = {
+						popularity <= -50
 					}
 				}
+			}
+			add_modifier = {
+				name = modifier_best_of_luck
+				days = normal_modifier_time
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician = {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_disastrous_administration
+				days = normal_modifier_time
+			}
+			add_loyalists = {
+				value = small_radicals
+			}
+			custom_tooltip = {
+				text = leader_resigns_from_office_tt
 				scope:resigning_politician = {
-					popularity <= -50
+					retire_character = yes
 				}
 			}
 		}
-		add_modifier = {
-			name = modifier_disastrous_administration
-			days = normal_modifier_time
-		}
-		add_loyalists = {
-			value = small_radicals
+		
+		#Appoint ruler
+		scope:replacement_ruler_power_hungry ?= {
+			hidden_effect = {
+				free_character_from_void = yes
+			}
+			set_character_as_ruler = yes 
+			owner = { remove_all_government_ig = yes ruler ?= { interest_group = { save_scope_as = ruler_ig_type } } scope:ruler_ig_type ?= { add_ruling_interest_group = yes } }
 		}
 		custom_tooltip = {
 			text = leader_resigns_from_office_tt
 			scope:resigning_politician = {
-				kill_character = {
-					hidden = yes
+				retire_character = yes
+			}
+		}
+		
+		#Call snap elections where applicable
+		if = {
+			limit = { 
+				OR = { 
+					is_a_presidential_democracy = yes 
+					is_a_parliamentary_democracy = yes
+				}
+			}
+			call_election = {
+				months = 3
+			}
+		}
+		
+	}
+	
+	option = { # Elitist successor
+		name = resignation_1.3.a
+		default_option = yes
+		trigger = {
+			exists = scope:replacement_ruler_elitist
+			OR = { 
+				has_variable = moderate_party
+				ruler ?= { has_ideology = ideology:ideology_elitist }
+				is_a_dictatorship = yes
+			}
+		}
+		
+		#Legacy of previous ruler
+		if = {
+			limit = {
+				NOR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician = {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_best_of_luck
+				days = normal_modifier_time
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician = {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_disastrous_administration
+				days = normal_modifier_time
+			}
+			add_loyalists = {
+				value = small_radicals
+			}
+			custom_tooltip = {
+				text = leader_resigns_from_office_tt
+				scope:resigning_politician = {
+					retire_character = yes
 				}
 			}
 		}
+		
+		#Appoint ruler
+		scope:replacement_ruler_elitist ?= {
+			hidden_effect = {
+				free_character_from_void = yes
+			}
+			set_character_as_ruler = yes 
+			owner = { remove_all_government_ig = yes ruler ?= { interest_group = { save_scope_as = ruler_ig_type } } scope:ruler_ig_type ?= { add_ruling_interest_group = yes } }
+		}
+		custom_tooltip = {
+			text = leader_resigns_from_office_tt
+			scope:resigning_politician = {
+				retire_character = yes
+			}
+		}
+		
+		#Call snap elections where applicable
+		if = {
+			limit = { 
+				OR = { 
+					is_a_presidential_democracy = yes 
+					is_a_parliamentary_democracy = yes
+				}
+			}
+			call_election = {
+				months = 3
+			}
+		}
+		
+	}
+	
+	option = { # Democratic successor
+		name = resignation_1.4.a
+		default_option = yes
+		trigger = {
+			exists = scope:replacement_ruler_democratic
+			OR = { 
+				has_variable = reformist_party
+				ruler ?= { has_ideology = ideology:ideology_democratic }
+				is_a_dictatorship = yes
+			}
+		}
+		
+		#Legacy of previous ruler
+		if = {
+			limit = {
+				NOR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician = {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_best_of_luck
+				days = normal_modifier_time
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician = {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_disastrous_administration
+				days = normal_modifier_time
+			}
+			add_loyalists = {
+				value = small_radicals
+			}
+			custom_tooltip = {
+				text = leader_resigns_from_office_tt
+				scope:resigning_politician = {
+					retire_character = yes
+				}
+			}
+		}
+		
+		#Appoint ruler
+		scope:replacement_ruler_democratic ?= {
+			hidden_effect = {
+				free_character_from_void = yes
+			}
+			set_character_as_ruler = yes 
+			owner = { remove_all_government_ig = yes ruler ?= { interest_group = { save_scope_as = ruler_ig_type } } scope:ruler_ig_type ?= { add_ruling_interest_group = yes } }
+		}
+		custom_tooltip = {
+			text = leader_resigns_from_office_tt
+			scope:resigning_politician = {
+				retire_character = yes
+			}
+		}
+		
+		#Call snap elections where applicable
+		if = {
+			limit = { 
+				OR = { 
+					is_a_presidential_democracy = yes 
+					is_a_parliamentary_democracy = yes
+				}
+			}
+			call_election = {
+				months = 3
+			}
+		}
+		
+	}
+	
+	option = { # Liberal successor
+		name = resignation_1.5.a
+		default_option = yes
+		trigger = {
+			exists = scope:replacement_ruler_liberal
+			OR = { 
+				has_variable = very_reformist_party
+				ruler ?= { has_ideology = ideology:ideology_liberal }
+				is_a_dictatorship = yes
+			}
+		}
+		
+		#Legacy of previous ruler
+		if = {
+			limit = {
+				NOR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician = {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_best_of_luck
+				days = normal_modifier_time
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician = {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_disastrous_administration
+				days = normal_modifier_time
+			}
+			add_loyalists = {
+				value = small_radicals
+			}
+			custom_tooltip = {
+				text = leader_resigns_from_office_tt
+				scope:resigning_politician = {
+					retire_character = yes
+				}
+			}
+		}
+		
+		#Appoint ruler
+		scope:replacement_ruler_liberal ?= {
+			hidden_effect = {
+				free_character_from_void = yes
+			}
+			set_character_as_ruler = yes 
+			owner = { remove_all_government_ig = yes ruler ?= { interest_group = { save_scope_as = ruler_ig_type } } scope:ruler_ig_type ?= { add_ruling_interest_group = yes } }
+		}
+		custom_tooltip = {
+			text = leader_resigns_from_office_tt
+			scope:resigning_politician = {
+				retire_character = yes
+			}
+		}
+		
+		#Call snap elections where applicable
+		if = {
+			limit = { 
+				OR = { 
+					is_a_presidential_democracy = yes 
+					is_a_parliamentary_democracy = yes
+				}
+			}
+			call_election = {
+				months = 3
+			}
+		}
+		
 	}
 
-	option = { # Immediate snap election
-		name = resignation.1.c
-		trigger = {
-			is_some_kind_of_democracy = yes
-		}
+	option = { # Leave it to fate
+		name = resignation_1.6.a
+		
+		#Ruler Resigns
 		custom_tooltip = {
 			text = leader_resigns_from_office_tt
 			scope:resigning_politician = {
-				kill_character = {
-					hidden = yes
-				}
+				retire_character = yes
 			}
 		}
-		call_election = {
-			months = 3
+		
+		#Call snap elections where applicable
+		if = {
+			limit = { 
+				OR = { 
+					is_a_presidential_democracy = yes 
+					is_a_parliamentary_democracy = yes
+				}
+			}
+			call_election = {
+				months = 3
+			}
 		}
+		
 	}
+	
 }
 
 # Resignation in the face of revolution
@@ -201,9 +655,7 @@ resignation.2 = {
 		custom_tooltip = {
 			text = leader_resigns_from_office_tt
 			scope:resigning_politician = {
-				kill_character = {
-					hidden = yes
-				}
+				retire_character = yes
 			}
 		}
 		if = {
@@ -235,9 +687,7 @@ resignation.2 = {
 		custom_tooltip = {
 			text = leader_resigns_from_office_tt
 			scope:resigning_politician = {
-				kill_character = {
-					hidden = yes
-				}
+				retire_character = yes
 			}
 		}
 		capitulate_to_revolution = yes
@@ -258,9 +708,7 @@ resignation.2 = {
 		custom_tooltip = {
 			text = leader_resigns_from_office_tt
 			scope:resigning_politician = {
-				kill_character = {
-					hidden = yes
-				}
+				retire_character = yes
 			}
 		}
 		if = {
