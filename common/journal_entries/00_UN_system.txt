@@ -1,78 +1,51 @@
 ﻿je_UN_system = {
 	icon = "gfx/interface/icons/diplo_icons/unsg_country.dds"
 
-	group = je_group_international_organisations
+	group = je_group_global_international_organisations
 
 	scripted_button = request_un_peacekeeping_button
 	#scripted_button = request_imf_loan_button
 	scripted_button = join_unsc_perm_decision
 
-	possible = {
+	should_be_involved = {
 		
 		#THIS is a member of the UN
 		is_country_type = recognized
 		
+		#Display only UNSC Members
+		OR = { 
+			has_modifier = unsc_non_permanent_member
+			has_modifier = unsc_permanent_member
+		}
+		
 		#No revolutionary
 		is_revolutionary = no is_secessionist = no
+		
+	}
+	
+	should_show_when_not_involved = {
+		
+		always = yes
 		
 	}
 
 	immediate = {
 		
 		#Count UN members
-		set_variable = {
-			name = UN_members_counter
-			value = 0
-		}
-		every_country = {
+		random_country = {
 			limit = { is_country_type = recognized }
-			ROOT = { 
-				change_variable = {
-					name = UN_members_counter
-					add = 1
-				}
-			}
-		}
-		set_variable = {
-			name = UN_unsc_members_counter
-			value = 0
-		}
-		every_country = {
-			limit = { 
-				OR = { 
-					has_modifier = unsc_non_permanent_member
-					has_modifier = unsc_permanent_member
-				} 
-			}
-			ROOT = { 
-				change_variable = {
-					name = UN_unsc_members_counter
-					add = 1
-				}
-			}
-		}
-		
-	}
-	
-	on_monthly_pulse = {
-	
-		effect = {
-			
-			#Count UN members
-			set_variable = {
+			set_global_variable = {
 				name = UN_members_counter
 				value = 0
 			}
 			every_country = {
 				limit = { is_country_type = recognized }
-				ROOT = { 
-					change_variable = {
-						name = UN_members_counter
-						add = 1
-					}
+				change_global_variable = {
+					name = UN_members_counter
+					add = 1
 				}
 			}
-			set_variable = {
+			set_global_variable = {
 				name = UN_unsc_members_counter
 				value = 0
 			}
@@ -83,49 +56,115 @@
 						has_modifier = unsc_permanent_member
 					} 
 				}
-				ROOT = { 
-					change_variable = {
+				change_global_variable = {
+					name = UN_unsc_members_counter
+					add = 1
+				}
+			}
+		}
+		
+		#Display UN Headquarters
+		random_country = {
+			limit = { any_scope_state = { has_modifier = un_headquarters } }
+			random_scope_state = {
+				limit = { has_modifier = un_headquarters }
+				save_scope_as = un_headquarters_country_label
+			}
+		}
+		
+		#Display UNSG Country
+		random_country = {
+			limit = { 
+				has_modifier = unsg_country 
+				any_scope_character = { has_modifier = unsg_character }
+			}
+			random_scope_character = {
+				limit = { has_modifier = unsg_character }
+				save_scope_as = unsg_character_scope_label
+			}
+			save_scope_as = unsg_country_scope_label
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			#Counters
+			random_country = {
+				limit = {
+					is_country_type = recognized
+				}
+				
+				#Count UN members
+				set_global_variable = {
+					name = UN_members_counter
+					value = 0
+				}
+				every_country = {
+					limit = { is_country_type = recognized }
+					change_global_variable = {
+						name = UN_members_counter
+						add = 1
+					}
+				}
+				set_global_variable = {
+					name = UN_unsc_members_counter
+					value = 0
+				}
+				every_country = {
+					limit = { 
+						OR = { 
+							has_modifier = unsc_non_permanent_member
+							has_modifier = unsc_permanent_member
+						} 
+					}
+					change_global_variable = {
 						name = UN_unsc_members_counter
 						add = 1
 					}
 				}
+				
 			}
 			
 			#Clean up UNSG characters
-			if = {
-				limit = { NOT = { has_modifier = unsg_country } }
-				every_scope_character = {
-					limit = { has_modifier = unsg_character }
-					remove_modifier = unsg_character
-				}
-			}
-			if = {
-				limit = { 
-					has_modifier = unsg_country
-					any_scope_character = {
-						has_modifier = unsg_character
-						count > 1
-					}
-				}
+			every_country = {
 				if = {
-					limit = {
-						any_scope_character = {
-							has_modifier = unsg_character
-							is_historical = yes
-						}
-					}
+					limit = { NOT = { has_modifier = unsg_country } }
 					every_scope_character = {
-						limit = { 
-							has_modifier = unsg_character
-							is_historical = no
-						}
-						remove_modifier = unsg_character
-					}
-				}
-				else = {
-					random_scope_character = {
 						limit = { has_modifier = unsg_character }
 						remove_modifier = unsg_character
+					}
+				}
+				else_if = {
+					limit = { 
+						has_modifier = unsg_country
+						any_scope_character = {
+							has_modifier = unsg_character
+							count > 1
+						}
+					}
+					if = {
+						limit = {
+							any_scope_character = {
+								has_modifier = unsg_character
+								is_historical = yes
+							}
+						}
+						every_scope_character = {
+							limit = { 
+								has_modifier = unsg_character
+								is_historical = no
+							}
+							remove_modifier = unsg_character
+						}
+					}
+					else = {
+						random_scope_character = {
+							limit = { has_modifier = unsg_character }
+							remove_modifier = unsg_character
+						}
 					}
 				}
 			}
@@ -136,44 +175,16 @@
 	
 	fail = {
 	
-		NOT = { is_country_type = recognized }
+		OR = {
+			NOT = { exists = scope:un_headquarters_country_label }
+			NOT = { exists = scope:unsg_country_scope_label }
+			NOT = { exists = scope:unsg_character_scope_label }
+		}
 		
 	}
 	
-	on_fail = {
+	on_fail_all_involved = {
 		
-		#Display UN Headquarters
-		random_country = {
-			limit = { any_scope_state = { has_modifier = un_headquarters } }
-			random_scope_state = {
-				limit = { has_modifier = un_headquarters }
-				save_scope_as = un_headquarters_country_label
-				custom_tooltip = {
-					text = un_headquarters_country_label.tt
-				}
-			}
-		}
-		
-		#Display UNSG Country
-		random_country = {
-			limit = { has_modifier = unsg_country }
-			random_scope_character = {
-				limit = { has_modifier = unsg_character }
-				save_scope_as = unsg_character_scope_label
-			}
-			save_scope_as = unsg_country_scope_label
-			if = {
-				limit = { exists = scope:unsg_character_scope_label }
-				custom_tooltip = {
-					text = unsg_character_label.tt
-				}
-			}
-			else = {
-				custom_tooltip = {
-					text = unsg_country_label.tt
-				}
-			}
-		}
 		#Display PERM UNSC Country
 		every_country = {
 			limit = { has_modifier = unsc_permanent_member }
@@ -205,7 +216,7 @@
 
 	should_be_pinned_by_default = no
 
-	transferable = no
+	#transferable = no
 
 	progressbar = no
 }

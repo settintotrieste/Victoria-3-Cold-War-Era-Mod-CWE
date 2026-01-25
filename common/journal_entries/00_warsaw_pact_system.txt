@@ -1,54 +1,59 @@
 ﻿je_warsaw_pact_system = {
 	icon = "gfx/interface/icons/diplo_icons/warsaw_pact_member.dds"
 
-	group = je_group_international_organisations
+	group = je_group_global_international_organisations
 	
 	scripted_button = je_request_warsaw_pact_intervention_button
 	scripted_button = je_fund_warsaw_pact_button
 	scripted_button = je_defund_warsaw_pact_button
 	scripted_button = je_hold_warsaw_pact_exercise_button
 	
-	is_shown_when_inactive = {
-		
-		#warsaw_pact eligible
+	should_be_involved = {
 		OR = { 
-			country_is_in_europe = yes
-			c:SOV ?= this
-			c:RUS ?= this
+			has_modifier = warsaw_pact_leader
+			has_modifier = warsaw_pact_member
 		}
-		
 	}
 	
-	possible = {
-		
-		#THIS is a member of warsaw_pact
+	should_show_when_not_involved = {
 		OR = { 
-			has_modifier = warsaw_pact_member
 			has_modifier = warsaw_pact_leader
+			has_modifier = warsaw_pact_member
 		}
-		
 	}
-
+	
 	immediate = {
 		
-		#Count Warsaw Pact members
-		set_variable = { 
-			name = warsaw_pact_member_count
-			value = 0 
-		}
-		every_country = {
+		#Count post_colonial_org members
+		random_country = {
 			limit = {
-				OR = { 
-					has_modifier = warsaw_pact_member
+				OR = {
 					has_modifier = warsaw_pact_leader
+					has_modifier = warsaw_pact_member
 				}
 			}
-			ROOT = {
-				change_variable = {
-					name = warsaw_pact_member_count
+			set_global_variable = { 
+				name = warsaw_pact_org_member_count
+				value = 0 
+			}
+			every_country = {
+				limit = {
+					OR = { 
+						has_modifier = warsaw_pact_leader
+						has_modifier = warsaw_pact_member
+					}
+				}
+				change_global_variable = {
+					name = warsaw_pact_org_member_count
 					add = 1
 				}
 			}
+		}
+		
+		#Mark leader
+		random_country = {
+			limit = { has_modifier = warsaw_pact_leader }
+			save_scope_as = warsaw_pact_leader
 		}
 		
 		#Default is leader funds Warsaw Pact
@@ -63,89 +68,71 @@
 		
 		effect = {
 		
-			#Count Warsaw Pact members
-			set_variable = { 
-				name = warsaw_pact_member_count
-				value = 0 
-			}
-			every_country = {
+			#Count post_colonial_org members
+			random_country = {
 				limit = {
-					OR = { 
-						has_modifier = warsaw_pact_member
+					OR = {
 						has_modifier = warsaw_pact_leader
+						has_modifier = warsaw_pact_member
 					}
 				}
-				ROOT = {
-					change_variable = {
-						name = warsaw_pact_member_count
+				set_global_variable = { 
+					name = warsaw_pact_org_member_count
+					value = 0 
+				}
+				every_country = {
+					limit = {
+						OR = { 
+							has_modifier = warsaw_pact_leader
+							has_modifier = warsaw_pact_member
+						}
+					}
+					change_global_variable = {
+						name = warsaw_pact_org_member_count
 						add = 1
 					}
 				}
 			}
-			
+		
 		}
 		
 	}
 	
-	on_yearly_pulse = {
-		
-		effect = {
-		
-			#Impose foreign military bases
-			if = {
-				limit = { 
-					has_global_variable = fund_warsaw_pact
-					has_modifier = warsaw_pact_leader
-					in_default = no
-				}
-				every_country = {
-					limit = { 
-						NOT = { this = root } 
-						has_modifier = warsaw_pact_member 
-						NOT = { has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement is_initiator = no } }
-					}
-					save_scope_as = warsaw_pact_member_scope
-					ROOT = {
-						create_diplomatic_pact = {
-							country = scope:warsaw_pact_member_scope
-							type = military_cooperation_agreement
-						}
-					}
-				}
-			}
-			
-		}
+	modifiers_while_active = {
 		
 	}
 
-	fail = {
+	invalid = {
+	
+		OR = {
 		
-		NOR = { 
-			has_modifier = warsaw_pact_member
-			has_modifier = warsaw_pact_leader
+			#No more members of org
+			any_country = {
+				count < 1
+				OR = { 
+					has_modifier = warsaw_pact_leader
+					has_modifier = warsaw_pact_member
+				}
+			}
+			
+			#Different leader
+			scope:warsaw_pact_leader ?= {
+				NOT = { has_modifier = warsaw_pact_leader }
+			}
+			
+			NOT = { exists = scope:warsaw_pact_leader }
+			
 		}
 		
 	}
 	
-	on_fail = {
+	on_invalid_all_involved = {
+	
+		remove_global_variable = warsaw_pact_org_member_count
 		
-		#Display members
-		every_country = {
-			limit = { has_modifier = warsaw_pact_leader }
-			save_scope_as = alliance_leader_scope_label
-			custom_tooltip = {
-				text = alliance_leader_label.tt
-			}
-		}
-		every_country = {
-			limit = { 
-				has_modifier = warsaw_pact_member
-			}
-			save_scope_as = superstate_member_label
-			custom_tooltip = {
-				text = superstate_member_label.tt
-			}
-		}
+	}
+	
+	on_no_longer_involved = {
 		
 		#Clear modifier
 		if = {
@@ -153,17 +140,11 @@
 			hidden_effect = { remove_modifier = warsaw_pact_exercise }
 		}
 		
-		#Clear variables
-		remove_variable = warsaw_pact_member_count
-		
 	}
 
 	weight = 100
 
 	should_be_pinned_by_default = no
 
-	transferable = no
-
 	progressbar = no
-	
 }
