@@ -116,7 +116,7 @@ indict_character = {
 	potential = {
 	
 		NOT = { has_modifier = unsg_character }
-		NOR = { has_modifier = monarch_character has_modifier = viceroy_character has_modifier = reserved_powers_holder }
+		NOR = { has_modifier = monarch_character has_modifier = viceroy_character has_modifier = reserved_powers_holder has_modifier = head_of_intelligence }
 	
 		owner ?= scope:actor
 	
@@ -283,7 +283,7 @@ arrange_accident = {
 	potential = {
 	
 		NOT = { has_modifier = unsg_character }
-		NOR = { has_modifier = monarch_character has_modifier = viceroy_character has_modifier = reserved_powers_holder }
+		NOR = { has_modifier = monarch_character has_modifier = viceroy_character has_modifier = reserved_powers_holder has_modifier = head_of_intelligence }
 	
 		owner ?= scope:actor
 	
@@ -698,7 +698,10 @@ retire_civil_servant = {
 	
 		is_ruler = no
 		
-		has_role = politician
+		OR = { 
+			has_role = politician
+			has_modifier = head_of_intelligence
+		}
 		NOT = { has_modifier = unsg_character }
 		NOR = { has_modifier = monarch_character has_modifier = viceroy_character has_modifier = reserved_powers_holder }
 		
@@ -751,84 +754,92 @@ retire_civil_servant = {
 			save_scope_as = retire_civil_servant_ig
 		}
 		
-		#Remove Civil Service Head
-		custom_tooltip = {
-			text = retire_civil_servant.tt
-			kill_character = yes
-			if = {
-				limit = { 
+		#Remove Civil Servant
+		if = {
+			limit = { has_role = politician }
+			
+			#Remove Civil Service Head
+			retire_character = yes
+			hidden_effect = {
+				if = {
+					limit = { 
+						owner ?= {
+							ruler ?= {
+								NOR = {
+									has_ideology = ideology:ideology_autocratic
+									has_ideology = ideology:ideology_power_hungry
+								}
+							}
+						}
+					}
 					owner ?= {
-						ruler ?= {
-							NOR = {
-								has_ideology = ideology:ideology_autocratic
-								has_ideology = ideology:ideology_power_hungry
+						random_list = {
+							1 = {
+								create_character = { 
+									ig_leader = yes
+									interest_group = scope:retire_civil_servant_ig
+									ideology = ideology_liberal
+								}
+							}
+							1 = {
+								create_character = { 
+									ig_leader = yes
+									interest_group = scope:retire_civil_servant_ig
+									ideology = ideology_democratic
+								}
+							}
+							1 = {
+								create_character = { 
+									ig_leader = yes
+									interest_group = scope:retire_civil_servant_ig
+									ideology = ideology_elitist
+								}
 							}
 						}
 					}
 				}
-				owner ?= {
-					random_list = {
-						1 = {
-							create_character = { 
-								ig_leader = yes
-								interest_group = scope:retire_civil_servant_ig
-								ideology = ideology_liberal
+				if = {
+					limit = { 
+						owner ?= {
+							ruler ?= {
+								OR = {
+									has_ideology = ideology:ideology_autocratic
+									has_ideology = ideology:ideology_power_hungry
+								}
 							}
 						}
-						1 = {
-							create_character = { 
-								ig_leader = yes
-								interest_group = scope:retire_civil_servant_ig
-								ideology = ideology_democratic
+					}
+					owner ?= {
+						random_list = {
+							1 = {
+								create_character = { 
+									ig_leader = yes
+									interest_group = scope:retire_civil_servant_ig
+									ideology = ideology_autocratic
+								}
 							}
-						}
-						1 = {
-							create_character = { 
-								ig_leader = yes
-								interest_group = scope:retire_civil_servant_ig
-								ideology = ideology_elitist
+							1 = {
+								create_character = { 
+									ig_leader = yes
+									interest_group = scope:retire_civil_servant_ig
+									ideology = ideology_power_hungry
+								}
+							}
+							1 = {
+								create_character = { 
+									ig_leader = yes
+									interest_group = scope:retire_civil_servant_ig
+									ideology = ideology_elitist
+								}
 							}
 						}
 					}
 				}
 			}
-			if = {
-				limit = { 
-					owner ?= {
-						ruler ?= {
-							OR = {
-								has_ideology = ideology:ideology_autocratic
-								has_ideology = ideology:ideology_power_hungry
-							}
-						}
-					}
-				}
-				owner ?= {
-					random_list = {
-						1 = {
-							create_character = { 
-								ig_leader = yes
-								interest_group = scope:retire_civil_servant_ig
-								ideology = ideology_autocratic
-							}
-						}
-						1 = {
-							create_character = { 
-								ig_leader = yes
-								interest_group = scope:retire_civil_servant_ig
-								ideology = ideology_power_hungry
-							}
-						}
-						1 = {
-							create_character = { 
-								ig_leader = yes
-								interest_group = scope:retire_civil_servant_ig
-								ideology = ideology_elitist
-							}
-						}
-					}
-				}
-			}
+			
+		}
+		else = {
+			retire_character = yes
 		}
 		
 	}
@@ -992,6 +1003,7 @@ expel_character_political_party = {
 
 	potential = {
 		owner ?= scope:actor
+		is_ruler = no
 		has_role = politician
 		interest_group = {
 			is_in_government = yes
@@ -1038,8 +1050,6 @@ expel_character_political_party = {
 	}
 
 	possible = {
-		
-		is_ruler = no
 		
 		owner ?= { 
 			in_election_campaign = no
