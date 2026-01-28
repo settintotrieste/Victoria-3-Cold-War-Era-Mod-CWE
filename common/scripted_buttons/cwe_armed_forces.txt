@@ -1,0 +1,108 @@
+je_armed_forces_system_dismiss_military_chief_button = {
+	name = "je_armed_forces_system_dismiss_military_chief_button"
+	desc = "je_armed_forces_system_dismiss_military_chief_button_desc"
+
+	visible = {
+		
+		#Head of Armed Forces is not the Ruler
+		ruler ?= { NOT = { has_modifier = head_of_armed_forces } }
+		
+	}
+
+	possible = {
+	
+		#Government can dismiss civil servants at will
+		has_law_or_variant = law_type:law_politicised_armed_forces
+		
+		#Timer
+		custom_tooltip = {
+			text = changed_armed_forces_timer.tt
+			NOT = { has_variable = changed_armed_forces_timer }
+		}
+		
+		#Legal requirements
+		government_has_legislative_simple_majority = yes
+		
+	}
+
+	effect = {
+	
+		#Dismiss Head of the Armed Forces
+		random_scope_character = {
+			limit = { 
+				has_modifier = head_of_armed_forces
+			}
+			retire_character = yes
+		}
+		
+		#Add timer
+		set_variable = {
+			name = changed_armed_forces_timer
+			years = 1
+		}
+		
+		#Add cost
+		if = {
+			limit = { has_law_or_variant = law_type:law_nepotistic_cabinet }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 2
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_semi_nepotistic_cabinet }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else = {
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 0.5
+				years = 1
+				is_decaying = yes
+			}
+		}
+		
+		#Anger an Opposition IG
+		random_scope_character = {
+			limit = { 
+				interest_group = { is_in_government = no }
+				NOT = { has_modifier = head_of_armed_forces }
+			}
+			interest_group = { save_scope_as = scope_opposition_target }
+		}
+		if = {
+			limit = { exists = scope:scope_opposition_target }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:scope_opposition_target
+			}
+		}
+		
+		#Anger Armed Forces
+		random_scope_character = {
+			limit = { 
+				has_modifier = head_of_armed_forces
+			}
+			interest_group = { save_scope_as = scope_opposition_target }
+		}
+		if = {
+			limit = { exists = scope:scope_opposition_target }
+			add_radicals = {
+				value = medium_radicals
+				interest_group = scope:scope_opposition_target
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+	}
+	
+}
