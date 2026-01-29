@@ -1,3 +1,1000 @@
+je_armed_forces_system_subvert_armed_forces_button = {
+	name = "je_armed_forces_system_subvert_armed_forces_button"
+	desc = "je_armed_forces_system_subvert_armed_forces_button_desc"
+
+	visible = {
+		
+		#Civil Service is politicised
+		OR = { 
+			has_law_or_variant = law_type:law_semi_politicised_armed_forces
+			has_law_or_variant = law_type:law_politicised_armed_forces
+		}
+		
+	}
+
+	possible = {
+		
+		#Timer
+		custom_tooltip = {
+			text = changed_armed_forces_timer.tt
+			NOT = { has_variable = changed_armed_forces_timer }
+		}
+		
+		ideologically_different_armed_forces = yes
+		
+	}
+
+	effect = {
+		
+		#Add timer
+		set_variable = {
+			name = changed_armed_forces_timer
+			years = 1
+		}
+		
+		#Add cost
+		if = {
+			limit = { has_law_or_variant = law_type:law_very_low_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 5
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_low_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 4
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_medium_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 3
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_high_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 2
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_very_high_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else = {
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 0.5
+				years = 1
+				is_decaying = yes
+			}
+		}
+		
+		#Anger an Opposition IG
+		random_interest_group = {
+			limit = { 
+				is_in_government = no 
+				NOT = { is_interest_group_type = ig_armed_forces }
+			}
+			save_scope_as = scope_opposition_target
+		}
+		if = {
+			limit = { exists = scope:scope_opposition_target }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:scope_opposition_target
+			}
+		}
+		
+		#Anger Civil Service
+		random_interest_group = {
+			limit = { 
+				is_interest_group_type = ig_armed_forces
+			}
+			save_scope_as = scope_opposition_target
+		}
+		if = {
+			limit = { exists = scope:scope_opposition_target }
+			add_radicals = {
+				value = medium_radicals
+				interest_group = scope:scope_opposition_target
+			}
+		}
+		
+		#Fire a random General or Admiral
+		ruler.interest_group ?= { save_scope_as = ruler_interest_group }
+		random_scope_character = {
+			limit = { 
+				OR = { 
+					has_role = general
+					has_role = admiral
+				}
+				NOT = { has_modifier = head_of_armed_forces }
+				interest_group = { NOR = { is_in_government = yes is_interest_group_type = scope:ruler_interest_group } }
+			}
+			retire_character = yes
+		}
+		
+		#Change ideology
+		if = {
+			limit = { ideologically_different_armed_forces = yes }
+			#random_list = {
+				
+				#General Economic Beliefs
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_far_right_economy }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_far_right_economy } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_far_right_economy
+							remove_ideology = ideology_right_economy
+							remove_ideology = ideology_centre_economy
+							remove_ideology = ideology_left_economy
+							remove_ideology = ideology_far_left_economy
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_right_economy }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_right_economy } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_far_right_economy
+							add_ideology = ideology_right_economy
+							remove_ideology = ideology_centre_economy
+							remove_ideology = ideology_left_economy
+							remove_ideology = ideology_far_left_economy
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_centre_economy }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_centre_economy } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_far_right_economy
+							remove_ideology = ideology_right_economy
+							add_ideology = ideology_centre_economy
+							remove_ideology = ideology_left_economy
+							remove_ideology = ideology_far_left_economy
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_left_economy }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_left_economy } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_far_right_economy
+							remove_ideology = ideology_right_economy
+							remove_ideology = ideology_centre_economy
+							add_ideology = ideology_left_economy
+							remove_ideology = ideology_far_left_economy
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_far_left_economy }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_far_left_economy } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_far_right_economy
+							remove_ideology = ideology_right_economy
+							remove_ideology = ideology_centre_economy
+							remove_ideology = ideology_left_economy
+							add_ideology = ideology_far_left_economy
+						}
+					}
+					
+				#}
+				
+				#Specific Economic Beliefs
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_natural_resource_focus }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_natural_resource_focus } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_natural_resource_focus
+							remove_ideology = ideology_manufacturing_focus
+							remove_ideology = ideology_services_focus
+							remove_ideology = ideology_no_economic_focus
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_manufacturing_focus }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_manufacturing_focus } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_natural_resource_focus
+							add_ideology = ideology_manufacturing_focus
+							remove_ideology = ideology_services_focus
+							remove_ideology = ideology_no_economic_focus
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_services_focus }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_services_focus } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_natural_resource_focus
+							remove_ideology = ideology_manufacturing_focus
+							add_ideology = ideology_services_focus
+							remove_ideology = ideology_no_economic_focus
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_no_economic_focus }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_no_economic_focus } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_natural_resource_focus
+							remove_ideology = ideology_manufacturing_focus
+							remove_ideology = ideology_services_focus
+							add_ideology = ideology_no_economic_focus
+						}
+					}
+				#}
+				
+				#Environmental Laws
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_anti_environment }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_anti_environment } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_anti_environment
+							remove_ideology = ideology_balanced_environment
+							remove_ideology = ideology_pro_environment
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_balanced_environment }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_balanced_environment } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_anti_environment
+							add_ideology = ideology_balanced_environment
+							remove_ideology = ideology_pro_environment
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_pro_environment }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_pro_environment } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_anti_environment
+							remove_ideology = ideology_balanced_environment
+							add_ideology = ideology_pro_environment
+						}
+					}
+				#}
+				
+				#Foreign Economic Policy
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_nationalist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_nationalist } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_nationalist
+							remove_ideology = ideology_regionalist
+							remove_ideology = ideology_globalist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_regionalist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_regionalist } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_nationalist
+							add_ideology = ideology_regionalist
+							remove_ideology = ideology_globalist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_globalist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_globalist } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_nationalist
+							remove_ideology = ideology_regionalist
+							add_ideology = ideology_globalist
+						}
+					}
+				#}
+				
+				#General Political Beliefs
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_totalitarian }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_totalitarian } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_totalitarian
+							remove_ideology = ideology_authoritarian
+							remove_ideology = ideology_communitarian
+							remove_ideology = ideology_individualist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_authoritarian }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_authoritarian } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_totalitarian
+							add_ideology = ideology_authoritarian
+							remove_ideology = ideology_communitarian
+							remove_ideology = ideology_individualist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_communitarian }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_communitarian } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_totalitarian
+							remove_ideology = ideology_authoritarian
+							add_ideology = ideology_communitarian
+							remove_ideology = ideology_individualist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_individualist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_individualist } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_totalitarian
+							remove_ideology = ideology_authoritarian
+							remove_ideology = ideology_communitarian
+							add_ideology = ideology_individualist
+						}
+					}
+				#}
+				
+				#Specific Political Beliefs
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_traditionalist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_traditionalist } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_traditionalist
+							remove_ideology = ideology_conservative
+							remove_ideology = ideology_progressive
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_conservative }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_conservative } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_traditionalist
+							add_ideology = ideology_conservative
+							remove_ideology = ideology_progressive
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_progressive }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_progressive } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_traditionalist
+							remove_ideology = ideology_conservative
+							add_ideology = ideology_progressive
+						}
+					}
+				#}
+				
+				#Government Types
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_monarchist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_monarchist } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_monarchist
+							remove_ideology = ideology_republican
+							remove_ideology = ideology_theocrat
+							remove_ideology = ideology_militarist
+							remove_ideology = ideology_communist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_republican }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_republican } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_monarchist
+							add_ideology = ideology_republican
+							remove_ideology = ideology_theocrat
+							remove_ideology = ideology_militarist
+							remove_ideology = ideology_communist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_theocrat }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_theocrat } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_monarchist
+							remove_ideology = ideology_republican
+							add_ideology = ideology_theocrat
+							remove_ideology = ideology_militarist
+							remove_ideology = ideology_communist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_militarist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_militarist } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_monarchist
+							remove_ideology = ideology_republican
+							remove_ideology = ideology_theocrat
+							add_ideology = ideology_militarist
+							remove_ideology = ideology_communist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { is_in_government = yes is_strongest_ig_in_government = yes has_ideology = ideology:ideology_communist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_communist } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_monarchist
+							remove_ideology = ideology_republican
+							remove_ideology = ideology_theocrat
+							remove_ideology = ideology_militarist
+							add_ideology = ideology_communist
+						}
+					}
+				#}
+			
+			#}
+			
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if this has sufficient government cohesion
+		modifier = { 
+			trigger = {
+				government_legitimacy >= 60
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_armed_forces_system_reform_armed_forces_button = {
+	name = "je_armed_forces_system_reform_armed_forces_button"
+	desc = "je_armed_forces_system_reform_armed_forces_button_desc"
+
+	visible = {
+		
+		#Civil Service is politicised
+		NOR = { 
+			has_law_or_variant = law_type:law_semi_politicised_armed_forces
+			has_law_or_variant = law_type:law_politicised_armed_forces
+		}
+		
+	}
+
+	possible = {
+		
+		#Timer
+		custom_tooltip = {
+			text = changed_armed_forces_timer.tt
+			NOT = { has_variable = changed_armed_forces_timer }
+		}
+		
+		ideologically_different_armed_forces_evolve = yes
+		
+	}
+
+	effect = {
+		
+		#Add timer
+		set_variable = {
+			name = changed_armed_forces_timer
+			years = 1
+		}
+		
+		#Add cost
+		if = {
+			limit = { has_law_or_variant = law_type:law_very_low_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 5
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_low_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 4
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_medium_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 3
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_high_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 2
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_very_high_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else = {
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 0.5
+				years = 1
+				is_decaying = yes
+			}
+		}
+		
+		#Make happy an Opposition IG
+		random_interest_group = {
+			limit = { 
+				is_in_government = no 
+			}
+			save_scope_as = scope_opposition_target
+		}
+		if = {
+			limit = { exists = scope:scope_opposition_target }
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:scope_opposition_target
+			}
+		}
+		
+		#Change ideology
+		if = {
+			limit = { ideologically_different_armed_forces_evolve = yes }
+		
+			#random_list = {
+				
+				#General Economic Beliefs
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_far_right_economy }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_far_right_economy } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_far_right_economy
+							remove_ideology = ideology_right_economy
+							remove_ideology = ideology_centre_economy
+							remove_ideology = ideology_left_economy
+							remove_ideology = ideology_far_left_economy
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_right_economy }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_right_economy } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_far_right_economy
+							add_ideology = ideology_right_economy
+							remove_ideology = ideology_centre_economy
+							remove_ideology = ideology_left_economy
+							remove_ideology = ideology_far_left_economy
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_centre_economy }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_centre_economy } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_far_right_economy
+							remove_ideology = ideology_right_economy
+							add_ideology = ideology_centre_economy
+							remove_ideology = ideology_left_economy
+							remove_ideology = ideology_far_left_economy
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_left_economy }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_left_economy } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_far_right_economy
+							remove_ideology = ideology_right_economy
+							remove_ideology = ideology_centre_economy
+							add_ideology = ideology_left_economy
+							remove_ideology = ideology_far_left_economy
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_far_left_economy }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_far_left_economy } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_far_right_economy
+							remove_ideology = ideology_right_economy
+							remove_ideology = ideology_centre_economy
+							remove_ideology = ideology_left_economy
+							add_ideology = ideology_far_left_economy
+						}
+					}
+					
+				#}
+				
+				#Specific Economic Beliefs
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_natural_resource_focus }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_natural_resource_focus } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_natural_resource_focus
+							remove_ideology = ideology_manufacturing_focus
+							remove_ideology = ideology_services_focus
+							remove_ideology = ideology_no_economic_focus
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_manufacturing_focus }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_manufacturing_focus } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_natural_resource_focus
+							add_ideology = ideology_manufacturing_focus
+							remove_ideology = ideology_services_focus
+							remove_ideology = ideology_no_economic_focus
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_services_focus }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_services_focus } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_natural_resource_focus
+							remove_ideology = ideology_manufacturing_focus
+							add_ideology = ideology_services_focus
+							remove_ideology = ideology_no_economic_focus
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_no_economic_focus }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_no_economic_focus } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_natural_resource_focus
+							remove_ideology = ideology_manufacturing_focus
+							remove_ideology = ideology_services_focus
+							add_ideology = ideology_no_economic_focus
+						}
+					}
+				#}
+				
+				#Environmental Laws
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_anti_environment }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_anti_environment } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_anti_environment
+							remove_ideology = ideology_balanced_environment
+							remove_ideology = ideology_pro_environment
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_balanced_environment }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_balanced_environment } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_anti_environment
+							add_ideology = ideology_balanced_environment
+							remove_ideology = ideology_pro_environment
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_pro_environment }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_pro_environment } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_anti_environment
+							remove_ideology = ideology_balanced_environment
+							add_ideology = ideology_pro_environment
+						}
+					}
+				#}
+				
+				#Foreign Economic Policy
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_nationalist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_nationalist } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_nationalist
+							remove_ideology = ideology_regionalist
+							remove_ideology = ideology_globalist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_regionalist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_regionalist } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_nationalist
+							add_ideology = ideology_regionalist
+							remove_ideology = ideology_globalist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_globalist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_globalist } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_nationalist
+							remove_ideology = ideology_regionalist
+							add_ideology = ideology_globalist
+						}
+					}
+				#}
+				
+				#General Political Beliefs
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_totalitarian }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_totalitarian } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_totalitarian
+							remove_ideology = ideology_authoritarian
+							remove_ideology = ideology_communitarian
+							remove_ideology = ideology_individualist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_authoritarian }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_authoritarian } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_totalitarian
+							add_ideology = ideology_authoritarian
+							remove_ideology = ideology_communitarian
+							remove_ideology = ideology_individualist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_communitarian }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_communitarian } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_totalitarian
+							remove_ideology = ideology_authoritarian
+							add_ideology = ideology_communitarian
+							remove_ideology = ideology_individualist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_individualist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_individualist } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_totalitarian
+							remove_ideology = ideology_authoritarian
+							remove_ideology = ideology_communitarian
+							add_ideology = ideology_individualist
+						}
+					}
+				#}
+				
+				#Specific Political Beliefs
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_traditionalist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_traditionalist } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_traditionalist
+							remove_ideology = ideology_conservative
+							remove_ideology = ideology_progressive
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_conservative }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_conservative } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_traditionalist
+							add_ideology = ideology_conservative
+							remove_ideology = ideology_progressive
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_progressive }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_progressive } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_traditionalist
+							remove_ideology = ideology_conservative
+							add_ideology = ideology_progressive
+						}
+					}
+				#}
+				
+				#Government Types
+				#1 = {
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_monarchist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_monarchist } }
+						}
+						ig:ig_armed_forces ?= {
+							add_ideology = ideology_monarchist
+							remove_ideology = ideology_republican
+							remove_ideology = ideology_theocrat
+							remove_ideology = ideology_militarist
+							remove_ideology = ideology_communist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_republican }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_republican } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_monarchist
+							add_ideology = ideology_republican
+							remove_ideology = ideology_theocrat
+							remove_ideology = ideology_militarist
+							remove_ideology = ideology_communist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_theocrat }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_theocrat } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_monarchist
+							remove_ideology = ideology_republican
+							add_ideology = ideology_theocrat
+							remove_ideology = ideology_militarist
+							remove_ideology = ideology_communist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_militarist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_militarist } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_monarchist
+							remove_ideology = ideology_republican
+							remove_ideology = ideology_theocrat
+							add_ideology = ideology_militarist
+							remove_ideology = ideology_communist
+						}
+					}
+					if = {
+						limit = {
+							any_interest_group = { AND = { is_in_government = yes is_strongest_ig_in_government = yes } has_ideology = ideology:ideology_communist }
+							ig:ig_armed_forces ?= { NOT = { has_ideology = ideology:ideology_communist } }
+						}
+						ig:ig_armed_forces ?= {
+							remove_ideology = ideology_monarchist
+							remove_ideology = ideology_republican
+							remove_ideology = ideology_theocrat
+							remove_ideology = ideology_militarist
+							add_ideology = ideology_communist
+						}
+					}
+				#}
+			
+			#}
+			
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if this has insufficient government cohesion
+		modifier = { 
+			trigger = {
+				government_legitimacy < 40
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
 je_armed_forces_system_dismiss_military_chief_button = {
 	name = "je_armed_forces_system_dismiss_military_chief_button"
 	desc = "je_armed_forces_system_dismiss_military_chief_button_desc"
@@ -43,7 +1040,34 @@ je_armed_forces_system_dismiss_military_chief_button = {
 		
 		#Add cost
 		if = {
-			limit = { has_law_or_variant = law_type:law_nepotistic_cabinet }
+			limit = { has_law_or_variant = law_type:law_very_low_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 5
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_low_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 4
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_medium_anti_corruption }
+			add_modifier = {
+				name = armed_forces_reform_cost_modifier
+				multiplier = 3
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_high_anti_corruption }
 			add_modifier = {
 				name = armed_forces_reform_cost_modifier
 				multiplier = 2
@@ -52,7 +1076,7 @@ je_armed_forces_system_dismiss_military_chief_button = {
 			}
 		}
 		else_if = {
-			limit = { has_law_or_variant = law_type:law_semi_nepotistic_cabinet }
+			limit = { has_law_or_variant = law_type:law_very_high_anti_corruption }
 			add_modifier = {
 				name = armed_forces_reform_cost_modifier
 				years = 1
