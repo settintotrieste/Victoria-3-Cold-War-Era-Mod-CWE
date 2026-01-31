@@ -363,6 +363,7 @@ historical_territorial_transfers.3 = {
 #Tangier International Zone
 historical_territorial_transfers.4 = {
     type = country_event
+	placement = c:TGZ
 
     title = transfer_territory_tangier.t 				# Title of the event; ADD LOCALISATION
     desc = transfer_territory_tangier.d 				# Description of the event; ADD LOCALISATION
@@ -378,20 +379,13 @@ historical_territorial_transfers.4 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:SPA this = c:SPA											# Change TAG of the overlord ****
+		c:MOR ?= this
 		game_date >= 1956.10.29									# START DATE: Date colony became self governing ****
 		game_date < 1966.10.29									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
 		#is_a_democratic_monarchy = yes							# Correct gov types
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
-		
-		#Recipent conditions
-		exists = c:MOR
-		c:MOR = { 												# Change TAG of the transferee ****
-			is_at_war = no
-			is_sufficiently_independent = yes
-		}
 		
 		#Colony conditions
 		exists = c:TGZ
@@ -404,16 +398,40 @@ historical_territorial_transfers.4 = {
 		NOT = { has_variable = spanish_tangier_htt }			# CHANGE ****
 		
     }
+	
+	immediate = {
+		
+		# Fire only once
+		set_variable = spanish_tangier_htt						# Change variable ****
+		
+	}
     
     option = {
-        name = historical_territorial_transfers.option.1				# Accept annexation by FROM
+        name = historical_gov_changes.option.1					# Accept annexation by FROM
         highlighted_option = yes
 		
 		#THIS is annexed by FROM
 		c:MOR = { annex = c:TGZ }
 		
-		# Fire only once
-		set_variable = spanish_tangier_htt						# Change variable ****
+		#Participants in TGZ are angry
+		every_country = {
+			limit = {
+				OR = { 
+					c:FRA ?= this
+					c:SPA ?= this
+					c:GBR ?= this
+					c:ITA ?= this
+					c:USA ?= this
+					c:BEL ?= this
+					c:NET ?= this
+					c:POR ?= this
+				}
+			}
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+		}
 		
 		ai_chance = { 
 			base = 90 
@@ -422,20 +440,30 @@ historical_territorial_transfers.4 = {
     }
 	
 	option = {
-        name = historical_territorial_transfers.option.2				# Refuse annexation by FROM
+        name = historical_gov_changes.option.2					# Refuse annexation by FROM
 		default_option = yes
 		
-		#FROM is angry!
-		change_relations = {
-			country = c:MOR
-			value = -100
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_industrialists
 		}
-		
-		# Add Infamy because doing this is against international law
-		change_infamy = 10
-		
-		# Fire only once
-		set_variable = spanish_tangier_htt						# Change variable ****
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_landowners
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_devout
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_armed_forces
+		}
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
