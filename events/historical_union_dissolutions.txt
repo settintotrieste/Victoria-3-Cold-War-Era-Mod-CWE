@@ -3452,3 +3452,131 @@ historical_union_dissolution.19 = {
     }
 
 }
+
+#Vanuatu
+historical_union_dissolution.20 = {
+    type = country_event
+	placement = c:VAN
+
+    title = british_vanuatu.indy.t 				# Title of the event; ADD LOCALISATION
+    desc = british_vanuatu.indy.d 					# Description of the event; ADD LOCALISATION
+    #flavor = british_vanuatu.indy.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = british_decolonisation_indy.option.1				# Grant them independence
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		if = {
+			limit = { 
+				c:VAN ?= {
+					is_direct_subject_of = ROOT
+				}
+			}
+			c:VAN ?= {
+				make_independent = yes
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+			}
+		}
+		if = {
+			limit = { 
+				has_diplomatic_pact = { who = c:VAN type = condominium is_initiator = yes }
+			}
+			remove_diplomatic_pact = { country = c:VAN type = condominium }
+			if = {
+				limit = {
+					c:VAN ?= {
+						any_scope_diplomatic_pact = {
+							is_diplomatic_action_type = condominium
+							count < 2
+						}
+					}
+				}
+				c:VAN ?= {
+					effect_starting_politics_presidential_republic = yes
+					effect_starting_politics_democratic = yes
+				}
+			}
+		}
+		
+		# Residual influence
+		create_treaty = {
+			name = treaty_name_historical_investment_treaties
+			first_country = ROOT
+			second_country = c:VAN
+
+			is_draft = no
+			binding_period = { years = 10 }
+
+			articles_to_create = {
+				{
+					article = foreign_investment_rights
+					source_country = c:VAN
+					target_country = ROOT
+				}
+				{
+					article = trade_privilege
+					source_country = c:VAN
+					target_country = ROOT
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = british_decolonisation_indy.option.2					# REFUSE
+		default_option = yes
+		
+		#Colonial effects
+		c:VAN ?= {
+		
+			# Natives are angry!
+			every_scope_state = {
+				add_radicals_in_state = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+			#Colony is angry
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+		}
+		
+		#International effect
+		change_relations = { country = c:GBR value = -50 }
+		create_incident = {
+			country = c:VAN
+			value = 15
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}

@@ -855,6 +855,7 @@ british_decolonisation_indy.8 = {
 #Vanuatu
 british_decolonisation_indy.9 = {
     type = country_event
+	placement = c:VAN
 
     title = british_vanuatu.indy.t 				# Title of the event; ADD LOCALISATION
     desc = british_vanuatu.indy.d 					# Description of the event; ADD LOCALISATION
@@ -870,34 +871,82 @@ british_decolonisation_indy.9 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:GBR this = c:GBR											# Change TAG of the overlord ****
+		c:GBR ?= this
 		game_date >= 1980.7.30									# START DATE: Date colony became self governing ****
 		game_date < 1990.7.30									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
-		is_a_democratic_monarchy = yes							# Correct gov types
+		is_a_democracy = yes									# Correct gov types
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
 		#Colony conditions
 		exists = c:VAN
-		c:VAN = { 												# Change TAG of the colony ****
-			is_direct_subject_of = ROOT
-			is_not_sufficiently_independent = yes
+		c:VAN ?= { 												# Change TAG of the colony ****
+			OR = { 
+				AND = { 
+					is_direct_subject_of = ROOT
+					is_not_sufficiently_independent = yes
+				}
+				has_diplomatic_pact = { who = ROOT type = condominium is_initiator = no }
+			}
 		}
 		
 		# Event has not been fired before
 		NOT = { has_variable = british_vanuatu_indy }			# CHANGE ****
 		
     }
+	
+	immediate = {
+		
+		# Fire only once
+		set_variable = british_vanuatu_indy						# Change variable ****
+		
+	}
     
     option = {
         name = british_decolonisation_indy.option.1				# Grant them independence
         highlighted_option = yes
 		
 		# Colony becomes independent
-		c:VAN = { 												# Change TAG of the colony ****
-			make_independent = yes
-			effect_starting_politics_presidential_republic = yes
+		if = {
+			limit = { 
+				c:VAN ?= {
+					is_direct_subject_of = ROOT
+				}
+			}
+			c:VAN ?= {
+				make_independent = yes
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+			}
+		}
+		if = {
+			limit = { 
+				has_diplomatic_pact = { who = c:VAN type = condominium is_initiator = yes }
+			}
+			remove_diplomatic_pact = { country = c:VAN type = condominium }
+			random_country = {
+				limit = { 
+					NOT = { THIS = ROOT }
+					c:FRA ?= this
+					has_diplomatic_pact = { who = c:VAN type = condominium is_initiator = yes } 
+				}
+				trigger_event = { id = historical_union_dissolution.20 popup = yes }
+			}
+			if = {
+				limit = {
+					c:VAN ?= {
+						any_scope_diplomatic_pact = {
+							is_diplomatic_action_type = condominium
+							count < 1
+						}
+					}
+				}
+				c:VAN ?= {
+					effect_starting_politics_presidential_republic = yes
+					effect_starting_politics_democratic = yes
+				}
+			}
 		}
 		
 		# Residual influence
@@ -923,9 +972,6 @@ british_decolonisation_indy.9 = {
 			}
 		}
 		
-		# Fire only once
-		set_variable = british_vanuatu_indy						# Change variable ****
-		
 		ai_chance = { 
 			base = 90 
 		}
@@ -936,7 +982,8 @@ british_decolonisation_indy.9 = {
         name = british_decolonisation_indy.option.2					# REFUSE
 		default_option = yes
 		
-		c:VAN = {
+		#Colonial effects
+		c:VAN ?= {
 		
 			# Natives are angry!
 			every_scope_state = {
@@ -953,8 +1000,8 @@ british_decolonisation_indy.9 = {
 			}
 		}
 		
-		# Fire only once
-		set_variable = british_vanuatu_indy						# Change variable ****
+		#International effect
+		change_infamy = 10
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
