@@ -5,10 +5,7 @@ je_civil_service_system_subvert_civil_service_button = {
 	visible = {
 		
 		#Civil Service is politicised
-		OR = { 
-			has_law_or_variant = law_type:law_elitist_bureaucrats
-			has_law_or_variant = law_type:law_politicised_bureaucrats
-		}
+		has_law_or_variant = law_type:law_politicised_bureaucrats
 		
 	}
 
@@ -504,10 +501,7 @@ je_civil_service_system_reform_civil_service_button = {
 	visible = {
 		
 		#Civil Service is politicised
-		NOR = { 
-			has_law_or_variant = law_type:law_elitist_bureaucrats
-			has_law_or_variant = law_type:law_politicised_bureaucrats
-		}
+		has_law_or_variant = law_type:law_elitist_bureaucrats
 		
 	}
 
@@ -961,6 +955,195 @@ je_civil_service_system_reform_civil_service_button = {
 				#}
 			
 			#}
+			
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if this has insufficient government cohesion
+		modifier = { 
+			trigger = {
+				government_legitimacy < 40
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_civil_service_system_restore_civil_service_button = {
+	name = "je_civil_service_system_restore_civil_service_button"
+	desc = "je_civil_service_system_restore_civil_service_button_desc"
+
+	visible = {
+		
+		#Civil Service is politicised
+		has_law_or_variant = law_type:law_professional_bureaucrats
+		
+	}
+
+	possible = {
+		
+		#Timer
+		custom_tooltip = {
+			text = changed_civil_service_timer.tt
+			NOT = { has_variable = changed_civil_service_timer }
+		}
+		
+		#Legal requirements
+		government_has_legislative_simple_majority = yes
+		
+		#Not having base ideologies
+		ig:ig_intelligentsia ?= {
+			NAND = {
+				has_ideology = ideology:ideology_centre_economy 			#General Economic Beliefs 
+				has_ideology = ideology:ideology_no_economic_focus 			#Economic Specialisation
+				has_ideology = ideology:ideology_balanced_environment 		#Environmental Laws
+				has_ideology = ideology:ideology_regionalist 				#Foreign Economic Policy
+		
+				has_ideology = ideology:ideology_authoritarian				#General Political Beliefs
+				has_ideology = ideology:ideology_conservative				#Specific Political Beliefs
+				has_ideology = ideology:ideology_militarist					#Government Types 
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Add timer
+		set_variable = {
+			name = changed_civil_service_timer
+			years = 1
+		}
+		
+		#Add cost
+		if = {
+			limit = { has_law_or_variant = law_type:law_very_low_anti_corruption }
+			add_modifier = {
+				name = civil_service_reform_cost_modifier
+				multiplier = 5
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_low_anti_corruption }
+			add_modifier = {
+				name = civil_service_reform_cost_modifier
+				multiplier = 4
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_medium_anti_corruption }
+			add_modifier = {
+				name = civil_service_reform_cost_modifier
+				multiplier = 3
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_high_anti_corruption }
+			add_modifier = {
+				name = civil_service_reform_cost_modifier
+				multiplier = 2
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_very_high_anti_corruption }
+			add_modifier = {
+				name = civil_service_reform_cost_modifier
+				years = 1
+				is_decaying = yes
+			}
+		}
+		else = {
+			add_modifier = {
+				name = civil_service_reform_cost_modifier
+				multiplier = 0.5
+				years = 1
+				is_decaying = yes
+			}
+		}
+		
+		#Domestic effects
+		every_interest_group = {
+			limit = { 
+				OR = { 
+					is_in_government = no 
+					is_interest_group_type = ig_intelligentsia
+				}
+			}
+			save_scope_as = scope_opposition_target
+			owner = {
+				if = {
+					limit = { exists = scope:scope_opposition_target }
+					add_loyalists = {
+						value = medium_radicals
+						interest_group = scope:scope_opposition_target
+					}
+				}
+			}
+		}
+		every_interest_group = {
+			limit = { is_in_government = yes }
+			save_scope_as = scope_government_target
+			owner = {
+				if = {
+					limit = { exists = scope:scope_government_target }
+					add_radicals = {
+						value = medium_radicals
+						interest_group = scope:scope_government_target
+					}
+				}
+			}
+		}
+		
+		#Change ideology
+		ig:ig_intelligentsia ?= {
+		
+			hidden_effect = { remove_ideology = ideology_far_right_economy }
+			hidden_effect = { remove_ideology = ideology_right_economy }
+			add_ideology = ideology_centre_economy
+			hidden_effect = { remove_ideology = ideology_left_economy }
+			hidden_effect = { remove_ideology = ideology_far_left_economy }
+			
+			hidden_effect = { remove_ideology = ideology_natural_resource_focus }
+			hidden_effect = { remove_ideology = ideology_manufacturing_focus }
+			hidden_effect = { remove_ideology = ideology_services_focus }
+			add_ideology = ideology_no_economic_focus
+			
+			hidden_effect = { remove_ideology = ideology_anti_environment }
+			add_ideology = ideology_balanced_environment
+			hidden_effect = { remove_ideology = ideology_pro_environment }
+			
+			hidden_effect = { remove_ideology = ideology_nationalist }
+			add_ideology = ideology_regionalist
+			hidden_effect = { remove_ideology = ideology_globalist }
+			
+			hidden_effect = { remove_ideology = ideology_totalitarian }
+			add_ideology = ideology_authoritarian
+			hidden_effect = { remove_ideology = ideology_communitarian }
+			hidden_effect = { remove_ideology = ideology_individualist }
+			
+			hidden_effect = { remove_ideology = ideology_traditionalist }
+			add_ideology = ideology_conservative
+			hidden_effect = { remove_ideology = ideology_progressive }
+			
+			hidden_effect = { remove_ideology = ideology_monarchist }
+			hidden_effect = { remove_ideology = ideology_republican }
+			hidden_effect = { remove_ideology = ideology_theocrat }
+			add_ideology = ideology_militarist
+			hidden_effect = { remove_ideology = ideology_communist }
 			
 		}
 		
