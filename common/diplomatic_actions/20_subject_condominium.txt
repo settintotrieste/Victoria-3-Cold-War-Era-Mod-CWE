@@ -1,6 +1,6 @@
-﻿special_administrative_region = {
-	groups= { general }
-	can_select = no
+﻿condominium = {
+	groups= { general } 
+	show_in_lens = no
 	can_use_obligations = yes
 
 	#Not available except outside scripted events
@@ -15,42 +15,157 @@
 		
 		has_junior_participant = yes
 		maintenance_paid_by = first_country
-		#is_customs_union = yes
-		##is_trade_agreement = yes
 		
-		income_transfer = 0.30
+		#Cash support to overlord
+		income_transfer = 0.25
 		second_country_gets_income_transfer = no
 		income_transfer_based_on_second_country = yes
+		
+		military_access = yes # Whether this pact provides military access between both parties, i.e. formations can travel on the other country territory
 		
 		#relations_progress_per_day = 1
 		#relations_improvement_max = 50
 	
 		target_requires_approval_to_break = yes	
 		
-		subject_type = subject_type_special_administrative_region
-		
 		second_modifier = {
-			country_law_enactment_imposition_success_add = 0.1
-			country_convoy_contribution_to_market_owner_add = 0.5
-			country_tech_spread_mult = 0.40
+			country_pact_leverage_generation_add = 100
+			country_tech_spread_mult = 0.20
+		}
+		
+		requirement_to_maintain = {
+			trigger = {
+				scope:target_country = { 
+					any_scope_diplomatic_pact = {
+						is_diplomatic_action_type = condominium
+						count >= 2
+					}
+				}
+			}
+		}
+		requirement_to_maintain = {
+			trigger = {
+				is_sufficiently_independent = yes
+			}
+		}
+		requirement_to_maintain = {
+			trigger = {
+				scope:target_country = { is_subject = no }
+			}
 		}
 		
 		actor_can_break = {
-			is_diplomatic_play_committed_participant = no
-			relinquishing_of_subjects_permitted = yes
+			always = no
 		}
 
 		target_can_break = {
-			is_diplomatic_play_committed_participant = no
-		}		
+			always = no
+		}
 
 		manual_break_effect = {
+		
 			create_bidirectional_truce = { country = scope:target_country months = 60 }
 			change_relations = { country = scope:target_country value = 50 }
+			
+			if = {
+				limit = { 
+					scope:target_country = { 
+						any_scope_diplomatic_pact = {
+							is_diplomatic_action_type = condominium
+							count < 2
+						}
+					}
+				}
+				scope:target_country = { 
+					
+					#End condominium
+					remove_modifier = condominium_modifier
+					
+					#Return to Reversionary Owner
+					if = {
+						limit = { is_subject = no }
+						hidden_effect = { make_indepedent = yes }
+						random_country = {
+							limit = {
+								has_diplomatic_pact = { who = scope:target_country type = condominium is_initiator = yes }
+							}
+							save_scope_as = condominium_reversionary_owner
+							if = {
+								limit = { scope:target_country.capital = { is_homeland_of_country_cultures = scope:condominium_reversionary_owner } }
+								create_diplomatic_pact = {
+									country = scope:target_country
+									type = special_administrative_region
+								}
+							}
+							else = {
+								create_diplomatic_pact = {
+									country = scope:target_country
+									type = semi_autonomous_colony
+								}
+							}
+						}
+					}
+					
+				}
+			}
+			
 		}
 		
 		auto_break_effect = {
+		
 			create_bidirectional_truce = { country = scope:target_country months = 60 }
+			
+			if = {
+				limit = { 
+					scope:target_country = { 
+						any_scope_diplomatic_pact = {
+							is_diplomatic_action_type = condominium
+							count < 2
+						}
+					}
+				}
+				scope:target_country = {
+				
+					#End condominium
+					remove_modifier = condominium_modifier
+					
+					#Return to Reversionary Owner
+					if = {
+						limit = { is_subject = no }
+						hidden_effect = { make_indepedent = yes }
+						random_country = {
+							limit = {
+								has_diplomatic_pact = { who = scope:target_country type = condominium is_initiator = yes }
+							}
+							if = {
+								limit = { scope:target_country.capital = { is_homeland_of_country_cultures = THIS } }
+								create_diplomatic_pact = {
+									country = scope:target_country
+									type = special_administrative_region
+								}
+							}
+							else = {
+								create_diplomatic_pact = {
+									country = scope:target_country
+									type = semi_autonomous_colony
+								}
+							}
+						}
+					}
+					
+				}
+			}
+			
+		}
+		
+	}
+	
+	effect = {
+		scope:target_country = { 
+			if = { 
+				limit = { NOT = { has_modifier = condominium_modifier } }
+				add_modifier = { name = condominium_modifier }
+			}
 		}
 	}
 	
@@ -216,7 +331,7 @@
 					desc = "DIPLOMATIC_ACCEPTANCE_POWERFUL_PROTECTORS_US"
 					value = 25
 				}	
-			}		
+			}
 		}	
 
 		use_obligation_chance = {

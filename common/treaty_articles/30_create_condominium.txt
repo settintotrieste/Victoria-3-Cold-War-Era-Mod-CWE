@@ -1,0 +1,309 @@
+﻿create_condominium = {
+	kind = directed
+	cost = 100
+
+	icon = "gfx/interface/icons/lens_toolbar_icons/territory.dds"
+
+	flags = {
+		friendly
+		giftable
+		target_subjects_as_input
+	}
+
+	usage_limit = once_per_side_with_same_inputs
+
+    required_inputs = {
+		country
+    }
+	
+	visible = {
+		is_not_revolutionary_or_decentralised = yes
+	}
+	
+	possible = {
+	
+		#AI does not use this on its own
+		trigger_if = {
+			limit = { 
+				is_player = no
+				scope:other_country = { is_player = no }
+			}
+			is_player = yes
+		}
+	
+		#Proper countries
+		is_not_revolutionary_or_decentralised = yes
+		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
+		
+		#Both parties are sufficiently independent
+		is_sufficiently_independent = yes
+		scope:other_country = { 
+			is_sufficiently_independent = yes 
+		}
+		
+		#Political conditions
+		relinquishing_of_territory_permitted = yes
+		
+		#Not in a diplo play
+		is_diplomatic_play_committed_participant = no
+		scope:other_country = { is_diplomatic_play_committed_participant = no }
+		
+	}
+	
+	requirement_to_maintain = {
+		
+		#Both parties are sufficiently independent
+		is_sufficiently_independent = yes
+		scope:other_country = { 
+			is_sufficiently_independent = yes 
+		}
+	
+	}
+
+	can_ratify = {
+		scope:source_country = {
+			num_subjects >= 1
+		}
+		custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            scope:treaty ?= {
+                NOT = {
+                    any_scope_article_option = {
+                        count > 1
+                        has_type = create_condominium
+                        source_country = scope:source_country
+                        input_country = root.input_country
+                    }
+                }
+            }
+        }
+	}
+
+	country_valid_trigger = {
+		scope:input = {
+			is_sufficiently_independent = no
+			OR = {
+				scope:other_country = { is_adjacent_to_country = prev }
+				AND = {
+					has_port = yes
+					scope:other_country = { has_port = yes }
+				}
+			}
+		}
+	}
+
+	on_entry_into_force = {
+		
+		scope:article_options.input_country = {
+			hidden_effect = { make_independent = yes }
+			if = { 
+				limit = { NOT = { has_modifier = condominium_modifier } }
+				add_modifier = { name = condominium_modifier }
+			}
+		}
+		scope:article_options.source_country = {
+			create_diplomatic_pact = {
+				country = scope:article_options.input_country
+				type = condominium
+			}
+			create_treaty = {
+				name = treaty_name_generic_condominium
+				first_country = scope:article_options.source_country
+				second_country = scope:article_options.input_country
+
+				is_draft = no
+
+				articles_to_create = {
+					{
+						article = defensive_pact
+					}
+					{
+						article = foreign_investment_rights
+						target_country = scope:article_options.source_country
+						source_country = scope:article_options.input_country
+					}
+					{
+						article = trade_privilege
+						target_country = scope:article_options.source_country
+						source_country = scope:article_options.input_country
+					}
+				}
+			}
+		}
+		scope:article_options.target_country = {
+			create_diplomatic_pact = {
+				country = scope:article_options.input_country
+				type = condominium
+			}
+			create_treaty = {
+				name = treaty_name_generic_condominium
+				first_country = scope:article_options.target_country
+				second_country = scope:article_options.input_country
+
+				is_draft = no
+
+				articles_to_create = {
+					{
+						article = defensive_pact
+					}
+					{
+						article = foreign_investment_rights
+						target_country = scope:article_options.target_country
+						source_country = scope:article_options.input_country
+					}
+					{
+						article = trade_privilege
+						target_country = scope:article_options.target_country
+						source_country = scope:article_options.input_country
+					}
+				}
+			}
+		}
+	
+	}
+
+	on_withdrawal = {
+		
+		#Reversionary owner will be happy
+		scope:withdrawing_country = {
+			change_relations = {
+				country = scope:non_withdrawing_country
+				value = 100
+			}
+			change_infamy = -15
+		}
+		
+		#Return to Reversionary Owner
+		scope:withdrawing_country = {
+			hidden_effect = {
+				if = {
+					limit = { has_diplomatic_pact = { who = scope:article_options.input_country type = condominium is_initiator = yes } }
+					remove_diplomatic_pact = { country = scope:article_options.input_country type = condominium } 
+				}
+			}
+		}
+		scope:non_withdrawing_country = {
+			hidden_effect = { 
+				if = {
+					limit = { has_diplomatic_pact = { who = scope:article_options.input_country type = condominium is_initiator = yes } }
+					remove_diplomatic_pact = { country = scope:article_options.input_country type = condominium } 
+				}
+			}
+			scope:article_options.input_country = {
+				hidden_effect = { make_indepedent = yes }
+				if = {
+					limit = { 
+						any_scope_diplomatic_pact = {
+							is_diplomatic_action_type = condominium
+							count < 2
+						}
+					}
+					remove_modifier = condominium_modifier
+				}
+			}
+			custom_tooltip = {
+				text = abolish_condominium.tt
+				scope:withdrawing_country = { save_scope_as = condominium_giving_country }
+				scope:non_withdrawing_country = { save_scope_as = condominium_recieving_country }
+				scope:article_options.input_country = { save_scope_as = condominium_country }
+				if = {
+					limit = { scope:article_options.input_country.capital = { is_homeland_of_country_cultures = scope:non_withdrawing_country } }
+					create_diplomatic_pact = {
+						country = scope:article_options.input_country
+						type = special_administrative_region
+					}
+				}
+				else = {
+					create_diplomatic_pact = {
+						country = scope:article_options.input_country
+						type = semi_autonomous_colony
+					}
+				}
+			}
+		}
+	
+	}
+	on_break = {
+		
+	}
+
+	ai = {
+
+		treaty_categories = {
+			expansion
+		}
+
+		evaluation_chance = {
+			value = 0.1
+		}
+
+		article_ai_usage = {
+            request
+        }
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					exists = scope:is_renegotiation
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ALREADY_TRADED_SUBJECT"
+					value = -1000
+				}
+			}
+			else_if = {
+				limit = {
+					exists = scope:article.input_country
+					scope:source_country ?= this
+					NOT = { exists = scope:is_treaty_active }
+					scope:article.input_country.ai_subject_value:root > 0
+				}
+				subtract = {
+					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_SUBJECT_SOURCE"
+					value = scope:article.input_country.ai_subject_value:root
+					add = 100
+
+					add = {
+						value = scope:article.input_country.gdp
+						divide = 200000
+						max = 200
+					}
+
+					if = {
+						limit = {
+							scope:source_country.country_rank > scope:target_country.country_rank
+						}
+						multiply = {
+							add = scope:source_country.country_rank
+							subtract = scope:target_country.country_rank
+							divide = 10
+							add = 1
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = {
+					exists = scope:article.input_country
+					scope:target_country ?= this
+					NOT = { exists = scope:is_treaty_active }
+					scope:article.input_country.ai_subject_value:root > 0
+				}
+				add = {
+					value = scope:article.input_country.ai_subject_value:root
+					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_SUBJECT_TARGET"
+				}
+			}
+			else_if = {
+				limit = { NOT = { exists = scope:is_treaty_active } }
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_SUBJECT_REJECT"
+					value = -300
+				}
+			}
+		}
+	}
+}

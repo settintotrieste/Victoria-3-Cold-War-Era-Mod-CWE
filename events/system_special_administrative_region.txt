@@ -27,7 +27,7 @@ special_administrative_region_system.1 = {
 			capital = { is_homeland_of_country_cultures = ROOT }
 			OR = { 
 				is_subject_type = subject_type_puppet
-				is_subject_type = subject_type_semi_autonomous_colony
+				is_subject_type = semi_autonomous_colony
 			}
 		}
 		
@@ -45,7 +45,7 @@ special_administrative_region_system.1 = {
 				capital = { is_homeland_of_country_cultures = ROOT }
 				OR = { 
 					is_subject_type = subject_type_puppet
-					is_subject_type = subject_type_semi_autonomous_colony
+					is_subject_type = semi_autonomous_colony
 				}
 			}
 			save_scope_as = SAR_country
@@ -75,5 +75,74 @@ special_administrative_region_system.1 = {
 		
 	}
 	
-	
+}
+
+#Condominium System
+special_administrative_region_system.2 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		#Set flags
+		OR = {
+			AND = { 
+				any_country = { has_diplomatic_pact = { who = ROOT type = condominium is_initiator = yes } }
+				NOT = { has_modifier = condominium_modifier }
+			}
+			AND = { 
+				NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = condominium is_initiator = yes } } }
+				has_modifier = condominium_modifier
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		if = {
+			limit = { 
+				any_country = { has_diplomatic_pact = { who = ROOT type = condominium is_initiator = yes } }
+				NOT = { has_modifier = condominium_modifier }
+			}
+			add_modifier = { name = condominium_modifier }
+		}
+		else_if = {
+			limit = { 
+				NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = condominium is_initiator = yes } } }
+				has_modifier = condominium_modifier
+			}
+			
+			#End Condominium
+			remove_modifier = condominium_modifier
+			
+			#Return to Reversionary Owner
+			if = {
+				limit = { is_subject = no }
+				hidden_effect = { make_indepedent = yes }
+				random_country = {
+					limit = {
+						has_diplomatic_pact = { who = ROOT type = condominium is_initiator = yes }
+					}
+					save_scope_as = condominium_reversionary_owner
+					if = {
+						limit = { ROOT.capital = { is_homeland_of_country_cultures = scope:condominium_reversionary_owner } }
+						create_diplomatic_pact = {
+							country = ROOT
+							type = special_administrative_region
+						}
+					}
+					else = {
+						create_diplomatic_pact = {
+							country = ROOT
+							type = semi_autonomous_colony
+						}
+					}
+				}
+			}
+		
+		}
+		
+	}
+
 }
