@@ -3985,3 +3985,270 @@ historical_diplomatic_incidents.40 = {
     }
 
 }
+
+# Operation Absolute Resolve - USA
+historical_diplomatic_incidents.41 = {
+    type = country_event
+	placement = c:VNZ
+
+    title = USA_VNZ_Overthrow_2026.t 							# Title of the event; ADD LOCALISATION
+    desc = USA_VNZ_Overthrow_2026.d 							# Description of the event; ADD LOCALISATION
+    #flavor = USA_VNZ_Overthrow_2026.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_police_breaking_door.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 2026.1.3									# START DATE: Date colony became self governing ****
+		game_date < 2036.1.3									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		country_rank = rank_value:super_power
+		
+		has_law_or_variant = law_type:law_offensive_war
+		
+		#Ruler
+		ruler ?= { has_variable = Donald_Trump }
+		
+		#Target
+		exists = c:VNZ
+		c:VNZ ?= {
+			is_a_socialist_government = yes
+			is_sufficiently_independent = yes					# is_vassal = no		
+			is_at_war = no										# war = no
+			NOT = { is_subject_of = ROOT }
+			
+			ruler ?= { has_variable = Nicolas_Maduro }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_VNZ_Overthrow_2026_hdi }		# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_VNZ_Overthrow_2026_hdi				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Infamy
+		create_incident = {
+			country = c:VNZ
+			value = 10
+		}
+		
+		#Choice for War
+		c:VNZ ?= {
+			trigger_event = { id = historical_diplomatic_incidents.42 popup = yes }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_landowners
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_devout
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# Operation Absolute Resolve - VNZ
+historical_diplomatic_incidents.42 = {
+    type = country_event
+
+    title = USA_VNZ_Overthrow_2026.t 							# Title of the event; ADD LOCALISATION
+    desc = USA_VNZ_Overthrow_2026.d 							# Description of the event; ADD LOCALISATION
+    #flavor = USA_VNZ_Overthrow_2026.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_police_breaking_door.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/military_drill.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1			# Yes
+        highlighted_option = yes
+		
+		#Remove Maduro
+		random_scope_character = {
+			limit = { has_variable = Nicolas_Maduro }
+			retire_character = yes
+		}
+		
+		#Delcy Rodríguez
+		create_character = {
+			first_name = "Delcy_Rodriguez_first_name"
+			last_name = "Delcy_Rodriguez_last_name"
+			ruler = yes ig_leader = yes historical = yes female = yes
+			birth_date = 1969.5.18
+			interest_group = ig_trade_unions
+			ideology = ideology_autocratic
+			culture = cu:venezuelan
+			religion = rel:catholic
+			traits = {
+				grifter
+				cruel
+				reckless
+			}
+			on_created = { set_variable = Delcy_Rodriguez }
+		}
+		
+		#Treaty of Submission
+		c:USA ?= {
+			create_diplomatic_pact = {
+				country = ROOT
+				type = protectorate
+			}
+			create_treaty = {
+				name = treaty_name_USA_VNZ_submission_treaty
+				first_country = c:USA
+				second_country = ROOT
+
+				is_draft = no
+				binding_period = { years = 10 }
+
+				articles_to_create = {
+					{
+						article = foreign_investment_rights
+						source_country = ROOT
+						target_country = c:USA
+					}
+					{
+						article = trade_privilege
+						source_country = ROOT
+						target_country = c:USA
+					}
+					{
+						article = economic_privatisation
+						source_country = ROOT
+						target_country = c:USA
+					}
+					{
+						article = acquire_monopoly_for_company
+						source_country = ROOT
+						target_country = c:USA
+						inputs = {
+							{ company = c:USA.company:company_standard_oil }
+							{ building_type = bt:building_oil_rig }
+						}
+					}
+					{
+						article = law_commitment
+						source_country = ROOT
+						target_country = c:USA
+						inputs = {
+							{ law_type = law_type:law_democratic_legislature }
+						}
+					}
+					{
+						article = law_commitment
+						source_country = ROOT
+						target_country = c:USA
+						inputs = {
+							{ law_type = law_type:law_full_foreign_investment_policy }
+						}
+					}
+					{
+						article = law_commitment
+						source_country = ROOT
+						target_country = c:USA
+						inputs = {
+							{ law_type = law_type:law_laissez_faire }
+						}
+					}
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2			# No
+		default_option = yes
+		
+		#War
+		c:USA ?= {
+			create_diplomatic_play = {
+				name = korean_war
+				type = dp_make_puppet
+				target_country = c:VNZ
+				
+				#war = yes
+				
+				add_war_goal = {
+					holder = ROOT
+					type = regime_change
+					target_country = c:VNZ
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
