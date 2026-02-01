@@ -383,15 +383,18 @@ historical_territorial_transfers.4 = {
 		game_date >= 1956.10.29									# START DATE: Date colony became self governing ****
 		game_date < 1966.10.29									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
-		#is_a_democratic_monarchy = yes							# Correct gov types
+		OR = {
+			is_a_monarchy = yes
+			is_a_democracy = yes
+		}
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
 		#Colony conditions
 		exists = c:TGZ
 		c:TGZ = { 												# Change TAG of the colony ****
-			is_direct_subject_of = ROOT
-			is_subject_type = subject_type_special_administrative_region
+			has_modifier = condominium_modifier
+			is_adjacent_to_country = ROOT
 		}
 		
 		# Event has not been fired before
@@ -410,27 +413,15 @@ historical_territorial_transfers.4 = {
         name = historical_gov_changes.option.1					# Accept annexation by FROM
         highlighted_option = yes
 		
-		#THIS is annexed by FROM
-		c:MOR = { annex = c:TGZ }
-		
-		#Participants in TGZ are angry
+		#Invite all condominium countries to surrender territory
 		every_country = {
 			limit = {
 				OR = { 
-					c:FRA ?= this
-					c:SPA ?= this
-					c:GBR ?= this
-					c:ITA ?= this
-					c:USA ?= this
-					c:BEL ?= this
-					c:NET ?= this
-					c:POR ?= this
+					c:TGZ ?= { is_subject_of = THIS }
+					has_diplomatic_pact = { who = c:TGZ type = condominium is_initiator = yes }
 				}
 			}
-			change_relations = {
-				country = ROOT
-				value = -100
-			}
+			trigger_event = { id = historical_territorial_transfers.43 popup = yes }
 		}
 		
 		ai_chance = { 
@@ -4610,6 +4601,107 @@ historical_territorial_transfers.42 = {
 				type = dp_annex_war_historical
 				target_country = ROOT
 			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+#Tangier - Condominium Owners
+historical_territorial_transfers.43 = {
+    type = country_event
+	placement = c:TGZ
+
+	title = transfer_territory_tangier.t 				# Title of the event; ADD LOCALISATION
+    desc = transfer_territory_tangier.d 				# Description of the event; ADD LOCALISATION
+    #flavor = transfer_territory_tangier.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_map.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+    
+    option = {
+        name = historical_yes_no.option.1							# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		# Colony becomes independent
+		if = {
+			limit = { 
+				c:TGZ ?= {
+					is_direct_subject_of = ROOT
+				}
+			}
+			c:MOR ?= { annex_with_incorporation = c:TGZ }
+		}
+		if = {
+			limit = { 
+				has_diplomatic_pact = { who = c:TGZ type = condominium is_initiator = yes }
+			}
+			remove_diplomatic_pact = { country = c:TGZ type = condominium }
+			if = {
+				limit = {
+					c:TGZ ?= {
+						any_scope_diplomatic_pact = {
+							is_diplomatic_action_type = condominium
+							count < 2
+						}
+					}
+				}
+				c:MOR ?= { annex_with_incorporation = c:TGZ }
+			}
+		}
+		
+		# Residual influence
+		create_treaty = {
+			name = treaty_name_historical_investment_treaties
+			first_country = ROOT
+			second_country = c:MOR
+
+			is_draft = no
+			binding_period = { years = 10 }
+
+			articles_to_create = {
+				{
+					article = foreign_investment_rights
+					source_country = c:MOR
+					target_country = ROOT
+				}
+				{
+					article = trade_privilege
+					source_country = c:MOR
+					target_country = ROOT
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_yes_no.option.2						# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#International effect
+		change_relations = { country = c:MOR value = -100 }
+		create_incident = {
+			country = c:MOR
+			value = 20
 		}
 		
 		ai_chance = { 
