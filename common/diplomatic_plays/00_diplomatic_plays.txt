@@ -558,6 +558,105 @@ dp_independence = {
 	on_war_end = {}
 }
 
+dp_independence_condominium = {
+	requires_interest_marker = no
+	initiator_can_add_war_goals = no
+
+	war_goal = independence_condominium
+
+	texture = "gfx/interface/icons/war_goals/independence.dds"
+	
+	confirmation_sound = "event:/SFX/UI/SubjectInteractions/subject_button_small_independence"
+
+	possible = {
+		
+		#Condominium only
+		has_modifier = condominium_modifier
+		scope:target_country = { has_diplomatic_pact = { who = ROOT type = condominium is_initiator = yes } }
+	
+		NOT = { is_country_type = decentralized }
+		
+		#Bad relations with TARGET
+		custom_tooltip = {
+			text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+			#scope:target_country.relations:root <= relations_threshold:poor
+		}
+		
+		#THIS has some army
+		NOT = { has_law_or_variant = law_type:law_peasant_levies }
+		
+		#Domestic pressure for independence
+		OR = { 
+		
+			#Overlord and Subject rulers are incompatible
+			ruler ?= {
+				culture = { culture_is_discriminated_in = scope:target_country }
+			}
+			AND = {
+				scope:target_country = { 
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				ROOT = {
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+			}
+			ruler ?= {
+				OR = {
+					has_ideology = ideology:ideology_autocratic
+					has_ideology = ideology:ideology_power_hungry
+				}
+			}
+		
+		}
+		
+		#Parliament and Cabinet approves
+		#government_has_legislative_simple_majority = yes
+		
+	}
+	
+	additional_involvement_trigger = {
+		
+		#Potential participant is willing to get involved in other's affairs
+		NOT = { is_country_type = decentralized }
+		aggressive_diplomatic_plays_permitted = yes
+		OR = { 
+			diplo_play_additional_involvement_check_cwe = yes
+			scope:target_country = { is_subject_of = ROOT }
+			scope:initiator = { is_subject_of = ROOT }
+		}
+	
+		#Has an interest in the area
+		scope:initiator = {
+			capital = {
+				region = {
+					save_temporary_scope_as = initiator_capital_region
+				}
+			}
+		}
+		OR = {
+			has_interest_marker_in_region = scope:initiator_capital_region
+			is_home_country_for = scope:initiator
+		}
+		
+	}
+
+	ai_acceptance_max = 100 on_weekly_pulse = {}
+
+	on_war_begins = {}
+
+	on_war_end = {}
+}
+
 dp_take_treaty_port = {
 	
 	war_goal = take_treaty_port
