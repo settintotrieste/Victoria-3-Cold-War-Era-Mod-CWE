@@ -106,11 +106,434 @@ ai_strategy_default = {
 	diplomatic_play_support = {
 		value = 0
 		
+		#Base value - Reputation
 		add = {
 			value = "scope:country.modifier:country_diplomatic_reputation_add"
 			desc = "DIPLOMATIC_REPUTATION_REASON"
 		}
 		
+		#Don't support TARGET if cannot anything something out of the ENEMY
+		if = {
+			limit = {
+				scope:country = {
+					OR = {
+						play_participant_has_war_goal_of_type_against = {
+							type = annex_country
+							target = scope:enemy_country
+						}
+						play_participant_has_war_goal_of_type_against = {
+							type = unification
+							target = scope:enemy_country
+						}
+					}
+				}
+			}
+			add = {
+				value = -200
+				desc = "DIPLOMATIC_NO_VALUE_IN_SUPPORTING_ENEMY_REASON"
+			}
+		}
+		
+		#Don't support TARGET if THIS cannot reach ENEMY
+		if = {
+			limit = {
+				NAND = {
+					has_diplomatic_relevance = scope:country
+					OR = {
+						has_strategic_adjacency = scope:country
+						AND = {
+							has_port = yes
+							navy_size >= 10
+							scope:country = { has_port = yes }
+						}
+					}
+				}
+			}
+			add = {
+				value = -100
+				desc = "DIPLOMATIC_CANNOT_REACH_COUNTRY_REASON"
+			}
+		}
+		
+		#Don't support TARGET if THIS is not near TARGET
+		if = {
+			limit = {
+				NOR = {
+					has_strategic_adjacency = scope:country
+					is_adjacent_to_country = scope:country
+				}
+			}
+			add = {
+				value = -100
+				desc = "DIPLOMATIC_NOT_GEOGRAPHICALLY_CLOSE_REASON"
+			}
+		}
+		
+		#Don't support TARGET if THIS is not of similar culture
+		if = {
+			limit = {
+				NOT = { 
+					any_primary_culture = {
+						OR = { 
+							is_primary_culture_of = scope:country
+							shares_non_heritage_trait_with_any_primary_culture = scope:country
+						}
+					}
+				}
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_NOT_CULTURALLY_CLOSE_REASON"
+			}
+		}
+		
+		#Don't support TARGET if ENEMY is of similar culture to THIS
+		if = {
+			limit = {
+				any_primary_culture = {
+					OR = { 
+						is_primary_culture_of = scope:enemy_country
+						shares_non_heritage_trait_with_any_primary_culture = scope:enemy_country
+					}
+				}
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_CULTURALLY_CLOSE_WITH_ENEMY_REASON"
+			}
+		}
+		
+		#Don't support TARGET if THIS is militarily weaker than ENEMY
+		if = {
+			limit = {
+				army_size < scope:enemy_country.army_size
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_ENEMY_HAS_STRONGER_ARMY_REASON"
+			}
+		}
+		if = {
+			limit = {
+				has_port = yes
+				navy_size < scope:enemy_country.navy_size
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_ENEMY_HAS_STRONGER_NAVY_REASON"
+			}
+		}
+		if = {
+			limit = {
+				NOT = { has_modifier = nuclear_capability }
+				scope:enemy_country = { has_modifier = nuclear_capability }
+			}
+			add = {
+				value = -1000
+				desc = "DIPLOMATIC_ENEMY_HAS_NUKES_WHILE_WE_DONT_REASON"
+			}
+		}
+		if = {
+			limit = {
+				OR = { 
+					has_modifier = nuclear_capability
+					scope:country = { has_modifier = nuclear_capability }
+				}
+				scope:enemy_country = { has_modifier = nuclear_capability }
+			}
+			add = {
+				value = -500
+				desc = "DIPLOMATIC_MUTUALLY_ASSURED_DESTRUCTION_WITH_ENEMY_REASON"
+			}
+		}
+		
+		#Don't support TARGET if TARGET is useless
+		if = {
+			limit = {
+				scope:country = {
+					OR = {
+						in_default = yes
+						has_revolution = yes
+					}
+				}
+			}
+			add = {
+				value = -100
+				desc = "DIPLOMATIC_USELESS_ALLY_REASON"
+			}
+		}
+		
+		#Don't support TARGET if TARGET has territorial interests in THIS
+		if = {
+			limit = {
+				scope:country = {
+					any_scope_state = {
+						is_homeland_of_country_cultures = root
+					}
+				}
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_HOMELANDS_IN_TARGET_REASON"
+			}
+		}
+		
+		#Don't support TARGET if TARGET is a subject
+		if = {
+			limit = {
+				scope:country = {
+					is_sufficiently_independent = no
+					NOT = { is_subject_of = ROOT }
+				}
+			}
+			add = {
+				value = -100
+				desc = "DIPLOMATIC_COUNTRY_IS_A_SUBJECT_REASON"
+			}
+		}
+		
+		#Support TARGET if THIS has rivalry with ENEMY
+		if = {
+			limit = {
+				has_diplomatic_pact = { who = scope:enemy_country type = rivalry }
+			}
+			add = {
+				value = 100
+				desc = "DIPLOMATIC_RIVALRY_WITH_ENEMY_REASON"
+			}
+		}
+		
+		#Support TARGET if THIS has economic interests in TARGET
+		if = {
+			limit = {
+				OR = { 
+					is_in_customs_union_with = scope:country
+					any_scope_treaty = {
+						binds = scope:country
+						any_scope_article = {
+							OR = { 
+								has_type = foreign_investment_rights
+								has_type = trade_privilege
+							}
+						}
+					}
+				}
+			}
+			add = {
+				value = 50
+				desc = "DIPLOMATIC_SHARED_ECONOMIC_INTERESTS_REASON"
+			}
+		}
+		
+		#Support TARGET if THIS has territorial interests in TARGET
+		if = {
+			limit = {
+				scope:enemy_country = {
+					any_scope_state = {
+						is_homeland_of_country_cultures = root
+					}
+				}
+			}
+			add = {
+				value = 100
+				desc = "DIPLOMATIC_HOMELANDS_IN_ENEMY_REASON"
+			}
+		}
+		
+		#Differing Gov Types - Common Enemy
+		if = {
+			limit = {
+				is_a_democracy = yes
+				scope:enemy_country = {
+					is_a_democracy = yes
+				}
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_SAME_GOV_TYPE_AS_ENEMY_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				is_a_communist_government = yes
+				scope:enemy_country = {
+					is_a_communist_government = yes
+				}
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_SAME_GOV_TYPE_AS_ENEMY_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				is_a_theocratic_government = yes
+				scope:enemy_country = {
+					is_a_theocratic_government = yes
+				}
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_SAME_GOV_TYPE_AS_ENEMY_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				is_a_nationalist_government = yes
+				scope:enemy_country = {
+					is_a_nationalist_government = yes
+				}
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_SAME_GOV_TYPE_AS_ENEMY_REASON"
+			}
+		}
+		
+		#Differing Gov Types - Incompatible allies
+		if = {
+			limit = {
+				is_a_democracy = yes
+				scope:country = {
+					is_a_democracy = no
+				}
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_DIFFERENT_GOV_TYPE_AS_TARGET_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				is_a_communist_government = yes
+				scope:country = {
+					is_a_communist_government = no
+				}
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_DIFFERENT_GOV_TYPE_AS_TARGET_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				is_a_theocratic_government = yes
+				scope:country = {
+					is_a_theocratic_government = no
+				}
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_DIFFERENT_GOV_TYPE_AS_TARGET_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				is_a_nationalist_government = yes
+				scope:country = {
+					is_a_nationalist_government = no
+				}
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_DIFFERENT_GOV_TYPE_AS_TARGET_REASON"
+			}
+		}
+		
+		#Scale level of AI interest based on rank
+		if = {
+			limit = {
+				scope:country = { country_rank < root.country_rank }
+				scope:country = {
+					country_rank = rank_value:great_power
+				}
+				NOT = { has_diplomatic_pact = { who = scope:country type = condominium is_initiator = yes } }
+			}
+			add = {
+				value = -25
+				desc = "DIPLOMATIC_LOWER_RANK_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				scope:country = { country_rank < root.country_rank }
+				scope:country = {
+					country_rank = rank_value:major_power
+				}
+				NOT = { has_diplomatic_pact = { who = scope:country type = condominium is_initiator = yes } }
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_LOWER_RANK_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				scope:country = { country_rank < root.country_rank }
+				scope:country = {
+					country_rank = rank_value:minor_power
+				}
+				NOT = { has_diplomatic_pact = { who = scope:country type = condominium is_initiator = yes } }
+			}
+			add = {
+				value = -100
+				desc = "DIPLOMATIC_LOWER_RANK_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				scope:country = { country_rank < root.country_rank }
+				scope:country = {
+					country_rank = rank_value:insignificant_power
+				}
+				NOT = { has_diplomatic_pact = { who = scope:country type = condominium is_initiator = yes } }
+			}
+			add = {
+				value = -150
+				desc = "DIPLOMATIC_LOWER_RANK_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				scope:country = { country_rank < root.country_rank }
+				scope:country = {
+					country_rank = rank_value:unrecognized_major_power
+				}
+				NOT = { has_diplomatic_pact = { who = scope:country type = condominium is_initiator = yes } }
+			}
+			add = {
+				value = -50
+				desc = "DIPLOMATIC_LOWER_RANK_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				scope:country = { country_rank < root.country_rank }
+				scope:country = {
+					country_rank = rank_value:unrecognized_regional_power
+				}
+				NOT = { has_diplomatic_pact = { who = scope:country type = condominium is_initiator = yes } }
+			}
+			add = {
+				value = -100
+				desc = "DIPLOMATIC_LOWER_RANK_REASON"
+			}
+		}
+		else_if = {
+			limit = {
+				scope:country = { country_rank < root.country_rank }
+				scope:country = {
+					country_rank = rank_value:unrecognized_power
+				}
+				NOT = { has_diplomatic_pact = { who = scope:country type = condominium is_initiator = yes } }
+			}
+			add = {
+				value = -200
+				desc = "DIPLOMATIC_LOWER_RANK_REASON"
+			}
+		}
+		
+		#Protecting Condominiums & Fighting rebelling condominiums
 		if = {
 			limit = { 	
 				scope:enemy_country = { has_modifier = condominium_modifier }
@@ -122,7 +545,6 @@ ai_strategy_default = {
 				desc = "DIPLOMATIC_CONDOMINIUM_REBELLING_REASON"
 			}
 		}
-		
 		if = {
 			limit = { 
 				scope:country = { has_modifier = condominium_modifier }
@@ -145,49 +567,49 @@ ai_strategy_default = {
 		### MORE NEUTRALITY ###
 		
 		# AI is more neutral if have domestic instability
-		if = {
-			limit = { 
-				OR = {
-					in_default = yes
-					has_revolution = yes
-				}
-			}
-			add = 100
-		}
+		#if = {
+		#	limit = { 
+		#		OR = {
+		#			in_default = yes
+		#			has_revolution = yes
+		#		}
+		#	}
+		#	add = {
+		#		value = 100
+		#		desc = "DIPLOMATIC_UNSTABLE_DOMESTIC_SITUATION_REASON"
+		#	}
+		#}
 		
 		# AI is more neutral if leader is democratic
 		if = {
 			limit = { 
 				ruler ?= { has_ideology = ideology:ideology_liberal }
 			}
-			add = 200
+			add = {
+				value = 100
+				desc = "DIPLOMATIC_PACIFIST_RULER_REASON"
+			}
 		}
 		if = {
 			limit = { 
 				ruler ?= { has_ideology = ideology:ideology_democratic }
 			}
-			add = 100
+			add = {
+				value = 50
+				desc = "DIPLOMATIC_PACIFIST_RULER_REASON"
+			}
 		}
 		if = {
 			limit = { 
 				ruler ?= { has_ideology = ideology:ideology_elitist }
 			}
-			add = 50
+			add = {
+				value = 25
+				desc = "DIPLOMATIC_PACIFIST_RULER_REASON"
+			}
 		}
 		
 		# AI is more neutral based on laws
-		if = {
-			limit = { 
-				has_law_or_variant = law_type:law_no_war
-			}
-			add = 200
-		}
-		if = {
-			limit = { 
-				has_law_or_variant = law_type:law_defensive_war
-			}
-			add = 100
-		}
 		if = {
 			limit = { 
 				has_law_or_variant = law_type:law_peasant_levies
@@ -225,34 +647,6 @@ ai_strategy_default = {
 				}
 			}
 			add = 50
-		}
-		
-		# AI is less neutral if is a GP and above
-		if = {
-			limit = { 
-				country_rank < rank_value:major_power
-			}
-			add = 100
-		}
-		if = {
-			limit = { 
-				country_rank < rank_value:great_power
-			}
-			add = 100
-		}
-		if = {
-			limit = { 
-				country_rank < rank_value:super_power
-			}
-			add = 100
-		}
-		
-		# Democracies are more neutral
-		if = {
-			limit = { 
-				is_a_democracy = yes
-			}
-			add = 200
 		}
 		
 	}
