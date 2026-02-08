@@ -583,7 +583,7 @@ arrange_accident = {
 		}
 	}
 
-	cooldown = { months = normal_modifier_time }
+	cooldown = { days = normal_modifier_time }
 	show_confirmation_box = yes
 
 	ai_chance = {
@@ -1173,7 +1173,7 @@ sabotage_interest_group = {
 		
 	}
 
-	cooldown = { months = normal_modifier_time }
+	cooldown = { months = 6 }
 	show_confirmation_box = yes
 
 	ai_chance = {
@@ -1276,4 +1276,391 @@ sabotage_interest_group = {
 		}
 	}
 	
+}
+
+bribe_character_to_retire = {
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+
+	should_ai_evaluate = {
+		has_law_or_variant = law_type:law_secret_police
+		has_variable = secret_police_action_points
+		has_variable = secret_police_loyalty
+	}
+
+	potential = {
+	
+		#Not a protected character
+		NOT = { has_modifier = unsg_character }
+		NOT = { has_modifier = pope_character }
+		NOT = { has_modifier = chief_religious_officer }
+		NOR = { has_modifier = monarch_character has_modifier = viceroy_character has_modifier = reserved_powers_holder has_modifier = head_of_intelligence }
+	
+		#Selected characters only
+		is_in_exile_pool = no
+		is_in_void = no
+		is_ruler = no
+		is_heir = no
+		
+		# Cannot exile pure commanders, we have the retire interaction for that
+		OR = {
+			has_role = politician
+			has_role = agitator
+		}
+		
+		#There is a secret police which is loyal
+		owner ?= { 
+			has_law_or_variant = law_type:law_secret_police
+			has_variable = secret_police_action_points
+			has_variable = secret_police_loyalty
+			var:secret_police_loyalty > 50
+		}
+		
+	}
+
+	show_requirements = yes
+
+	possible = {
+	
+		#Enough secret police points
+		owner ?= {
+			custom_tooltip = {
+				text = secret_police_action_5_points.tt
+				var:secret_police_action_points > 5
+			}
+		}
+	
+	
+		#Character is not on trial
+		custom_tooltip = {
+			text = not_on_trial.tt
+			NOR = {
+				has_modifier = indicted_character
+				has_modifier = convicted_character
+				has_modifier = unjustly_convicted_character
+				has_modifier = acquitted_character
+			}
+		}
+		
+		#Character is not an agitator plotting a revolution OR coup
+		trigger_if = {
+			limit = {
+				has_role = agitator
+			}
+			political_movement ?= { is_insurrectionary = no }
+		}
+		trigger_else = {
+			interest_group ?= {
+				is_insurrectionary = no
+				ig_counts_as_marginal = no
+			}
+		}
+		custom_tooltip = {
+			text = pending_coup_event_tt
+			NOT = {
+				owner = {
+					has_variable = coup_event_active
+				}
+			}
+		}
+		custom_tooltip = {
+			text = doing_coup_for_player_tt
+			NOT = {
+				has_variable = commander_doing_coup_on_player_behalf
+			}
+		}
+		
+		#Cannot exile cabinet ministers, must fire them first
+		custom_tooltip = {
+			text = not_a_cabinet_minister.tt
+			NOT = { has_modifier = cabinet_minister }
+		}
+		
+		#Ideologically different
+		custom_tooltip = {
+			text = ideology_not_too_close_tt
+			NOT = {
+				OR = {
+					AND = {
+						owner ?= {
+							OR = { 
+								has_modifier = communist_ruling_party_ideology
+								has_modifier = market_socialist_ruling_party_ideology
+								has_modifier = socialist_ruling_party_ideology
+								
+								is_a_communist_government = yes
+							}
+						}
+						has_ideology = ideology:ideology_agitator_communist
+					}
+					AND = {
+						owner ?= {
+							OR = { 
+								has_modifier = fascist_ruling_party_ideology
+								
+								is_a_nationalist_government = yes
+							}
+						}
+						has_ideology = ideology:ideology_agitator_nationalist
+					}
+					AND = {
+						owner ?= {
+							OR = { 
+								has_modifier = traditionalist_ruling_party_ideology
+								has_modifier = conservative_ruling_party_ideology
+								
+								is_a_monarchy = yes
+							}
+						}
+						has_ideology = ideology:ideology_agitator_monarchist
+					}
+					AND = {
+						owner ?= {
+							OR = { 
+								has_modifier = traditionalist_ruling_party_ideology
+								has_modifier = conservative_ruling_party_ideology
+							}
+							is_a_theocratic_government = yes
+						}
+						has_ideology = ideology:ideology_agitator_theocrat
+					}
+					AND = {
+						owner ?= {
+							has_law_or_variant = law_type:law_HOS_president
+						}
+						has_ideology = ideology:ideology_agitator_republican
+					}
+					AND = {
+						OR = {
+							owner ?= {
+								OR = { 
+									has_modifier = social_democratic_ruling_party_ideology
+									has_modifier = liberal_ruling_party_ideology
+									has_modifier = libertarian_ruling_party_ideology
+								}
+							}
+							owner.ruler = {
+								OR = {
+									has_ideology = ideology:ideology_democratic
+									has_ideology = ideology:ideology_liberal
+								}
+							}
+						}
+						has_ideology = ideology:ideology_agitator_pro_human_rights
+					}
+					AND = {
+						owner.ruler = {
+							OR = {
+								has_ideology = ideology:ideology_autocratic
+								has_ideology = ideology:ideology_power_hungry
+							}
+						}
+						has_ideology = ideology:ideology_agitator_anti_human_rights
+					}
+					AND = {
+						owner ?= {
+							is_at_war = yes
+						}
+						has_ideology = ideology:ideology_agitator_pro_war_rights
+					}
+				}
+			}
+		}
+		
+	}
+
+	effect = {
+		this.interest_group ?= {
+			save_scope_as = relevant_ig
+		}
+		this = {
+			save_scope_as = exile_scope
+		}
+		if = {
+			limit = {
+				owner = {
+					has_journal_entry = je_ip4_coup
+				}
+				root = {
+					has_variable = golpista_var
+				}
+			}
+			owner = {
+				set_variable = exile_golpista_var
+				character_execute_immediate_coup = yes
+			}
+		}
+		else = {
+			if = {
+				limit = {
+					has_role = politician
+				}
+				owner ?= {
+					scope:relevant_ig = {
+						add_modifier = {
+							name = ig_little_angry_with_government
+							days = normal_modifier_time
+							is_decaying = yes
+						}
+					}
+				}
+			}
+		}
+		owner ?= {
+			custom_tooltip = exiling_dissident_radicals_factors
+		}
+		# Extra radical from exiling a popular character
+		if = {
+			limit = {
+				popularity >= 50
+			}
+			owner ?= {
+				add_radicals = {
+					value = large_radicals
+					interest_group = scope:relevant_ig
+				}
+			}
+		}
+		# Standard radicals from having Right of Assembly
+		if = {
+			limit = {
+				owner ?= { has_law_or_variant = law_type:law_limited_free_speech }
+			}
+			owner ?= {
+				add_radicals = {
+					value = medium_radicals
+					interest_group = scope:relevant_ig
+				}
+			}
+		}
+		# Fewer radicals from Censorship
+		else_if = {
+			limit = {
+				owner ?= { has_law_or_variant = law_type:law_censorship }
+			}
+			owner ?= {
+				add_radicals = {
+					value = small_radicals
+					interest_group = scope:relevant_ig
+				}
+			}
+		}
+		#Pay character to retire
+		retire_character = yes
+	}
+
+	cooldown = { months = 12 }
+	show_confirmation_box = yes
+
+	ai_chance = {
+		value = -50
+		if = {
+			limit = {
+				is_historical = yes
+			}
+			add = -1000
+		}
+		if = {
+			limit = {
+				interest_group ?= {
+					ig_approval <= -5
+				}		
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group ?= {
+					ig_approval <= -10
+				}		
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					NOR = {
+						has_law_or_variant = law_type:law_appointed_legislature
+						has_law_or_variant = law_type:law_technocratic_legislature
+						has_law_or_variant = law_type:law_parties_not_allowed
+						has_law_or_variant = law_type:law_single_party_state
+					}
+				}			
+			}
+			add = -25
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_secret_police
+				}			
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_national_militia
+				}			
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_full_free_speech
+				}			
+			}
+			add = -100
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_outlawed_dissent
+				}			
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_censorship
+				}			
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_limited_free_speech
+				}			
+			}
+			add = -10
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_full_free_speech
+				}			
+			}
+			add = -20
+		}
+		
+		if = {
+			limit = {
+				OR = {
+					interest_group ?= {
+						ig_approval < 0
+					}
+					political_movement ?= {
+						is_being_suppressed = yes
+					}
+				}
+			}
+			add = {
+				value = popularity
+				multiply = 0.2
+			}
+		}
+		
+	}
 }
