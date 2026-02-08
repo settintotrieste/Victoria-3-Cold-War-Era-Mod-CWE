@@ -1,7 +1,217 @@
 namespace = BEN_gov_changes
 
-# The People's Republic of Benin
+# The One Party State
 BEN_gov_changes.1 = {
+    type = country_event
+
+    title = BEN_1960_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = BEN_1960_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = BEN_1960_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:BEN ?= this
+		game_date >= 1960.8.1									# START DATE: Date colony became self governing ****
+		game_date < 1970.8.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = BEN_1960_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = BEN_1960_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_dictatorship = yes
+		
+		#Hubert Maga
+		create_character = {
+			first_name = "Hubert_Maga_first_name"
+			last_name = "Hubert_Maga_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1916.8.10
+			interest_group = ig_rural_folk
+			ideology = ideology_autocratic
+			culture = cu:beninese
+			religion = rel:catholic
+			traits = {
+				cruel
+				ambitious
+				persistent
+			}
+			on_created = { set_variable = Hubert_Maga }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = lower
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# The Triumvirate
+BEN_gov_changes.2 = {
+    type = country_event
+
+    title = BEN_1970_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = BEN_1970_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = BEN_1970_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:BEN ?= this
+		game_date >= 1970.5.7									# START DATE: Date colony became self governing ****
+		game_date < 1980.5.7									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		OR = {
+			is_a_presidential_regime = yes
+			is_a_nationalist_government = yes
+		}
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Not already a collective presidency
+		NOT = {
+			active_law:lawgroup_governance_principles ?= {
+				has_amendment = amendment_type:amendment_rotating_presidency
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = BEN_1970_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = BEN_1970_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_dictatorship = yes
+		activate_law = law_type:law_yes_term_limit
+		active_law:lawgroup_governance_principles ?= {
+			add_amendment = {
+				type = amendment_rotating_presidency
+				sponsor = PREV.ig:ig_petty_bourgeoisie 
+			}
+		}
+		
+		#Create new leader
+		if = {
+			limit = { any_scope_character = { has_variable = Hubert_Maga } }
+			random_scope_character = { 
+				limit = { has_variable = Hubert_Maga }
+				set_character_as_ruler = yes
+			}
+		}
+		else = {
+			create_character = {
+				first_name = "Hubert_Maga_first_name"
+				last_name = "Hubert_Maga_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1916.8.10
+				interest_group = ig_rural_folk
+				ideology = ideology_autocratic
+				culture = cu:beninese
+				religion = rel:catholic
+				traits = {
+					cruel
+					ambitious
+					persistent
+				}
+				on_created = { set_variable = Hubert_Maga }
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			strata = middle
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# The People's Republic of Benin
+BEN_gov_changes.3 = {
     type = country_event
 
     title = BEN_1972_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -22,7 +232,10 @@ BEN_gov_changes.1 = {
 		game_date >= 1972.10.26									# START DATE: Date colony became self governing ****
 		game_date < 1982.10.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
-		is_a_communist_government = no							# Correct gov types
+		OR = {
+			is_a_presidential_regime = yes
+			is_a_nationalist_government = yes
+		}
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
@@ -95,7 +308,7 @@ BEN_gov_changes.1 = {
 }
 
 # Beninese Return to democracy
-BEN_gov_changes.2 = {
+BEN_gov_changes.4 = {
     type = country_event
 
     title = BEN_1990_revolution.t 							# Title of the event; ADD LOCALISATION
