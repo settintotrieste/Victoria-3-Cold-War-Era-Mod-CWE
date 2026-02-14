@@ -1302,6 +1302,7 @@ on_country_released_as_independent = {
 		#Create Client State if not monarchy
 		if = {
 			limit = { 
+				NOT = { has_variable = country_liberated_source }
 				scope:target = {
 					is_sufficiently_independent = yes
 					NOT = { is_a_monarchy = yes }
@@ -1311,6 +1312,78 @@ on_country_released_as_independent = {
 				create_diplomatic_pact = {
 					country = scope:target
 					type = protectorate
+				}
+			}
+		}
+		
+		#Guarantees of independence
+		if = {
+			limit = {
+				has_variable = country_liberated_source
+				NOT = { has_variable = country_liberated_source_subject }
+				NOT = { has_variable = country_liberated_source_mandate }
+			}
+			remove_variable = country_liberated_source
+			random_country = {
+				limit = { has_variable = country_liberator }
+				remove_variable = country_liberator
+				save_scope_as = country_liberator
+				create_treaty = {
+					first_country = scope:country_liberator
+					second_country = scope:target
+
+					is_draft = no
+					binding_period = { years = 10 }
+
+					articles_to_create = {
+						{
+							article = guarantee_independence
+							source_country = scope:country_liberator
+							target_country = scope:target
+						}
+						{
+							article = trade_privilege
+							source_country = scope:target
+							target_country = scope:country_liberator
+						}
+						{
+							article = foreign_investment_rights
+							source_country = scope:target
+							target_country = scope:country_liberator
+						}
+					}
+				}
+			}
+		}
+		
+		#Released as Foreign Subject
+		if = {
+			limit = {
+				has_variable = country_liberated_source_subject
+			}
+			remove_variable = country_liberated_source_subject
+			random_country = {
+				limit = { has_variable = country_liberator_overlord }
+				remove_variable = country_liberator_overlord
+				save_scope_as = country_liberator
+				create_diplomatic_pact = {
+					country = scope:target
+					type = puppet
+				}
+			}
+		}
+		if = {
+			limit = {
+				has_variable = country_liberated_source_mandate
+			}
+			remove_variable = country_liberated_source_mandate
+			random_country = {
+				limit = { has_variable = country_liberator_overlord }
+				remove_variable = country_liberator_overlord
+				save_scope_as = country_liberator
+				create_diplomatic_pact = {
+					country = scope:target
+					type = mandate
 				}
 			}
 		}
