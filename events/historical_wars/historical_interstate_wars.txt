@@ -425,6 +425,7 @@ historical_interstate_wars.4 = {
 
 historical_interstate_wars.5 = {
     type = country_event
+	placement = scope:suez_canal_state_location
 
     title = suez_crisis_war.t 								# Title of the event; ADD LOCALISATION
     desc = suez_crisis_war.d 								# Description of the event; ADD LOCALISATION
@@ -458,14 +459,26 @@ historical_interstate_wars.5 = {
 				exists = c:GBR
 				c:GBR ?= { 												# Change TAG of the transferee ****
 					is_sufficiently_independent = yes
-					has_state_in_state_region = STATE_SINAI
+					OR = { 
+						has_state_in_state_region = STATE_SINAI
+						AND = {
+							exists = c:SCZ
+							has_diplomatic_pact = { who = c:SCZ type = condominium is_initiator = yes }
+						}
+					}
 				}
 			}
 			AND = {
 				exists = c:FRA
 				c:FRA ?= { 												# Change TAG of the transferee ****
 					is_sufficiently_independent = yes
-					has_state_in_state_region = STATE_SINAI
+					OR = { 
+						has_state_in_state_region = STATE_SINAI
+						AND = {
+							exists = c:SCZ
+							has_diplomatic_pact = { who = c:SCZ type = condominium is_initiator = yes }
+						}
+					}
 				}
 			}
 		}
@@ -476,6 +489,15 @@ historical_interstate_wars.5 = {
     }
 	
 	immediate = {
+	
+		random_state = {
+			limit = { state_region = s:STATE_SINAI }
+			save_scope_as = suez_canal_state_location
+		}
+		if = {
+			limit = { exists = c:SCZ }
+			c:SCZ = { save_scope_as = suez_canal_state_location }
+		}
 	
 		# Fire only once
 		set_variable = suez_crisis_war_hiw						# Change variable ****
@@ -491,7 +513,13 @@ historical_interstate_wars.5 = {
 			limit = { 
 				OR = { c:GBR ?= this c:FRA ?= this } 
 				is_sufficiently_independent = yes
-				has_state_in_state_region = STATE_SINAI
+				OR = { 
+					has_state_in_state_region = STATE_SINAI
+					AND = {
+						exists = c:SCZ
+						has_diplomatic_pact = { who = c:SCZ type = condominium is_initiator = yes }
+					}
+				}
 			}
 			trigger_event = { id = historical_interstate_wars.6 }
 		}
@@ -511,7 +539,13 @@ historical_interstate_wars.5 = {
 			limit = { 
 				OR = { c:GBR ?= this c:FRA ?= this } 
 				is_sufficiently_independent = yes
-				has_state_in_state_region = STATE_SINAI
+				OR = { 
+					has_state_in_state_region = STATE_SINAI
+					AND = {
+						exists = c:SCZ
+						has_diplomatic_pact = { who = c:SCZ type = condominium is_initiator = yes }
+					}
+				}
 			}
 			change_relations = {
 				country = ROOT
@@ -541,6 +575,7 @@ historical_interstate_wars.5 = {
 
 historical_interstate_wars.6 = {
     type = country_event
+	placement = scope:suez_canal_state_location
 
     title = suez_crisis_war.t 							# Title of the event; ADD LOCALISATION
     desc = suez_crisis_war.d 							# Description of the event; ADD LOCALISATION
@@ -560,12 +595,28 @@ historical_interstate_wars.6 = {
     }
 	
 	immediate = {
+	
 		save_scope_as = suez_canal_owner
+		
+		random_state = {
+			limit = { state_region = s:STATE_SINAI }
+			save_scope_as = suez_canal_state_location
+		}
+		if = {
+			limit = { exists = c:SCZ }
+			c:SCZ = { save_scope_as = suez_canal_state_location }
+		}
 		
 		random_scope_state = {
 			limit = { state_region = s:STATE_SINAI }
 			save_scope_as = suez_canal_state
 		}
+		
+		random_country = {
+			limit = { c:SCZ ?= this }
+			save_scope_as = suez_canal_country
+		}
+		
 	}
     
     option = {
@@ -573,9 +624,52 @@ historical_interstate_wars.6 = {
         highlighted_option = yes
 		
 		#Transfer territories
+		if = {
+			limit = {
+				exists = c:SCZ
+				has_diplomatic_pact = { who = c:SCZ type = condominium is_initiator = yes }
+			}
+			if = {
+				limit = { 
+					c:EGY ?= { 
+						NOT = { 
+							has_diplomatic_pact = { who = c:SCZ type = condominium is_initiator = yes }
+						} 
+					}
+				}
+				c:EGY ?= {
+					create_diplomatic_pact = {
+						country = c:SCZ
+						type = condominium
+					}
+				}
+			}
+			remove_diplomatic_pact = { country = c:SCZ type = condominium }
+			c:SCZ ?= { hidden_effect = { make_independent = yes } }
+		}
+		if = {
+			limit = {
+				exists = c:SCZ
+				c:SCZ ?= { is_subject_of = c:EGY }
+			}
+			c:EGY ?= { annex_with_incorporation = c:SCZ }
+		}
 		random_scope_state = {
 			limit = { state_region = s:STATE_SINAI }
 			set_state_owner = c:EGY
+		}
+		if = {
+			limit = { 
+				exists = c:SCZ
+				c:SCZ ?= {
+					has_diplomatic_pact = { who = c:EGY type = condominium is_initiator = yes }
+					any_scope_diplomatic_pact = {
+						is_diplomatic_action_type = condominium
+						count < 2
+					}
+				}
+			}
+			c:EGY ?= { annex_with_incorporation = c:SCZ }
 		}
 		
 		#National humiliation
@@ -646,24 +740,95 @@ historical_interstate_wars.6 = {
 		
 		#Trigger war
 		c:EGY = {
-			create_diplomatic_play = {
-				name = suez_crisis_war
-				type = dp_take_treaty_port
-				target_state = scope:suez_canal_state
-			
-				#war = yes
-
-				add_war_goal = {
-					holder = scope:suez_canal_owner
-					type = humiliation
-					target_country = c:EGY
+			if = {
+				limit = {
+					exists = scope:suez_canal_state 
 				}
-				add_war_goal = {
-					holder = scope:suez_canal_owner
-					type = regime_change
-					target_country = c:EGY
+				create_diplomatic_play = {
+					name = suez_crisis_war
+					type = dp_return_state_historical
+					target_state = scope:suez_canal_state
+				
+					#war = yes
+
+					add_war_goal = {
+						holder = scope:suez_canal_owner
+						type = humiliation
+						target_country = c:EGY
+					}
+					add_war_goal = {
+						holder = scope:suez_canal_owner
+						type = regime_change
+						target_country = c:EGY
+					}
 				}
 			}
+			if = {
+				limit = { 
+					exists = scope:suez_canal_country 
+					NOT = { is_diplomatic_play_enemy_of = scope:suez_canal_country }
+				}
+				create_diplomatic_play = {
+					name = suez_crisis_war
+					type = dp_annex_war_historical
+					target_country = scope:suez_canal_country
+				
+					#war = yes
+
+					add_war_goal = {
+						holder = scope:suez_canal_owner
+						type = humiliation
+						target_country = c:EGY
+					}
+					add_war_goal = {
+						holder = scope:suez_canal_owner
+						type = regime_change
+						target_country = c:EGY
+					}
+				}
+			}
+		}
+		random_diplomatic_play = {
+			limit = {
+				initiator_is = c:EGY
+				target_is = c:SCZ
+			}
+			add_target_backers = {
+				ROOT
+			}
+		}
+		if = {
+			limit = { c:GBR ?= this }
+			random_diplomatic_play = {
+				limit = {
+					initiator_is = c:EGY
+					target_is = c:FRA
+				}
+				add_target_backers = {
+					c:GBR
+				}
+			}
+		}
+		if = {
+			limit = { c:FRA ?= this }
+			random_diplomatic_play = {
+				limit = {
+					initiator_is = c:EGY
+					target_is = c:GBR
+				}
+				add_target_backers = {
+					c:FRA
+				}
+			}
+		}
+		random_country = {
+			limit = {
+				c:ISR ?= this
+				is_sufficiently_independent = yes
+				NOT = { is_subject_of = c:EGY }
+				NOT = { is_diplomatic_play_ally_of = c:SCZ }
+			}
+			trigger_event = { id = historical_alliances_system.35 }
 		}
 		
 		ai_chance = { 

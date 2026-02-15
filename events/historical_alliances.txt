@@ -3237,3 +3237,102 @@ historical_alliances_system.34 = {
     }
 
 }
+
+# Israeli Intervention in the Suez Crisis
+historical_alliances_system.35 = {
+    type = country_event
+	placement = scope:suez_canal_state_location
+
+    title = suez_crisis_war.t 							# Title of the event; ADD LOCALISATION
+    desc = suez_crisis_war.d 							# Description of the event; ADD LOCALISATION
+    #flavor = suez_crisis_war.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		random_state = {
+			limit = { state_region = s:STATE_SINAI }
+			save_scope_as = suez_canal_state_location
+		}
+		if = {
+			limit = { exists = c:SCZ }
+			c:SCZ = { save_scope_as = suez_canal_state_location }
+		}
+		
+		set_variable = ISR_joins_suez_crisis
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#Join war
+		random_diplomatic_play = {
+			limit = {
+				initiator_is = c:EGY
+				OR = { 
+					target_is = c:FRA
+					target_is = c:GBR
+				}
+				any_scope_play_involved = {
+					NOT = { THIS = ROOT }
+				}
+			}
+			add_target_backers = {
+				ROOT
+			}
+		}
+		random_diplomatic_play = {
+			limit = {
+				initiator_is = c:EGY
+				target_is = c:SCZ
+			}
+			add_target_backers = {
+				ROOT
+			}
+		}
+		
+		#Domestic
+		add_loyalists = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		#Lose relations
+		every_country = {
+			limit = { OR = { c:GBR ?= this c:FRA ?= this } }
+			change_relations = {
+				country = ROOT
+				value = -50
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 }
+		}
+		
+    }
+
+}
