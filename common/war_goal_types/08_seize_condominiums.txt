@@ -1,0 +1,145 @@
+﻿seize_condominiums = {
+	icon = "gfx/interface/icons/war_goals/conquer_state.dds"
+
+	kind = custom
+
+	settings = {
+		require_target_be_part_of_war
+
+		# Validation
+		validate_conflicts_war_goals_all
+	}
+
+	execution_priority = 18
+
+	contestion_type = control_any_target_country_state
+
+	target_type = country
+
+	possible = {
+		# trigger to determine if a goal with its target data is listed when selecting a war goal in the diplo play panel
+		# scopes: root = holder, creator_country, diplomatic_play, target_country, target_state, stakeholder, target_region, article_options
+		custom_tooltip = {
+			text = "THIS_OWNS_CONDOMINIUMS"
+			scope:target_country = {
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = condominium
+					first_country = scope:target_country
+				}
+			}
+		}
+	}
+
+	valid = {
+		# trigger in addition to some basic validation code-side
+		# scopes: root = holder, creator_country, diplomatic_play, target_country, target_state, stakeholder, target_region, article_options
+		custom_tooltip = {
+			text = "THIS_OWNS_CONDOMINIUMS"
+			scope:target_country = {
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = condominium
+					first_country = scope:target_country
+				}
+			}
+		}
+	}
+
+	maneuvers = {
+		value = 0
+
+		add = {
+			desc = "MANEUVERS_BASE_VALUE"
+			value = 20
+		}
+	}
+
+	infamy = {
+		value = 0
+
+		add = {
+			desc = "INFAMY_BASE_VALUE"
+			value = 2
+		}
+
+		scope:target_country = {
+			multiply = {
+				desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
+				add = {
+					every_country = {
+						limit = { has_diplomatic_pact = { who = scope:target_country type = condominium is_initiator = no } }
+						every_scope_state = {
+							add = {
+								value = state_population
+								divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+								multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+								multiply = {
+									value = 1
+									if = {
+										limit = {
+											is_homeland_of_country_cultures = root
+										}
+										add = define:NDiplomacy|WAR_GOAL_INFAMY_HOMELAND_FACTOR
+									}
+								}
+								multiply = {
+									value = 1
+									if = {
+										limit = {
+											is_incorporated = no
+										}
+										add = define:NDiplomacy|WAR_GOAL_INFAMY_UNINCORPORATED_FACTOR
+									}
+								}
+								max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_PER_STATE
+							}
+						}
+					}
+				}
+				add = 1
+				max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+			}
+		}
+
+		multiply = {
+			desc = "country_infamy_generation_against_unrecognized_mult"
+			value = 1
+			every_country = {
+				limit = { has_diplomatic_pact = { who = scope:target_country type = condominium is_initiator = no } }
+				if = {
+					limit = {
+						NOR = {
+							is_country_type = unrecognized
+							is_country_type = decentralized
+						}
+						scope:target_country = {
+							OR = {
+								is_country_type = unrecognized
+								is_country_type = decentralized
+							}
+						}
+					}
+					add = modifier:country_infamy_generation_against_unrecognized_mult
+				}
+			}
+		}
+
+		min = {
+			desc = "INFAMY_MINIMUM_VALUE"
+			value = 2
+		}
+	}
+
+	on_enforced = {
+		# script effect on top of the predefined code effect
+		set_variable = { name = condominium_overlord days = 2 }
+		scope:target_country ?= { set_variable = { name = condominium_loser days = 2 } }
+		every_country = {
+			limit = { has_diplomatic_pact = { who = scope:target_country type = condominium is_initiator = no } }
+			trigger_event = { id = revolution_system.17 }
+		}
+	}
+
+	ai = {
+		is_significant_demand = no
+	}
+}

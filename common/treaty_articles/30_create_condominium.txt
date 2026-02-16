@@ -74,7 +74,15 @@
 		max_consecutive_contraventions = 4
 		conditions = {
 			weekly = {
-				scope:article.input_country ?= { NOT = { has_modifier = condominium_modifier } }
+				scope:article.input_country ?= { 
+					OR = { 
+						NOT = { has_modifier = condominium_modifier }
+						NAND = {
+							has_diplomatic_pact = { who = scope:article.target_country type = condominium is_initiator = no }
+							has_diplomatic_pact = { who = scope:article.source_country type = condominium is_initiator = no }
+						}
+					}
+				}
 			}
 		}
 	}
@@ -216,12 +224,6 @@
 			}
 		}
 		scope:non_withdrawing_country = {
-			hidden_effect = { 
-				if = {
-					limit = { has_diplomatic_pact = { who = scope:article_options.input_country type = condominium is_initiator = yes } }
-					remove_diplomatic_pact = { country = scope:article_options.input_country type = condominium } 
-				}
-			}
 			scope:article_options.input_country = {
 				if = { 
 					limit = { is_subject_of = scope:withdrawing_country }
@@ -254,6 +256,43 @@
 						create_diplomatic_pact = {
 							country = scope:article_options.input_country
 							type = semi_autonomous_colony
+						}
+					}
+				}
+			}
+			hidden_effect = {
+				if = {
+					limit = { 
+						has_diplomatic_pact = { who = scope:article_options.input_country type = condominium is_initiator = yes }
+						NOT = {
+							any_scope_treaty = {
+								binds = scope:non_withdrawing_country
+								any_scope_article = {
+									has_type = create_condominium
+									target_country = scope:non_withdrawing_country
+									input_country = scope:article_options.input_country
+								}
+							}
+						}
+					}
+					every_country = {
+						limit = { has_diplomatic_pact = { who = scope:article_options.input_country type = condominium is_initiator = yes } }
+						create_treaty = {
+							first_country = scope:non_withdrawing_country
+							second_country = THIS
+
+							is_draft = no
+
+							articles_to_create = {
+								{
+									article = create_condominium
+									source_country = scope:non_withdrawing_country
+									target_country = THIS
+									inputs = {
+										{ country = scope:article_options.input_country }
+									}
+								}
+							}
 						}
 					}
 				}
