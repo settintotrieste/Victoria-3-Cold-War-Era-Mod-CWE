@@ -94,7 +94,15 @@ colonial_empire_system.2 = {
 			is_sufficiently_independent = no
 			is_direct_subject_of = ROOT
 			has_healthy_economy = no
-			NOT = { has_diplomatic_pact = { who = ROOT type = bankroll_subject is_initiator = no } }
+			OR = { 
+				NOT = { 
+					any_scope_diplomatic_pact = {
+						is_diplomatic_action_type = bankroll_subject
+						first_country = ROOT
+					}
+				}
+				in_default = yes
+			}
 		}
 		
 	}
@@ -106,7 +114,15 @@ colonial_empire_system.2 = {
 				is_direct_subject_of = ROOT
 				is_sufficiently_independent = no
 				has_healthy_economy = no
-				NOT = { has_diplomatic_pact = { who = ROOT type = bankroll_subject is_initiator = no } }
+				OR = { 
+					NOT = { 
+						any_scope_diplomatic_pact = {
+							is_diplomatic_action_type = bankroll_subject
+							first_country = ROOT
+						}
+					}
+					in_default = yes
+				}
 			}
 			save_scope_as = colonial_empire_debtor
 		}
@@ -118,9 +134,19 @@ colonial_empire_system.2 = {
 		
 		if = {
 			limit = { exists = scope:colonial_empire_debtor }
-			create_diplomatic_pact = {
-				country = scope:colonial_empire_debtor
-				type = bankroll_subject
+			if = {
+				limit = { NOT = { has_diplomatic_pact = { who = scope:colonial_empire_debtor type = bankroll_subject is_initiator = yes } } }
+				create_diplomatic_pact = {
+					country = scope:colonial_empire_debtor
+					type = bankroll_subject
+				}
+			}
+			if = {
+				limit = { scope:colonial_empire_debtor = { in_default = yes } }
+				take_on_scaled_debt = {
+					who = scope:colonial_empire_debtor
+					value = scope:colonial_empire_debtor.scaled_debt
+				}
 			}
 		}
 		
