@@ -38,13 +38,25 @@ je_generic_decolonisation_civil_disobedience_button = {
 			limit = {
 				is_primary_culture_of = ROOT
 			}
-			add_fervor = 10
+			add_fervor = 20
+		}
+		
+		#Increase liberty desire
+		if = {
+			limit = { is_subject = yes }
+			add_liberty_desire = 20
 		}
 		
 		#Disobedience
 		add_modifier = { 
 			name = colonial_disobedience_modifier 
 			years = 1
+		}
+		
+		#Lose relations
+		if = {
+			limit = { is_subject = yes }
+			change_relations = { country = overlord value = -50 }
 		}
 		
 	}
@@ -100,15 +112,9 @@ je_generic_decolonisation_colonial_purge_button = {
 
 	effect = {
 		
-		#Decrease fervor
+		#Decrease fervor in subjects
 		custom_tooltip = {
 			text = colonial_lose_fervor.tt
-			every_scope_culture = {
-				limit = {
-					NOT = { is_primary_culture_of = ROOT }
-				}
-				add_fervor = -20
-			}
 			every_country = {
 				limit = {
 					is_subject_of = ROOT
@@ -116,10 +122,34 @@ je_generic_decolonisation_colonial_purge_button = {
 				}
 				every_scope_culture = {
 					limit = {
-						NOT = { is_primary_culture_of = ROOT }
+						is_primary_culture_of = prev
 					}
 					add_fervor = -20
 				}
+			}
+		}
+		
+		#Decrease liberty desire
+		custom_tooltip = {
+			text = colonial_lose_liberty_desire.tt
+			every_country = {
+				limit = {
+					is_subject_of = ROOT
+					NOT = { is_sufficiently_independent = yes }
+				}
+				add_liberty_desire = -20
+			}
+		}
+		
+		#Lose relations with subjects
+		custom_tooltip = {
+			text = colonial_lose_relations.tt
+			every_country = {
+				limit = {
+					is_subject_of = ROOT
+					NOT = { is_sufficiently_independent = yes }
+				}
+				change_relations = { country = ROOT value = -50 }
 			}
 		}
 		
@@ -171,7 +201,8 @@ je_generic_decolonisation_colonial_purge_button = {
 		
 		#AI will only do this if country has a revolution
 		modifier = { 
-			trigger = { 
+			trigger = {
+				OR = { has_revolution = yes has_any_secessionists_broken_out = yes }
 				ruler ?= { character_is_autocratic = yes }
 			}
 			add = 10 
