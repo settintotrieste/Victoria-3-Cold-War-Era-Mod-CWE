@@ -1,0 +1,182 @@
+je_generic_decolonisation_civil_disobedience_button = {
+	name = "je_generic_decolonisation_civil_disobedience_button"
+	desc = "je_generic_decolonisation_civil_disobedience_button_desc"
+
+	visible = {
+		
+	}
+
+	possible = {
+		
+		#Once per year
+		NOT = { has_modifier = colonial_disobedience_modifier }
+		
+		#Sufficient support
+		government_has_legislative_simple_majority = yes
+		
+		#Ruler is not colonial
+		any_scope_character = {
+			OR = { 
+				is_ruler = yes
+				AND = { 
+					has_role = politician
+					interest_group = {
+						is_in_government = yes 
+						is_powerful = yes
+					}
+				}
+			}
+			culture = { is_primary_culture_of = ROOT }
+		}
+		
+	}
+
+	effect = {
+		
+		#Increase fervor
+		every_scope_culture = {
+			limit = {
+				is_primary_culture_of = ROOT
+			}
+			add_fervor = 10
+		}
+		
+		#Disobedience
+		add_modifier = { 
+			name = colonial_disobedience_modifier 
+			years = 1
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if country has a revolution
+		modifier = { 
+			trigger = { 
+				ruler ?= { character_is_autocratic = yes }
+			}
+			add = 10 
+		}
+		
+	}
+	
+}
+
+je_generic_decolonisation_colonial_purge_button = {
+	name = "je_generic_decolonisation_colonial_purge_button"
+	desc = "je_generic_decolonisation_colonial_purge_button_desc"
+
+	visible = {
+		
+	}
+
+	possible = {
+		
+		#Once per year
+		NOT = { has_modifier = colonial_purge_modifier }
+		
+		#Sufficient support
+		government_has_legislative_simple_majority = yes
+		
+		#Violent policing allowed
+		OR = {
+			has_law_or_variant = law_type:law_strict_policing
+			has_law_or_variant = law_type:law_draconian_policing
+		}
+		
+		#Free speech is not allowed
+		NOT = { has_law_or_variant = law_type:law_full_free_speech }
+		
+		#Ruler is not colonial
+		any_scope_character = {
+			is_ruler = yes
+			character_is_democratic = no
+			culture = { is_primary_culture_of = ROOT }
+		}
+		
+	}
+
+	effect = {
+		
+		#Decrease fervor
+		custom_tooltip = {
+			text = colonial_lose_fervor.tt
+			every_scope_culture = {
+				limit = {
+					NOT = { is_primary_culture_of = ROOT }
+				}
+				add_fervor = -20
+			}
+			every_country = {
+				limit = {
+					is_subject_of = ROOT
+					NOT = { is_sufficiently_independent = yes }
+				}
+				every_scope_culture = {
+					limit = {
+						NOT = { is_primary_culture_of = ROOT }
+					}
+					add_fervor = -20
+				}
+			}
+		}
+		
+		#Casualties of purge
+		custom_tooltip = {
+			text = colonial_lose_pop.tt
+			every_scope_culture = {
+				limit = {
+					NOT = { is_primary_culture_of = ROOT }
+				}
+				save_scope_as = targeted_culture
+				prev = {
+					kill_population_percent = {
+						percent = 0.005
+						culture = scope:targeted_culture
+					}
+				}
+			}
+			every_country = {
+				limit = {
+					is_subject_of = ROOT
+					NOT = { is_sufficiently_independent = yes }
+				}
+				every_scope_culture = {
+					limit = {
+						NOT = { is_primary_culture_of = ROOT }
+					}
+					save_scope_as = targeted_culture
+					prev = {
+						kill_population_percent = {
+							percent = 0.005
+							culture = scope:targeted_culture
+						}
+					}
+				}
+			}
+		}
+		
+		#Purge
+		add_modifier = { 
+			name = colonial_purge_modifier 
+			years = 1
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if country has a revolution
+		modifier = { 
+			trigger = { 
+				ruler ?= { character_is_autocratic = yes }
+			}
+			add = 10 
+		}
+		
+	}
+	
+}
