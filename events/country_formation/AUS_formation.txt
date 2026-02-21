@@ -3,14 +3,15 @@ namespace = austria_formation
 #Austria - USA
 austria_formation.1 = {
     type = country_event
+	placement = c:AUS
 
-    title = austria_formation.t 			# Title of the event; ADD LOCALISATION
-    desc = austria_formation.d 				# Description of the event; ADD LOCALISATION
-    #flavor = austria_formation.f 			# Flavor for event; ADD LOCALISATION, IF REQUIRED
+    title = austria_formation.t 								# Title of the event; ADD LOCALISATION
+    desc = austria_formation.d 									# Description of the event; ADD LOCALISATION
+    #flavor = austria_formation.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
 
     event_image = { video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2" }
 
-    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
     on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
 
     duration = 1 # Duration to fire if triggers are met
@@ -18,7 +19,7 @@ austria_formation.1 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:USA this = c:USA											# Change TAG of the overlord ****
+		c:USA ?= this											# Change TAG of the overlord ****
 		game_date >= 1955.5.15									# START DATE: Date colony became self governing ****
 		game_date < 1965.5.15									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -26,28 +27,23 @@ austria_formation.1 = {
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
+		# Event has not been fired before
+		NOT = { has_variable = american_austria_htt }			# CHANGE ****
+		
+		#Austria exists
+		exists = c:AUS
+		has_diplomatic_pact = { who = c:AUS type = condominium is_initiator = yes }
+		
 		#Recipent conditions
 		exists = c:SOV
-		c:SOV = { 												# Change TAG of the transferee ****
+		c:SOV ?= { 												# Change TAG of the transferee ****
 			is_a_communist_government = yes
 			is_sufficiently_independent = yes
 			is_at_war = no
 			
 			#Colony conditions
-			c:EAU ?= { 											# Change TAG of the colony ****
-				is_direct_subject_of = c:SOV
-				is_subject_type = subject_type_mandate
-			}
+			has_diplomatic_pact = { who = c:AUS type = condominium is_initiator = yes }
 		}
-		
-		#Colony conditions
-		c:WAU ?= { 												# Change TAG of the colony ****
-			is_direct_subject_of = ROOT
-			is_subject_type = subject_type_mandate
-		}
-		
-		# Event has not been fired before
-		NOT = { has_variable = american_austria_htt }			# CHANGE ****
 		
     }
 	
@@ -62,14 +58,66 @@ austria_formation.1 = {
         name = austria_formation.option.1		# Accept land transfer request by FROM
         highlighted_option = yes
 		
-		#Option for USSR to accept
-		c:SOV = { 
+		#Option for USSR et al to accept
+		every_country = { 
+			limit = { 
+				NOT = { THIS = ROOT }
+				has_diplomatic_pact = { who = c:AUS type = condominium is_initiator = yes }
+			}
 			trigger_event = { id = austria_formation.2 } 
+		}
+		
+		#End condominium
+		remove_diplomatic_pact = { country = c:AUS type = condominium }
+		if = {
+			limit = { c:AUS = { is_subject_of = ROOT } }
+			make_independent = yes
+		}
+		c:AUS ?= { 
+			effect_starting_politics_war_policy_pacifism = yes
+		}
+		
+		#Austrian State Treaty
+		c:AUS ?= {
+			create_treaty = {
+				name = treaty_name_AUS_state_treaty
+				first_country = ROOT
+				second_country = c:AUS
+
+				is_draft = no
+				binding_period = { years = 10 }
+
+				articles_to_create = {
+					{
+						article = foreign_investment_rights
+						source_country = c:AUS
+						target_country = ROOT
+					}
+					{
+						article = trade_privilege
+						source_country = c:AUS
+						target_country = ROOT
+					}
+					{
+						article = law_commitment
+						source_country = c:AUS
+						target_country = ROOT
+						inputs = {
+							{ law_type = law_type:law_no_war }
+						}
+					}
+					{
+						article = guarantee_independence
+						source_country = ROOT
+						target_country = c:AUS
+					}
+				}
+			}
 		}
 		
 		#FROM is happy!
 		change_relations = {
-			country = c:WAU
+			country = c:AUS
 			value = 50
 		}
 		
@@ -84,17 +132,12 @@ austria_formation.1 = {
 		
 		#FROM is angry!
 		change_relations = {
-			country = c:WAU
+			country = c:AUS
 			value = -100
 		}
 		
-		#FROM is angry!
-		change_relations = {
-			country = c:EAU
-			value = -100
-		}
-		
-		c:WAU = {
+		#Effect on AUS
+		c:AUS ?= {
 		
 			# Natives are angry!
 			every_scope_state = {
@@ -108,7 +151,10 @@ austria_formation.1 = {
 		}
 		
 		# Add Infamy because doing this is against international law
-		change_infamy = 10
+		create_incident = {
+			value = 20
+			country = c:AUS
+		}
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
@@ -117,9 +163,10 @@ austria_formation.1 = {
 
 }
 
-#Austria - USSR
+#Austria - USSR et al
 austria_formation.2 = {
     type = country_event
+	placement = c:AUS
 
     title = austria_formation.t 			# Title of the event; ADD LOCALISATION
     desc = austria_formation.d 				# Description of the event; ADD LOCALISATION
@@ -144,18 +191,53 @@ austria_formation.2 = {
 		
 		#FROM is happy!
 		change_relations = {
-			country = prev
+			country = c:USA
 			value = 50
 		}
 		
 		#Form independent, neutral & democratic austria
-		c:WAU = {
-			annex = c:EAU
-			
-			effect_starting_politics_war_policy_pacifism = yes
-			
+		remove_diplomatic_pact = { country = c:AUS type = condominium }
+		if = {
+			limit = { c:AUS = { is_subject_of = ROOT } }
 			make_independent = yes
-			change_tag = AUS
+		}
+		
+		#Austrian State Treaty
+		c:AUS ?= {
+			create_treaty = {
+				name = treaty_name_AUS_state_treaty
+				first_country = ROOT
+				second_country = c:AUS
+
+				is_draft = no
+				binding_period = { years = 10 }
+
+				articles_to_create = {
+					{
+						article = foreign_investment_rights
+						source_country = c:AUS
+						target_country = ROOT
+					}
+					{
+						article = trade_privilege
+						source_country = c:AUS
+						target_country = ROOT
+					}
+					{
+						article = law_commitment
+						source_country = c:AUS
+						target_country = ROOT
+						inputs = {
+							{ law_type = law_type:law_no_war }
+						}
+					}
+					{
+						article = guarantee_independence
+						source_country = ROOT
+						target_country = c:AUS
+					}
+				}
+			}
 		}
 		
 		ai_chance = { 
@@ -174,33 +256,17 @@ austria_formation.2 = {
 			value = -100
 		}
 		
-		#FROM is angry!
+		#AUS is angry!
 		change_relations = {
-			country = c:WAU
+			country = c:AUS
 			value = -100
-		}
-		
-		#FROM is angry!
-		change_relations = {
-			country = c:EAU
-			value = -100
-		}
-		
-		c:EAU = {
-		
-			# Natives are angry!
-			every_scope_state = {
-				limit = { state_region = { is_homeland = cu:austrian } }
-				add_radicals_in_state = {
-					value = large_radicals
-				}
-				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
-			}
-			
 		}
 		
 		# Add Infamy because doing this is against international law
-		change_infamy = 10
+		create_incident = {
+			value = 20
+			country = c:AUS
+		}
 		
 		ai_chance = { 
 			base = 0 
