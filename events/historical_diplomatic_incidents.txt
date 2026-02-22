@@ -4251,3 +4251,209 @@ historical_diplomatic_incidents.42 = {
     }
 
 }
+
+# The Joint Comprehensive Plan of Action - USA
+historical_diplomatic_incidents.43 = {
+    type = country_event
+	placement = c:PER
+
+    title = USA_PER_START.t 									# Title of the event; ADD LOCALISATION
+    desc = USA_PER_START.d 										# Description of the event; ADD LOCALISATION
+    #flavor = USA_PER_START.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 2016.1.16									# START DATE: Date colony became self governing ****
+		game_date < 2026.1.16									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#THIS is a super power
+		country_rank = rank_value:super_power
+		
+		#Has nuclear weapons
+		has_modifier = nuclear_capability
+		
+		#Not Trump
+		NOT = { ruler ?= { has_variable = Donald_Trump } }
+		
+		#Iran conditions
+		exists = c:PER
+		c:PER ?= {
+			is_a_theocratic_government = yes
+			is_sufficiently_independent = yes
+			
+			#Has nuclear weapons
+			has_journal_entry = je_develop_nuclear_weapons
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_PER_START_hae }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_PER_START_hae						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1				# Accept
+        highlighted_option = yes
+		
+		#Choice for PER
+		c:PER ?= {
+			trigger_event = { id = historical_diplomatic_incidents.44 }
+		}
+		
+		#Israel likes this
+		random_country = {
+			limit = { c:ISR ?= this }
+			change_relations = {
+				country = c:USA
+				value = 25
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# The Joint Comprehensive Plan of Action - PER
+historical_diplomatic_incidents.44 = {
+    type = country_event
+	placement = c:USA
+
+    title = USA_PER_START.t 										# Title of the event; ADD LOCALISATION
+    desc = USA_PER_START.d 											# Description of the event; ADD LOCALISATION
+    #flavor = USA_PER_START.f 										# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		# Joint Comprehensive Plan of Action treaty
+		create_treaty = {
+			name = treaty_name_START_treaty_PER_USA
+			first_country = c:USA
+			second_country = c:PER
+
+			is_draft = no
+			binding_period = { years = 20 }
+
+			articles_to_create = {
+				{
+					article = pause_nuclear_weapons_development
+					source_country = c:PER
+					target_country = c:USA
+				}
+			}
+		}
+		
+		change_relations = {
+			country = c:USA
+			value = 25
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		#Infamy
+		create_incident = {
+			country = ROOT
+			value = 20
+		}
+		
+		#Consequences
+		c:USA ?= {
+			create_diplomatic_pact = {
+				country = ROOT
+				type = embargo
+			}
+			change_relations = {
+				country = c:USA
+				value = -25
+			}
+		}
+		
+		#Israel hates this
+		random_country = {
+			limit = { c:ISR ?= this }
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 }
+		}
+		
+    }
+
+}
