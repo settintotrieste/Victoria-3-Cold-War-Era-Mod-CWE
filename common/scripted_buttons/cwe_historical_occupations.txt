@@ -1,0 +1,121 @@
+je_occupation_of_austria_end_occupation_button = {
+	name = "je_occupation_of_austria_end_occupation_button"
+	desc = "je_occupation_of_austria_end_occupation_button_desc"
+
+	visible = {
+	
+		#Occupies Austria in a condominium
+		exists = c:AUS
+		c:AUS ?= { has_modifier = condominium_modifier }
+		has_diplomatic_pact = { who = c:AUS type = condominium is_initiator = yes }
+		
+	}
+
+	possible = {
+	
+		is_sufficiently_independent = yes
+		is_at_war = no
+		
+		c:AUS ?= { is_at_war = no }
+		
+	}
+
+	effect = {
+		
+		#International reaction
+		change_infamy = -10
+		
+		#Option for USSR et al to accept
+		every_country = { 
+			limit = { 
+				NOT = { THIS = ROOT }
+				has_diplomatic_pact = { who = c:AUS type = condominium is_initiator = yes }
+			}
+			trigger_event = { id = austria_formation.2 } 
+		}
+		
+		#End condominium
+		remove_diplomatic_pact = { country = c:AUS type = condominium }
+		if = {
+			limit = { c:AUS = { is_subject_of = ROOT } }
+			make_independent = yes
+		}
+		c:AUS ?= {
+			effect_starting_politics_war_policy_pacifism = yes
+		}
+		
+		#Austrian State Treaty
+		every_scope_treaty = {
+			limit = {
+				binds = c:AUS
+				any_scope_article = {
+					OR = { 
+						has_type = foreign_investment_rights
+						has_type = trade_privilege
+						has_type = guarantee_independence
+					}
+				}
+			}
+			withdraw = {
+				country = ROOT
+			}
+		}
+		c:AUS ?= {
+			create_treaty = {
+				name = treaty_name_AUS_state_treaty
+				first_country = ROOT
+				second_country = c:AUS
+
+				is_draft = no
+				binding_period = { years = 10 }
+
+				articles_to_create = {
+					{
+						article = foreign_investment_rights
+						source_country = c:AUS
+						target_country = ROOT
+					}
+					{
+						article = trade_privilege
+						source_country = c:AUS
+						target_country = ROOT
+					}
+					{
+						article = law_commitment
+						source_country = c:AUS
+						target_country = ROOT
+						inputs = {
+							{ law_type = law_type:law_no_war }
+						}
+					}
+					{
+						article = guarantee_independence
+						source_country = ROOT
+						target_country = c:AUS
+					}
+				}
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if ruler is hated
+		modifier = { 
+			trigger = {
+				OR = {
+					AND = {
+						infamy >= infamy_threshold:pariah
+						ruler ?= { character_is_autocratic = no }
+					}
+					in_default = yes
+				}
+			}
+			add = 10
+		}
+		
+	}
+	
+}
