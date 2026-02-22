@@ -305,3 +305,223 @@ austria_formation.2 = {
     }
 
 }
+
+#Second Control Agreement - USA
+austria_formation.3 = {
+    type = country_event
+	placement = c:EAU
+
+    title = austria_formation_1946.t 							# Title of the event; ADD LOCALISATION
+    desc = austria_formation_1946.d 							# Description of the event; ADD LOCALISATION
+    #flavor = austria_formation_1946.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		has_global_variable = 1946_start_date
+		
+		#Overlord conditions
+		c:USA ?= this											# Change TAG of the overlord ****
+		game_date >= 1946.6.28									# START DATE: Date colony became self governing ****
+		game_date < 1956.6.28									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Recipent conditions
+		exists = c:SOV
+		c:SOV ?= { 												# Change TAG of the transferee ****
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			
+			#Colony conditions
+			c:EAU ?= { 											# Change TAG of the colony ****
+				is_direct_subject_of = c:SOV
+				is_subject_type = subject_type_mandate
+			}
+		}
+		
+		#Colony conditions
+		c:WAU ?= { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_subject_type = subject_type_mandate
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = american_austria_1946_htt }		# CHANGE ****
+		
+    }
+	
+	immediate = { 
+	
+		# Fire only once
+		set_variable = american_austria_1946_htt				# Change variable ****
+	
+	}
+    
+    option = {
+        name = austria_formation_1946.option.1		# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Option for USSR to accept
+		c:SOV = { 
+			trigger_event = { id = austria_formation.4 } 
+		}
+		
+		#FROM is happy!
+		change_relations = {
+			country = c:WAU
+			value = 50
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+    }
+	
+	option = {
+        name = austria_formation_1946.option.2		# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:WAU
+			value = -100
+		}
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:EAU
+			value = -100
+		}
+		
+		c:WAU = {
+		
+			# Natives are angry!
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:austrian } }
+				add_radicals_in_state = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+		}
+		
+		# Add Infamy because doing this is against international law
+		create_incident = {
+			value = 10
+			country = c:AUS
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+    }
+
+}
+
+#Second Control Agreement - USSR
+austria_formation.4 = {
+    type = country_event
+	placement = c:EAU
+
+    title = austria_formation_1946.t 				# Title of the event; ADD LOCALISATION
+    desc = austria_formation_1946.d 				# Description of the event; ADD LOCALISATION
+    #flavor = austria_formation_1946.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+    
+    option = {
+        name = austria_formation_1946.option.1			# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Form united democratic Austria in a condominium
+		c:WAU = {
+			make_independent = yes
+			annex_with_incorporation = c:EAU
+			change_tag = AUS
+			add_modifier = { name = condominium_modifier }
+			effect_starting_politics_democratic = yes
+		}
+		every_country = {
+			limit = { OR = { c:USA ?= this c:GBR ?= this c:FRA ?= this c:SOV ?= this } }
+			create_diplomatic_pact = {
+				country = c:AUS
+				type = condominium
+			}
+		}
+		
+		ai_chance = { 
+			base = 100 
+		}
+		
+    }
+	
+	option = {
+        name = austria_formation_1946.option.2			# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:USA
+			value = -100
+		}
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:WAU
+			value = -100
+		}
+		
+		#FROM is angry!
+		change_relations = {
+			country = c:EAU
+			value = -100
+		}
+		
+		c:EAU = {
+		
+			# Natives are angry!
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:austrian } }
+				add_radicals_in_state = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+		}
+		
+		# Add Infamy because doing this is against international law
+		create_incident = {
+			value = 10
+			country = c:AUS
+		}
+		
+		ai_chance = { 
+			base = 0 
+		}
+		
+    }
+
+}
