@@ -4457,3 +4457,240 @@ historical_diplomatic_incidents.44 = {
     }
 
 }
+
+# The Minsk Agreements - RUS
+historical_diplomatic_incidents.45 = {
+    type = country_event
+	placement = scope:target_state
+
+    title = RUS_UKR_Minsk.t 									# Title of the event; ADD LOCALISATION
+    desc = RUS_UKR_Minsk.d 										# Description of the event; ADD LOCALISATION
+    #flavor = RUS_UKR_Minsk.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:RUS ?= this											# Change TAG of the overlord ****
+		game_date >= 2015.2.12									# START DATE: Date colony became self governing ****
+		game_date < 2025.2.12									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		OR = {
+			is_some_kind_of_democracy = yes
+			is_a_republican_regime = yes
+		}
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Ukraine conditions
+		exists = c:UKR
+		c:UKR ?= {
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			
+			owns_entire_state_region = STATE_LUHANSK
+			
+			has_variable = UKR_2014_hgc
+		}
+		NOT = { exists = c:DPR }
+		
+		# Event has not been fired before
+		NOT = { has_variable = RUS_UKR_START_hae }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_state = {
+			limit = { state_region = s:STATE_LUHANSK }
+			save_scope_as = target_state
+		}
+	
+		# Fire only once
+		set_variable = RUS_UKR_START_hae						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1				# Accept
+        highlighted_option = yes
+		
+		#Choice for UKR
+		c:UKR ?= {
+			trigger_event = { id = historical_diplomatic_incidents.46 }
+		}
+		
+		#Infamy
+		create_incident = {
+			country = c:UKR
+			value = 10
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# The Minsk Agreements - UKR
+historical_diplomatic_incidents.46 = {
+    type = country_event
+	placement = scope:target_state
+
+    title = RUS_UKR_Minsk.t 										# Title of the event; ADD LOCALISATION
+    desc = RUS_UKR_Minsk.d 											# Description of the event; ADD LOCALISATION
+    #flavor = RUS_UKR_Minsk.f 										# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		random_state = {
+			limit = { state_region = s:STATE_LUHANSK }
+			save_scope_as = target_state
+		}
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#Release Donesk
+		if = {
+			limit = { 
+				NOT = { exists = c:DPR }
+				owns_entire_state_region = STATE_LUHANSK
+			}
+			create_country = { 
+				tag = DPR 
+				province = p:xF0E061
+				province = p:x500F88
+				province = p:x386376
+				province = p:x9A1118
+				province = p:x7161E0
+				origin = ROOT 
+				on_created = { 
+					soviet_SSR_dissolution_laws = yes 
+					set_relations = { country = c:RUS value = 100 }
+					set_relations = { country = ROOT value = -100 }
+					change_infamy = 80
+				}
+			}
+		}
+		
+		# Minsk Agreements
+		if = {
+			limit = {
+				exists = c:DPR
+			}
+			c:DPR ?= {
+				create_treaty = {
+					name = treaty_name_minsk_agreement_DPR_UKR
+					first_country = c:UKR
+					second_country = c:DPR
+
+					is_draft = no
+					binding_period = { years = 10 }
+
+					articles_to_create = {
+						{
+							article = non_aggression_pact
+						}
+					}
+				}
+			}
+			c:RUS ?= {
+				create_diplomatic_pact = {
+					country = c:DPR										# Change TAG ****
+					type = protectorate
+				}
+			}
+			set_relations = { country = c:DPR value = -100 }
+		}
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		#War
+		c:RUS ?= {
+			create_diplomatic_play = {
+				name = russia_ukraine_war
+				type = dp_return_state
+				target_state = s:STATE_LUHANSK.region_state:UKR
+				
+				war = yes
+				
+				#Ukraine's Goals
+				add_war_goal = {
+					holder = c:UKR
+					type = conquer_state
+					target_state = s:STATE_CRIMEA.region_state:RUS
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 }
+		}
+		
+    }
+
+}

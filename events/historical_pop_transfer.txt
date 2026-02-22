@@ -381,3 +381,289 @@ historical_pop_transfer.2 = {
     }
 
 }
+
+# Polish deportation - GENERAL
+historical_pop_transfer.3 = {
+    type = country_event
+
+    title = POL_post_war_deportations.t 						# Title of the event; ADD LOCALISATION
+    desc = POL_post_war_deportations.d 							# Description of the event; ADD LOCALISATION
+    #flavor = POL_post_war_deportations.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_poor_people_moving.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/identification_documents.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SOV ?= this
+		game_date >= 1946.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1956.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Poland exists to transfer Polish to
+		exists = c:POL
+		
+		# Event has not been fired before
+		NOT = { has_variable = POL_post_war_deportations_hpt }	# CHANGE ****
+		
+		#Has significant Polish population
+		any_scope_state = {
+			culture_percent_state = {
+				target = cu:polish
+				value >= 0.01
+			}
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = POL_post_war_deportations_hpt			# Change variable ****
+		
+	}
+    
+    option = {
+        name = POL_post_war_deportations.option.1					# Yes
+        highlighted_option = yes
+		
+		#Move pops
+		every_scope_state = {
+			limit = { 
+				culture_percent_state = {
+					target = cu:polish
+					value >= 0.01
+				}
+			}
+			
+			custom_tooltip = {
+				text = deport_polish_ww2.tt
+				
+				kill_population_percent_in_state = {
+					culture = cu:polish
+					percent = 0.01
+				}
+			
+				save_scope_as = pop_transfer_source_state
+				owner = {
+					random_country = {
+						limit = {
+							c:POL ?= this
+						}
+						random_primary_culture = {
+							save_scope_as = polish_culture
+						}
+						random_scope_state = {
+							limit = { 
+								OR = { 
+									any_neighbouring_state = { owner = ROOT }
+									is_coastal = yes
+									is_capital = yes
+								}
+								is_incorporated = yes
+							}
+							save_scope_as = pop_transfer_target_state
+						}
+					}
+					scope:pop_transfer_source_state ?= {
+						every_scope_pop = {
+							limit = {
+								culture = cu:polish
+							}
+							move_partial_pop = {
+								state = scope:pop_transfer_target_state
+								population_ratio = 0.5
+							}
+						}
+					}
+				}
+				
+			}
+			
+		}
+		
+		#International relations
+		change_infamy = 10
+		
+		#Mark for second repatriation
+		set_variable = POL_post_war_deportations_happened
+		
+		ai_chance = {
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = POL_post_war_deportations.option.2					# No
+		default_option = yes
+		
+		#Domestic reaction
+		add_radicals = {
+			value = very_large_radicals
+			culture = cu:polish
+		}
+		add_modifier = { 
+			name = domestic_unrest
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# Polish deportation 1955 - GENERAL
+historical_pop_transfer.4 = {
+    type = country_event
+
+    title = POL_post_war_deportations_2.t 						# Title of the event; ADD LOCALISATION
+    desc = POL_post_war_deportations_2.d 						# Description of the event; ADD LOCALISATION
+    #flavor = POL_post_war_deportations_2.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_poor_people_moving.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/identification_documents.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SOV ?= this
+		game_date >= 1955.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1965.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#First repatriation occurred
+		has_variable = POL_post_war_deportations_happened
+		
+		#Poland exists to transfer Polish to
+		exists = c:POL
+		
+		# Event has not been fired before
+		NOT = { has_variable = POL_post_war_deportations_hpt }	# CHANGE ****
+		
+		#Has significant Polish population
+		any_scope_state = {
+			culture_percent_state = {
+				target = cu:polish
+				value >= 0.01
+			}
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = POL_post_war_deportations_hpt			# Change variable ****
+		
+	}
+    
+    option = {
+        name = POL_post_war_deportations.option.1					# Yes
+        highlighted_option = yes
+		
+		#Move pops
+		every_scope_state = {
+			limit = { 
+				culture_percent_state = {
+					target = cu:polish
+					value >= 0.01
+				}
+			}
+			
+			custom_tooltip = {
+				text = deport_polish_ww2_1.tt
+				
+				kill_population_percent_in_state = {
+					culture = cu:polish
+					percent = 0.01
+				}
+			
+				save_scope_as = pop_transfer_source_state
+				owner = {
+					random_country = {
+						limit = {
+							c:POL ?= this
+						}
+						random_primary_culture = {
+							save_scope_as = polish_culture
+						}
+						random_scope_state = {
+							limit = { 
+								OR = { 
+									any_neighbouring_state = { owner = ROOT }
+									is_coastal = yes
+									is_capital = yes
+								}
+								is_incorporated = yes
+							}
+							save_scope_as = pop_transfer_target_state
+						}
+					}
+					scope:pop_transfer_source_state ?= {
+						every_scope_pop = {
+							limit = {
+								culture = cu:polish
+							}
+							move_partial_pop = {
+								state = scope:pop_transfer_target_state
+								population_ratio = 0.9
+							}
+						}
+					}
+				}
+				
+			}
+			
+		}
+		
+		#International relations
+		change_infamy = 10
+		
+		ai_chance = {
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = POL_post_war_deportations.option.2					# No
+		default_option = yes
+		
+		#Domestic reaction
+		add_radicals = {
+			value = very_large_radicals
+			culture = cu:polish
+		}
+		add_modifier = { 
+			name = domestic_unrest
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
