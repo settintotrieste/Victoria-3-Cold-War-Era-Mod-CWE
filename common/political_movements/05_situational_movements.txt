@@ -1602,6 +1602,410 @@ movement_collaborationist = {
 	}
 }
 
+#Anti-Overlord
+movement_anti_overlord = {
+	category = movement_category_ideological
+	
+	ideology = ideology_anti_overlord_movement
+	character_ideologies = {
+		ideology_autocratic
+		ideology_power_hungry
+		ideology_elitist
+		ideology_democratic
+		ideology_liberal
+	}
+	
+	disband_trigger = {
+		OR = { 
+			is_sufficiently_independent = yes
+			NOT = { exists = scope:overlord_scope }
+		}
+	}
+	
+	creation_trigger = {
+		NOT = { is_sufficiently_independent = yes }
+	}
+	creation_weight = {
+		value = 100
+	}	
+	on_created = {
+		add_movement_enthusiasm_modifier = yes
+		owner = { 
+			overlord = { 
+				save_scope_as = overlord_scope
+			}
+		}
+	}
+	
+	can_pressure_interest_group = {
+		leader ?= { 
+			culture = {
+				NOT = { is_primary_culture_of = scope:overlord_scope }
+			}
+		}
+	}
+	
+	character_support_trigger = {
+		culture = {
+			NOT = { is_primary_culture_of = scope:overlord_scope }
+		}
+	}
+	character_support_weight = {
+		value = 200
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_liberal
+			}
+			multiply = {
+				value = 5
+			}
+		}
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_democratic
+			}
+			multiply = {
+				value = 3
+			}
+		}
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_elitist
+			}
+			multiply = {
+				value = 1
+			}
+		}
+	}
+
+	pop_support_trigger = {
+		culture = {
+			NOT = { is_primary_culture_of = scope:overlord_scope }
+		}
+		NOT = { is_pop_type = slaves }
+	}
+
+	pop_support_factors = {
+		movement_support_national_awakening
+		movement_support_cultural_fervor
+		movement_support_shopkeepers
+		movement_support_officers
+		movement_support_farmers
+		movement_support_clerks
+		movement_support_soldiers
+		movement_support_peasants
+		movement_support_colonial_settlers
+	}
+	
+	pop_support_weight = {
+		if = {
+			limit = {
+				exists = scope:political_movement
+				scope:political_movement ?= {
+					OR = {
+						is_being_suppressed = yes
+						is_being_bolstered = yes
+					}
+				}
+			}
+			if = {
+				limit = {
+					scope:political_movement = {
+						is_being_suppressed = yes
+					}
+				}
+				add = {
+					value = suppression_base_value
+					multiply = {
+						value = -0.5
+						add = owner.modifier:country_suppression_attraction_factor
+					}
+					desc = "concept_suppressed"
+				}
+			}
+			else = {
+				add = {
+					value = bolstering_base_value
+					multiply = {
+						value = 0.5
+						add = owner.modifier:country_bolster_attraction_factor
+					}
+					desc = "concept_bolstered"
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				strata = upper
+			}
+			add = {
+				value = 10
+				desc = "UPPER_NO_ICON"
+			}
+		}
+		else_if = {
+			limit = {
+				strata = middle
+			}
+			if = {
+				limit = {
+					is_pop_type = shopkeepers
+				}
+				add = {
+					value = 25
+					desc = "POP_SHOPKEEPERS"
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = officers
+				}
+				add = {
+					value = 20
+					desc = "POP_OFFICERS"
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = farmers
+				}
+				add = {
+					value = 15
+					desc = "POP_FARMERS"
+				}
+			}
+			else = {
+				add = {
+					value = 12
+					desc = "MIDDLE_NO_ICON"
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				strata = lower
+			}
+			if = {
+				limit = {
+					is_pop_type = clerks
+				}
+				add = {
+					value = 25
+					desc = "POP_CLERKS"
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = soldiers
+				}
+				add = {
+					value = 20
+					desc = "POP_SOLDIERS"
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = peasants
+				}
+				add = {
+					value = 10
+					desc = "POP_PEASANTS"
+				}
+			}
+			else = {
+				add = {
+					value = 5
+					desc = "LOWER_NO_ICON"
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				state = {
+					is_incorporated = no
+				}
+			}
+			multiply = {
+				value = 1.5
+				desc = "COLONIAL_SETTLERS"
+			}
+		}
+
+		if = { # If a more radical movement exists, it'll poach radicals from this one.
+			limit = {
+				owner ?= {
+					any_political_movement = {
+						OR = {
+							is_political_movement_type = movement_traditionalist
+							is_political_movement_type = movement_fascist
+							is_political_movement_type = movement_communist
+							is_political_movement_type = movement_liberal
+						}
+					}
+				}
+			}
+			multiply = {
+				desc = "POP_RADICAL_MOVEMENT_LOSSES"
+				value = 1
+				subtract = pop_radical_fraction
+			}
+		}
+		
+		multiply = { # Range from x0.775 to 2.275
+			desc = "POP_CULTURE_FERVOR"
+			value = culture.culture_current_fervor
+			subtract = 15
+			multiply = 0.015
+			add = 1
+		}
+		
+		if = {
+			limit = {
+				culture ?= {
+					culture_has_national_awakening = yes
+				}
+			}
+			multiply = {
+				value = 1.5
+				desc = "POP_ACTIVE_NATIONAL_AWAKENING"
+			}
+		}
+		
+	}
+
+	revolution = {
+		possible = {
+			political_movement_support >= 0.05
+		}
+
+		weight = {
+			value = 100
+		}
+
+		state_weight = {
+			value = 1
+
+			if = {
+				limit = {
+					is_capital = no
+					is_homeland_of_country_cultures = owner
+					primary_cultures_percent_state >= 0.05
+				}
+				add = 10
+
+				if = {
+					limit = {
+						primary_cultures_percent_state >= 0.75
+					}
+					add = 1000
+				}
+				else_if = {
+					limit = {
+						primary_cultures_percent_state >= 0.5
+					}
+					add = 500
+				}
+				else_if = {
+					limit = {
+						primary_cultures_percent_state >= 0.25
+					}
+					add = 100
+				}
+				else_if = {
+					limit = {
+						primary_cultures_percent_state >= 0.1
+					}
+					add = 50
+				}
+			}
+		}
+	}
+
+	secession = {
+		possible = {
+			political_movement_support >= 0.05
+			scope:clout <= 0
+		}
+
+		weight = {
+			value = 1000
+		}
+
+		state_weight = {
+			value = 0
+
+			if = {
+				limit = {
+					is_capital = no
+					is_homeland_of_country_cultures = owner
+					primary_cultures_percent_state >= 0.05
+				}
+				add = { # These three values must add up to more than 1 - 5 x Obstinance, 1/2 Turmoil, percent of pops of primary cultures
+					value = -1
+					add = "this.primary_cultures_percent_state"
+					add = {
+						value = this.turmoil
+						multiply = 0.5
+					}
+					add = {
+						value = this.obstinance
+						multiply = 5
+					}
+					multiply = 100
+				}
+			}
+		}
+	}
+
+	additional_radicalism_factors = {
+		if = {
+			limit = {
+				owner.ruler ?= {
+					NOT = { culture = { is_primary_culture_of = root.owner } }
+				}
+			}
+
+			add = {
+				value = 0.1
+				desc = "RULER_NOT_PRIMARY_CULTURE"
+			}
+		}
+
+		add = {
+			value = "owner.average_sol"
+			subtract = "owner.average_sol_for_primary_cultures"
+			multiply = 0.05
+			max = 0.5
+			min = 0
+			desc = "STANDARD_OF_LIVING_FOR_PRIMARY_CULTURES"
+		}
+		
+		if = {
+			limit = {
+				owner = {
+					any_neighbouring_state = {
+						owner = {
+							NOT = { THIS = ROOT.owner }
+							any_political_movement = {
+								culture ?= ROOT.culture
+								is_insurrectionary = yes
+							}
+						}
+					}
+				}
+			}
+			add = {
+				desc = "NEIGHBOURING_COUNTRY_WITH_CULTURE_REVOLUTION"
+				value = 0.15
+			}
+		}
+		
+	}
+	
+}
+
 movement_corporatist = {
 	category = movement_category_ideological
 	
