@@ -8228,3 +8228,110 @@ historical_interstate_wars.70 = {
     }
 
 }
+
+### Ethiopian invasion of Somalia ###
+
+historical_interstate_wars.71 = {
+    type = country_event
+	placement = c:SOM
+
+    title = ETH_SOM_2006_war.t 										# Title of the event; ADD LOCALISATION
+    desc = ETH_SOM_2006_war.d 										# Description of the event; ADD LOCALISATION
+    #flavor = ETH_SOM_2006_war.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/middleeast_battlefield_trenches.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:ETH ?= this
+		game_date >= 2006.6.17										# START DATE: Date colony became self governing ****
+		game_date < 2016.6.17										# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes										# Correct gov types
+		is_sufficiently_independent = yes							# is_vassal = no		
+		is_at_war = no												# war = no
+		
+		is_not_neutral = yes										# No legal or political restrictions on going to war
+		
+		#Recipent conditions
+		exists = c:SOM
+		c:SOM ?= { 													# Change TAG of the transferee ****
+			is_a_theocratic_government = yes
+			is_sufficiently_independent = yes
+			is_not_a_diplomatic_ally = yes
+			
+			is_not_neutral = yes									# No legal or political restrictions on going to war
+		}
+		
+		# Event has not fired before
+		NOT = { has_variable = ETH_SOM_2006_war_hiw }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = ETH_SOM_2006_war_hiw						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_interstate_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#War
+		create_diplomatic_play = {
+			name = us_libya_war
+			type = dp_regime_change
+			target_country = c:SOM
+			
+			war = yes
+			
+			add_war_goal = {
+				holder = c:ETH
+				type = make_dominion
+				target_country = c:SOM
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_interstate_wars.option.2				# Peace option
+		default_option = yes
+		
+		#Minor discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_landowners
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
