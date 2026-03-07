@@ -2369,3 +2369,219 @@ conduct_hostile_espionage_10 = {
 	}
 	
 }
+
+#Manipulate Politics
+conduct_hostile_espionage_11 = {
+	groups= { general } requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	unlocking_technologies = {
+		
+	}
+
+	potential = {
+	
+		hidden_trigger = { has_journal_entry = je_secret_police_system }
+	
+		OR = {
+	
+			#THIS has spies in TARGET
+			has_diplomatic_pact = {
+				who = scope:target_country
+				type = conduct_hostile_espionage
+				is_initiator = yes
+			}
+			
+			#TARGET is an independent country
+			scope:target_country = { 
+				is_sufficiently_independent = yes
+				NOT = { has_war_with = scope:actor }
+			}
+			
+		}
+		
+	}
+	
+	possible = {
+		
+		#Has enough action points
+		custom_tooltip = {
+			text = secret_police_action_50_points.tt
+			has_variable = secret_police_action_points
+			root.var:secret_police_action_points > 50
+		}
+		
+		#Cooldown
+		custom_tooltip = {
+			text = secret_police_action_timer.tt
+			NOT = { has_variable = secret_police_action_timer }
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Subtract action points
+		custom_tooltip = {
+			text = secret_police_action_subtract_50_points.tt
+			if = {
+				limit = { has_variable = secret_police_action_points }
+				change_variable = { 
+					name = secret_police_action_points
+					add = -50
+				}
+			}
+		}
+		
+		#Gain Loyalty
+		custom_tooltip = {
+			text = secret_police_gain_loyalty_5_points.tt
+			change_variable = { 
+				name = secret_police_loyalty
+				add = 5
+			}
+			clamp_variable = {
+				name = secret_police_loyalty
+				max = 100
+				min = 0
+			}
+		}
+		
+		#Gain infamy
+		change_infamy = 5
+		
+		#Reduce Relations
+		save_scope_as = manipulator_country
+		scope:target_country = { save_scope_as = manipulated_country }
+		custom_tooltip = manipulating_government.tt
+		change_relations = { country = scope:target_country value = -50 }
+		
+	}
+	
+	pact = {	
+		cost = 200
+		is_two_sided_pact = no
+		infamy_affects_maintenance = yes
+		
+		income_transfer = 0.05
+		max_paying_country_income_to_transfer = 0.05
+		second_country_gets_income_transfer = yes
+		income_transfer_based_on_second_country = yes
+		income_transfer_to_pops = {
+			allow_discriminated = yes
+			upper_strata_pops = {
+				value = 0.5
+				
+				if = {
+					limit = {
+						is_a_dictatorship = yes
+						NOT = { is_a_communist_government = yes }		
+					}
+					add = 0.5
+				}
+				
+				max = 1
+				min = 0
+			}
+			middle_strata_pops = {
+				value = 0.25
+				
+				if = {
+					limit = {
+						is_a_democracy = yes					
+					}
+					add = 0.25
+				}	
+
+				max = 1
+				min = 0				
+			}
+			lower_strata_pops = {
+				value = 0.0
+				
+				if = {
+					limit = {
+						is_a_communist_government = yes
+					}
+					add = 0.25
+				}	
+
+				max = 1
+				min = 0				
+			}
+		}
+		
+		### Validation requirements ###
+		
+		requirement_to_maintain = { 
+		
+			trigger = { 
+			
+				hidden_trigger = { has_journal_entry = je_secret_police_system }
+				
+				OR = {
+	
+					#THIS has spies in TARGET
+					has_diplomatic_pact = {
+						who = scope:target_country
+						type = conduct_hostile_espionage
+						is_initiator = yes
+					}
+					
+					#TARGET is an independent country
+					scope:target_country = { 
+						is_sufficiently_independent = yes
+						NOT = { has_war_with = scope:actor }
+					}
+					
+				}
+				
+				#TARGET politics is suceptible to manipulation
+				scope:target_country = { 
+					OR = { 
+						is_a_democracy = yes
+						has_modifier = power_vacuum_modifier
+						has_modifier = domestic_unrest
+						has_modifier = stirrings_of_revolution
+					}
+				}
+				
+			}
+			
+		}
+		
+		# Break effects
+		manual_break_effect = {
+			change_infamy = -5
+		}
+		
+		auto_break_effect = {
+			change_infamy = -5
+		}
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0.25		
+		}
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			infamy < infamy_threshold:reputable
+			OR = { 
+				has_attitude = { who = scope:target_country attitude = antagonistic }
+				has_attitude = { who = scope:target_country attitude = belligerent }
+				has_attitude = { who = scope:target_country attitude = domineering }
+				scope:target_country.relations:root < relations_threshold:poor
+			}
+		}
+		
+	}
+	
+}
