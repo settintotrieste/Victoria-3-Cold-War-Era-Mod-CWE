@@ -2,6 +2,12 @@ INJECT:ai_strategy_default = {
 
 	diplomatic_play_support = {
 
+		#Base value - Reputation
+		add = {
+			value = "scope:country.modifier:country_diplomatic_reputation_add"
+			desc = "DIPLOMATIC_REPUTATION_REASON"
+		}
+
 		### Value of ENEMY ###
 		
 		#Don't support TARGET if cannot get anything something out of the ENEMY
@@ -40,8 +46,7 @@ INJECT:ai_strategy_default = {
 		#Don't support TARGET if THIS has economic interests in ENEMY
 		if = {
 			limit = {
-				OR = { 
-					is_in_customs_union_with = scope:enemy_country
+				OR = {
 					any_scope_treaty = {
 						binds = scope:enemy_country
 						any_scope_article = {
@@ -51,6 +56,7 @@ INJECT:ai_strategy_default = {
 							}
 						}
 					}
+					is_in_customs_union_with = scope:enemy_country
 				}
 			}
 			add = {
@@ -94,8 +100,7 @@ INJECT:ai_strategy_default = {
 		#Support TARGET if THIS has economic interests in TARGET
 		if = {
 			limit = {
-				OR = { 
-					is_in_customs_union_with = scope:country
+				OR = {
 					any_scope_treaty = {
 						binds = scope:country
 						any_scope_article = {
@@ -105,11 +110,41 @@ INJECT:ai_strategy_default = {
 							}
 						}
 					}
+					is_in_customs_union_with = scope:country
 				}
 			}
 			add = {
 				value = 10
 				desc = "DIPLOMATIC_SHARED_ECONOMIC_INTERESTS_TARGET_REASON"
+			}
+		}
+		
+		#Support TARGET if ENEMY has high infamy
+		if = {
+			limit = { 
+				scope:enemy_country = { infamy = infamy_threshold:infamous }
+			}
+			add = {
+				value = 5
+				desc = "DIPLOMATIC_INFAMY_ENEMY_REASON"
+			}
+		}
+		else_if = {
+			limit = { 
+				scope:enemy_country = { infamy = infamy_threshold:notorious }
+			}
+			add = {
+				value = 10
+				desc = "DIPLOMATIC_INFAMY_ENEMY_REASON"
+			}
+		}
+		else_if = {
+			limit = { 
+				scope:enemy_country = { infamy >= infamy_threshold:pariah }
+			}
+			add = {
+				value = 20
+				desc = "DIPLOMATIC_INFAMY_ENEMY_REASON"
 			}
 		}
 		
@@ -656,6 +691,7 @@ INJECT:ai_strategy_default = {
 		if = {
 			limit = {
 				scope:country = {
+					country_rank < root.country_rank
 					country_rank = rank_value:great_power
 				}
 			}
@@ -667,6 +703,7 @@ INJECT:ai_strategy_default = {
 		else_if = {
 			limit = {
 				scope:country = {
+					country_rank < root.country_rank
 					country_rank = rank_value:major_power
 				}
 			}
@@ -678,6 +715,7 @@ INJECT:ai_strategy_default = {
 		else_if = {
 			limit = {
 				scope:country = {
+					country_rank < root.country_rank
 					country_rank = rank_value:minor_power
 				}
 			}
@@ -689,6 +727,7 @@ INJECT:ai_strategy_default = {
 		else_if = {
 			limit = {
 				scope:country = {
+					country_rank < root.country_rank
 					country_rank = rank_value:insignificant_power
 				}
 			}
@@ -700,6 +739,7 @@ INJECT:ai_strategy_default = {
 		else_if = {
 			limit = {
 				scope:country = {
+					country_rank < root.country_rank
 					country_rank = rank_value:unrecognized_major_power
 				}
 			}
@@ -711,6 +751,7 @@ INJECT:ai_strategy_default = {
 		else_if = {
 			limit = {
 				scope:country = {
+					country_rank < root.country_rank
 					country_rank = rank_value:unrecognized_regional_power
 				}
 			}
@@ -722,6 +763,7 @@ INJECT:ai_strategy_default = {
 		else_if = {
 			limit = {
 				scope:country = {
+					country_rank < root.country_rank
 					country_rank = rank_value:unrecognized_power
 				}
 			}
@@ -869,30 +911,6 @@ INJECT:ai_strategy_default = {
 			add = {
 				value = -5
 				desc = "DIPLOMATIC_FOREIGN_POLICY_LAWS_STANCE_THIS_REASON"
-			}
-		}
-
-		#Protecting Condominiums & Fighting rebelling condominiums
-		if = {
-			limit = { 	
-				scope:enemy_country = { has_modifier = condominium_modifier }
-				has_diplomatic_pact = { who = scope:enemy_country type = condominium is_initiator = yes }
-				scope:country = { has_diplomatic_pact = { who = scope:enemy_country type = condominium is_initiator = yes } }
-			}
-			add = {
-				value = 500
-				desc = "DIPLOMATIC_CONDOMINIUM_REBELLING_REASON"
-			}
-		}
-		if = {
-			limit = { 
-				scope:country = { has_modifier = condominium_modifier }
-				has_diplomatic_pact = { who = scope:country type = condominium is_initiator = yes }
-				NOT = { has_diplomatic_pact = { who = scope:enemy_country type = condominium is_initiator = yes } }
-			}
-			add = {
-				value = 500
-				desc = "DIPLOMATIC_CONDOMINIUM_TARGETED_REASON"
 			}
 		}
 
