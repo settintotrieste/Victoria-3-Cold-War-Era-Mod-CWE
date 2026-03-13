@@ -599,8 +599,104 @@ SYR_gov_changes.6 = {
 
 }
 
-# The Death of Hafez al-Assad
+# Bashar al-Assad
 SYR_gov_changes.7 = {
+    type = country_event
+
+    title = SYR_1994_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = SYR_1994_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SYR_1994_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SYR ?= this
+		game_date >= 1994.1.21									# START DATE: Date colony became self governing ****
+		game_date < 2004.1.21									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_nationalist_government = yes						# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		ruler ?= { 
+			has_variable = Hafez_al_Assad 
+			NOT = { has_variable = dynastic_ruler_enabled }
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SYR_1994_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SYR_1994_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Create Dynastic Republic
+		random_scope_character = {
+			limit = { has_variable = Hafez_al_Assad }
+			set_variable = dynastic_ruler_enabled
+		}
+		
+		#Bashar al-Assad
+		create_character = {
+			first_name = "Bashar_al-Assad_first_name"
+			last_name = "Bashar_al-Assad_last_name"
+			heir = yes historical = yes
+			birth_date = 1930.10.6
+			interest_group = ig_industrialists
+			ideology = ideology_autocratic
+			culture = cu:syrian
+			religion = rel:sunni
+			traits = {
+				charismatic
+				cruel
+				tactful
+			}
+			on_created = { set_variable = Bashar_al_Assad }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_modifier = { 
+			name = party_in_chaos_modifier
+			months = 12
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# The Death of Hafez al-Assad
+SYR_gov_changes.8 = {
     type = country_event
 
     title = SYR_2000_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -648,22 +744,37 @@ SYR_gov_changes.7 = {
 		effect_starting_politics_economic_policy_interventionism = yes
 		activate_law = law_type:law_regionalist_fp
 		
+		#Ruler dies
+		random_scope_character = {
+			limit = { has_variable = Hafez_al_Assad }
+			kill_character = yes
+		}
+		
 		#Bashar al-Assad
-		create_character = {
-			first_name = "Bashar_al-Assad_first_name"
-			last_name = "Bashar_al-Assad_last_name"
-			ruler = yes ig_leader = yes historical = yes
-			birth_date = 1930.10.6
-			interest_group = ig_industrialists
-			ideology = ideology_autocratic
-			culture = cu:syrian
-			religion = rel:sunni
-			traits = {
-				charismatic
-				cruel
-				tactful
+		if = {
+			limit = { any_scope_character = { has_variable = Bashar_al_Assad } }
+			random_scope_character = {
+				limit = { has_variable = Bashar_al_Assad }
+				set_character_as_ruler = yes
 			}
-			on_created = { set_variable = Bashar_al_Assad }
+		}
+		else = {
+			create_character = {
+				first_name = "Bashar_al-Assad_first_name"
+				last_name = "Bashar_al-Assad_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1930.10.6
+				interest_group = ig_industrialists
+				ideology = ideology_autocratic
+				culture = cu:syrian
+				religion = rel:sunni
+				traits = {
+					charismatic
+					cruel
+					tactful
+				}
+				on_created = { set_variable = Bashar_al_Assad }
+			}
 		}
 		
     }
@@ -671,7 +782,7 @@ SYR_gov_changes.7 = {
 }
 
 # Syrian Revolution of 2024
-SYR_gov_changes.8 = {
+SYR_gov_changes.9 = {
     type = country_event
 
     title = SYR_2024_revolution.t 							# Title of the event; ADD LOCALISATION
