@@ -306,25 +306,70 @@ debug.11 = {
 	}
 	option = {
 		
-		c:SOV = {
+		c:GBR = { save_scope_as = actor }
+		ROOT = { save_scope_as = target_country }
 		
-			#War
-			create_diplomatic_play = {
-				name = test_war
-				type = dp_annex_war
-				target_country = c:USA
-			
-				war = yes
-			
-				#add_war_goal = {
-				#	holder = c:USA
-				#	type = annex_country
-				#	target_country = c:SOV
-				#}
-			
+		#Send expeditionary force
+		scope:target_country = {
+			create_military_formation = {
+				type = army
+				hq_region = scope:target_country.capital.region
+				name = Expeditionary_Force
+				combat_unit = {
+					type = unit_type:combat_unit_type_infantry_1
+					state_region = scope:target_country.capital.state_region
+					count = 1
+				}
+				combat_unit = {
+					type = unit_type:combat_unit_type_artillery_1
+					state_region = scope:target_country.capital.state_region
+					count = 1
+				}
+				combat_unit = {
+					type = unit_type:combat_unit_type_airforce_1
+					state_region = scope:target_country.capital.state_region
+					count = 1
+				}
 			}
-			
+			scope:actor = {
+				random_primary_culture = {
+					save_scope_as = relevant_culture
+				}
+				ruler ?= { religion = { save_scope_as = relevant_religion } }
+			}
+			create_character = {
+				is_agitator = yes
+				culture = scope:relevant_culture
+				religion = scope:relevant_religion
+				on_created = { 
+					set_variable = expeditionary_force_general
+					set_variable = { name = expeditionary_force_general_home_country days = 1 }
+					add_character_role = general
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_variable = expeditionary_force_general_home_country
+					has_role = agitator
+				}
+				remove_variable = expeditionary_force_general_home_country
+				set_home_country = scope:actor
+			}
 		}
+		
+	}
+}
+
+debug.12 = {
+	type = country_event
+	duration = 1
+	trigger = { 
+		
+	}
+	option = {
+		c:USA = { save_scope_as = actor }
+		
+		
 		
 	}
 }
