@@ -645,7 +645,13 @@ eastern_europe_sovietisation.6 = {
 			is_sufficiently_independent = yes					# is_vassal = no		
 			is_not_neutral = yes
 			
-			has_state_in_state_region = STATE_BRANDENBURG
+			OR = { 
+				has_state_in_state_region = STATE_BRANDENBURG
+				AND = {
+					exists = c:FCB
+					c:USA ?= { has_diplomatic_pact = { who = c:FCB type = condominium is_initiator = yes } }
+				}
+			}
 			
 			is_subject_of = c:USA
 		}
@@ -664,13 +670,16 @@ eastern_europe_sovietisation.6 = {
 		
     }
 	
-	immediate = { 
+	immediate = {
 		
-		c:WGR = {
+		c:WGR ?= {
 			random_scope_state = {
 				limit = { state_region = s:STATE_BRANDENBURG }
 				save_scope_as = berlin_target_state
 			}
+		}
+		c:FCB ?= {
+			save_scope_as = berlin_target_state
 		}
 		
 		# Fire only once
@@ -755,6 +764,9 @@ eastern_europe_sovietisation.7 = {
 				save_scope_as = berlin_target_state
 			}
 		}
+		c:FCB ?= {
+			save_scope_as = berlin_target_state
+		}
 		
 	}
     
@@ -777,11 +789,25 @@ eastern_europe_sovietisation.7 = {
 		default_option = yes
 		
 		#Transfer Berlin to East Germany
-		c:WGR = {
-			random_scope_state = {
-				limit = { state_region = s:STATE_BRANDENBURG }
-				set_state_owner = c:EGR
+		if = {
+			limit = { 
+				c:WGR ?= { 
+					has_state_in_state_region = STATE_BRANDENBURG 
+				}
 			}
+			c:WGR ?= {
+				random_scope_state = {
+					limit = { state_region = s:STATE_BRANDENBURG }
+					set_state_owner = c:EGR
+				}
+			}
+		}
+		if = {
+			limit = {
+				exists = c:FCB
+				c:USA ?= { has_diplomatic_pact = { who = c:FCB type = condominium is_initiator = yes } }
+			}
+			c:EGR ?= { annex_with_incorporation = c:FCB }
 		}
 		
 		add_modifier = { 
@@ -822,11 +848,14 @@ eastern_europe_sovietisation.8 = {
 	
 	immediate = { 
 		
-		c:WGR = {
+		c:WGR ?= {
 			random_scope_state = {
 				limit = { state_region = s:STATE_BRANDENBURG }
 				save_scope_as = berlin_target_state
 			}
+		}
+		c:FCB ?= {
+			save_scope_as = berlin_target_state
 		}
 		
 	}
@@ -851,7 +880,7 @@ eastern_europe_sovietisation.8 = {
 		default_option = yes
 		
 		#East Germany declares war on West Germany
-		c:EGR = {
+		c:EGR ?= {
 			create_diplomatic_play = {
 				name = Berlin_Crisis
 				type = dp_annex_war_historical
@@ -861,6 +890,14 @@ eastern_europe_sovietisation.8 = {
 					holder = c:WGR
 					type = annex_country
 					target_country = c:EGR
+				}
+			}
+			if = {
+				limit = { exists = c:FCB }
+				create_diplomatic_play = {
+					name = Berlin_Crisis
+					type = dp_annex_war_historical
+					target_country = c:FCB
 				}
 			}
 		}
@@ -924,7 +961,13 @@ eastern_europe_sovietisation.9 = {
 			is_sufficiently_independent = yes					# is_vassal = no		
 			is_not_neutral = yes
 			
-			has_state_in_state_region = STATE_BRANDENBURG
+			OR = { 
+				has_state_in_state_region = STATE_BRANDENBURG
+				AND = {
+					exists = c:FCB
+					c:USA ?= { has_diplomatic_pact = { who = c:FCB type = condominium is_initiator = yes } }
+				}
+			}
 			
 			is_subject_of = c:USA
 		}
@@ -945,11 +988,14 @@ eastern_europe_sovietisation.9 = {
 	
 	immediate = { 
 		
-		c:WGR = {
+		c:WGR ?= {
 			random_scope_state = {
 				limit = { state_region = s:STATE_BRANDENBURG }
 				save_scope_as = berlin_target_state
 			}
+		}
+		c:FCB ?= {
+			save_scope_as = berlin_target_state
 		}
 		
 		# Fire only once
@@ -1013,11 +1059,14 @@ eastern_europe_sovietisation.10 = {
 	
 	immediate = { 
 		
-		c:WGR = {
+		c:WGR ?= {
 			random_scope_state = {
 				limit = { state_region = s:STATE_BRANDENBURG }
 				save_scope_as = berlin_target_state
 			}
+		}
+		c:FCB ?= {
+			save_scope_as = berlin_target_state
 		}
 		
 	}
@@ -1041,36 +1090,45 @@ eastern_europe_sovietisation.10 = {
 		default_option = yes
 		
 		#Create neutral Free City of Berlin
-		c:WGR = {
-			#Release country
-			create_country = {
-				tag = FCB										# Change TAG of country being released ****
-				origin = ROOT									# TAG where the created country takes tech from
-				state = scope:berlin_target_state
-				
-				on_created = {									# Set government laws & rulers here
+		if = {
+			limit = { NOT = { exists = c:FCB } }
+			c:WGR ?= {
+				#Release country
+				create_country = {
+					tag = FCB										# Change TAG of country being released ****
+					origin = ROOT									# TAG where the created country takes tech from
+					state = scope:berlin_target_state
 					
-					# SET laws for colony ****
-					effect_starting_politics_parliamentary_republic = yes
-					effect_starting_politics_very_democratic = yes
-					effect_starting_politics_constitutional_unitary_state = yes
-					effect_starting_politics_war_policy_pacifism = yes
-					effect_starting_politics_economic_policy_interventionism = yes
-					effect_starting_politics_trade_policy_free_trade = yes
-					effect_starting_politics_anti_nuclear_policy = yes
+					on_created = {									# Set government laws & rulers here
+						
+						# SET laws for colony ****
+						effect_starting_politics_parliamentary_republic = yes
+						effect_starting_politics_very_democratic = yes
+						effect_starting_politics_constitutional_unitary_state = yes
+						effect_starting_politics_war_policy_pacifism = yes
+						effect_starting_politics_economic_policy_interventionism = yes
+						effect_starting_politics_trade_policy_free_trade = yes
+						effect_starting_politics_anti_nuclear_policy = yes
+						
+						# Set diplomatic recognition
+						set_country_type = unrecognized
+					}
 					
-					# Set diplomatic recognition
-					set_country_type = unrecognized
 				}
-				
+			}
+			if = {
+				limit = { exists = c:FCB }
+				create_diplomatic_pact = {
+					country = c:FCB
+					type = protectorate
+				}
 			}
 		}
 		if = {
-			limit = { exists = c:FCB }
-			create_diplomatic_pact = {
-				country = c:FCB
-				type = protectorate
+			limit = {
+				exists = c:FCB
 			}
+			c:EGR ?= { annex_with_incorporation = c:FCB }
 		}
 		
 		add_modifier = { 
@@ -1111,11 +1169,14 @@ eastern_europe_sovietisation.11 = {
 	
 	immediate = { 
 		
-		c:WGR = {
+		c:WGR ?= {
 			random_scope_state = {
 				limit = { state_region = s:STATE_BRANDENBURG }
 				save_scope_as = berlin_target_state
 			}
+		}
+		c:FCB ?= {
+			save_scope_as = berlin_target_state
 		}
 		
 	}
@@ -1150,6 +1211,14 @@ eastern_europe_sovietisation.11 = {
 					holder = c:WGR
 					type = annex_country
 					target_country = c:EGR
+				}
+			}
+			if = {
+				limit = { exists = c:FCB }
+				create_diplomatic_play = {
+					name = Berlin_Crisis
+					type = dp_annex_war_historical
+					target_country = c:FCB
 				}
 			}
 		}
@@ -1216,7 +1285,13 @@ eastern_europe_sovietisation.12 = {
 			is_sufficiently_independent = yes					# is_vassal = no		
 			is_not_neutral = yes
 			
-			has_state_in_state_region = STATE_BRANDENBURG
+			OR = { 
+				has_state_in_state_region = STATE_BRANDENBURG
+				AND = {
+					exists = c:FCB
+					c:USA ?= { has_diplomatic_pact = { who = c:FCB type = condominium is_initiator = yes } }
+				}
+			}
 			
 			is_subject_of = c:USA
 		}
@@ -1237,11 +1312,14 @@ eastern_europe_sovietisation.12 = {
 	
 	immediate = { 
 		
-		c:WGR = {
+		c:WGR ?= {
 			random_scope_state = {
 				limit = { state_region = s:STATE_BRANDENBURG }
 				save_scope_as = berlin_target_state
 			}
+		}
+		c:FCB ?= {
+			save_scope_as = berlin_target_state
 		}
 		
 		# Fire only once
@@ -1320,11 +1398,14 @@ eastern_europe_sovietisation.13 = {
 	
 	immediate = { 
 		
-		c:WGR = {
+		c:WGR ?= {
 			random_scope_state = {
 				limit = { state_region = s:STATE_BRANDENBURG }
 				save_scope_as = berlin_target_state
 			}
+		}
+		c:FCB ?= {
+			save_scope_as = berlin_target_state
 		}
 		
 	}
@@ -1348,11 +1429,25 @@ eastern_europe_sovietisation.13 = {
 		default_option = yes
 		
 		#Transfer Berlin to East Germany
-		c:WGR = {
-			random_scope_state = {
-				limit = { state_region = s:STATE_BRANDENBURG }
-				set_state_owner = c:EGR
+		if = {
+			limit = { 
+				c:WGR ?= { 
+					has_state_in_state_region = STATE_BRANDENBURG 
+				}
 			}
+			c:WGR ?= {
+				random_scope_state = {
+					limit = { state_region = s:STATE_BRANDENBURG }
+					set_state_owner = c:EGR
+				}
+			}
+		}
+		if = {
+			limit = {
+				exists = c:FCB
+				c:USA ?= { has_diplomatic_pact = { who = c:FCB type = condominium is_initiator = yes } }
+			}
+			c:EGR ?= { annex_with_incorporation = c:FCB }
 		}
 		
 		add_modifier = { 
@@ -1393,11 +1488,14 @@ eastern_europe_sovietisation.14 = {
 	
 	immediate = { 
 		
-		c:WGR = {
+		c:WGR ?= {
 			random_scope_state = {
 				limit = { state_region = s:STATE_BRANDENBURG }
 				save_scope_as = berlin_target_state
 			}
+		}
+		c:FCB ?= {
+			save_scope_as = berlin_target_state
 		}
 		
 	}
@@ -1422,7 +1520,7 @@ eastern_europe_sovietisation.14 = {
 		default_option = yes
 		
 		#East Germany declares war on West Germany
-		c:EGR = {
+		c:EGR ?= {
 			create_diplomatic_play = {
 				name = Berlin_Blockade
 				type = dp_annex_war_historical
@@ -1432,6 +1530,14 @@ eastern_europe_sovietisation.14 = {
 					holder = c:WGR
 					type = annex_country
 					target_country = c:EGR
+				}
+			}
+			if = {
+				limit = { exists = c:FCB }
+				create_diplomatic_play = {
+					name = Berlin_Crisis
+					type = dp_annex_war_historical
+					target_country = c:FCB
 				}
 			}
 		}
