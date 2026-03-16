@@ -4972,3 +4972,132 @@ historical_territorial_transfers.46 = {
     }
 
 }
+
+#West Berlin - et al
+historical_territorial_transfers.47 = {
+    type = country_event
+	placement = c:FCB
+
+    title = end_berlin_occupation.t 					# Title of the event; ADD LOCALISATION
+    desc = end_berlin_occupation.d 						# Description of the event; ADD LOCALISATION
+    #flavor = end_berlin_occupation.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_ruler_speaking_to_people.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+    
+    option = {
+        name = historical_yes_no.option.1			# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#International reaction
+		change_infamy = -10
+		
+		#End condominium
+		remove_diplomatic_pact = { country = c:FCB type = condominium }
+		if = {
+			limit = { 
+				exists = c:EGR
+				c:FCB = { 
+					is_subject_of = ROOT
+					is_adjacent_to_country = c:EGR
+				}
+			}
+			c:EGR ?= { annex_with_incorporation = c:FCB }
+		}
+		else_if = {
+			limit = { 
+				exists = c:WGR
+				c:FCB = { 
+					is_subject_of = ROOT 
+					is_adjacent_to_country = c:WGR
+				}
+			}
+			c:WGR ?= { annex_with_incorporation = c:FCB }
+		}
+		else_if = {
+			limit = { 
+				exists = c:GER
+				c:FCB = { 
+					is_subject_of = ROOT
+					is_adjacent_to_country = c:GER
+				}
+			}
+			c:GER ?= { annex_with_incorporation = c:FCB }
+		}
+		else_if = {
+			limit = {
+				OR = {
+					exists = c:GER
+					exists = c:WGR
+					exists = c:EGR
+				}
+				c:FCB = { 
+					is_subject_of = ROOT
+				}
+			}
+			random_country = {
+				limit = {
+					OR = { 
+						c:GER ?= this
+						c:WGR ?= this
+						c:EGR ?= this
+					}
+				}
+				annex_with_incorporation = c:FCB
+			}
+		}
+		else = {
+			if = {
+				limit = { c:FCB = { is_subject_of = ROOT } }
+				c:FCB = { make_independent = yes }
+			}
+		}
+		
+		ai_chance = { 
+			base = 100 
+		}
+		
+    }
+	
+	option = {
+        name = historical_yes_no.option.2			# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#Lose relations with Germany
+		every_country = {
+			limit = {
+				OR = { 
+					c:GER ?= this
+					c:WGR ?= this
+					c:EGR ?= this
+				}
+			}
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+		}
+		
+		# Add Infamy because doing this is against international law
+		create_incident = {
+			value = 20
+			country = c:FCB
+		}
+		
+		ai_chance = { 
+			base = 0 
+		}
+		
+    }
+
+}

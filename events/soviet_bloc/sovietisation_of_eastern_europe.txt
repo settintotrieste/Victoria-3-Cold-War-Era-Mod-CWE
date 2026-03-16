@@ -1349,6 +1349,38 @@ eastern_europe_sovietisation.12 = {
 				type = embargo
 			}
 		}
+		if = {
+			limit = { exists = c:FCB }
+			every_scope_treaty = {
+				limit = {
+					binds = c:FCB
+					any_scope_article = {
+						has_type = ﻿transit_rights
+					}
+				}
+				withdraw = {
+					country = ROOT
+				}
+			}
+			random_country = {
+				limit = {
+					c:EGR ?= this
+					is_sufficiently_independent = no
+					is_subject_of = ROOT
+				}
+				every_scope_treaty = {
+					limit = {
+						binds = c:FCB
+						any_scope_article = {
+							has_type = ﻿transit_rights
+						}
+					}
+					withdraw = {
+						country = THIS
+					}
+				}
+			}
+		}
 		
 		ai_chance = { 
 			base = 90 
@@ -1504,6 +1536,66 @@ eastern_europe_sovietisation.14 = {
         name = Berlin_Blockade.3.option.1					# De-escalate
         highlighted_option = yes
 		
+		#End blockade
+		if = {
+			limit = { exists = c:FCB }
+			create_treaty = {
+				name = treaty_name_FCB_EGR_transit_rights
+				first_country = c:SOV
+				second_country = c:FCB
+
+				is_draft = no
+				entered_into_force_on = 1946.1.1
+				binding_period = { years = 99 } # 99 years
+
+				articles_to_create = {
+					{
+						article = transit_rights
+						source_country = c:SOV
+						target_country = c:FCB
+					}
+				}
+			}
+			random_country = {
+				limit = {
+					c:EGR ?= this
+					is_sufficiently_independent = no
+					is_subject_of = ROOT
+				}
+				create_treaty = {
+					name = treaty_name_FCB_EGR_transit_rights
+					first_country = c:EGR
+					second_country = c:FCB
+
+					is_draft = no
+					entered_into_force_on = 1946.1.1
+					binding_period = { years = 99 } # 99 years
+
+					articles_to_create = {
+						{
+							article = transit_rights
+							source_country = c:EGR
+							target_country = c:FCB
+						}
+					}
+				}
+			}
+		}
+		every_country = {
+			limit = {
+				OR = {
+					c:WGR ?= this
+					c:USA ?= this
+				}
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = embargo
+					first_country = ROOT
+				}
+			}
+			ROOT = { remove_diplomatic_pact = { country = THIS type = embargo } }
+		}
+		
+		#Domestic reaction
 		add_radicals = {
 			value = small_radicals
 			interest_group = ig:ig_trade_unions
