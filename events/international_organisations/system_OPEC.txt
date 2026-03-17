@@ -10,20 +10,30 @@ OPEC_system.1 = {
 		OR = {
 		
 			#No OPEC leader and there is an eligible one
-			AND = { 
+			AND = {
 				NOT = { any_country = { has_modifier = OPEC_leader } }
 				any_country = { 
 					has_modifier = OPEC_member
 				}
 			}
 			
+			#There are somehow 2 OPEC leaders
+			AND = {
+				has_modifier = OPEC_leader
+				any_country = { 
+					has_modifier = OPEC_leader
+					count > 1
+				}
+				NOT = { any_country = { has_modifier = OPEC_member NOT = { has_modifier = OPEC_leader } sol_ranking < root.sol_ranking } }
+			}
+			
 			#OPEC leader is wrong
-			AND = { 
+			AND = {
 				has_modifier = OPEC_leader 
 				OR = {
 					NOT = { is_sufficiently_independent = yes }
 					is_a_communist_government = yes
-					any_country = { has_modifier = OPEC_member NOT = { has_modifier = OPEC_leader } country_rank > root.country_rank }
+					any_country = { has_modifier = OPEC_member NOT = { has_modifier = OPEC_leader } sol_ranking < root.sol_ranking }
 				}
 			}
 			
@@ -36,71 +46,51 @@ OPEC_system.1 = {
 
 	immediate = {
 		
-		#Clear OPEC leader
-		every_country = {
-			limit = { has_modifier = OPEC_leader }
+		#If there are somehow 2 OPEC leaders
+		if = {
+			limit = {
+				has_modifier = OPEC_leader
+				any_country = {
+					has_modifier = OPEC_leader
+					count > 1
+				}
+				NOT = { any_country = { OR = { has_modifier = OPEC_member has_modifier = OPEC_leader } sol_ranking < root.sol_ranking } }
+			}
+			every_country = {
+				limit = {
+					NOT = { THIS = ROOT }
+					has_modifier = OPEC_leader 
+				}
+				remove_modifier = OPEC_leader
+				if = {
+					limit = { NOT = { has_modifier = OPEC_member } }
+					add_modifier = { name = OPEC_member }
+				}
+			}
+		}
+		#Set OPEC leader
+		else_if = {
+			limit = {
+				has_modifier = OPEC_leader
+			}
+			random_country = {
+				limit = { 
+					has_modifier = OPEC_member
+					NOT = { has_modifier = OPEC_leader }
+					sol_ranking < root.sol_ranking
+				}
+				add_modifier = { name = OPEC_leader }
+				remove_modifier = OPEC_member
+			}
 			remove_modifier = OPEC_leader
-			if = { 
+			if = {
 				limit = { NOT = { has_modifier = OPEC_member } }
 				add_modifier = { name = OPEC_member }
 			}
 		}
-	
-		#Set OPEC leader
-		if = {
-			limit = { 
-				NOT = { any_country = { has_modifier = OPEC_leader } }
-				any_country = { 
-					has_modifier = OPEC_member
-				}
-			}
-			random_country = {
-				limit = {
-					has_modifier = OPEC_member
-					NOT = { 
-						any_country = {
-							has_modifier = OPEC_member
-							country_rank > this.country_rank
-						}
-					}
-				}
-				add_modifier = { name = OPEC_leader }
-			}
-		}
-		else_if = {
-			limit = {
-				has_modifier = OPEC_leader
-				OR = {
-					NOT = { is_sufficiently_independent = yes }
-					is_a_communist_government = yes
-					any_country = { has_modifier = OPEC_member NOT = { has_modifier = OPEC_leader } country_rank > root.country_rank }
-				}
-			}
-			random_country = {
-				limit = {
-					has_modifier = OPEC_member
-					country_rank > root.country_rank
-				}
-				add_modifier = { name = OPEC_leader }
-			}
-		}
-		else = {
-			random_country = {
-				limit = {
-					has_modifier = OPEC_member
-					NOT = { 
-						any_country = {
-							has_modifier = OPEC_member
-							country_rank > this.country_rank
-						}
-					}
-				}
-				add_modifier = { name = OPEC_leader }
-			}
-		}
 		
 		#Clean up memberships
-		if = { 
+		every_country = {
 			limit = { has_modifier = OPEC_leader has_modifier = OPEC_member }
 			remove_modifier = OPEC_member
 		}
