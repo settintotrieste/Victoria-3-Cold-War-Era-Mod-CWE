@@ -1,0 +1,156 @@
+je_non_competitive_elections = {
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	group = je_group_political_organs
+
+	scripted_button = je_controlled_elections_enabled_button
+	scripted_button = je_controlled_elections_disabled_button
+
+	is_shown_when_inactive = {
+		
+		#One party state
+		has_law_or_variant = law_type:law_single_party_state
+		
+	}
+
+	possible = {
+		
+		#Voting is enabled
+		country_has_voting_franchise = yes
+		
+	}
+
+	immediate = {
+	
+		#Set term
+		set_variable = {
+			name = non_competitive_elections_var
+			value = 0
+		}
+		
+		#First elections
+		if = {
+			limit = {
+				NOR = {
+					has_revolution = yes
+					AND = {
+						is_at_war = yes
+						enemy_occupation > 0
+					}
+				}
+			}
+			trigger_event = { id = controlled_elections_system.1 }
+		}
+		
+	}
+	
+	invalid = {
+	
+		OR = { 
+			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			country_has_voting_franchise = no
+		}
+		
+	}
+	
+	on_invalid = {
+		
+		hidden_effect = {
+		
+			#Reset Election cycle
+			remove_variable = non_competitive_elections_var
+			
+			#Clear modifier
+			remove_modifier = controlled_election_results_positive
+			remove_modifier = controlled_election_results_negative
+			remove_modifier = controlled_election_disabled
+			
+			#Clear variable
+			remove_variable = controlled_elections_system_fired
+			remove_variable = controlled_elections_system_radical_votes
+			remove_variable = controlled_elections_system_radical_voters
+			remove_variable = controlled_elections_system_loyalist_voters
+			remove_variable = controlled_elections_system_total_voters
+			remove_variable = controlled_elections_system_radical_votes_rigged
+			
+		}
+		
+	}
+
+	current_value = {
+		value =	root.var:non_competitive_elections_var
+	}
+
+	goal_add_value = {
+		add = 60
+	}
+
+	on_monthly_pulse = {
+		
+		effect = {
+		
+			#Add election day
+			change_variable = {
+				name = non_competitive_elections_var
+				add = 1
+			}
+			clamp_variable = {
+				name = non_competitive_elections_var
+				max = 60
+				min = 0
+			}
+			
+			#Call elections
+			if = {
+				limit = {
+					scope:journal_entry = {
+						is_goal_complete = yes
+					}
+					NOT = { has_modifier = controlled_election_disabled }
+					NOR = {
+						has_revolution = yes
+						AND = {
+							is_at_war = yes
+							enemy_occupation > 0
+						}
+					}
+				}
+				trigger_event = { id = controlled_elections_system.1 }
+			}
+			
+		}
+		
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = wartime_suspended_non_competitive_elections.t
+				trigger = {
+					OR = {
+						has_modifier = controlled_election_disabled
+						has_revolution = yes
+						AND = {
+							is_at_war = yes
+							enemy_occupation > 0
+						}
+					}
+				}
+			}
+			triggered_desc = {
+				desc = regular_non_competitive_elections.t
+				trigger = {
+					
+				}
+			}
+		}
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = yes
+}
