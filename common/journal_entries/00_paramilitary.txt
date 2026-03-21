@@ -4,6 +4,7 @@
 	group = je_group_political_organs
 
 	scripted_button = je_conduct_great_purge_button
+	scripted_button = je_paramilitary_system_dismiss_military_chief_button
 
 	is_shown_when_inactive = {
 	
@@ -31,10 +32,20 @@
 	immediate = {
 		
 		#Set interest group for Paramilitary Group
-		ruler = { interest_group = { save_scope_as = paramilitary_IG } }
-		
-		scope:paramilitary_IG = {
-			set_variable = paramilitary_IG
+		ruler ?= { interest_group = { save_scope_as = paramilitary_IG } }
+		if = {
+			limit = { exists = scope:paramilitary_IG }
+			create_character = {
+				is_agitator = yes
+				interest_group = scope:paramilitary_IG
+				on_created = {
+					add_modifier = { name = head_of_paramilitary }
+				}
+			}
+			random_scope_character = {
+				limit = { has_modifier = head_of_paramilitary }
+				save_scope_as = head_of_paramilitary
+			}
 		}
 		
 		#Paramilitary groups always start off as loyal
@@ -68,6 +79,8 @@
 			
 			NOT = { exists = scope:paramilitary_IG }
 			
+			NOT = { exists = scope:head_of_paramilitary }
+			
 		}
 		
 	}
@@ -84,6 +97,13 @@
 		
 		every_interest_group = {
 			remove_variable = paramilitary_IG
+		}
+		
+		#Clear modifiers
+		every_scope_character = {
+			limit = { has_modifier = head_of_paramilitary }
+			#remove_modifier = head_of_paramilitary
+			retire_character = yes
 		}
 		
 		remove_variable = paramilitary_group_veto_overruled
@@ -351,6 +371,11 @@
 			1 = revolution_system.5
 		}
 		
+	}
+	
+	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
+	modifiers_while_active = {
+		paramilitary_groups_system
 	}
 
 	weight = 11
