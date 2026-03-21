@@ -4706,3 +4706,211 @@ historical_diplomatic_incidents.46 = {
     }
 
 }
+
+# Treaty of Osimo - YUG
+historical_diplomatic_incidents.47 = {
+    type = country_event
+	placement = scope:target_state
+
+    title = YUG_ITA_Treaty_of_Osimo.t 							# Title of the event; ADD LOCALISATION
+    desc = YUG_ITA_Treaty_of_Osimo.d 							# Description of the event; ADD LOCALISATION
+    #flavor = YUG_ITA_Treaty_of_Osimo.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:YUG ?= this											# Change TAG of the overlord ****
+		game_date >= 1975.11.10									# START DATE: Date colony became self governing ****
+		game_date < 1985.11.10									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		NOT = { is_a_nationalist_government = yes }
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = YUG_ITA_Treaty_of_Osimo_hae }	# CHANGE ****
+		
+		#Receipient conditions
+		exists = c:ITA
+		c:ITA ?= {
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			
+			any_scope_state = { 
+				state_region = s:STATE_ISTRIA
+				has_claim_by = c:ITA
+				has_claim_by = ROOT
+			}
+		}
+		NOT = { exists = c:TRE }
+		
+    }
+	
+	immediate = {
+	
+		random_state = {
+			limit = { 
+				state_region = s:STATE_ISTRIA
+				has_claim_by = ROOT
+			}
+			save_scope_as = target_state
+		}
+	
+		# Fire only once
+		set_variable = YUG_ITA_Treaty_of_Osimo_hae				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1				# Accept
+        highlighted_option = yes
+		
+		#Choice for ITA
+		c:ITA ?= {
+			trigger_event = { id = historical_diplomatic_incidents.48 }
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2				# Reject
+		default_option = yes
+		
+		#Infamy
+		create_incident = {
+			country = c:ITA
+			value = 10
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# Treaty of Osimo - ITA
+historical_diplomatic_incidents.48 = {
+    type = country_event
+	placement = scope:target_state
+
+    title = YUG_ITA_Treaty_of_Osimo.t 							# Title of the event; ADD LOCALISATION
+    desc = YUG_ITA_Treaty_of_Osimo.d 							# Description of the event; ADD LOCALISATION
+    #flavor = YUG_ITA_Treaty_of_Osimo.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_signed_contract.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+	
+		random_state = {
+			limit = { 
+				state_region = s:STATE_ISTRIA
+				has_claim_by = c:YUG
+			}
+			save_scope_as = target_state
+		}
+		
+	}
+    
+    option = {
+        name = historical_diplomatic_incidents.option.1				# Accept
+        highlighted_option = yes
+		
+		#Remove claims
+		c:YUG ?= {
+			random_scope_state = {
+				limit = {
+					state_region = s:STATE_ISTRIA
+					has_claim_by = c:YUG
+				}
+				state_region = { remove_claim = c:YUG }
+			}
+		}
+		c:ITA ?= {
+			random_scope_state = {
+				limit = {
+					state_region = s:STATE_ISTRIA
+					has_claim_by = c:ITA
+				}
+				state_region = { remove_claim = c:ITA }
+			}
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_diplomatic_incidents.option.2				# Reject
+		default_option = yes
+		
+		#Infamy
+		create_incident = {
+			country = c:YUG
+			value = 10
+		}
+		change_relations = { 
+			country = c:YUG 
+			value = -100
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
