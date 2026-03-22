@@ -115,16 +115,98 @@ controlled_elections_system.1 = {
 			name = controlled_elections_system_radical_votes_rigged
 			value = var:controlled_elections_system_radical_votes
 		}
-		change_variable = {
-			name = controlled_elections_system_radical_votes_rigged
-			divide = 5
+		if = {
+			limit = { has_law_or_variant = law_type:law_harassment_voting }
+			change_variable = {
+				name = controlled_elections_system_radical_votes_rigged
+				divide = 2
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_gerrymandered_voting }
+			change_variable = {
+				name = controlled_elections_system_radical_votes_rigged
+				divide = 3
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_rigged_voting }
+			change_variable = {
+				name = controlled_elections_system_radical_votes_rigged
+				divide = 5
+			}
+		}
+		
+		#Show result
+		if = {
+			limit = { 
+				var:controlled_elections_system_loyalist_voters >= var:controlled_elections_system_radical_voters
+			}
+			set_variable = {
+				name = controlled_elections_vote_result_display
+				value = var:controlled_elections_system_loyalist_voters
+			}
+			change_variable = {
+				name = controlled_elections_vote_result_display
+				divide = var:controlled_elections_system_total_voters
+			}
+			change_variable = {
+				name = controlled_elections_vote_result_display
+				multiply = 5
+			}
+			change_variable = {
+				name = controlled_elections_vote_result_display
+				add = 95
+			}
+			round_variable = {
+				name = controlled_elections_vote_result_display
+				nearest = 1
+			}
+		}
+		else = {
+			if = {
+				limit = {
+					NOT = { has_law_or_variant = law_type:law_fair_voting }
+					var:controlled_elections_system_radical_votes_rigged >= 1
+				}
+				set_variable = {
+					name = controlled_elections_vote_result_display
+					value = var:controlled_elections_system_radical_votes_rigged
+				}
+			}
+			else = {
+				set_variable = {
+					name = controlled_elections_vote_result_display
+					value = var:controlled_elections_system_radical_votes
+				}
+			}
+			change_variable = {
+				name = controlled_elections_vote_result_display
+				divide = var:controlled_elections_system_total_voters
+			}
+			change_variable = {
+				name = controlled_elections_vote_result_display
+				multiply = 5
+			}
+			change_variable = {
+				name = controlled_elections_vote_result_display
+				subtract = 95
+			}
+			change_variable = {
+				name = controlled_elections_vote_result_display
+				multiply = -1
+			}
+			round_variable = {
+				name = controlled_elections_vote_result_display
+				nearest = 1
+			}
 		}
 		
 	}
 
 	option = {
 		name = controlled_elections_system_option.1 #Accept the result
-		highlighted_option = yes
+		#highlighted_option = yes
 		
 		#Add election result
 		if = {
@@ -137,10 +219,23 @@ controlled_elections_system.1 = {
 			change_infamy = -5
 		}
 		else = {
-			add_modifier = {
-				name = controlled_election_results_negative
-				multiplier = var:controlled_elections_system_radical_votes
-				years = 5
+			if = {
+				limit = {
+					NOT = { has_law_or_variant = law_type:law_fair_voting }
+					var:controlled_elections_system_radical_votes_rigged >= 1
+				}
+				add_modifier = {
+					name = controlled_election_results_negative
+					multiplier = var:controlled_elections_system_radical_votes_rigged
+					years = 5
+				}
+			}
+			else = {
+				add_modifier = {
+					name = controlled_election_results_negative
+					multiplier = var:controlled_elections_system_radical_votes
+					years = 5
+				}
 			}
 		}
 		
@@ -151,49 +246,6 @@ controlled_elections_system.1 = {
 		remove_variable = controlled_elections_system_loyalist_voters
 		remove_variable = controlled_elections_system_total_voters
 		remove_variable = controlled_elections_system_radical_votes_rigged
-		
-		ai_chance = { 
-			base = 90 
-		}
-		
-	}
-	
-	option = {
-		name = controlled_elections_system_option.2 #Modify the result
-		default_option = yes
-		
-		trigger = {
-			
-			#There is some benefit in rigging the vote
-			var:controlled_elections_system_radical_votes_rigged >= 1
-			NOT = { var:controlled_elections_system_loyalist_voters >= var:controlled_elections_system_radical_voters }
-			
-		}
-		
-		#Add election result
-		add_modifier = {
-			name = controlled_election_results_negative
-			multiplier = var:controlled_elections_system_radical_votes_rigged
-			years = 5
-		}
-		change_infamy = 5
-		
-		#Clear variable
-		remove_variable = controlled_elections_system_fired
-		remove_variable = controlled_elections_system_radical_votes
-		remove_variable = controlled_elections_system_radical_voters
-		remove_variable = controlled_elections_system_loyalist_voters
-		remove_variable = controlled_elections_system_total_voters
-		remove_variable = controlled_elections_system_radical_votes_rigged
-		
-		#Domestic reaction
-		add_radicals = {
-			value = medium_radicals
-		}
-		
-		ai_chance = { 
-			base = 10
-		}
 		
 	}
 	
