@@ -1,7 +1,79 @@
 namespace = LBY_gov_changes
 
-# Libyan Coup of 1969
+# Libyan Coup of 1963
 LBY_gov_changes.1 = {
+    type = country_event
+
+    title = LBY_1963_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = LBY_1963_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = LBY_1963_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_politicians_arguing.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:LBY ?= this
+		game_date >= 1963.4.26									# START DATE: Date colony became self governing ****
+		game_date < 1973.4.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_regime_monarchy = yes								# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		has_law_or_variant = law_type:law_devolved_state
+		
+		# Event has not been fired before
+		NOT = { has_variable = LBY_1963_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = LBY_1963_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		activate_law = law_type:law_unitary_state
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_modifier = { 
+			name = domestic_unrest
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# Libyan Coup of 1969
+LBY_gov_changes.2 = {
     type = country_event
 
     title = LBY_1969_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -18,8 +90,7 @@ LBY_gov_changes.1 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:LBY
-		this = c:LBY											# Change TAG of the overlord ****
+		c:LBY ?= this
 		game_date >= 1969.9.1									# START DATE: Date colony became self governing ****
 		game_date < 1979.9.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -45,8 +116,11 @@ LBY_gov_changes.1 = {
         name = historical_gov_changes.option.1					# Accept
         highlighted_option = yes
 		
-		#Becomes independent
-		make_independent = yes
+		#Become independent
+		if = {
+			limit = { is_subject = yes }
+			make_independent = yes
+		}
 		
 		#Leader flees
 		ruler = { exile_character = yes }
