@@ -3326,3 +3326,194 @@ historical_alliances_system.35 = {
     }
 
 }
+
+# Petro-dollar Agreement - NEJ
+historical_alliances_system.36 = {
+    type = country_event
+	placement = c:NEJ
+
+    title = USA_Saudi_Arabia_petrodollar.t 							# Title of the event; ADD LOCALISATION
+    desc = USA_Saudi_Arabia_petrodollar.d 							# Description of the event; ADD LOCALISATION
+    #flavor = USA_Saudi_Arabia_petrodollar.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:NEJ ?= this
+		game_date >= 1974.6.8									# START DATE: Date colony became self governing ****
+		game_date < 1984.6.8									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_monarchy = yes										# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_not_neutral = yes
+		
+		# Event has not been fired before
+		NOT = { has_variable = USA_Saudi_Arabia_petrodollar_hae }	# CHANGE ****
+		
+		#Recipient conditions
+		exists = c:USA
+		c:USA ?= {
+			is_a_democracy = yes								# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no		
+			is_at_war = no										# war = no
+			
+			is_not_neutral = yes
+			
+			country_rank = rank_value:super_power
+			NOT = { is_subject_of = ROOT }
+			
+			#Relevant company
+			any_company = {
+				is_company_type = company_type:company_standard_oil
+			}
+		}
+		NOT = { has_truce_with = c:USA }
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = USA_Saudi_Arabia_petrodollar_hae				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#Option to accept
+		c:USA ?= {
+			trigger_event = { id = historical_alliances_system.37 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# Petro-dollar Agreement - USA
+historical_alliances_system.37 = {
+    type = country_event
+	placement = c:NEJ
+
+    title = USA_Saudi_Arabia_petrodollar.t 							# Title of the event; ADD LOCALISATION
+    desc = USA_Saudi_Arabia_petrodollar.d 							# Description of the event; ADD LOCALISATION
+    #flavor = USA_Saudi_Arabia_petrodollar.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/unspecific_military_parade.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#Petrodollar Agreement
+		create_treaty = {
+			name = treaty_name_historical_petrodollar_agreement
+			first_country = c:USA
+			second_country = c:NEJ
+
+			is_draft = no
+			binding_period = { years = 50 }
+
+			articles_to_create = {
+				{
+					article = foreign_investment_rights
+					source_country = c:USA
+					target_country = c:NEJ
+				}
+				{
+					article = acquire_monopoly_for_company
+					source_country = c:NEJ
+					target_country = c:USA
+					inputs = {
+						{ company = c:USA.company:company_standard_oil }
+						{ building_type = bt:building_oil_rig }
+					}
+				}
+				{
+					article = no_tariffs
+					source_country = c:NEJ
+					target_country = c:USA
+					inputs = {
+						{ goods = g:oil }
+					}
+				}
+				{
+					article = guarantee_independence
+					source_country = c:USA
+					target_country = c:NEJ
+				}
+				{
+					article = military_assistance
+					source_country = c:USA
+					target_country = c:NEJ
+				}
+			}
+		}
+		
+		change_relations = { 
+			country = c:NEJ 
+			value = 50 
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		change_relations = { 
+			country = c:NEJ 
+			value = -50 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}

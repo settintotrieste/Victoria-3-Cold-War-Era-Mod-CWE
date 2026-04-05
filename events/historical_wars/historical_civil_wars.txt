@@ -6431,3 +6431,165 @@ historical_civil_wars.37 = {
     }
 
 }
+
+#Anyanya Rebellion
+historical_civil_wars.38 = {
+    type = country_event
+	placement = scope:Darfur_war_indy_state
+
+    title = SSD_war.SUD.t 												# Title of the event; ADD LOCALISATION
+    desc = SSD_war.SUD.d 												# Description of the event; ADD LOCALISATION
+    #flavor = SSD_war.SUD.f 											# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SUD ?= this
+		game_date >= 1964.10.20
+		game_date < 1974.10.20
+		
+		OR = { 
+			is_a_republican_regime = yes
+			NOT = { has_law_or_variant = law_type:law_multicultural }
+		}
+		is_sufficiently_independent = yes								# is_vassal = no		
+		is_at_war = no													# war = no
+		
+		#Owns country to release
+		NOT = { 														# Colony to be released must not already exist on the map
+			exists = c:SSD												# Change TAG of the colony ****
+		}
+		any_scope_state = { 											# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:south_sudanese }			# Change homeland identity to match colony to be released ****
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = SSD_war_SUD_hccw }						# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		random_scope_state = {
+			limit = { state_region = { is_homeland = cu:south_sudanese } }
+			save_scope_as = Darfur_war_indy_state
+		}
+	
+		# Fire only once
+		set_variable = SSD_war_SUD_hccw									# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1				# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = SSD										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:Darfur_war_indy_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_nationalist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:SSD }
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:south_sudanese } }
+				set_state_owner = c:SSD
+			}
+			create_diplomatic_play = {
+				name = darfuri_war
+				type = dp_annex_war_historical
+				target_country = c:SSD
+				war = yes
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2				# Peace option
+		default_option = yes
+		
+		#Release country
+		create_country = {
+			tag = SSD										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:Darfur_war_indy_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				#UN status
+				set_country_type = unrecognized 
+				
+				# Laws
+				effect_starting_politics_nationalist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				effect_starting_politics_specialisation_natural_resource = yes
+				effect_starting_politics_fiat_standard = yes
+				
+			}
+			
+		}
+		if = {
+			limit = { exists = c:SSD }
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:south_sudanese } }
+				set_state_owner = c:SSD
+			}
+			c:SSD ?= {
+				create_diplomatic_play = {
+					name = darfuri_war
+					type = dp_secession
+					target_country = ROOT
+					war = yes
+				}
+			}
+		}
+		
+		#Large discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}

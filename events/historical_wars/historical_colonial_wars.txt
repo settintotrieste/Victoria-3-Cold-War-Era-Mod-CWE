@@ -1997,3 +1997,235 @@ historical_colonial_wars.10 = {
     }
 
 }
+
+### Brunei Revolt ###
+
+historical_colonial_wars.11 = {
+    type = country_event
+	placement = c:BRU
+
+    title = brunei_revolt_1962.t 									# Title of the event; ADD LOCALISATION
+    desc = brunei_revolt_1962.d 									# Description of the event; ADD LOCALISATION
+    #flavor = brunei_revolt_1962.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { video = "gfx/event_pictures/asia_sepoy_mutiny.bk2" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:GBR ?= this
+		game_date >= 1962.12.8											# START DATE: Date colony became self governing ****
+		game_date < 1964.11.1											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		#is_a_democracy = yes											# Correct gov types
+		is_sufficiently_independent = yes								# is_vassal = no		
+		#is_at_war = no													# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = brunei_revolt_1962_hcw }				# CHANGE ****
+		
+		#Colony conditions
+		exists = c:BRU
+		c:BRU ?= {
+			is_a_monarchy = yes
+			is_direct_subject_of = ROOT
+		}
+		exists = c:MLY
+		c:MLY ?= {
+			is_a_monarchy = yes
+			is_sufficiently_independent = yes
+		}
+		NOT = { 													# Colony to be released must not already exist on the map
+			exists = c:KLM											# Change TAG of the colony ****
+		}
+		any_scope_state = { 										# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:kalimantan }			# Change homeland identity to match colony to be released ****
+		}
+		exists = c:IDO
+		c:IDO ?= {
+			is_sufficiently_independent = yes
+			NOT = { is_direct_subject_of = ROOT }
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released					# DO NOT TOUCH ROOT SECTION
+		every_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:kalimantan }		# Change homeland identity to match colony to be released ****
+			}
+			save_scope_as = colonial_state
+		}
+	
+		# Fire only once
+		set_variable = brunei_revolt_1962_hcw						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_colonial_wars.option.1					# Declare war!
+        highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = KLM										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_communist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "A_M_Azahari_first_name"
+					last_name = "A_M_Azahari_last_name"
+					ruler = yes ig_leader = yes historical = yes
+					birth_date = 1928.9.4
+					interest_group = ig_rural_folk
+					ideology = ideology_democratic
+					culture = cu:kalimantan
+					religion = rel:sunni
+					traits = {
+						charismatic
+						ambitious
+						tactful
+					}
+					on_created = { set_variable = A_M_Azahari }
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+				set_relations = { country = c:IDO value = 100 }
+				
+			}
+		}
+		if = {
+			limit = { exists = c:KLM }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:kalimantan }
+				}
+				set_state_owner = c:KLM
+			}
+		}
+		
+		#Brunei Revolt
+		if = {
+			limit = { exists = c:KLM }
+			c:KLM ?= {
+				create_diplomatic_play = {
+					name = algerian_war
+					type = dp_humiliation
+					target_country = ROOT
+					
+					war = yes
+					
+					add_war_goal = {
+						holder = c:KLM
+						type = annex_country
+						target_country = c:BRU
+					}
+				}
+			}
+		}
+		
+		# Fire only once
+		set_variable = algerian_war_hcw							# Change variable ****
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_colonial_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Release country
+		create_country = {
+			tag = KLM										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_communist_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_pro_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "A_M_Azahari_first_name"
+					last_name = "A_M_Azahari_last_name"
+					ruler = yes ig_leader = yes historical = yes
+					birth_date = 1928.9.4
+					interest_group = ig_rural_folk
+					ideology = ideology_democratic
+					culture = cu:kalimantan
+					religion = rel:sunni
+					traits = {
+						charismatic
+						ambitious
+						tactful
+					}
+					on_created = { set_variable = A_M_Azahari }
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		if = {
+			limit = { exists = c:KLM }
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:kalimantan }
+				}
+				set_state_owner = c:KLM
+			}
+		}
+		
+		#Abandon Brunei
+		c:BRU ?= { make_independent = yes }
+		
+		#Brunei Revolt
+		if = {
+			limit = { exists = c:KLM }
+			c:KLM ?= {
+				create_diplomatic_play = {
+					name = algerian_war
+					type = dp_annex_war_historical
+					target_country = c:BRU
+					war = yes
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
