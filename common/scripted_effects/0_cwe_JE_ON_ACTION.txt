@@ -1182,19 +1182,248 @@ effect_journal_entry_cwe_on_action = {
 effect_party_update_cwe_on_action = {
 
 	if = {
-		limit = { 
-			any_interest_group = { has_party = yes }
+		limit = {
 			in_election_campaign = no
 			has_free_government_reform = no
+		}
+		effect_set_ig_electoral_strategy = yes
+	}
+
+}
+
+effect_set_ig_electoral_strategy = {
+
+	#Weak parties consolidate
+	if = {
+		limit = {
+			NOT = { has_law_or_variant = law_type:law_no_voting }
+			NOR = { 
+				has_law_or_variant = law_type:law_single_party_state 
+				has_law_or_variant = law_type:law_parties_not_allowed
+			}
+			OR = {
+				AND = { 
+					has_law_or_variant = law_type:law_first_past_the_post
+					any_active_party = { count > 2 }
+				}
+				AND = {
+					has_law_or_variant = law_type:law_jefferson_system
+					any_active_party = { count > 3 }
+				}
+			}
 			NOT = {
 				active_law:lawgroup_political_parties ?= {
 					has_amendment = amendment_type:amendment_party_hopping_banned
 				}
 			}
+			any_interest_group = { has_party = yes }
 		}
-		update_party_support = yes
-		save_scope_as = party_update_country
-		post_notification = party_update_notification
+		every_interest_group = {
+			limit = {
+				has_party = yes
+				party ?= {
+					NOT = {
+						any_member = {
+							OR = {
+								is_powerful = yes 
+								ig_clout >= 0.15
+							}
+						}
+					}
+					any_member = {
+						count = 1
+					}
+				}
+				save_temporary_scope_as = THIS_IG_party
+				trigger_if = {
+					limit = { 
+						is_in_government = yes
+					}
+					is_strongest_ig_in_government = no
+					party ?= {
+						any_member = {
+							is_strongest_ig_in_government = no
+						}
+					}
+					owner ?= {
+						any_active_party = {
+							any_member = {
+								is_in_government = yes
+								is_strongest_ig_in_government = yes
+								NOT = { has_party_member = scope:THIS_IG_party }
+							}
+						}
+					}
+				}
+				trigger_if = {
+					limit = { 
+						is_in_government = no
+					}
+					owner ?= {
+						any_active_party = {
+							any_member = {
+								is_in_government = no
+								ig_clout >= 0.05
+								NOT = { has_party_member = scope:THIS_IG_party }
+							}
+						}
+					}
+				}
+			}
+			save_scope_as = IG_expelled_from_party
+			#party ?= {
+			#	remove_ig_from_party = scope:IG_expelled_from_party
+			#}
+			if = {
+				limit = {
+					is_in_government = yes
+				}
+				owner ?= {
+					random_active_party = {
+						limit = {
+							any_member = {
+								is_in_government = yes
+								is_strongest_ig_in_government = yes
+							}
+							NOT = { has_party_member = scope:IG_expelled_from_party }
+						}
+						add_ig_to_party = scope:IG_expelled_from_party
+					}
+				}
+				party ?= { save_scope_as = new_IG_party }
+				owner = { post_notification = party_update_notification }
+			}
+			else_if = {
+				limit = {
+					is_in_government = no
+					NOT = { ig_clout >= 0.15 }
+					owner ?= {
+						any_active_party = {
+							any_member = {
+								is_in_government = no
+								ig_clout > 0.15
+							}
+							#NOT = { has_party_member = scope:IG_expelled_from_party }
+						}
+					}
+				}
+				owner ?= {
+					random_active_party = {
+						limit = {
+							any_member = {
+								is_in_government = no
+								ig_clout >= 0.15
+							}
+							NOT = { has_party_member = scope:IG_expelled_from_party }
+						}
+						add_ig_to_party = scope:IG_expelled_from_party
+					}
+				}
+				party ?= { save_scope_as = new_IG_party }
+				owner = { post_notification = party_update_notification }
+			}
+			else_if = {
+				limit = {
+					is_in_government = no
+					NOT = { ig_clout >= 0.10 }
+					owner ?= {
+						any_active_party = {
+							any_member = {
+								is_in_government = no
+								ig_clout >= 0.10
+							}
+						}
+						#NOT = { has_party_member = scope:IG_expelled_from_party }
+					}
+				}
+				owner ?= {
+					random_active_party = {
+						limit = {
+							any_member = {
+								is_in_government = no
+								ig_clout >= 0.10
+							}
+							NOT = { has_party_member = scope:IG_expelled_from_party }
+						}
+						add_ig_to_party = scope:IG_expelled_from_party
+					}
+				}
+				party ?= { save_scope_as = new_IG_party }
+				owner = { post_notification = party_update_notification }
+			}
+			else_if = {
+				limit = {
+					is_in_government = no
+					NOT = { ig_clout >= 0.05 }
+					owner ?= {
+						any_active_party = {
+							any_member = {
+								is_in_government = no
+								ig_clout >= 0.05
+							}
+						}
+						#NOT = { has_party_member = scope:IG_expelled_from_party }
+					}
+				}
+				owner ?= {
+					random_active_party = {
+						limit = {
+							any_member = {
+								is_in_government = no
+								ig_clout >= 0.05
+							}
+							NOT = { has_party_member = scope:IG_expelled_from_party }
+						}
+						add_ig_to_party = scope:IG_expelled_from_party
+					}
+				}
+				party ?= { save_scope_as = new_IG_party }
+				owner = { post_notification = party_update_notification }
+			}
+		}
+	
+	}
+	
+	#IGs with no parties join those with parties
+	every_interest_group = {
+		limit = {
+			has_party = no
+			ig_counts_as_marginal = no
+		}
+		save_scope_as = IG_expelled_from_party
+		if = {
+			limit = { is_in_government = yes }
+			owner ?= {
+				random_active_party = {
+					limit = {
+						any_member = {
+							is_in_government = yes
+							is_strongest_ig_in_government = yes
+							NOT = { is_same_interest_group_type = scope:IG_expelled_from_party }
+						}
+					}
+					add_ig_to_party = scope:IG_expelled_from_party
+				}
+			}
+			party ?= { save_scope_as = new_IG_party }
+			owner = { post_notification = party_update_notification }
+		}
+		else = {
+			owner ?= {
+				random_active_party = {
+					limit = {
+						any_member = {
+							is_in_government = no
+							ig_clout > 0.05
+							NOT = { is_same_interest_group_type = scope:IG_expelled_from_party }
+						}
+					}
+					add_ig_to_party = scope:IG_expelled_from_party
+				}
+			}
+			party ?= { save_scope_as = new_IG_party }
+			owner = { post_notification = party_update_notification }
+		}
 	}
 
 }
