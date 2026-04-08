@@ -1425,5 +1425,48 @@ effect_set_ig_electoral_strategy = {
 			owner = { post_notification = party_update_notification }
 		}
 	}
+	
+	#Angry IGs in government leave party
+	if = {
+		limit = {
+			NOT = { has_law_or_variant = law_type:law_no_voting }
+			NOR = { 
+				has_law_or_variant = law_type:law_single_party_state 
+				has_law_or_variant = law_type:law_parties_not_allowed
+			}
+			NOT = {
+				active_law:lawgroup_political_parties ?= {
+					has_amendment = amendment_type:amendment_party_hopping_banned
+				}
+			}
+			any_interest_group = { has_party = yes }
+		}
+		every_interest_group = {
+			limit = {
+				has_party = yes
+				party ?= { any_member = { is_in_government = yes } }
+				NOT = { ig_approval > angry }
+			}
+			save_scope_as = IG_expelled_from_party
+			party ?= {
+				save_scope_as = party_affected_by_expulsion_IG
+				remove_ig_from_party = scope:IG_expelled_from_party
+			}
+			remove_ruling_interest_group = yes
+			owner = { post_notification = party_leave_update_notification }
+			owner ?= {
+				random_active_party = {
+					limit = {
+						any_member = {
+							is_in_government = no
+						}
+					}
+					add_ig_to_party = scope:IG_expelled_from_party
+				}
+			}
+			party ?= { save_scope_as = new_IG_party }
+			owner = { post_notification = party_update_notification }
+		}
+	}
 
 }
