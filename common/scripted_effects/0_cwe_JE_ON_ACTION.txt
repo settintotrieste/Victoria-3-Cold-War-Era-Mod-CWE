@@ -1293,7 +1293,10 @@ effect_set_ig_electoral_strategy = {
 				party ?= { save_scope_as = new_IG_party }
 				owner ?= {
 					if = { 
-						limit = { exists = scope:new_IG_party } 
+						limit = { 
+							exists = scope:new_IG_party 
+							exists = scope:IG_expelled_from_party
+						} 
 						post_notification = party_update_notification 
 					}
 				}
@@ -1327,7 +1330,10 @@ effect_set_ig_electoral_strategy = {
 				party ?= { save_scope_as = new_IG_party }
 				owner ?= {
 					if = { 
-						limit = { exists = scope:new_IG_party } 
+						limit = { 
+							exists = scope:new_IG_party 
+							exists = scope:IG_expelled_from_party
+						} 
 						post_notification = party_update_notification 
 					}
 				}
@@ -1361,7 +1367,10 @@ effect_set_ig_electoral_strategy = {
 				party ?= { save_scope_as = new_IG_party }
 				owner ?= {
 					if = { 
-						limit = { exists = scope:new_IG_party } 
+						limit = { 
+							exists = scope:new_IG_party 
+							exists = scope:IG_expelled_from_party
+						} 
 						post_notification = party_update_notification 
 					}
 				}
@@ -1395,40 +1404,16 @@ effect_set_ig_electoral_strategy = {
 				party ?= { save_scope_as = new_IG_party }
 				owner ?= {
 					if = { 
-						limit = { exists = scope:new_IG_party } 
+						limit = { 
+							exists = scope:new_IG_party 
+							exists = scope:IG_expelled_from_party
+						}
 						post_notification = party_update_notification 
 					}
 				}
 			}
 		}
 	
-	}
-	
-	#IGs with no parties join those with parties in opposition
-	every_interest_group = {
-		limit = {
-			has_party = no
-			ig_counts_as_marginal = no
-			NOT = { has_variable = IG_party_banned }
-		}
-		save_scope_as = IG_expelled_from_party
-		owner ?= {
-			random_active_party = {
-				limit = {
-					any_member = {
-						is_in_government = no
-					}
-				}
-				add_ig_to_party = scope:IG_expelled_from_party
-			}
-		}
-		party ?= { save_scope_as = new_IG_party }
-		owner ?= {
-			if = { 
-				limit = { exists = scope:new_IG_party } 
-				post_notification = party_update_notification 
-			}
-		}
 	}
 	
 	#Angry IGs in government leave party
@@ -1459,6 +1444,101 @@ effect_set_ig_electoral_strategy = {
 						any_member = {
 							is_in_government = no
 						}
+					}
+					add_ig_to_party = scope:IG_expelled_from_party
+				}
+			}
+			party ?= { save_scope_as = new_IG_party }
+			owner ?= {
+				if = { 
+					limit = { 
+						exists = scope:new_IG_party 
+						exists = scope:IG_expelled_from_party
+					}
+					post_notification = party_update_notification 
+				}
+			}
+		}
+	}
+	
+	#No party in Gov
+	if = {
+		limit = { 
+			any_interest_group = { has_party = yes }
+			NOT = { 
+				any_active_party = {
+					any_member = { 
+						is_in_government = yes
+					}
+				}
+			}
+		}
+		every_interest_group = {
+			limit = { 
+				has_party = no 
+				is_in_government = yes
+			}
+			remove_ruling_interest_group = yes
+		}
+		post_notification = no_gov_party_update_notification 
+		call_election = {
+			months = 6
+		}
+	}
+	
+	#Mega party was somehow created
+	if = {
+		limit = {
+			any_active_party = {
+				count = 1
+			}
+			any_interest_group = { 
+				ig_counts_as_marginal = no
+				count > 1
+			}
+		}
+		every_interest_group = {
+			limit = {
+				has_party = yes
+				NOT = { ig_approval >= loyal }
+			}
+			save_scope_as = IG_expelled_from_party
+			party ?= {
+				save_scope_as = party_affected_by_expulsion_IG
+				remove_ig_from_party = scope:IG_expelled_from_party
+			}
+			owner ?= { post_notification = mega_party_leave_update_notification }
+			if = {
+				limit = { is_in_government = yes }
+				remove_ruling_interest_group = yes
+			}
+			update_party_support = yes
+		}
+	}
+	
+	#IGs with no parties join those with parties in opposition
+	if = {
+		limit = {
+			any_interest_group = {
+				has_party = no
+				ig_counts_as_marginal = no
+				NOT = { has_variable = IG_party_banned }
+			}
+			any_active_party = {
+				NOT = { any_member = { is_in_government = yes } }
+			}
+		}
+		every_interest_group = {
+			limit = {
+				has_party = no
+				ig_counts_as_marginal = no
+				NOT = { has_variable = IG_party_banned }
+			}
+			save_scope_as = IG_expelled_from_party
+			owner ?= {
+				random_active_party = {
+					limit = {
+						NOT = { any_member = { is_in_government = yes } }
 					}
 					add_ig_to_party = scope:IG_expelled_from_party
 				}
