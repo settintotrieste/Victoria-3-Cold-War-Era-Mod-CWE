@@ -58,14 +58,17 @@ je_elections_system_electoral_fraud_button = {
 		}
 		
 		#Ruler's party gets more votes
-		random_active_party = { 
+		every_active_party = { 
 			limit = { 
-				any_member = { 
-					leader = { is_ruler = yes }
-					is_in_government = yes 
-				} 
+				any_member = { is_in_government = yes }
 			}
-			add_momentum = momentum_large
+			add_momentum = 1.0
+		}
+		every_active_party = { 
+			limit = { 
+				any_member = { is_in_government = no }
+			}
+			add_momentum = -1.0
 		}
 		
 		#Domestic reaction
@@ -231,7 +234,7 @@ je_elections_system_electoral_fraud_button = {
 		}
 		
 		#Lose electoral confidence
-		add_electoral_confidence = -0.20
+		add_electoral_confidence = -1.0
 		
 	}
 	
@@ -241,20 +244,101 @@ je_elections_system_electoral_fraud_button = {
 		#AI will only do this if the ruler is going to lose the election
 		modifier = { 
 			trigger = { 
-				any_interest_group = { 
-					leader = { 
-						is_ruler = yes 
-						OR = {
-							has_ideology = ideology:ideology_autocratic
-							has_ideology = ideology:ideology_power_hungry
-						}
-					}
-					is_in_government = yes
-					is_strongest_ig_in_government = no
+				ruler ?= { 
+					character_is_autocratic = yes
+					interest_group = { is_powerful = no is_in_government = no } 
 				}
 			}
-			add = 10 
-		} 
+			add = 100
+		}
+		
+	}
+	
+}
+
+je_elections_system_corrupt_campaign_button = {
+	name = "je_elections_system_corrupt_campaign_button"
+	desc = "je_elections_system_corrupt_campaign_button_desc"
+
+	visible = { 
+		
+		#Private Companies exists
+		is_a_command_economy = no
+		
+		#Hyper competitive elections
+		OR = {
+			has_law_or_variant = law_type:law_fair_voting
+			has_law_or_variant = law_type:law_harassment_voting
+			has_law_or_variant = law_type:law_gerrymandered_voting
+		}
+		
+		#Ruling party
+		ruler ?= { interest_group = { has_party = yes } }
+		
+	}
+
+	possible = {
+	
+		#No prohibitions on corrupt dealings
+		NOT = { has_law_or_variant = law_type:law_very_high_anti_corruption }
+		
+		#Did not recently give concessions
+		NOT = { has_modifier = corrupt_campaign_donations_modifier }
+		
+	}
+
+	effect = {
+	
+		#Corrupt donations
+		add_modifier = { 
+			name = corrupt_campaign_donations_modifier 
+			months = 6
+		}
+		
+		#Ruler's party gets more votes
+		every_active_party = { 
+			limit = { 
+				any_member = { is_in_government = yes }
+			}
+			add_momentum = 0.50
+		}
+		every_active_party = { 
+			limit = { 
+				any_member = { is_in_government = no }
+			}
+			add_momentum = -0.50
+		}
+		
+		#Lose electoral confidence
+		add_electoral_confidence = -0.20
+		
+		#Risk of corruption scandal
+		random_list = {
+			1 = { ruler ?= { add_modifier = { name = corruption_scandal_character_modifier years = 1 } } }
+			9 = { }
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if the ruler is going to lose the election
+		modifier = { 
+			trigger = { 
+				ruler ?= { 
+					character_is_autocratic = yes
+					OR = {
+						popularity <= 0
+						interest_group = { 
+							is_powerful = no 
+							is_in_government = no 
+						}
+					}
+				}
+			}
+			add = 100
+		}
 		
 	}
 	
