@@ -1465,3 +1465,88 @@ revolution_system.18 = {
 	}
 	
 }
+
+# Parliamentary Regimes
+revolution_system.19 = {
+    type = country_event
+
+    title = enforce_parliamentary_regime_system.t 						# Title of the event; ADD LOCALISATION
+    desc = enforce_parliamentary_regime_system.d 						# Description of the event; ADD LOCALISATION
+    flavor = enforce_parliamentary_regime_system.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "asia_politician_parliament_motion" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Parliamentary Regime
+		has_law_or_variant = law_type:law_HOG_prime_minister
+		NOT = { has_law_or_variant = law_type:law_democratic_legislature }
+		
+		#Ruler's IG is not in Government
+		ruler.interest_group ?= { is_in_government = no }
+		
+    }
+	
+	immediate = {
+		
+	}
+	
+	cancellation_trigger = {
+		
+		NAND = {
+		
+			#Parliamentary Regime
+			has_law_or_variant = law_type:law_HOG_prime_minister
+			NOT = { has_law_or_variant = law_type:law_democratic_legislature }
+			
+			#Ruler's IG is not in Government
+			ruler.interest_group ?= { is_in_government = no }
+			
+		}
+		
+	}
+    
+	option = {
+        name = historical_yes_no.option.1				# Ruler remains in charge
+		highlighted_option = yes
+		
+		#Re-add Ruler's IG to government
+		if = {
+			limit = { ruler.interest_group ?= { has_party = yes } }
+			ruler.interest_group.party ?= { set_ruling_party = yes }
+		}
+		else = {
+			ruler.interest_group ?= { add_ruling_interest_group = yes }
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_yes_no.option.2				# Transfer of Power
+		default_option = yes
+		
+		#New ruler
+		random_interest_group = {
+			limit = { 
+				is_in_government = yes
+				is_strongest_ig_in_government = yes 
+			}
+			leader ?= { set_character_as_ruler = yes }
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
