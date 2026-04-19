@@ -22,11 +22,6 @@
 	possible = {
 	
 		#THIS has strategic bombardment capability
-		any_scope_building = {
-			is_building_type = building_barrack
-			level >= 1
-			NOT = { has_active_production_method = pm_no_organization }
-		}
 		any_military_formation = {
 			filter = {
 				is_army = yes
@@ -75,12 +70,12 @@
 			#THIS has direct access to the TARGET through land
 			has_strategic_land_adjacency = scope:target_country
 			
-			#THIS has direct access to the TARGET through the sea (but only if THIS has a stronger navy than TARGET)
-			AND = {
-				navy_size >= 10
-				has_port = yes
-				scope:target_country = { has_port = yes }
-				navy_size > scope:target_country.navy_size
+			#THIS has direct access to the TARGET through the sea (via blockade)
+			scope:target_country = { 
+				any_scope_state = {
+					is_blockaded_by = ROOT
+					blockade_level >= 1
+				}
 			}
 			
 			#THIS has access to the TARGET through an ally
@@ -88,15 +83,15 @@
 				has_strategic_land_adjacency = scope:target_country
 			}
 			
-			#THIS has access to the TARGET through a subject
+			#THIS has access to the TARGET through a subject OR a country with THIS military bases
 			any_country = {
-				is_subject_of = ROOT
-				has_strategic_land_adjacency = scope:target_country
-			}
-			
-			#THIS has access to the TARGET through an enemy 3P
-			any_country = {
-				has_war_with = ROOT
+				OR = {
+					AND = {
+						is_subject_of = ROOT
+						is_sufficiently_independent = no
+					}
+					has_diplomatic_pact = { who = scope:actor type = military_cooperation_agreement }
+				}
 				has_strategic_land_adjacency = scope:target_country
 			}
 			
@@ -124,7 +119,7 @@
 		
 		### Validation requirements ###
 		
-		requirement_to_maintain = { 
+		requirement_to_maintain = {
 		
 			trigger = { 
 			
@@ -135,11 +130,6 @@
 				has_war_with = scope:target_country
 				
 				#THIS has strategic bombardment capability
-				any_scope_building = {
-					is_building_type = building_barrack
-					level >= 1
-					NOT = { has_active_production_method = pm_no_organization }
-				}
 				any_military_formation = {
 					filter = {
 						is_army = yes
@@ -184,16 +174,16 @@
 				
 				#THIS can reach the TARGET
 				OR = {
-				
+		
 					#THIS has direct access to the TARGET through land
 					has_strategic_land_adjacency = scope:target_country
 					
-					#THIS has direct access to the TARGET through the sea (but only if THIS has a stronger navy than TARGET)
-					AND = {
-						navy_size >= 10
-						has_port = yes
-						scope:target_country = { has_port = yes }
-						navy_size > scope:target_country.navy_size
+					#THIS has direct access to the TARGET through the sea (via blockade)
+					scope:target_country = { 
+						any_scope_state = {
+							is_blockaded_by = ROOT
+							blockade_level >= 1
+						}
 					}
 					
 					#THIS has access to the TARGET through an ally
@@ -201,15 +191,15 @@
 						has_strategic_land_adjacency = scope:target_country
 					}
 					
-					#THIS has access to the TARGET through a subject
+					#THIS has access to the TARGET through a subject OR a country with THIS military bases
 					any_country = {
-						is_subject_of = ROOT
-						has_strategic_land_adjacency = scope:target_country
-					}
-					
-					#THIS has access to the TARGET through an enemy 3P
-					any_country = {
-						has_war_with = ROOT
+						OR = {
+							AND = {
+								is_subject_of = ROOT
+								is_sufficiently_independent = no
+							}
+							has_diplomatic_pact = { who = scope:actor type = military_cooperation_agreement }
+						}
 						has_strategic_land_adjacency = scope:target_country
 					}
 					
