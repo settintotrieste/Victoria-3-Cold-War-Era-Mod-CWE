@@ -103,8 +103,8 @@ je_occupation_of_austria_end_occupation_button = {
 		base = 0
 		
 		#AI will only do this if ruler is hated
-		modifier = { 
-			trigger = {
+		if = { 
+			limit = {
 				OR = {
 					AND = {
 						infamy >= infamy_threshold:pariah
@@ -223,8 +223,8 @@ je_occupation_of_berlin_end_occupation_button = {
 		base = 0
 		
 		#AI will only do this if ruler is hated
-		modifier = { 
-			trigger = {
+		if = { 
+			limit = {
 				OR = {
 					AND = {
 						infamy >= infamy_threshold:pariah
@@ -301,8 +301,8 @@ je_occupation_of_trieste_end_occupation_button = {
 		base = 0
 		
 		#AI will only do this if ruler is hated
-		modifier = { 
-			trigger = {
+		if = { 
+			limit = {
 				OR = {
 					AND = {
 						infamy >= infamy_threshold:pariah
@@ -312,6 +312,768 @@ je_occupation_of_trieste_end_occupation_button = {
 				}
 			}
 			add = 10
+		}
+		
+	}
+	
+}
+
+je_german_unification_button = {
+	name = "je_german_unification_button"
+	desc = "je_german_unification_button_desc"
+
+	visible = {
+		
+		NOT = { c:GER ?= this }
+		
+	}
+
+	possible = {
+	
+		#German reunification factors
+		OR = {
+			
+			#THIS has not become Germany yet
+			AND = {
+			
+				#Independent or are subjects of the same overlord
+				OR = {
+					AND = {
+						is_sufficiently_independent = yes
+						OR = { c:WGR ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:WGR } c:WGR ?= this }
+						OR = { c:EGR ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:EGR } c:EGR ?= this }
+						OR = { c:SGR ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:SGR } c:SGR ?= this }
+					}
+					AND = {
+						is_subject = yes
+						overlord ?= {
+							is_sufficiently_independent = yes
+							is_at_war = no
+						
+							OR = { c:WGR ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:WGR } }
+							OR = { c:EGR ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:EGR } }
+							OR = { c:SGR ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:SGR } }
+						}
+					}
+				}
+				
+				#Other German States share the same gov type
+				custom_tooltip = {
+					text = GER_has_same_gov_type_tt
+					OR = {
+						AND = { OR = { c:WGR ?= { is_a_democracy = yes } NOT = { exists = c:WGR } } OR = { c:EGR ?= { is_a_democracy = yes } NOT = { exists = c:EGR } } OR = { c:SGR ?= { is_a_democracy = yes } NOT = { exists = c:SGR } } }
+						AND = { OR = { c:WGR ?= { is_a_monarchy = yes } NOT = { exists = c:WGR } } OR = { c:EGR ?= { is_a_monarchy = yes } NOT = { exists = c:EGR } } OR = { c:SGR ?= { is_a_monarchy = yes } NOT = { exists = c:SGR } } }
+						AND = { OR = { c:WGR ?= { is_a_communist_government = yes } NOT = { exists = c:WGR } } OR = { c:EGR ?= { is_a_communist_government = yes } NOT = { exists = c:EGR } } OR = { c:SGR ?= { is_a_communist_government = yes } NOT = { exists = c:SGR } } }
+						AND = { OR = { c:WGR ?= { is_a_nationalist_government = yes } NOT = { exists = c:WGR } } OR = { c:EGR ?= { is_a_nationalist_government = yes } NOT = { exists = c:EGR } } OR = { c:SGR ?= { is_a_nationalist_government = yes } NOT = { exists = c:SGR } } }
+						AND = { OR = { c:WGR ?= { is_a_theocratic_government = yes } NOT = { exists = c:WGR } } OR = { c:EGR ?= { is_a_theocratic_government = yes } NOT = { exists = c:EGR } } OR = { c:SGR ?= { is_a_theocratic_government = yes } NOT = { exists = c:SGR } } }
+					}
+				}
+				
+			}
+			
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+	}
+
+	effect = {
+		
+		#Become Germany
+		if = {
+			limit = {
+				NOT = { exists = c:GER }
+				NOT = { c:GER ?= this }
+			}
+			change_tag = GER
+		}
+		if = {
+			limit = {
+				exists = c:GER
+				NOT = { c:GER ?= this }
+			}
+			c:GER ?= { annex_with_incorporation = ROOT }
+		}
+		
+		#Unify Germany
+		every_country = {
+			limit = { 
+				is_player = no
+				OR = { 
+					c:WGR ?= this
+					c:EGR ?= this
+					c:SGR ?= this
+				}
+			}
+			save_scope_as = GER_state
+			c:GER ?= { annex_with_incorporation = scope:GER_state }
+		}
+		
+		#Set new capital
+		if = {
+			limit = {
+				c:GER ?= this
+				exists = c:FCB
+				c:FCB ?= { 
+					OR = { 
+						is_sufficiently_independent = yes
+						has_modifier = condominium_modifier 
+						is_subject_of = ROOT
+					}
+				}
+			}
+			annex_with_incorporation = c:FCB
+		}
+		if = {
+			limit = { 
+				capital = { NOT = { state_region = s:STATE_BRANDENBURG } }
+				has_state_in_state_region = STATE_BRANDENBURG
+			}
+			set_capital = STATE_BRANDENBURG
+		}
+		
+		#Prestige from re-unification
+		add_modifier = { name = national_pride_modifier months = 60 is_decaying = yes }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will give priority to player
+		if = {
+			limit = {
+				OR = {
+					c:WGR ?= this
+					c:SGR ?= this
+				}
+				NOR = {
+					c:WGR ?= { is_player = yes }
+					c:EGR ?= { is_player = yes }
+					c:SGR ?= { is_player = yes }
+				}
+			}
+			add = 100
+		}
+		
+	}
+	
+}
+
+je_austrian_unification_button = {
+	name = "je_austrian_unification_button"
+	desc = "je_austrian_unification_button_desc"
+
+	visible = {
+		
+		NOT = { c:AUS ?= this }
+		
+	}
+
+	possible = {
+	
+		#German reunification factors
+		OR = {
+			
+			#THIS has not become Germany yet
+			AND = {
+			
+				#Independent or are subjects of the same overlord
+				OR = {
+					AND = {
+						is_sufficiently_independent = yes
+						OR = { c:WAU ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:WAU } c:WAU ?= this }
+						OR = { c:EAU ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:EAU } c:EAU ?= this }
+					}
+					AND = {
+						is_subject = yes
+						overlord ?= {
+							is_sufficiently_independent = yes
+							is_at_war = no
+						
+							OR = { c:WAU ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:WAU } }
+							OR = { c:EAU ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:EAU } }
+						}
+					}
+				}
+				
+				#Other German States share the same gov type
+				custom_tooltip = {
+					text = AUS_has_same_gov_type_tt
+					OR = {
+						AND = { OR = { c:WAU ?= { is_a_democracy = yes } NOT = { exists = c:WAU } } OR = { c:EAU ?= { is_a_democracy = yes } NOT = { exists = c:EAU } } }
+						AND = { OR = { c:WAU ?= { is_a_monarchy = yes } NOT = { exists = c:WAU } } OR = { c:EAU ?= { is_a_monarchy = yes } NOT = { exists = c:EAU } } }
+						AND = { OR = { c:WAU ?= { is_a_communist_government = yes } NOT = { exists = c:WAU } } OR = { c:EAU ?= { is_a_communist_government = yes } NOT = { exists = c:EAU } } }
+						AND = { OR = { c:WAU ?= { is_a_nationalist_government = yes } NOT = { exists = c:WAU } } OR = { c:EAU ?= { is_a_nationalist_government = yes } NOT = { exists = c:EAU } } }
+						AND = { OR = { c:WAU ?= { is_a_theocratic_government = yes } NOT = { exists = c:WAU } } OR = { c:EAU ?= { is_a_theocratic_government = yes } NOT = { exists = c:EAU } } }
+					}
+				}
+				
+			}
+			
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+	}
+
+	effect = {
+		
+		#Become Germany
+		if = {
+			limit = {
+				NOT = { exists = c:AUS }
+				NOT = { c:AUS ?= this }
+			}
+			change_tag = AUS
+		}
+		if = {
+			limit = {
+				exists = c:AUS
+				NOT = { c:AUS ?= this }
+			}
+			c:AUS ?= { annex_with_incorporation = ROOT }
+		}
+		
+		#Unify Germany
+		every_country = {
+			limit = { 
+				is_player = no
+				OR = { 
+					c:WAU ?= this
+					c:EAU ?= this
+				}
+			}
+			save_scope_as = AUS_state
+			c:AUS ?= { annex_with_incorporation = scope:AUS_state }
+		}
+		
+		#Prestige from re-unification
+		add_modifier = { name = national_pride_modifier months = 60 is_decaying = yes }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will give priority to player
+		if = {
+			limit = {
+				c:WAU ?= this
+				NOR = {
+					c:WAU ?= { is_player = yes }
+					c:EAU ?= { is_player = yes }
+				}
+			}
+			add = 100
+		}
+		
+	}
+	
+}
+
+je_chinese_unification_button = {
+	name = "je_chinese_unification_button"
+	desc = "je_chinese_unification_button_desc"
+
+	visible = {
+		
+		NOT = { c:CHI ?= this }
+		
+	}
+
+	possible = {
+	
+		#German reunification factors
+		OR = {
+			
+			#THIS has not become Germany yet
+			AND = {
+			
+				#Independent or are subjects of the same overlord
+				OR = {
+					AND = {
+						is_sufficiently_independent = yes
+						OR = { c:ROC ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:ROC } c:ROC ?= this }
+						OR = { c:PRC ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:PRC } c:PRC ?= this }
+					}
+					AND = {
+						is_subject = yes
+						overlord ?= {
+							is_sufficiently_independent = yes
+							is_at_war = no
+						
+							OR = { c:ROC ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:ROC } }
+							OR = { c:PRC ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:PRC } }
+						}
+					}
+				}
+				
+				#Other German States share the same gov type
+				custom_tooltip = {
+					text = CHI_has_same_gov_type_tt
+					OR = {
+						AND = { OR = { c:ROC ?= { is_a_democracy = yes } NOT = { exists = c:ROC } } OR = { c:PRC ?= { is_a_democracy = yes } NOT = { exists = c:PRC } } }
+						AND = { OR = { c:ROC ?= { is_a_monarchy = yes } NOT = { exists = c:ROC } } OR = { c:PRC ?= { is_a_monarchy = yes } NOT = { exists = c:PRC } } }
+						AND = { OR = { c:ROC ?= { is_a_communist_government = yes } NOT = { exists = c:ROC } } OR = { c:PRC ?= { is_a_communist_government = yes } NOT = { exists = c:PRC } } }
+						AND = { OR = { c:ROC ?= { is_a_nationalist_government = yes } NOT = { exists = c:ROC } } OR = { c:PRC ?= { is_a_nationalist_government = yes } NOT = { exists = c:PRC } } }
+						AND = { OR = { c:ROC ?= { is_a_theocratic_government = yes } NOT = { exists = c:ROC } } OR = { c:PRC ?= { is_a_theocratic_government = yes } NOT = { exists = c:PRC } } }
+					}
+				}
+				
+			}
+			
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+	}
+
+	effect = {
+		
+		#Become Germany
+		if = {
+			limit = {
+				NOT = { exists = c:CHI }
+				NOT = { c:CHI ?= this }
+			}
+			change_tag = CHI
+		}
+		if = {
+			limit = {
+				exists = c:CHI
+				NOT = { c:CHI ?= this }
+			}
+			c:CHI ?= { annex_with_incorporation = ROOT }
+		}
+		
+		#Unify Germany
+		every_country = {
+			limit = { 
+				is_player = no
+				OR = { 
+					c:ROC ?= this
+					c:PRC ?= this
+				}
+			}
+			save_scope_as = CHI_state
+			c:CHI ?= { annex_with_incorporation = scope:CHI_state }
+		}
+		
+		#Set new capital
+		if = {
+			limit = { 
+				is_a_communist_government = yes
+				capital = { NOT = { state_region = s:STATE_BEIJING } }
+				owns_entire_state_region = STATE_BEIJING
+			}
+			set_capital = STATE_BEIJING
+		}
+		if = {
+			limit = { 
+				NOT = { is_a_communist_government = yes }
+				capital = { NOT = { state_region = s:STATE_NANJING } }
+				owns_entire_state_region = STATE_NANJING
+			}
+			set_capital = STATE_NANJING
+		}
+		
+		#Prestige from re-unification
+		add_modifier = { name = national_pride_modifier months = 60 is_decaying = yes }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will give priority to player
+		if = {
+			limit = {
+				c:ROC ?= this
+				NOR = {
+					c:ROC ?= { is_player = yes }
+					c:PRC ?= { is_player = yes }
+				}
+			}
+			add = 100
+		}
+		
+	}
+	
+}
+
+je_vietnamese_unification_button = {
+	name = "je_vietnamese_unification_button"
+	desc = "je_vietnamese_unification_button_desc"
+
+	visible = {
+		
+		NOT = { c:DAI ?= this }
+		
+	}
+
+	possible = {
+	
+		#German reunification factors
+		OR = {
+			
+			#THIS has not become Germany yet
+			AND = {
+			
+				#Independent or are subjects of the same overlord
+				OR = {
+					AND = {
+						is_sufficiently_independent = yes
+						OR = { c:SVM ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:SVM } c:SVM ?= this }
+						OR = { c:NVM ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:NVM } c:NVM ?= this }
+					}
+					AND = {
+						is_subject = yes
+						overlord ?= {
+							is_sufficiently_independent = yes
+							is_at_war = no
+						
+							OR = { c:SVM ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:SVM } }
+							OR = { c:NVM ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:NVM } }
+						}
+					}
+				}
+				
+				#Other German States share the same gov type
+				custom_tooltip = {
+					text = DAI_has_same_gov_type_tt
+					OR = {
+						AND = { OR = { c:SVM ?= { is_a_democracy = yes } NOT = { exists = c:SVM } } OR = { c:NVM ?= { is_a_democracy = yes } NOT = { exists = c:NVM } } }
+						AND = { OR = { c:SVM ?= { is_a_monarchy = yes } NOT = { exists = c:SVM } } OR = { c:NVM ?= { is_a_monarchy = yes } NOT = { exists = c:NVM } } }
+						AND = { OR = { c:SVM ?= { is_a_communist_government = yes } NOT = { exists = c:SVM } } OR = { c:NVM ?= { is_a_communist_government = yes } NOT = { exists = c:NVM } } }
+						AND = { OR = { c:SVM ?= { is_a_nationalist_government = yes } NOT = { exists = c:SVM } } OR = { c:NVM ?= { is_a_nationalist_government = yes } NOT = { exists = c:NVM } } }
+						AND = { OR = { c:SVM ?= { is_a_theocratic_government = yes } NOT = { exists = c:SVM } } OR = { c:NVM ?= { is_a_theocratic_government = yes } NOT = { exists = c:NVM } } }
+					}
+				}
+				
+			}
+			
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+	}
+
+	effect = {
+		
+		#Become Germany
+		if = {
+			limit = {
+				NOT = { exists = c:DAI }
+				NOT = { c:DAI ?= this }
+			}
+			change_tag = DAI
+		}
+		if = {
+			limit = {
+				exists = c:DAI
+				NOT = { c:DAI ?= this }
+			}
+			c:DAI ?= { annex_with_incorporation = ROOT }
+		}
+		
+		#Unify Germany
+		every_country = {
+			limit = { 
+				is_player = no
+				OR = { 
+					c:SVM ?= this
+					c:NVM ?= this
+				}
+			}
+			save_scope_as = DAI_state
+			c:DAI ?= { annex_with_incorporation = scope:DAI_state }
+		}
+		
+		#Set new capital
+		if = {
+			limit = { 
+				is_a_communist_government = yes
+				capital = { NOT = { state_region = s:STATE_TONKIN } }
+				owns_entire_state_region = STATE_TONKIN
+			}
+			set_capital = STATE_TONKIN
+		}
+		if = {
+			limit = { 
+				NOT = { is_a_communist_government = yes }
+				capital = { NOT = { state_region = s:STATE_MEKONG } }
+				owns_entire_state_region = STATE_MEKONG
+			}
+			set_capital = STATE_MEKONG
+		}
+		
+		#Prestige from re-unification
+		add_modifier = { name = national_pride_modifier months = 60 is_decaying = yes }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will give priority to player
+		if = {
+			limit = {
+				c:SVM ?= this
+				NOR = {
+					c:SVM ?= { is_player = yes }
+					c:NVM ?= { is_player = yes }
+				}
+			}
+			add = 100
+		}
+		
+	}
+	
+}
+
+je_korean_unification_button = {
+	name = "je_korean_unification_button"
+	desc = "je_korean_unification_button_desc"
+
+	visible = {
+		
+		NOT = { c:KOR ?= this }
+		
+	}
+
+	possible = {
+	
+		#German reunification factors
+		OR = {
+			
+			#THIS has not become Germany yet
+			AND = {
+			
+				#Independent or are subjects of the same overlord
+				OR = {
+					AND = {
+						is_sufficiently_independent = yes
+						OR = { c:SKO ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:SKO } c:SKO ?= this }
+						OR = { c:NKO ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:NKO } c:NKO ?= this }
+					}
+					AND = {
+						is_subject = yes
+						overlord ?= {
+							is_sufficiently_independent = yes
+							is_at_war = no
+						
+							OR = { c:SKO ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:SKO } }
+							OR = { c:NKO ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:NKO } }
+						}
+					}
+				}
+				
+				#Other German States share the same gov type
+				custom_tooltip = {
+					text = KOR_has_same_gov_type_tt
+					OR = {
+						AND = { OR = { c:SKO ?= { is_a_democracy = yes } NOT = { exists = c:SKO } } OR = { c:NKO ?= { is_a_democracy = yes } NOT = { exists = c:NKO } } }
+						AND = { OR = { c:SKO ?= { is_a_monarchy = yes } NOT = { exists = c:SKO } } OR = { c:NKO ?= { is_a_monarchy = yes } NOT = { exists = c:NKO } } }
+						AND = { OR = { c:SKO ?= { is_a_communist_government = yes } NOT = { exists = c:SKO } } OR = { c:NKO ?= { is_a_communist_government = yes } NOT = { exists = c:NKO } } }
+						AND = { OR = { c:SKO ?= { is_a_nationalist_government = yes } NOT = { exists = c:SKO } } OR = { c:NKO ?= { is_a_nationalist_government = yes } NOT = { exists = c:NKO } } }
+						AND = { OR = { c:SKO ?= { is_a_theocratic_government = yes } NOT = { exists = c:SKO } } OR = { c:NKO ?= { is_a_theocratic_government = yes } NOT = { exists = c:NKO } } }
+					}
+				}
+				
+			}
+			
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+	}
+
+	effect = {
+		
+		#Become Germany
+		if = {
+			limit = {
+				NOT = { exists = c:KOR }
+				NOT = { c:KOR ?= this }
+			}
+			change_tag = KOR
+		}
+		if = {
+			limit = {
+				exists = c:KOR
+				NOT = { c:KOR ?= this }
+			}
+			c:KOR ?= { annex_with_incorporation = ROOT }
+		}
+		
+		#Unify Germany
+		every_country = {
+			limit = { 
+				is_player = no
+				OR = { 
+					c:SKO ?= this
+					c:NKO ?= this
+				}
+			}
+			save_scope_as = KOR_state
+			c:KOR ?= { annex_with_incorporation = scope:KOR_state }
+		}
+		
+		#Set new capital
+		if = {
+			limit = {
+				is_a_communist_government = yes
+				capital = { NOT = { state_region = s:STATE_PYONGYANG } }
+				owns_entire_state_region = STATE_PYONGYANG
+			}
+			set_capital = STATE_PYONGYANG
+		}
+		if = {
+			limit = { 
+				NOT = { is_a_communist_government = yes }
+				capital = { NOT = { state_region = s:STATE_SEOUL } }
+				owns_entire_state_region = STATE_SEOUL
+			}
+			set_capital = STATE_SEOUL
+		}
+		
+		#Prestige from re-unification
+		add_modifier = { name = national_pride_modifier months = 60 is_decaying = yes }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will give priority to player
+		if = {
+			limit = {
+				c:SKO ?= this
+				NOR = {
+					c:SKO ?= { is_player = yes }
+					c:NKO ?= { is_player = yes }
+				}
+			}
+			add = 100
+		}
+		
+	}
+	
+}
+
+je_yemeni_unification_button = {
+	name = "je_yemeni_unification_button"
+	desc = "je_yemeni_unification_button_desc"
+
+	visible = {
+		
+		NOT = { c:YEM ?= this }
+		
+	}
+
+	possible = {
+	
+		#German reunification factors
+		OR = {
+			
+			#THIS has not become Germany yet
+			AND = {
+			
+				#Independent or are subjects of the same overlord
+				OR = {
+					AND = {
+						is_sufficiently_independent = yes
+						OR = { c:NYE ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:NYE } c:NYE ?= this }
+						OR = { c:SYE ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:SYE } c:SYE ?= this }
+					}
+					AND = {
+						is_subject = yes
+						overlord ?= {
+							is_sufficiently_independent = yes
+							is_at_war = no
+						
+							OR = { c:NYE ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:NYE } }
+							OR = { c:SYE ?= { OR = { is_direct_subject_of = ROOT is_sufficiently_independent = yes } } NOT = { exists = c:SYE } }
+						}
+					}
+				}
+				
+				#Other German States share the same gov type
+				custom_tooltip = {
+					text = YEM_has_same_gov_type_tt
+					OR = {
+						AND = { OR = { c:NYE ?= { is_a_democracy = yes } NOT = { exists = c:NYE } } OR = { c:SYE ?= { is_a_democracy = yes } NOT = { exists = c:SYE } } }
+						AND = { OR = { c:NYE ?= { is_a_monarchy = yes } NOT = { exists = c:NYE } } OR = { c:SYE ?= { is_a_monarchy = yes } NOT = { exists = c:SYE } } }
+						AND = { OR = { c:NYE ?= { is_a_communist_government = yes } NOT = { exists = c:NYE } } OR = { c:SYE ?= { is_a_communist_government = yes } NOT = { exists = c:SYE } } }
+						AND = { OR = { c:NYE ?= { is_a_nationalist_government = yes } NOT = { exists = c:NYE } } OR = { c:SYE ?= { is_a_nationalist_government = yes } NOT = { exists = c:SYE } } }
+						AND = { OR = { c:NYE ?= { is_a_theocratic_government = yes } NOT = { exists = c:NYE } } OR = { c:SYE ?= { is_a_theocratic_government = yes } NOT = { exists = c:SYE } } }
+					}
+				}
+				
+			}
+			
+		}
+		
+		#THIS is not at war
+		is_at_war = no
+		
+	}
+
+	effect = {
+		
+		#Become Germany
+		if = {
+			limit = {
+				NOT = { exists = c:YEM }
+				NOT = { c:YEM ?= this }
+			}
+			change_tag = YEM
+		}
+		if = {
+			limit = {
+				exists = c:YEM
+				NOT = { c:YEM ?= this }
+			}
+			c:YEM ?= { annex_with_incorporation = ROOT }
+		}
+		
+		#Unify Germany
+		every_country = {
+			limit = { 
+				is_player = no
+				OR = { 
+					c:NYE ?= this
+					c:SYE ?= this
+				}
+			}
+			save_scope_as = YEM_state
+			c:YEM ?= { annex_with_incorporation = scope:YEM_state }
+		}
+		
+		#Prestige from re-unification
+		add_modifier = { name = national_pride_modifier months = 60 is_decaying = yes }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will give priority to player
+		if = {
+			limit = {
+				c:NYE ?= this
+				NOR = {
+					c:NYE ?= { is_player = yes }
+					c:SYE ?= { is_player = yes }
+				}
+			}
+			add = 100
 		}
 		
 	}
