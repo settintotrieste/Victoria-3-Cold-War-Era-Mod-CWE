@@ -551,7 +551,7 @@ ai_strategy_default = {
 				if = {
 					limit = { 
 						NOT = { has_strategic_land_adjacency = scope:target_state } 
-						scope:target_state = { has_port_country = no }
+						scope:target_state = { has_port_state = no }
 					}
 					multiply = 0.5
 				}
@@ -1435,6 +1435,276 @@ ai_strategy_default = {
 		max = 10000 #Hard Capped to prevent unbearable lag
 	}
 	
+	strategic_region_stance_type_scores = {
+		stance_conquer_region = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:target_region = {
+						any_scope_country = {
+							NOR = {
+								this = root
+								is_subject_of = root
+							}
+						}
+					}
+				}
+
+				add = {
+					desc = "AI_REGION_STANCE_BASE_VALUE"
+					value = 100
+				}
+
+				add = {
+					desc = "AI_REGION_STANCE_NUMBER_OF_CLAIMS"
+					scope:target_region = {
+						every_scope_state = {
+							limit = {
+								owner = {
+									NOT = { is_country_type = decentralized }
+								}
+								has_claim_by = root
+							}
+							add = 100
+						}
+					}
+				}
+
+				if = {
+					limit = {
+						is_country_type = unrecognized
+						scope:target_region = {
+							this = root.capital.region
+						}
+					}
+					add = {
+						desc = "AI_REGION_STANCE_CAPITAL_REGION"
+						value = 150
+					}
+				}
+
+				if = {
+					limit = {
+						has_strategy = ai_strategy_territorial_expansion
+					}
+					multiply = {
+						desc = "ai_strategy_territorial_expansion"
+						value = 3
+					}
+				}
+
+				if = {
+					limit = {
+						is_subject = yes
+						liberty_desire <= 25
+					}
+					multiply = {
+						desc = "AI_REGION_STANCE_IS_LOYAL_SUBJECT"
+						value = 0.5
+					}
+				}
+			}
+
+			if = {
+				limit = {
+					country_rank <= rank_value:minor_power
+					scope:target_region != capital.region
+				}
+				multiply = {
+					desc = "AI_REGION_STANCE_SMALL_COUNTRY"
+					value = 0
+				}
+			}
+		}
+
+		stance_protect_region = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:target_region = {
+						any_scope_country = {
+							NOT = {
+								this = root
+							}
+						}
+					}
+				}
+				add = {
+					desc = "AI_REGION_STANCE_BASE_VALUE"
+					value = 100
+				}
+
+				if = {
+					limit = {
+						scope:target_region = {
+							this = root.capital.region
+						}
+					}
+					add = {
+						desc = "AI_REGION_STANCE_CAPITAL_REGION"
+						value = 100
+					}
+				}
+			}
+
+			if = {
+				limit = {
+					country_rank <= rank_value:minor_power
+					scope:target_region != capital.region
+				}
+				multiply = {
+					desc = "AI_REGION_STANCE_SMALL_COUNTRY"
+					value = 0
+				}
+			}
+		}
+
+		stance_colonize_region = {
+			value = 0
+
+			if = {
+				limit = {
+					NOR = {
+						has_law_or_variant = law_type:law_no_colonial_affairs
+						is_country_type = unrecognized
+					}
+					OR = {
+						any_neighbouring_state = {
+							region = scope:target_region
+						}
+						navy_size >= 50
+					}
+					scope:target_region = {
+						any_scope_state = {
+							owner = {
+								OR = {
+									is_country_type = unrecognized
+									is_country_type = decentralized
+								}
+							}
+						}
+					}
+				}
+
+				add = {
+					desc = "AI_REGION_STANCE_BASE_VALUE"
+					value = 100
+				}
+
+				if = {
+					limit = {
+						country_is_colonial_or_company = yes
+					}
+					add =  {
+						desc = "AI_REGION_STANCE_COLONIAL_COUNTRY"
+						value = 200
+					}
+				}
+
+				scope:target_region = {
+					every_scope_state = {
+						limit = {
+							owner = {
+								OR = {
+									is_country_type = unrecognized
+									is_country_type = decentralized
+								}
+							}
+						}
+						add = {
+							desc = "AI_REGION_STANCE_FREE_REAL_ESTATE"
+							value = 200
+						}
+					}
+				}
+
+				if = {
+					limit = {
+						has_strategy = ai_strategy_colonial_expansion
+					}
+					multiply = {
+						desc = "ai_strategy_colonial_expansion"
+						value = 3
+					}
+				}
+				
+			}
+
+			if = {
+				limit = {
+					country_rank <= rank_value:minor_power
+					scope:target_region != capital.region
+				}
+				multiply = {
+					desc = "AI_REGION_STANCE_SMALL_COUNTRY"
+					value = 0
+				}
+			}
+			
+		}
+
+		stance_none = {
+			value = 0
+
+			add = {
+				desc = "AI_REGION_STANCE_BASE_VALUE"
+				value = 200
+			}
+
+			if = {
+				limit = {
+					scope:target_region != capital.region
+					any_country_strategic_region = {
+						NOT = {
+							root = {
+								has_region_stance = {
+									region = prev
+									stance = stance_none
+								}
+							}
+						}
+					}
+				}
+				add = {
+					desc = "AI_REGION_STANCE_EXISTING_REGION_STANCES"
+					every_country_strategic_region = {
+						limit = {
+							NOT = {
+								root = {
+									has_region_stance = {
+										region = prev
+										stance = stance_none
+									}
+								}
+							}
+						}
+						add = 200
+						multiply = {
+							value = 10
+							subtract = root.country_rank
+							min = 1
+						}
+						round = yes
+						min = 100
+					}
+				}
+			}
+
+			if = {
+				limit = {
+					has_strategy = ai_strategy_armed_isolationism
+					scope:target_region != capital.region
+				}
+				multiply = {
+					desc = "ai_strategy_armed_isolationism"
+					value = 1.5
+				}
+			}
+		}
+	}
+	
 	# How much does the AI want to prioritize economic construction vs government spending?
 	# Having a value above 0 here makes the AI less willing to spend on government expenses and more willing to take on debt to build production buildings
 	# Values below 0 have the opposite effect and thus also increase AI government spending
@@ -1445,19 +1715,94 @@ ai_strategy_default = {
 		value = 0.0
 	}
 	
+	# How many levels of barracks with non-marine units should the AI have
+	# Using this value in other strategies will function additively
 	wanted_army_size = {
-		value = wanted_army_size_script_value
-		# moved to script_values so this can be called outside of AI.
-		# How many levels of barracks should the AI have
-		# Using this value in other strategies will function additively
+		value = wanted_army_size_script_value # moved to script_values so this can be called outside of AI
+		subtract = wanted_marines_size_script_value
+	}
+	
+	# How many  levels of barracks with marine units should the AI have
+	# Using this value in other strategies will function additively
+	wanted_marines  = {
+		value = wanted_marines_size_script_value # moved to script_values so this can be called outside of AI
 	}
 
+	# Target number of units per marine formation
+	target_marine_formation_size = {
+		value = 5
+	
+		add = {
+			value = total_marine_capacity
+			divide = 5
+			max = 5
+		}
+		
+	}
+
+	# How many levels of naval administration should the AI have
+	# Using this value in other strategies will function additively
 	wanted_navy_size = {
-		value = wanted_navy_size_script_value
-		# moved to script_values so this can be called outside of AI.
-		# How many levels of naval base should the AI have
-		# Using this value in other strategies will function additively
-	}		
+		value = wanted_navy_size_script_value # moved to script_values so this can be called outside of AI
+	}
+	
+	# How many levels of naval fortification should the AI have in a state
+	# Using this value in other strategies will function additively
+	wanted_naval_fortification_levels = {
+		value = 0
+		
+		if = {
+			limit = {
+				state_population >= 50000
+			}
+			
+			if = {
+				limit = {
+					has_building = building_port
+				}
+				add = 1
+			}
+			
+			if = {
+				limit = {
+					has_building = building_shipyard
+				}
+				add = 1
+			}				
+
+			if = {
+				limit = { 
+					NOT = { any_neighbouring_state = {} } # Is this a one-state island?
+				}
+				
+				add = 1
+			}
+		}	
+		
+		if = {
+			limit = {
+				is_capital = yes
+			}
+			add = 2
+		}	
+		
+		if = {
+			limit = {
+				is_world_market_hub = yes
+			}
+			add = 2
+		}
+		
+		if = {
+			limit = {
+				any_scope_strait = {} # Is there a strait linked to this state?
+			}
+			
+			add = 2
+		}
+		
+		max = 5
+	}
 	
 	# Set the weights for combat unit groups, this determines the ratio that the AI aims to have of each, and thus what unit types it adds to formations
 	# Using this value in other strategies will function additively
@@ -1518,31 +1863,6 @@ ai_strategy_default = {
 				limit = { has_law_or_variant = law_type:law_peasant_levies }
 				multiply = 1.5
 			}				
-		}
-		combat_unit_group_light_ship = {
-			value = 100
-		}
-		combat_unit_group_capital_ship = {
-			value = 50
-			if = {
-				limit = { country_rank >= rank_value:great_power }
-				add = 30
-			}
-			if = {
-				limit = { country_rank = rank_value:major_power }
-				add = 10
-			}			
-		}
-		combat_unit_group_support_ship = {
-			value = 10
-			if = {
-				limit = { country_rank >= rank_value:great_power }
-				add = 30
-			}
-			if = {
-				limit = { country_rank = rank_value:major_power }
-				add = 10
-			}
 		}
 	}
 	
@@ -1774,6 +2094,83 @@ ai_strategy_default = {
 	# How important is it that the AI maintains an interest in a specific strategic region (added on top of region value calculations set in defines)
 	# Using this value in other strategies will function additively
 	strategic_region_scores = {
+		value = 0
+
+		# Base Value
+		add = {
+			value = 100
+
+			add = {
+				scope:region = {
+					every_scope_state = {
+						add = gdp
+					}
+				}
+				divide = 40000
+				max = 50
+			}
+
+			every_rival_country = {
+				limit = {
+					has_strategic_region_interest_tier = {
+						strategic_region = scope:region
+						value >= 1
+					}
+				}
+				add = 25
+			}
+
+			scope:region = {
+				every_scope_state = {
+					limit = {
+						is_homeland_of_country_cultures = root
+					}
+					add = 10
+				}
+			}
+		}
+
+		# We care about the things happening at home
+		if = {
+			limit = {
+				any_scope_state = {
+					region = scope:region
+				}
+			}
+			add = 50
+
+			if = {
+				limit = {
+					scope:region = {
+						any_scope_state = {
+							owner = root
+							is_incorporated = yes
+						}
+					}
+				}
+				add = 50
+			}
+
+			if = {
+				limit = {
+					scope:region = capital.region
+				}
+				add = 100
+			}
+		}
+
+		# Ensure we maintain interests in colonies
+		if = {
+			limit = {
+				scope:region = {
+					any_scope_state = {
+						is_under_colonization = yes
+						owner = root
+					}
+				}
+			}
+			add = 1000
+		}
 		
 	}
 	
@@ -1784,7 +2181,9 @@ ai_strategy_default = {
 	secret_goal_scores = {
 		none = {
 			trigger = {
-				NOT = { has_subject_relation_with = scope:target_country }
+				NOT = {
+					has_subject_relation_with = scope:target_country
+				}
 			}
 			score = {
 				value = 150
@@ -1814,9 +2213,9 @@ ai_strategy_default = {
 						has_law_or_variant = law_type:law_isolationism
 						gdp >= 5000000
 					}
-				}				
+				}
 			}
-		
+
 			score = {
 				value = 200
 
@@ -1827,11 +2226,41 @@ ai_strategy_default = {
 					add = 100
 				}
 
-				if = {
+				if = { # Billions must smile
 					limit = {
 						has_je_befriend_reason = { TARGET = scope:target_country }
 					}
 					add = 10000
+				}
+
+				if = {
+					limit = {
+						any_country_strategic_region = {
+							root = {
+								has_region_stance = {
+									region = prev
+									stance = stance_protect_region
+								}
+							}
+							scope:target_country = {
+								is_local_country = prev
+							}
+						}
+					}
+					every_country_strategic_region = {
+						limit = {
+							root = {
+								has_region_stance = {
+									region = prev
+									stance = stance_protect_region
+								}
+							}
+							scope:target_country = {
+								is_local_country = prev
+							}
+						}
+						add = 50
+					}
 				}
 
 				multiply = {
@@ -1970,7 +2399,7 @@ ai_strategy_default = {
 					}
 					scope:target_country = { relations:root <= relations_threshold:poor }
 				}
-				
+
 				# Don't reconcile with your oppressors while civil war is ongoing
 				is_insurrectionary = no
 			
@@ -1979,6 +2408,13 @@ ai_strategy_default = {
 			}
 			score = {
 				value = 100
+
+				if = {
+					limit = {
+						has_je_befriend_reason = { TARGET = scope:target_country }
+					}
+					add = 10000
+				}
 
 				if = {
 					limit = {
@@ -2116,19 +2552,19 @@ ai_strategy_default = {
 						country_rank >= rank_value:major_power
 						scope:target_country = { is_country_type = unrecognized }
 					}
-				}	
+				}
 
 				# Don't protect your overlord
 				NOT = { is_subject_of = scope:target_country }
-				
+
 				# Don't protect enemies
 				scope:target_country = { relations:root > relations_threshold:poor }
 				NOT = {
 					has_diplomatic_pact = {
 						who = scope:target_country
 						type = rivalry
-					}	
-				}						
+					}
+				}
 
 				# Don't protect large isolationist powers
 				NOT = {
@@ -2136,17 +2572,25 @@ ai_strategy_default = {
 						has_law_or_variant = law_type:law_isolationism
 						gdp >= 5000000
 					}
-				}		
+				}
 
 				# Valid target for protection?
 				OR = {
 					country_rank > scope:target_country.country_rank
 					scope:target_country = { is_subject_of = root }
-				}	
+					has_je_protect_reason = { TARGET = scope:target_country }
+				}
 				
 			}
 			score = {
 				value = 200
+
+				if = {
+					limit = {
+						has_je_protect_reason = { TARGET = scope:target_country }
+					}
+					add = 10000
+				}
 
 				multiply = {
 					value = "ai_ideological_opinion(scope:target_country)"
@@ -2220,6 +2664,36 @@ ai_strategy_default = {
 
 				if = {
 					limit = {
+						any_country_strategic_region = {
+							root = {
+								has_region_stance = {
+									region = prev
+									stance = stance_protect_region
+								}
+							}
+							scope:target_country = {
+								is_local_country = prev
+							}
+						}
+					}
+					every_country_strategic_region = {
+						limit = {
+							root = {
+								has_region_stance = {
+									region = prev
+									stance = stance_protect_region
+								}
+							}
+							scope:target_country = {
+								is_local_country = prev
+							}
+						}
+						add = 50
+					}
+				}
+
+				if = {
+					limit = {
 						harsh_ai_behavior_trigger = yes
 					}
 					multiply = 0.75
@@ -2268,6 +2742,8 @@ ai_strategy_default = {
 					}				
 				}
 				
+				# Be nice to tutorial players
+				scope:target_country = { is_still_learning = no }
 			}
 			score = {
 				value = 0
@@ -2305,7 +2781,7 @@ ai_strategy_default = {
 						}
 					}
 					add = 500
-				}			
+				}
 
 				multiply = {
 					value = "ai_ideological_opinion(scope:target_country)"
@@ -2353,7 +2829,7 @@ ai_strategy_default = {
 						has_game_rule = low_ai_aggression
 					}
 					multiply = 1.25 # Yes, this is actually intended to be an increase - it's to partially compensate for lowered conquer/dominate desires
-				}			
+				}
 
 				if = {
 					limit = {
@@ -2418,7 +2894,7 @@ ai_strategy_default = {
 						country_is_power_struggle_rival = { TARGET = scope:target_country }
 					}
 					multiply = 2
-				}				
+				}
 			}
 		}
 		conquer = {
@@ -2434,15 +2910,22 @@ ai_strategy_default = {
 						has_friendly_diplomatic_pact = { TARGET = scope:target_country }
 					}
 				}			
+				# Be nice to tutorial players
+				scope:target_country = { is_still_learning = no }
 			}
 			score = {
 				value = 0
 
 				if = {
+					limit = { has_je_conquest_reason = { TARGET = scope:target_country } }
+					add = 10000
+				}
+
+				if = { # Conquest for the sake of colonies
 					limit = {
 						NOT = { is_country_type = unrecognized }
-						scope:target_country = { is_country_type = unrecognized }
 						scope:target_country = {
+							is_country_type = unrecognized
 							OR = {
 								is_subject = no
 								top_overlord ?= {
@@ -2463,7 +2946,7 @@ ai_strategy_default = {
 						}
 						add = 50
 					}
-			
+
 					if = {
 						limit = {
 							scope:target_country = {
@@ -2476,7 +2959,7 @@ ai_strategy_default = {
 						}
 						multiply = 0.1
 					}
-				}			
+				}
 
 				if = {
 					limit = {
@@ -2609,7 +3092,6 @@ ai_strategy_default = {
 				}
 			}
 		}
-
 		dominate = {
 			trigger = {
 				OR = {
@@ -2619,10 +3101,10 @@ ai_strategy_default = {
 						country_rank >= rank_value:major_power
 						scope:target_country = { is_country_type = unrecognized }
 					}
-				}					
+				}
 				can_reach_target_country = yes
 				NOT = { is_subject_of = scope:target_country }
-				
+
 				# AI shouldn't be aggressive against subjects of their subjects
 				NOT = {
 					scope:target_country = {
@@ -2639,9 +3121,19 @@ ai_strategy_default = {
 						has_friendly_diplomatic_pact = { TARGET = scope:target_country }
 					}
 				}						
+				# Be nice to tutorial players
+				scope:target_country = { is_still_learning = no }
 			}
 			score = {
 				value = 0
+
+				if = {
+					limit = {
+						has_je_subjugation_reason = { TARGET = scope:target_country }
+						NOT = { is_subject_of = root }
+					}
+					add = 10000
+				}
 
 				if = {
 					limit = {
@@ -2659,9 +3151,9 @@ ai_strategy_default = {
 						can_reach_target_country = yes
 						country_rank > scope:target_country.country_rank
 						NOT = { is_country_type = unrecognized }
-						scope:target_country = { is_country_type = unrecognized }
-						scope:target_country = { NOT = { is_subject_of = root }	}
 						scope:target_country = {
+							is_country_type = unrecognized
+							NOT = { is_subject_of = root }
 							OR = {
 								is_subject = no
 								top_overlord ?= {
@@ -2776,7 +3268,37 @@ ai_strategy_default = {
 					}
 					multiply = 1.5
 				}
-				
+
+				if = {
+					limit = {
+						any_country_strategic_region = {
+							root = {
+								has_region_stance = {
+									region = prev
+									stance = stance_conquer_region
+								}
+							}
+							scope:target_country = {
+								is_local_country = prev
+							}
+						}
+					}
+					every_country_strategic_region = {
+						limit = {
+							root = {
+								has_region_stance = {
+									region = prev
+									stance = stance_conquer_region
+								}
+							}
+							scope:target_country = {
+								is_local_country = prev
+							}
+						}
+						add = 50
+					}
+				}
+
 				if = {
 					limit = {
 						lenient_ai_behavior_trigger = yes
@@ -2937,7 +3459,35 @@ ai_strategy_default = {
 			}			
 
 			min = 0
-			max = 100				
+			max = 100
+			
+			# Placement here is intentional
+			if = {
+				limit = {
+					any_country_strategic_region = {
+						scope:target_state.region = this
+						root = {
+							OR = {
+								has_region_stance = {
+									region = prev
+									stance = stance_conquer_region
+								}
+								AND = {
+									scope:target_country = { is_country_type = unrecognized }
+									has_region_stance = {
+										region = prev
+										stance = stance_colonize_region
+									}
+								}
+							}
+						}
+					}
+				}
+				multiply = 2.5
+			}
+			else = {
+				multiply = 0.75
+			}
 		}
 		
 		return_state = {
@@ -2966,7 +3516,35 @@ ai_strategy_default = {
 			else = {
 				min = 0
 				max = 200				
-			}			
+			}
+			
+			# Placement here is intentional
+			if = {
+				limit = {
+					any_country_strategic_region = {
+						scope:target_state.region = this
+						root = {
+							OR = {
+								has_region_stance = {
+									region = prev
+									stance = stance_conquer_region
+								}
+								AND = {
+									scope:target_country = { is_country_type = unrecognized }
+									has_region_stance = {
+										region = prev
+										stance = stance_colonize_region
+									}
+								}
+							}
+						}
+					}
+				}
+				multiply = 2.5
+			}
+			else = {
+				multiply = 0.75
+			}
 		}
 		
 		transfer_subject = {
@@ -3311,6 +3889,45 @@ ai_strategy_default = {
 				min = 0
 				max = 200
 			}
+			
+			# Placement here is intentional
+			if = {
+				limit = {
+					any_country_strategic_region = {
+						scope:target_country = {
+							is_local_country = prev
+							is_country_type = unrecognized
+
+						}
+						root = {
+							has_region_stance = {
+								region = prev
+								stance = stance_colonize_region
+							}
+						}
+					}
+				}
+				multiply = 2.5
+			}
+			else_if = {
+				limit = {
+					any_country_strategic_region = {
+						scope:target_country = {
+							is_local_country = prev
+						}
+						root = {
+							has_region_stance = {
+								region = prev
+								stance = stance_conquer_region
+							}
+						}
+					}
+				}
+				multiply = 1.5
+			}
+			else = {
+				multiply = 0.75
+			}
 		}			
 		
 		colonization_rights = {
@@ -3532,6 +4149,165 @@ ai_strategy_default = {
 			value = 100
 		}
 		
+	}
+	
+	# Determines which strait settings the AI will use, highest score 
+	# Using this value in other strategies will function additively
+	# root = country
+	# scope:strait = the strait
+	# scope:first_state = the first state controlling the strait
+	# scope:second_state = the second state controlling the strait
+	# scope:is_sole_controller = yes/no depending on whether country controls both sides of the strait
+	strait_scores = {
+		status_scores = {
+			open = {
+				value = 0
+			}
+
+			no_military = {
+				value = 10
+			}
+
+			closed = {
+				value = 0
+				
+				if = { # Close canals to enemy trade
+					limit = {
+						scope:strait = {
+							OR = {
+								type = strait_type:canal_panama
+								type = strait_type:canal_suez
+							}
+						}
+					}
+					
+					add = 100
+				}			
+			}
+		}
+
+		permissions_scores = {
+			all = {
+				value = 0					
+			}
+
+			no_enemies = {
+				value = 10
+			}
+
+			only_allies = {
+				value = 0
+				
+				# Commented out for now as AI is too happy to close straits, we should consider bringing this back later
+				#if = { # Wants to keep competitor navies out
+				#	limit = {
+				#		OR = {
+				#			has_strategy = ai_strategy_colonial_expansion
+				#			has_strategy = ai_strategy_territorial_expansion
+				#		}
+				#	}
+				#	
+				#	add = 20
+				#}	
+
+				if = { # Don't close off gibraltar
+					limit = {
+						scope:strait = {
+							type = strait_type:strait_gibraltar
+						}					
+					}
+					
+					multiply = 0
+				}				
+			}
+
+			only_controller = {
+				value = 0
+			}
+		}
+
+		toll_rate_scores = {
+			no_tolls = {
+				value = 0
+				
+				if = {
+					limit = {
+						scope:is_sole_controller = no
+						OR = {
+							has_strategy = ai_strategy_maintain_power_balance
+							has_strategy = ai_strategy_anti_imperialism
+						}
+					}
+					
+					add = 20
+				}				
+			}
+
+			low_tolls = {
+				value = 10
+				
+				if = {
+					limit = {
+						scope:is_sole_controller = yes
+						OR = {
+							has_strategy = ai_strategy_maintain_power_balance
+							has_strategy = ai_strategy_anti_imperialism
+						}
+					}
+					
+					add = 20
+				}			
+			}
+
+			medium_tolls = {
+				value = 0
+				
+				if = { # "Greed is good"
+					limit = {
+						OR = {
+							has_strategy = ai_strategy_economic_imperialism
+							has_strategy = ai_strategy_colonial_expansion
+						}
+					}
+					
+					add = 20
+				}
+				
+				if = { # Can charge higher tolls if we control both sides
+					limit = {
+						scope:is_sole_controller = yes
+					}
+					
+					add = 20
+				}
+
+				if = { # Don't extort in gibraltar
+					limit = {
+						scope:strait = {
+							type = strait_type:strait_gibraltar
+						}					
+					}
+					
+					multiply = 0.5
+				}					
+				else_if = { # Make some money on your canals
+					limit = {
+						scope:strait = {
+							OR = {
+								type = strait_type:canal_panama
+								type = strait_type:canal_suez
+							}
+						}
+					}
+					
+					add = 100
+				}				
+			}
+
+			high_tolls = {
+				value = 0
+			}
+		}
 	}
 
 	# Trigger for whether this strategy can be randomly allocated to a country
