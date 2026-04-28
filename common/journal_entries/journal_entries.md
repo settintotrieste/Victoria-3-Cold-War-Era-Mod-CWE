@@ -19,7 +19,7 @@
 		
 		# whether a country should become involved when a contextless JE activates
 		# root = specific country
-		should_be_involved = {		
+		should_be_pinned_by_default_uninvolved_or_context_involved = {		
 		}
 		
 		# whether this JE should be visible to a country that is not involved in a contextles JE, also additionally determines who can see it when it's not active
@@ -137,7 +137,7 @@
 	    on_invalid_all_involved = {
 		}
 		
-		# fires when a country becomes involved after activation of a contextless JE, ie not as a result of the should_be_involved trigger
+		# fires when a country becomes involved after activation of a contextless JE, ie not as a result of the should_be_pinned_by_default_uninvolved_or_context_involved trigger
 		# root = specific country
 		on_become_involved_after_activation = {
 		}
@@ -411,5 +411,5 @@
         why_tutorial = why_tutorial_lesson_key
     
         # whether a Journal Entry should be pinned in its outliner by default. Defaults to 'no'
-        should_be_pinned_by_default = yes
+        should_be_pinned_by_default_uninvolved_or_context = yes
     }
