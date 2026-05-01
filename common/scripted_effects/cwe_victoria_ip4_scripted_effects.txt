@@ -237,6 +237,37 @@ REPLACE_OR_CREATE:ip4_coup_victory_effect_interaction_display = {
 			}
 		}
 	}
+	if = {
+		limit = {
+			owner = {
+				has_variable = coup_sponsor
+				var:coup_sponsor ?= {
+					is_country_alive = yes
+				}
+				var:coup_sponsor ?= {
+					has_diplomatic_pact = {
+						who = ROOT.owner
+						type = orchestrate_coup
+					}
+				}
+			}
+		}
+		owner = {
+			set_owes_obligation_to = {
+				country = var:coup_sponsor
+				setting = yes
+			}
+			create_diplomatic_catalyst = {
+				type = catalyst_orchestrate_coup_successful
+				target = var:coup_sponsor
+			}
+			var:coup_sponsor ?= {
+				power_bloc ?= {
+					add_leverage = { target = ROOT value = 500 }
+				}
+			}
+		}
+	}
 }
 
 REPLACE_OR_CREATE:ip4_coup_victory_law_effects = {
@@ -380,6 +411,10 @@ REPLACE_OR_CREATE:transfer_character_of_unknown_status_to_country_and_make_ruler
 		set_variable = {
 			name = memento_mori_immunity
 			months = 60
+		}
+		add_career_length = {
+			months = 60
+			random_range = { 1.0 1.5 } # 60-90 months
 		}
 		hidden_effect = {
 			free_from_exile_effect = yes
