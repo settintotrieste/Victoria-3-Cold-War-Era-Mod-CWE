@@ -289,6 +289,12 @@ wanted_army_size_script_value = {
 		limit = { is_neutral = yes }
 		multiply = 0.1
 	}
+	
+	# Multiply final value by diplomatic pact expenses ratio - countries paying a lot to pacts have lower spending ambitions
+	multiply = {
+		value = 1
+		subtract = diplomatic_pact_expense_ratio
+	}
 
 	min = {
 		value = 20
@@ -310,6 +316,74 @@ wanted_army_size_script_value = {
 		}
 		
 	}
+}
+
+wanted_marines_size_script_value = {
+	value = 0
+
+	# 1 marine per 1 mil coastal incorporated population
+	add = {
+		value = cached_ai_incorporated_coastal_population
+		divide = 1000000
+	}
+	# 1 marine per 5 million coastal unincorporated population
+	add = {
+		value = cached_ai_unincorporated_coastal_population
+		divide = 5000000
+	}
+	# 1 marine per 20 million population in direct overseas subjects
+	add = {
+		value = cached_ai_overseas_subject_population
+		divide = 20000000
+	}
+	max = 25 # No more than 25 from population
+	# 1 marine per 15k income, multiplied by relative incorporated coastal population to total incorporated population
+	if = {
+		limit = {
+			cached_ai_incorporated_population > 0
+			cached_ai_incorporated_coastal_population > 0
+		}
+		add = {
+			value = fixed_income
+			divide = cached_ai_incorporated_population
+			multiply = cached_ai_incorporated_coastal_population
+			divide = 15000
+		}
+	}
+	if = { # GPs and MPs should want to maintain some marines
+		limit = { country_rank >= rank_value:great_power }
+		add = 5
+	}
+	else_if = {
+		limit = { country_rank = rank_value:major_power }
+		add = 2
+	}
+	
+	# General multiplier for easy adjustment
+	multiply = 0.5
+
+	# Factor in strategies
+	if = {
+		limit = {
+			OR = {
+				has_strategy = ai_strategy_colonial_expansion
+				has_strategy = ai_strategy_economic_imperialism
+			}
+		}
+		multiply = 1.25
+	}
+	if = {
+		limit = { has_strategy = ai_strategy_armed_isolationism }
+		multiply = 0.5
+	}
+	
+	# Multiply final value by diplomatic pact expenses ratio - countries paying a lot to pacts have lower spending ambitions
+	multiply = {
+		value = 1
+		subtract = diplomatic_pact_expense_ratio
+	}
+	
+	max = total_marine_capacity
 }
 
 wanted_navy_size_script_value = {
@@ -426,4 +500,170 @@ wanted_navy_size_script_value = {
 	}
 	
 	min = 5
+}
+
+flagship_score_for_fleet = {
+	# More powerful fleets should have higher scoring flagships
+	add = {
+		value = power_projection
+		divide = 100 # 1 point per 100 power projection
+	}
+
+	# Fleets with more ships should have higher scoring flagships
+	add = {
+		value = num_ships
+		divide = 5 # 1 point per 5 ships
+	}
+
+	# Fleets with capital ships should have higher scoring flagships
+	add = {
+		value = "num_ships_of_group(ship_group:ship_group_capital_ships)"
+		multiply = 0.5 # 1 point per 2 capital ships
+	}
+
+	# Stickyness factor to keep the same flagship for a while
+	if = {
+		limit = {
+			any_scope_ship = {
+				is_flagship = yes
+			}
+		}
+		multiply = 1.5
+	}
+}
+
+flagship_score_for_ship = {
+	# More powerful ships should have higher scoring flagships
+	add = {
+		value = power_projection
+		divide = 10 # 1 point per 10 power projection
+	}
+
+	# Capital ships should have higher scoring flagships
+	if = {
+		limit = {
+			ship_group = ship_group:ship_group_capital_ships
+		}
+		add = 20
+	}
+
+	# Stickyness factor to keep the same flagship for a while
+	if = {
+		limit = {
+			is_flagship = yes
+		}
+		multiply = 1.5
+	}
+}
+
+
+ship_mod_ai_price_ratio_reject     = { value = 1.25 }  # Weighted buy/sell ratio at/above which a mod is rejected (multiplier = 0)
+ship_mod_ai_price_ratio_bonus      = { value = 0.75 }  # At/below which the full bonus multiplier applies
+ship_mod_ai_price_bonus_multiplier = { value = 2.0 }   # Multiplier at the bonus ratio (linear interpolation in between)
+
+# Scales each mod's base ai_weight by a function of the goods-weighted buy/sell
+# ratio for its construction goods, against the country's market.
+# Curve:
+#   weighted_ratio >= ship_mod_ai_price_ratio_reject   -> multiplier = 0
+#   weighted_ratio <= ship_mod_ai_price_ratio_bonus    -> multiplier = ship_mod_ai_price_bonus_multiplier
+#   between                                            -> linear interpolation
+# Linear form: multiplier = BONUS_MULT * (REJECT - ratio) / (REJECT - BONUS)
+# At ratio = 1 (neutral market) this is BONUS_MULT * 0.5 / 0.5 = 1 with default
+# thresholds (1.25 / 0.75 / 2.0), so a neutral-market mod keeps its base weight.
+
+ship_mod_market_multiplier = {
+	# Evaluate the trigger once and save the ratio as a temporary; we refer to
+	# it three times below (two limit branches + the else arithmetic).
+	value = "ship_modification_market_demand_ratio(scope:ship_modification_type)"
+	save_temporary_value_as = temp_ship_mod_demand_ratio
+
+	# Base multiplier = 1; each branch overrides via multiply.
+	value = 1
+	if = {
+		limit = { scope:temp_ship_mod_demand_ratio >= ship_mod_ai_price_ratio_reject }
+		multiply = 0
+	}
+	else_if = {
+		limit = { scope:temp_ship_mod_demand_ratio <= ship_mod_ai_price_ratio_bonus }
+		multiply = ship_mod_ai_price_bonus_multiplier
+	}
+	else = {
+		multiply = {
+			value = ship_mod_ai_price_bonus_multiplier
+			multiply = {
+				value = ship_mod_ai_price_ratio_reject
+				subtract = scope:temp_ship_mod_demand_ratio
+			}
+			divide = {
+				value = ship_mod_ai_price_ratio_reject
+				subtract = ship_mod_ai_price_ratio_bonus
+			}
+		}
+	}
+}
+
+
+ship_mod_doctrine_boost = { value = 1.5 }  # Multiplier applied when a bundle's doctrinal condition fires
+
+# Professional-navy / great-power balance: invest in the heaviest mods on
+# capital hulls. Also picks up Fire Control and Range Finder utility mods —
+# tools of disciplined capital-ship gunnery.
+ship_mod_capital_doctrine = {
+	value = 1
+	if = {
+		limit = {
+			OR = {
+				has_law = law_type:law_professional_army
+				has_law = law_type:law_mass_conscription
+				has_strategy = ai_strategy_maintain_power_balance
+			}
+		}
+		multiply = ship_mod_doctrine_boost
+	}
+}
+
+# Jeune-école: torpedo-craft doctrine. Buffs every mod on torpedo_boat,
+# torpedo_boat_destroyer, submarine, destroyer — the AI leans hard into small
+# deadly hulls. Camouflage too (jeune-école-coded).
+ship_mod_jeune_ecole_doctrine = {
+	value = 1
+	if = {
+		limit = { has_law = law_type:law_national_militia }
+		multiply = ship_mod_doctrine_boost
+	}
+}
+
+# Coastal defence: armed isolationism wants floating forts and harbour denial.
+# Applies across monitor, coastal_defense_ship, and the small-ship hulls that
+# double as coastal-denial platforms (submarine, torpedo_boat).
+ship_mod_coastal_defence_doctrine = {
+	value = 1
+	if = {
+		limit = { has_strategy = ai_strategy_armed_isolationism }
+		multiply = ship_mod_doctrine_boost
+	}
+}
+
+# Blue-water power projection: diplomatic-navy law and overseas-expansion
+# strategies favour range on cruisers and support hulls.
+ship_mod_power_projection_doctrine = {
+	value = 1
+	if = {
+		limit = {
+			OR = {
+				has_strategy = ai_strategy_colonial_expansion
+				has_strategy = ai_strategy_economic_imperialism
+			}
+		}
+		multiply = ship_mod_doctrine_boost
+	}
+}
+
+# Merchant navy: civilian-grade fleet, prioritise auxiliaries.
+ship_mod_merchant_navy_doctrine = {
+	value = 1
+	if = {
+		limit = { has_law = law_type:law_peasant_levies }
+		multiply = ship_mod_doctrine_boost
+	}
 }

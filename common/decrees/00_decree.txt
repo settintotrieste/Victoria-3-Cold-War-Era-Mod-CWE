@@ -276,6 +276,8 @@ decree_promote_national_values = {
 		state_assimilation_mult = 0.5
 		state_conversion_mult = 0.5
 		state_allow_assimilation_in_homeland_bool = yes
+		state_allow_assimilation_without_presence_bool = yes
+		state_allow_conversion_without_presence_bool = yes
 		state_radicalism_increases_violent_hostility_mult = 0.5
 		state_radicalism_increases_cultural_erasure_mult = 0.4
 		state_radicalism_increases_open_prejudice_mult = 0.3
@@ -791,8 +793,8 @@ decree_enlistment_efforts = {
 		if = {
 			limit = {
 				any_scope_building = {
-					is_building_type = building_naval_base
-					count >= 25
+					is_building_type = building_naval_administration
+					count >= 5
 				}
 			}
 			add = 50
@@ -800,12 +802,180 @@ decree_enlistment_efforts = {
 		if = {
 			limit = {
 				any_scope_building = {
-					is_building_type = building_naval_base
-					count >= 50
+					is_building_type = building_naval_administration
+					count >= 10
 				}			
 			}
 			add = 50
 		}		
 	}
 	
+}
+
+decree_establish_missions = {
+	texture = "gfx/interface/icons/decree/decree_establish_missions.dds"
+
+	unlocking_technologies = {
+		
+	}
+
+	unlocking_laws = {
+		law_colonial_exploitation
+		law_colonial_resettlement
+	}
+
+	country_trigger = {
+		NOR = {
+			country_has_state_religion = rel:atheist
+			country_has_state_religion = rel:animist
+		}
+	}
+
+	state_trigger = {
+		is_incorporated = no
+		religion_percent_state = {
+			target = owner.religion
+			value < 0.8
+		}
+		owner ?= {
+			has_strategic_region_interest_tier = {
+				strategic_region = root.region
+				value >= interest_tier_effect_can_establish_missions_min_tier
+			}
+		}
+		NOT = { is_homeland_of_country_cultures = root.owner }
+	}
+
+	modifier = {
+		state_colony_growth_speed_mult = 0.2
+		state_conversion_mult = 0.2
+		state_education_access_add = 0.1
+		state_food_security_add = 0.05
+	}
+
+	cost = 100
+
+	ai_weight = {
+		value = 0
+
+		if = {
+			limit = {
+				OR = {
+					NOT = { scope:country = { has_law_or_variant = law_type:law_total_separation } }
+					AND = {
+						scope:country = { is_not_in_geographic_region = geographic_region_africa }
+						is_in_geographic_region = geographic_region_africa
+					}
+					scope:country = {
+						country_is_colonial_or_company = yes
+					}
+				}
+				religion_percent_state = {
+					target = scope:country.religion
+					value <= 0.9
+				}
+			}
+
+			if = {
+				limit = {
+					scope:country = {
+						has_strategy = ai_strategy_conservative_agenda
+					}
+				}
+				add = 50
+			}
+			else_if = {
+				limit = {
+					scope:country = {
+						has_strategy = ai_strategy_reactionary_agenda
+					}
+				}
+				add = 100
+			}
+
+			if = {
+				limit = {
+					scope:country = {
+						has_law_or_variant = law_type:law_state_religion
+					}
+				}
+				add = 50
+			}
+
+			if = {
+				limit = {
+					scope:country = {
+						has_journal_entry = je_scramble_for_africa
+					}
+					is_in_geographic_region = geographic_region_africa
+				}
+				add = 150
+
+				if = {
+					limit = {
+						is_under_colonization = yes
+					}
+					add = 150
+				}
+			}
+
+			if = {
+				limit = {
+					religion_percent_state = {
+						target = scope:country.religion
+						value <= 0.1
+					}
+				}
+				multiply = 5.0
+			}
+			else_if = {
+				limit = {
+					religion_percent_state = {
+						target = scope:country.religion
+						value <= 0.3
+					}
+				}
+				multiply = 3.0
+			}
+			else_if = {
+				limit = {
+					religion_percent_state = {
+						target = scope:country.religion
+						value <= 0.5
+					}
+				}
+				multiply = 2.0
+			}
+		}
+
+		if = {
+			limit = {
+				state_population > 300000
+			}
+			multiply = 2.0
+		}
+
+		if = {
+			limit = {
+				scope:country = {
+					OR = {
+						has_law = law_type:law_cultural_exclusion
+						has_law = law_type:law_freedom_of_conscience
+					}
+				}
+			}
+			multiply = 0.5
+		}
+		else_if = {
+			limit = {
+				scope:country = {
+					OR = {
+						has_law = law_type:law_multicultural
+						has_law = law_type:law_total_separation
+					}
+				}
+			}
+			multiply = 0.1
+		}
+	}
 }
