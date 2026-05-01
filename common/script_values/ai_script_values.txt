@@ -388,14 +388,24 @@ wanted_marines_size_script_value = {
 
 wanted_navy_size_script_value = {
 	value = 0
-	
-	# 1 level of naval base per 10 million population in direct overseas subjects
+
+	# 1 ship per 500k coastal incorporated population
+	add = {
+		value = cached_ai_incorporated_coastal_population
+		divide = 500000
+	}
+	# 1 ship per 2 million coastal unincorporated population
+	add = {
+		value = cached_ai_unincorporated_coastal_population
+		divide = 2000000
+	}
+	# 1 ship per 10 million population in direct overseas subjects
 	add = {
 		value = cached_ai_overseas_subject_population
 		divide = 10000000
 	}
 	max = 100 # No more than 100 from population
-	# 1 level of naval base per 50k income, multiplied by relative incorporated coastal population to total incorporated population
+	# 1 ship per 5k income, multiplied by relative incorporated coastal population to total incorporated population
 	if = {
 		limit = {
 			cached_ai_incorporated_population > 0
@@ -405,17 +415,18 @@ wanted_navy_size_script_value = {
 			value = fixed_income
 			divide = cached_ai_incorporated_population
 			multiply = cached_ai_incorporated_coastal_population
-			divide = 50000
+			divide = 5000
 		}
 	}
-	
-	# GPs and MPs should want to maintain a bit of a navy
+	# SPs want large navy
 	if = {
-		limit = { country_rank = rank_value:super_power }
+		limit = {
+			limit = { country_rank = rank_value:super_power }
+		}
 		add = 50
 	}
-	else_if = {
-		limit = { country_rank = rank_value:major_power }
+	else_if = { # GPs and MPs should want to maintain a bit of a navy
+		limit = { country_rank = rank_value:great_power }
 		add = 25
 	}
 	else_if = {
@@ -423,27 +434,8 @@ wanted_navy_size_script_value = {
 		add = 10
 	}
 	
-	# More advanced navies are expensive and should be smaller relative to population
-	if = {
-		limit = { has_technology_researched = tech_military_naval_forces_2 }
-		multiply = 0.80
-	}
-	if = {
-		limit = { has_technology_researched = tech_military_naval_forces_4 }
-		multiply = 0.80
-	}
-	if = {
-		limit = { has_technology_researched = tech_military_naval_forces_6 }
-		multiply = 0.80
-	}
-	if = {
-		limit = { has_technology_researched = tech_military_naval_forces_8 }
-		multiply = 0.80
-	}
-	if = {
-		limit = { has_technology_researched = tech_military_naval_forces_10 }
-		multiply = 0.80
-	}
+	# General multiplier for easy adjustment
+	multiply = 0.75
 
 	# Factor in strategies
 	if = {
@@ -460,46 +452,24 @@ wanted_navy_size_script_value = {
 		multiply = 0.75
 	}
 	if = {
+		limit = { country_rank < rank_value:major_power }
+		multiply = 0.5
+	}
+	if = {
+		limit = { is_country_type = unrecognized }
+		multiply = 0.5
+	}
+	if = {
 		limit = { has_strategy = ai_strategy_maintain_mandate_of_heaven }
 		multiply = 0.25
 	}
 	
-	# GPs and MPs should want to maintain a bit of a navy
-	if = {
-		limit = { country_rank = rank_value:super_power }
-		multiply = 2
-	}
-	if = {
-		limit = { country_rank >= rank_value:great_power }
-		multiply = 1.50
-	}
-	if = {
-		limit = { country_rank = rank_value:minor_power }
-		multiply = 0.50
-	}
-	if = {
-		limit = { country_rank < rank_value:minor_power }
-		multiply = 0.25
-	}
-
-	#Neutrality
-	if = {
-		limit = { is_neutral = yes }
-		multiply = 0.1
+	# Multiply final value by diplomatic pact expenses ratio - countries paying a lot to pacts have lower spending ambitions
+	multiply = {
+		value = 1
+		subtract = diplomatic_pact_expense_ratio
 	}
 	
-	#Small countries don't care
-	if = {
-		limit = {
-			OR = { 
-				total_population < 500000
-				has_modifier = condominium_modifier
-			}
-		}
-		multiply = 0
-	}
-	
-	min = 5
 }
 
 flagship_score_for_fleet = {
@@ -613,8 +583,7 @@ ship_mod_capital_doctrine = {
 	if = {
 		limit = {
 			OR = {
-				has_law = law_type:law_professional_army
-				has_law = law_type:law_mass_conscription
+				has_law = law_type:law_professional_navy
 				has_strategy = ai_strategy_maintain_power_balance
 			}
 		}
@@ -628,7 +597,7 @@ ship_mod_capital_doctrine = {
 ship_mod_jeune_ecole_doctrine = {
 	value = 1
 	if = {
-		limit = { has_law = law_type:law_national_militia }
+		limit = { has_law = law_type:law_jeune_ecole }
 		multiply = ship_mod_doctrine_boost
 	}
 }
@@ -651,6 +620,7 @@ ship_mod_power_projection_doctrine = {
 	if = {
 		limit = {
 			OR = {
+				has_law = law_type:law_diplomatic_navy
 				has_strategy = ai_strategy_colonial_expansion
 				has_strategy = ai_strategy_economic_imperialism
 			}
@@ -663,7 +633,7 @@ ship_mod_power_projection_doctrine = {
 ship_mod_merchant_navy_doctrine = {
 	value = 1
 	if = {
-		limit = { has_law = law_type:law_peasant_levies }
+		limit = { has_law = law_type:law_merchant_navy }
 		multiply = ship_mod_doctrine_boost
 	}
 }
