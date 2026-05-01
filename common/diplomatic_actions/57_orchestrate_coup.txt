@@ -1,0 +1,620 @@
+﻿#Instigate Coup
+orchestrate_coup = {
+	groups= { general } 
+	
+	requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+	
+	selectable = {
+		NOT = { is_country_type = decentralized }
+		is_revolutionary = no
+	}
+
+	potential = {
+	
+		hidden_trigger = { has_journal_entry = je_secret_police_system }
+	
+		#THIS has spies in TARGET
+		has_diplomatic_pact = {
+			who = scope:target_country
+			type = conduct_hostile_espionage
+			is_initiator = yes
+		}
+		
+	}
+	
+	possible = {
+		
+		#THIS is more powerful than TARGET
+		country_rank > scope:target_country.country_rank
+		army_size > scope:target_country.army_size
+		
+		#Not at war
+		NOT = { has_war_with = scope:target_country }
+		
+		#TARGET has favourable environment for coup
+		scope:target_country = { 
+		
+			#Not already fired
+			NOR = {
+				hidden_trigger = { has_variable = coup_event_active }
+				has_journal_entry = je_ip4_coup
+			}
+			
+			# Election grace period
+			NOT = { has_free_government_reform = yes }
+			
+			#Inherent protections
+			OR = {
+				AND = { 
+					institution_investment_level = { institution = institution_espionage value = 5 }
+					OR = { 
+						government_legitimacy < 20
+						country_turmoil >= 0.50
+					}
+				}
+				AND = { 
+					institution_investment_level = { institution = institution_espionage value = 4 }
+					OR = { 
+						government_legitimacy < 40
+						country_turmoil >= 0.40
+					}
+				}
+				AND = { 
+					institution_investment_level = { institution = institution_espionage value = 3 }
+					OR = { 
+						government_legitimacy < 60
+						country_turmoil >= 0.30
+					}
+				}
+				AND = { 
+					institution_investment_level = { institution = institution_espionage value = 2 }
+					OR = { 
+						government_legitimacy < 80
+						country_turmoil >= 0.20
+					}
+				}
+				AND = { 
+					institution_investment_level = { institution = institution_espionage value = 1 }
+					OR = { 
+						government_legitimacy < 100
+						country_turmoil >= 0.10
+					}
+				}
+				AND = { 
+					NOT = { has_institution = institution_espionage }
+					government_legitimacy < 50
+					country_turmoil >= 0.01
+				}
+			}
+			
+			#Favourable lobby
+			any_political_lobby = {
+				OR = {
+					is_political_lobby_type = lobby_pro_country
+					is_political_lobby_type = lobby_pro_overlord
+				}
+				custom_tooltip = {
+					text = lobby_is_friendly_tt
+					target = ROOT
+				}
+				save_temporary_scope_as = relevant_lobby
+			}
+			
+			#Coup character
+			any_scope_character = {
+				OR = {
+					has_role_of_type = general
+					has_role_of_type = admiral
+				}
+				hidden_trigger = {
+					has_variable = monthly_cached_commander_coup_strength
+				}
+				custom_tooltip = {
+					text = ig_in_pro_country_lobby_tt
+					interest_group ?= {
+						is_member_of_any_lobby = yes
+						any_political_lobby = {
+							scope:relevant_lobby ?= this
+						}
+					}
+				}
+				loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+				trigger_if = {
+					limit = {
+						has_variable = monthly_cached_commander_coup_strength
+					}
+					custom_tooltip = {
+						text = coup_strength_greater_than_coup_resistance_tt
+						var:monthly_cached_commander_coup_strength >= {
+							value = scope:target_country.country_coup_resistance
+						}
+					}
+				}
+			}
+			
+			#Not already fired
+			NOT = { has_variable = coup_event_active }
+			NOT = { has_variable = coup_cooldown_var }
+			NOT = { has_variable = coup_immunity }
+			
+		}
+		
+		#Has diplomats
+		NOR = { 
+			has_diplomats_expelled = scope:target_country
+			scope:target_country = { has_diplomats_expelled = scope:actor }
+		}
+		
+		#Has enough action points
+		custom_tooltip = {
+			text = secret_police_action_50_points.tt
+			has_variable = secret_police_action_points
+			root.var:secret_police_action_points > 50
+		}
+		
+		#Cooldown
+		custom_tooltip = {
+			text = secret_police_action_timer.tt
+			NOT = { has_variable = secret_police_action_timer }
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Subtract action points
+		custom_tooltip = {
+			text = secret_police_action_subtract_50_points.tt
+			if = {
+				limit = { has_variable = secret_police_action_points }
+				change_variable = { 
+					name = secret_police_action_points
+					add = -50
+				}
+			}
+		}
+		
+		#Gain Loyalty
+		custom_tooltip = {
+			text = secret_police_gain_loyalty_5_points.tt
+			change_variable = { 
+				name = secret_police_loyalty
+				add = 5
+			}
+			clamp_variable = {
+				name = secret_police_loyalty
+				max = 100
+				min = 0
+			}
+		}
+		
+		#Increase appeasement of both sides
+		add_lobby_appeasement_from_diplomacy_unidirectional = {
+			FIRST = root
+			SECOND = scope:target_country
+			PRO_AMOUNT = -4
+			ANTI_AMOUNT = 4
+			FACTOR = appeasement_orchestrate_coup_started
+		}
+		ROOT = {
+			save_scope_as = coupist_lobby_country
+		}
+		scope:target_country ?= {
+			set_variable = { name = coup_sponsor value = ROOT }
+			random_political_lobby = {
+				limit = {
+					OR = {
+						is_political_lobby_type = lobby_pro_country
+						is_political_lobby_type = lobby_pro_overlord
+					}
+					custom_tooltip = {
+						text = lobby_is_friendly_tt
+						target = ROOT
+					}
+				}
+				save_scope_as = relevant_lobby
+			}
+			ordered_scope_character = {
+				limit = {
+					OR = {
+						has_role_of_type = general
+						has_role_of_type = admiral
+					}
+					hidden_trigger = {
+						has_variable = monthly_cached_commander_coup_strength
+					}
+					custom_tooltip = {
+						text = ig_in_pro_country_lobby_tt
+						interest_group ?= {
+							is_member_of_any_lobby = yes
+							any_political_lobby = {
+								scope:relevant_lobby ?= this
+							}
+						}
+					}
+					loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+					trigger_if = {
+						limit = {
+							has_variable = monthly_cached_commander_coup_strength
+						}
+						custom_tooltip = {
+							text = coup_strength_greater_than_coup_resistance_tt
+							var:monthly_cached_commander_coup_strength >= {
+								value = scope:target_country.country_coup_resistance
+							}
+						}
+					}
+				}
+				order_by = popularity
+				position = 0
+				save_scope_as = orchestrated_coupist
+			}
+			if = {
+				limit = {
+					exists = scope:orchestrated_coupist
+				}
+				custom_tooltip = {
+					text = begin_coup_tt
+				}
+				if = {
+					limit = {
+						exists = scope:orchestrated_coupist
+					}
+					create_coup_event_from_character = {
+						CHARACTER = scope:orchestrated_coupist
+					}
+				}
+			}
+			else = {
+				custom_tooltip = begin_coup_scopeless_tt
+			}
+		}
+		if = {
+			limit = {
+				scope:target_country = {
+					OR = {
+						country_rank >= rank_value:great_power
+						country_rank = rank_value:major_power
+					}
+				}
+			}
+			create_incident = {
+				value = 15
+				country = scope:target_country
+			}
+		}
+		else_if = {
+			limit = {
+				scope:target_country = {
+					OR = {
+						country_rank = rank_value:minor_power
+						country_rank = rank_value:unrecognized_major_power
+					}
+				}
+			}
+			create_incident = {
+				value = 10
+				country = scope:target_country
+			}
+		}
+		else_if = {
+			limit = {
+				scope:target_country = {
+					OR = {
+						country_rank = rank_value:insignificant_power
+						country_rank = rank_value:unrecognized_regional_power
+					}
+				}
+			}
+			create_incident = {
+				value = 7.5
+				country = scope:target_country
+			}
+		}
+		else_if = {
+			limit = {
+				scope:target_country = {
+					country_rank = rank_value:unrecognized_power
+				}
+			}
+			create_incident = {
+				value = 5
+				country = scope:target_country
+			}
+		}
+		
+	}
+	
+	pact = {
+		cost = 100
+
+		is_two_sided_pact = no
+
+		max_target_involvement = 1000
+		target_involvement_applies_to = source_country
+
+		income_transfer = 0.25
+		max_paying_country_income_to_transfer = 0.15
+		second_country_gets_income_transfer = yes
+		income_transfer_based_on_second_country = yes
+		income_transfer_to_pops = {
+			allow_non_fully_accepted = no
+			upper_strata_pops = {
+				value = 0.5
+				
+				if = {
+					limit = {
+						has_law_or_variant = law_type:law_appointed_legislature
+					}
+					add = 0.5
+				}
+
+				max = 1
+				min = 0
+			}
+			middle_strata_pops = {
+				value = 0.25
+
+				if = {
+					limit = {
+						OR = { 
+							has_law_or_variant = law_type:law_technocratic_legislature
+							has_law_or_variant = law_type:law_democratic_legislature
+						}
+					}
+					add = 0.25
+				}
+
+				max = 1
+				min = 0
+			}
+			lower_strata_pops = {
+				value = 0.0
+
+				if = {
+					limit = {
+						has_law_or_variant = law_type:law_democratic_legislature
+					}
+					add = 0.25
+				}
+
+				max = 1
+				min = 0
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				has_diplomatic_relevance = scope:target_country
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_NOT_DECENTRALIZED"
+					NOT = { is_country_type = decentralized }
+					scope:target_country = {
+						NOT = { is_country_type = decentralized }
+					}
+				}
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "DIPLOMATIC_PACT_REQUIREMENT_AT_PEACE"
+					NOT = { has_war_with = scope:target_country }
+				}
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "EQUAL_OR_BETTER_RANK_THAN_TARGET"
+					country_rank > scope:target_country.country_rank
+				}
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				in_default = no
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "HAS_PRO_LOBBY"
+					scope:target_country ?= {
+						any_political_lobby = {
+							OR = {
+								is_political_lobby_type = lobby_pro_country
+								is_political_lobby_type = lobby_pro_overlord
+							}
+							target = ROOT
+						}
+					}
+				}
+			}
+		}
+
+		requirement_to_maintain = {
+			trigger = {
+				custom_tooltip = {
+					text = "COUP_IS_ONGOING_TT"
+					OR = {
+						NOT = {
+							has_diplomatic_pact = {
+								who = scope:target_country
+								type = orchestrate_coup
+							}
+						}
+						scope:target_country ?= {
+							has_variable = coup_sponsor
+							var:coup_sponsor ?= ROOT
+						}
+					}
+				}
+			}
+		}
+
+		manual_break_effect = {
+			add_lobby_appeasement_from_diplomacy_unidirectional = {
+				FIRST = root
+				SECOND = scope:target_country
+				PRO_AMOUNT = 4
+				ANTI_AMOUNT = -4
+				FACTOR = appeasement_orchestrate_coup_ended
+			}
+			custom_tooltip = {
+				text = revoke_coup_support_tt
+				scope:target_country ?= {
+					set_variable = orchestrate_coup_aborted
+				}
+			}
+			custom_tooltip = orchestrate_coup_warning_tt
+		}
+
+		auto_break_effect = {
+			add_lobby_appeasement_from_diplomacy_unidirectional = {
+				FIRST = root
+				SECOND = scope:target_country
+				PRO_AMOUNT = 4
+				ANTI_AMOUNT = -4
+				FACTOR = appeasement_orchestrate_coup_ended
+			}
+			scope:target_country ?= {
+				set_variable = orchestrate_coup_aborted
+			}
+		}
+	}
+
+	ai = {
+		evaluation_chance = {
+			value = 0.10
+
+			add = {
+				value = country_rank
+				multiply = 0.05
+			}
+		}
+
+		propose_score = {
+			value = 10
+			if = {
+				limit = {
+					scope:target_country ?= {
+						OR = {
+							has_attitude = {
+								who = ROOT
+								attitude = antagonistic
+							}
+							has_attitude = {
+								who = ROOT
+								attitude = belligerent
+							}
+							has_attitude = {
+								who = ROOT
+								attitude = domineering
+							}
+							has_attitude = {
+								who = ROOT
+								attitude = rebellious
+							}
+						}
+					}
+				}
+				add = 10
+			}
+			if = {
+				limit = {
+					OR = {
+						AND = {
+							has_radical_leftist_government = no
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+						AND = {
+							has_radical_leftist_economy = no
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}
+					}
+				}
+				add = 100
+			}
+		}
+
+		will_propose = {
+			scope:target_country.relations:root < relations_threshold:cordial
+			infamy <= infamy_threshold:notorious
+			NOT = { # Is not conciliatory towards the target country
+				has_attitude = {
+					who = scope:target_country
+					attitude = conciliatory
+				}
+			}
+			NOT = { # The target country does not already owe us an obligation
+				scope:target_country = {
+					owes_obligation_to = root
+				}
+			}
+			# We want to have at least five times their income, and at least 50k income in general
+			AND = {
+				income >= 50000
+				net_fixed_income >= {
+					value = scope:target_country.fixed_income
+					multiply = 5
+				}
+			}
+			OR = {
+				"ai_ideological_opinion(scope:target_country)" <= -50 # Cannot get along politically
+				AND = { # Has a communist government
+					has_radical_leftist_government = no
+					scope:target_country = {
+						has_radical_leftist_government = yes
+					}
+				}
+				AND = { # Has a leftist economy law
+					has_radical_leftist_economy = no
+					scope:target_country = {
+						has_radical_leftist_economy = yes
+					}
+				}
+				scope:target_country ?= { # If the target country has a poor attitude
+					OR = {
+						has_attitude = {
+							who = ROOT
+							attitude = antagonistic
+						}
+						has_attitude = {
+							who = ROOT
+							attitude = belligerent
+						}
+						has_attitude = {
+							who = ROOT
+							attitude = domineering
+						}
+						has_attitude = {
+							who = ROOT
+							attitude = rebellious
+						}
+						has_attitude = {
+							who = ROOT
+							attitude = cautious
+						}
+					}
+				}
+			}
+		}
+	}
+	
+}
