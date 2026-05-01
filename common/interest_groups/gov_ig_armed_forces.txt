@@ -240,16 +240,77 @@
 	}
 	
 	monarch_weight = {
-		value = 0
+		value = 1
+		# Monarch is not likely to adopt a marginal IG
+		if = {
+			limit = {
+				ig_counts_as_marginal = yes
+			}
+			multiply = {
+				value = 0.1
+			}
+		}
+		# Monarch is more likely to adopt a Powerful IG
+		if = {
+			limit = {
+				is_powerful = yes
+			}
+			multiply = {
+				value = 2
+			}
+		}
+		# Monarch more likely to be Armed Forces under an autocratic or oligarchic regime
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law_or_variant = law_type:law_technocratic_legislature
+						has_law_or_variant = law_type:law_appointed_legislature
+						has_law_or_variant = law_type:law_single_party_state
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
+		# Monarch is less likely to be Armed forces in a democratic monarchy
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law_or_variant = law_type:law_fair_voting
+						has_law_or_variant = law_type:law_harassment_voting
+					}
+				}
+			}
+			multiply = {
+				value = 0.5
+			}
+		}
+		# Less likely without Professional Army or Mass Conscription
+		if = {
+			limit = {
+				owner = {
+					NOR = {
+						has_law_or_variant = law_type:law_professional_army
+						has_law_or_variant = law_type:law_mass_conscription
+					}
+				}
+			}
+			multiply = {
+				value = 0.5
+			}
+		}
 	}
-	
+
 	agitator_weight = {
 		# Agitators more likely to come from populist IG's rather than elitist
 		value = 0.5
 		# Agitators will never be part of a marginalized IG
 		if = {
 			limit = {
-				owner.ig:ig_armed_forces = {
+				owner.ig:ig_armed_forces ?= {
 					ig_counts_as_marginal = yes
 				}
 			}
@@ -258,29 +319,38 @@
 			}
 		}
 	}
-	
+
 	commander_weight = {
 		value = 5.0
 	}
 	
+	magnate_weight = {
+		value = 1.0
+	}	
+
 	executive_weight = {
 		value = 0.2
 	}
-	
+
 	noble_chance = {
 		value = 0.5
 	}
-	
-	female_commander_chance = {	
+
+	female_commander_chance = {
 		value = 0.0
 	}
-	
+
 	female_executive_chance = {
 		value = 0.0
 	}
-	
+
+	female_monarch_chance = {
+		value = 0
+	}
+
 	female_politician_chance = {
 		value = 0.0
+
 		if = {
 			limit = {
 				owner = {
@@ -295,22 +365,51 @@
 				value = 0.025
 			}
 		}
-	}	
-	
+	}
+
 	female_agitator_chance = {
-		value = 0.0
+		value = 0.01
+
+		if = {
+			limit = {
+				owner = {
+					has_law_or_variant = law_type:law_some_womens_rights
+				}
+
+			}
+			add = {
+				value = 0.01
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					has_law_or_variant = law_type:law_full_womens_rights
+				}
+
+			}
+			add = {
+				value = 0.02
+			}
+		}
+	}
+
+	# Multiplier applied to the weight for an appropriate commander will be selected from the character pool to lead the IG
+	# root = interest group
+	commander_leader_weight = {
+		value = 3.0
 	}
 	
-	# The chance that a commander belonging to this IG takes over leadership when it changes
-	# scope:character is the most popular commander in the IG
-	commander_leader_chance = {
-		value = 0.75
-		multiply = ig_commander_leader_chance_mult
+	# Multiplier applied to the weight for an appropriate magnate will be selected from the character pool to lead the IG
+	# root = interest group
+	magnate_leader_weight = {
+		value = 1.0
 	}
-	
-	# The chance that a executive belonging to this IG takes over leadership when it changes
-	# scope:character is the most popular executive in the IG
-	executive_leader_chance = {
+
+	# Multiplier applied to the weight for an appropriate executive will be selected from the character pool to lead the IG
+	# root = interest group
+	executive_leader_weight = {
 		value = 0.1
 	}
 	
