@@ -1,0 +1,273 @@
+﻿ship_transfer = {
+	kind = directed
+	cost = 0
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/ship_transfer_treaties.dds"
+
+	flags = {
+		can_be_enforced
+		giftable
+		is_ship_transfer
+	}
+
+	usage_limit = once_per_side_with_same_inputs
+
+	maintenance_paid_by = source_country
+
+    required_inputs = {
+		ship
+    }
+
+	visible = {
+		is_revolutionary = no
+		has_dlc_feature = ep2_content
+	}
+
+	can_ratify = {
+		scope:source_country = {
+			num_non_destroyed_ships_not_in_battle > 0
+		}
+
+		custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            scope:treaty ?= {
+                NOT = {
+                    any_scope_article_option = {
+                        count > 1
+                        has_type = ship_transfer
+                        source_country = scope:source_country
+                        input_ship = root.input_ship
+                    }
+                }
+            }
+        }
+
+		custom_tooltip = {
+            text = TREATY_SHIP_IN_BATTLE
+            scope:article ?= {
+                input_ship = { is_in_battle = no }
+            }
+        }
+	}
+
+	ship_valid_trigger = {
+		scope:input = {
+			owner = root
+			scope:other_country = { has_port_country = yes }
+			is_in_battle = no
+		}
+	}
+
+	on_entry_into_force = {
+		scope:article_options = {
+			target_country = {
+				save_scope_as = ship_taker
+			}
+			source_country = {
+				save_scope_as = ship_giver
+			}
+
+			if = {
+				limit = { exists = input_ship }
+				input_ship = { set_ship_owner_multiple = scope:ship_taker }
+			}
+		}
+	}
+
+	on_withdrawal = {}
+
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = {
+				country = scope:non_withdrawing_country
+				value = {
+					add = {
+						value = -5
+						multiply = {
+							value = scope:treaty_options.remaining_binding_period
+							min = 365
+							divide = 365
+						}
+					}
+					max = -5
+					min = -100
+				}
+			}
+			change_infamy = {
+				value = {
+					add = {
+						value = 5
+						multiply = {
+							value = scope:treaty_options.remaining_binding_period
+							min = 365
+							divide = 365
+						}
+					}
+					min = 5
+					max = 50
+				}
+			}
+		}
+	}
+
+	ai = {
+
+		treaty_categories = {
+			military
+		}
+
+		evaluation_chance = {
+			value = 0.1
+		}
+
+		article_ai_usage = {
+			request
+            offer
+        }
+
+        combined_acceptance_cap_max = 50
+
+		# Proactively pick this article when the candidate ship has been obsolete for a while:
+		# 5x the normal proposal weight nudges the treaty composer toward proactively offering the sale.
+		proposal_weight = {
+			value = 1
+
+			if = {
+				limit = {
+					scope:article.input_ship ?= {
+						days_obsolete > 1000
+					}
+				}
+				multiply = 5
+			}
+		}
+
+		# Ship valuation lives in contextual_accept_score because it depends on
+		# scope:treaty.binding_period, which is only bound in contextual (where
+		# scope:treaty holds either the live treaty or the proposed STreatyOptions).
+		contextual_accept_score = {
+			value = 0
+
+			if = {
+				limit = { scope:source_country ?= this }
+
+				# We're giving up the ship. Charge acceptance equal to the
+				# per-week money flow that would deliver ai_ship_value over the
+				# binding period, at money_transfer's source rate (1/25 per £/wk).
+				#   ai_ship_value * 7 / (25 * binding_days)
+				# = (ai_ship_value / binding_weeks) / 25
+				subtract = {
+					desc = "DIPLOMATIC_ACCEPTANCE_SHIP_VALUE"
+					value = "scope:article.input_ship.ai_ship_value"
+					multiply = 7
+					divide = 25
+					divide = {
+						value = scope:treaty.binding_period
+						min = 365
+					}
+				}
+
+				# Ships that have been obsolete for a while are much less
+				# painful to part with: 5x lower penalty once the obsolescence
+				# tick task has had time to stamp them (100-day grace avoids
+				# AI fire-selling the moment the enabling tech is researched).
+				if = {
+					limit = {
+						scope:article.input_ship = {
+							days_obsolete > 100
+						}
+					}
+					multiply = {
+						desc = "DIPLOMATIC_ACCEPTANCE_SHIP_OBSOLETE"
+						value = 0.2
+					}
+				}
+			}
+			else = {
+				# We're receiving the ship. Credit acceptance at money_transfer's
+				# target rate (1/100 per £/wk), capped at +75.
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_SHIP_VALUE"
+					value = "scope:article.input_ship.ai_ship_value"
+					multiply = 7
+					divide = 100
+					divide = {
+						value = scope:treaty.binding_period
+						min = 365
+					}
+					max = 75
+				}
+			}
+
+			# Binding-period amplifier mirroring money_transfer: treaties of
+			# 5+ years scale the above up to 2x during new-proposal evaluation,
+			# so longer commitments carry proportionally more weight. Only fires
+			# when the treaty is not yet active.
+			if = {
+				limit = {
+					NOT = { exists = scope:is_treaty_active }
+					scope:treaty.binding_period >= 1825
+				}
+				multiply = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BINDING_PERIOD"
+					value = 1
+					add = {
+						value = scope:treaty.binding_period
+						min = 365
+						divide = 3650
+					}
+					max = 2
+				}
+			}
+
+			# general multiplier to all ship trade values if necessary
+			# multiply = 0.33
+
+
+			# Veto one-sided ship grabs: if we're losing the ship and no other
+			# article in this treaty makes us the beneficiary (ship, money,
+			# goods, state, etc.), refuse outright. Applied after the binding-
+			# period amplifier so the flat -1000 is unaffected by it.
+			if = {
+				limit = {
+					scope:source_country ?= this
+					scope:treaty = {
+						NOT = {
+							any_scope_article_option = {
+								target_country = scope:source_country
+							}
+						}
+					}
+				}
+				subtract = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ONE_SIDED_SHIP_TRADE"
+					value = 1000
+				}
+			}
+		}
+	}
+
+	wargoal = {
+		execution_priority = 21
+
+		contestion_type = control_target_country_capital
+
+		maneuvers = {
+			value = 0
+
+			add = {
+				desc = "MANEUVERS_BASE_VALUE"
+				value = 2.5
+			}
+		}
+
+		infamy = {
+			value = 0
+
+			add = {
+				desc = "INFAMY_BASE_VALUE"
+				value = 0.25
+			}
+		}
+	}
+}

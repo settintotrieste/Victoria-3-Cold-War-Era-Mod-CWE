@@ -1,0 +1,241 @@
+﻿abandon_piracy = {
+    kind = directed
+    cost = 25
+
+	max_target_involvement = 500
+	target_involvement_applies_to = target_country
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/abandon_piracy.dds"
+
+	flags = {
+		is_abandon_piracy
+		can_be_enforced
+		ai_consider_threaten_naval_hostilities
+		can_be_renegotiated
+		giftable
+	}
+
+	maintenance_paid_by = target_country
+	usage_limit = once_per_side
+
+    unlocked_by_technologies = {
+        international_relations
+    }
+
+	visible = {
+		has_dlc_feature = ep2_content
+		is_country_type = unrecognized
+	}
+
+	possible = {
+		OR = {
+			is_subject = no
+			top_overlord ?= {
+				is_country_type = unrecognized
+			}
+		}
+	}
+
+    can_ratify = {
+        custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS_TREATY
+            NOT = {
+                scope:source_country = {
+                    any_scope_treaty = {
+						binds = scope:target_country
+                        hidden_trigger = {
+							OR = {
+								scope:treaty = {
+									is_renegotiation = no
+								}
+								scope:treaty.amended_treaty != this
+							}
+						}
+						any_scope_article = {
+							has_type = abandon_piracy
+							source_country = scope:source_country
+						}
+                    }
+                }
+            }
+        }
+        custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS_TREATY
+            NOT = {
+				scope:treaty = {
+					any_scope_article_option = {
+						has_type = non_piracy_agreement
+						source_country = scope:source_country
+					}
+				}
+            }
+        }
+    }
+
+    on_entry_into_force = {}
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -10 }
+		}
+	}
+
+	ai = {
+
+		treaty_categories = {
+			economy
+		}
+
+		evaluation_chance = {
+			value = 0.025
+
+			if = {
+				limit = {
+					country_rank = rank_value:great_power
+					navy_size >= 25
+				}
+				add = 0.075
+			}
+		}
+
+		article_ai_usage = {
+			request
+		}
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:source_country ?= this
+				}
+
+				# We are doing this to be able to reuse loc across treaties and diplomatic actions
+				scope:source_country = {
+					save_temporary_scope_as = target
+				}
+				scope:target_country = {
+					save_temporary_scope_as = actor
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = -25
+				}
+
+				if = {
+					limit = {
+						scope:target_country = {
+							"pirated_trade_value_by(scope:source_country)" > 0
+						}
+					}
+					subtract = {
+						desc = "country_piracy_income_add"
+						scope:target_country = {
+							add = "pirated_trade_value_by(scope:source_country)"
+						}
+						divide = 100
+						max = 100
+					}
+				}
+			}
+			else = {
+				scope:source_country = {
+					save_temporary_scope_as = actor
+				}
+				scope:target_country = {
+					save_temporary_scope_as = target
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = -10
+				}
+
+				if = {
+					limit = {
+						scope:target_country = {
+							"pirated_trade_value_by(scope:source_country)" > 0
+						}
+					}
+					add = {
+						desc = "country_piracy_income_add"
+						scope:target_country = {
+							add = "pirated_trade_value_by(scope:source_country)"
+						}
+						divide = 100
+						max = 30
+					}
+				}
+			}
+		}
+
+		wargoal_score_multiplier = {
+			value = 1
+
+			if = {
+				limit = {
+					NOT = { is_country_type = unrecognized }
+					navy_size >= scope:source_country.navy_size
+				}
+
+				add = {
+					value = navy_size
+					divide = 1000
+				}
+
+				add = {
+					root = {
+						add = "pirated_trade_value_by(scope:source_country)"
+					}
+					divide = 10000
+				}
+			}
+		}
+	}
+
+	wargoal = {
+		execution_priority = 21
+
+		contestion_type = control_any_target_country_state
+
+		maneuvers = {
+			value = 0
+
+			add = {
+				desc = "MANEUVERS_BASE_VALUE"
+				value = 1
+			}
+
+			scope:target_country = {
+				multiply = {
+					desc = "MANEUVERS_TARGET_COUNTRY_POPULATION_FACTOR"
+					value = total_population
+					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+
+		infamy = {
+			value = 0
+
+			add = {
+				desc = "INFAMY_BASE_VALUE"
+				value = 0.25
+			}
+
+			scope:target_country = {
+				multiply = {
+					desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
+					value = total_population
+					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+		}
+	}
+}

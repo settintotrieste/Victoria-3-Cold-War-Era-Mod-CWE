@@ -1,74 +1,37 @@
-﻿military_access = {
+﻿no_strait_closure = {
     kind = directed
     cost = 25
-	
-	max_target_involvement = 1000
-	target_involvement_applies_to = source_country
 
     relations_progress_per_day = 0.5
     relations_improvement_max = 20
 
-	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/military_access_treaties.dds"
+	max_target_involvement = 500
+	target_involvement_applies_to = target_country
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/no_strait_closure_treaties.dds"
 
 	flags = {
-		is_military_access
+		is_no_strait_closure
 		can_be_enforced
 		ai_consider_threaten_naval_hostilities
 		can_be_renegotiated
 		giftable
-		friendly
 	}
 
 	maintenance_paid_by = target_country
 	usage_limit = once_per_side
 
     unlocked_by_technologies = {
-        
+        international_relations
     }
 
 	visible = {
-		is_not_revolutionary_or_decentralised = yes
+		has_any_strait_province = scope:source_country
 	}
 
 	possible = {
-	
-		#Proper countries
-		is_not_revolutionary_or_decentralised = yes
-		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
-		
-		#Both parties are sufficiently independent
-		is_sufficiently_independent = yes
-		scope:other_country = { is_sufficiently_independent = yes }
-		
-		#Neither parties are subjects of the other
-		scope:other_country = { NOT = { is_subject_of = ROOT } } 
-		NOT = { is_subject_of = scope:other_country }
-		
-		#Neither party is neutral
-		NOR = {
-			is_neutral = yes
-			scope:other_country = { is_neutral = yes }
-		}
-	
-	}
-
-	requirement_to_maintain = {
-		trigger = {
-			scope:source_country = {
-				OR = {
-					is_sufficiently_independent = yes
-					has_modifier = condominium_modifier
-				}
-			}
-		}
-	}
-
-	requirement_to_maintain = {
-		trigger = {
-			scope:target_country = {
-				is_sufficiently_independent = yes
-			}
-		}
+		has_any_strait_province = scope:source_country
+		has_any_strait_control = scope:source_country
 	}
 
     can_ratify = {
@@ -87,23 +50,25 @@
 							}
 						}
 						any_scope_article = {
-							has_type = military_access
+							has_type = no_strait_closure
 							source_country = scope:source_country
 						}
                     }
                 }
             }
         }
+        custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS_TREATY
+            NOT = {
+				scope:treaty = {
+					any_scope_article_option = {
+						has_type = strait_access
+						source_country = scope:source_country
+					}
+				}
+            }
+        }
     }
-	
-	can_withdraw = {
-	
-		trigger_if = {
-			limit = { scope:source_country = { has_modifier = condominium_modifier } }
-			scope:target_country = { NOT = { has_diplomatic_pact = { who = scope:source_country type = condominium is_initiator = yes } } }
-		}
-		
-	}
 
     on_entry_into_force = {}
 
@@ -159,14 +124,29 @@
 					value = -10
 				}
 
-				if = {
-					limit = {
-						has_strategy = ai_strategy_armed_isolationism
+				add = {
+					desc = "concept_strait_controller"
+					value = {
+						scope:target_country = {
+							add = "strait_trade_importance_by(scope:source_country)"
+						}
 					}
-					add = {
-						desc = "DIPLOMATIC_ACCEPTANCE_ISOLATIONIST"
-						add = -25
+					divide = gdp
+					multiply = {
+						scope:target_country = {
+							add = "strait_trade_importance_by(scope:source_country)"
+						}
 					}
+					multiply = -1
+					min = -25
+				}
+
+				add = {
+					desc = "concept_rank"
+					value = country_rank
+					multiply = 5
+					multiply = -1
+					min = -50
 				}
 
 				if = {
@@ -178,6 +158,7 @@
 						value = "num_alliances_and_defensive_pacts_with_rivals(scope:target_country)"
 						multiply = -15
 					}
+					min = -20
 				}
 
 				if = {
@@ -189,6 +170,7 @@
 						value = "num_alliances_and_defensive_pacts_with_allies(scope:target_country)"
 						multiply = 10
 					}
+					max = 10
 				}
 
 				if = {
@@ -199,7 +181,7 @@
 						desc = "DIPLOMATIC_ACCEPTANCE_SHARED_RIVALS"
 						value = "num_shared_rivals(scope:target_country)"
 						multiply = 10
-						max = 30
+						max = 10
 					}
 				}
 
@@ -214,7 +196,7 @@
 						}
 						add = {
 							desc = "DIPLOMATIC_ACCEPTANCE_SAME_POWER_BLOC"
-							value = 25
+							value = 10
 						}
 					}
 					else = {
@@ -265,65 +247,20 @@
 					value = -10
 				}
 
-				if = {
-					limit = {
-						"num_alliances_and_defensive_pacts_with_rivals(scope:source_country)" > 0
-					}
-					add = {
-						desc = "DIPLOMATIC_ACCEPTANCE_ALLIED_TO_RIVALS"
-						value = "num_alliances_and_defensive_pacts_with_rivals(scope:source_country)"
-						multiply = -15
-					}
-				}
-
-				if = {
-					limit = {
-						"num_alliances_and_defensive_pacts_with_allies(scope:source_country)" > 0
-					}
-					add = {
-						desc = "DIPLOMATIC_ACCEPTANCE_ALLIED_TO_ALLIES"
-						value = "num_alliances_and_defensive_pacts_with_allies(scope:source_country)"
-						multiply = 10
-					}
-				}
-
-				if = {
-					limit = {
-						"num_shared_rivals(scope:source_country)" > 0
-					}
-					add = {
-						desc = "DIPLOMATIC_ACCEPTANCE_SHARED_RIVALS"
-						value = "num_shared_rivals(scope:source_country)"
-						multiply = 10
-						max = 30
-					}
-				}
-
 				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
-					if = {
-						limit = {
-							OR = {
-								has_attitude = {
-									who = scope:source_country
-									attitude = antagonistic
-								}
-								has_attitude = {
-									who = scope:source_country
-									attitude = domineering
-								}
-								has_attitude = {
-									who = scope:source_country
-									attitude = belligerent
-								}
-								has_attitude = {
-									who = scope:source_country
-									attitude = rebellious
-								}
-							}
+					desc = "concept_strait_controller"
+					value = {
+						scope:target_country = {
+							add = "strait_trade_importance_by(scope:source_country)"
 						}
-						value = -1000
 					}
+					divide = gdp
+					multiply = {
+						scope:target_country = {
+							add = "strait_trade_importance_by(scope:source_country)"
+						}
+					}
+					max = 10
 				}
 			}
 		}
@@ -364,31 +301,12 @@
 			scope:target_country = {
 				multiply = {
 					desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
-					add = {
-						every_scope_state = {
-							add = {
-								value = state_population
-								divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
-								multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
-
-								if = {
-									limit = {
-										is_incorporated = no
-									}
-									multiply = {
-										value = 1
-										add = define:NDiplomacy|WAR_GOAL_INFAMY_UNINCORPORATED_FACTOR
-									}
-								}
-								max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_PER_STATE
-							}
-						}
-					}
-					max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+					value = total_population
+					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
 				}
 			}
-
-			min = 0.25
 		}
 	}
 }
