@@ -1,1 +1,261 @@
-﻿
+﻿da_stake_colonial_claim = {
+	groups= { general }
+
+	requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+	state_selection = second_required
+	second_state_list = second_country
+
+	selectable = {
+		NOT = { is_country_type = decentralized }
+		OR = {
+			NOT = { has_law_or_variant = law_type:law_no_colonial_affairs }
+			is_a_colonial_subject_gov = yes
+		}
+	}
+
+	potential = {
+		scope:target_country = {
+			OR = {
+				is_country_type = decentralized
+				is_country_type = unrecognized
+			}
+		}
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = "DA_STAKE_COLONIAL_CLAIM_COOLDOWN"
+			NOT = {
+				has_variable = da_stake_colonial_claim_cooldown
+			}
+		}
+		OR = {
+			NAND = {
+				is_country_on_same_continent = { TARGET = root }
+				has_law_or_variant = law_type:law_no_colonial_affairs
+			}
+			is_a_colonial_subject_gov = yes
+		}
+		scope:target_country = {
+			OR = {
+				is_subject = no
+				this.overlord ?= {
+					NOT = { is_country_type = recognized }
+				}
+			}
+		}
+	}
+
+	second_state_trigger = {
+		trigger_if = {
+			limit = {
+				owner = {
+					is_country_type = decentralized
+				}
+			}
+			scope:country = {
+				has_strategic_region_interest_tier = {
+					strategic_region = root.region
+					value >= interest_tier_effect_stake_colonial_claim_min_tier
+				}
+			}
+		}
+		trigger_else_if = {
+			limit = {
+				owner = {
+					is_country_type = unrecognized
+				}
+			}
+			scope:country = {
+				has_strategic_region_interest_tier = {
+					strategic_region = root.region
+					value >= interest_tier_effect_stake_colonial_claim_unrecognized_min_tier
+				}
+			}
+		}
+		OR = {
+			scope:country = { is_adjacent_to_state = root }
+			AND = {
+				is_coastal = yes
+				scope:country = { has_port_country = yes }
+			}
+		}
+		NOT = { has_claim_by = scope:country }
+	}
+
+	accept_effect = {
+		if = {
+			limit = {
+				exists = scope:second_state
+			}
+
+			set_variable = {
+				name = da_stake_colonial_claim_cooldown
+				days = normal_modifier_time
+			}
+			scope:second_state = {
+				state_region = {
+					add_claim = root
+				}
+			}
+			scope:second_state = {
+				save_temporary_scope_as = target_state
+			}
+			set_local_variable = {
+				name = infamy_value
+				value = {
+					add = 5
+
+					multiply = {
+						#desc = "INFAMY_STATE_POPULATION_FACTOR"
+						value = scope:second_state.state_population
+						divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+						multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+						add = 1
+						max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_PER_STATE
+					}
+
+					multiply = {
+						#desc = "country_infamy_generation_against_unrecognized_mult"
+						value = 1
+						if = {
+							limit = {
+								NOR = {
+									is_country_type = unrecognized
+									is_country_type = decentralized
+								}
+								scope:second_state.owner = {
+									OR = {
+										is_country_type = unrecognized
+										is_country_type = decentralized
+									}
+								}
+							}
+							add = modifier:country_infamy_generation_against_unrecognized_mult
+						}
+					}
+
+					multiply = {
+						#desc = "decentralized_nation"
+						value = 1
+						if = {
+							limit = {
+								scope:second_state.owner = {
+									is_country_type = decentralized
+								}
+							}
+							multiply = 0.5
+						}
+					}
+
+					min = {
+						#desc = "INFAMY_MINIMUM_VALUE"
+						value = 5
+					}
+					max = 20
+				}
+			}
+			create_incident = {
+				country = scope:second_state.owner
+				value = local_var:infamy_value
+			}
+		}
+		else = {
+			custom_tooltip = DA_STAKE_COLONIAL_CLAIM_EMPTY_EFFECT
+		}
+	}
+
+	is_hostile = yes
+
+	ai = {
+		evaluation_chance = {
+			value = 0.0
+
+			if = {
+				limit = {
+					NOT = {
+						has_variable = da_stake_colonial_claim_cooldown
+					}
+				}
+
+				if = {
+					limit = {
+						country_rank >= rank_value:great_power
+					}
+					add = 0.1
+				}
+				else_if = {
+					limit = {
+						country_rank = rank_value:major_power
+					}
+					add = 0.05
+				}
+
+				if = {
+					limit = {
+						is_a_colonial_subject_gov = yes
+					}
+					add = 0.05
+				}
+				
+			}
+		}
+
+		will_select_as_second_state = {
+			always = yes
+		}
+
+		will_propose_with_states = {
+			exists = scope:second_state
+			OR = {
+				scope:second_state = { is_coastal = yes }
+				is_adjacent_to_state = scope:second_state
+				any_subject_or_below = {
+					is_adjacent_to_state = scope:second_state
+				}
+			}
+		}
+
+		propose_score = {
+			value = 5
+
+			if = {
+				limit = {
+					has_attitude = {
+						who = scope:target_country
+						attitude = antagonistic
+					}
+				}
+				add = 5
+			}
+			else_if = {
+				limit = {
+					has_attitude = {
+						who = scope:target_country
+						attitude = belligerent
+					}
+				}
+				add = 10
+			}
+		}
+
+		will_propose = {
+			is_adjacent_to_country = root
+			OR = {
+				scope:target_country = {
+					is_country_type = decentralized
+				}
+				has_attitude = {
+					who = scope:target_country
+					attitude = antagonistic
+				}
+				has_attitude = {
+					who = scope:target_country
+					attitude = belligerent
+				}
+			}
+		}
+	}
+}
