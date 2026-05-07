@@ -7,18 +7,20 @@ REPLACE_OR_CREATE:can_lead_power_bloc = {
 # Root = Country
 # scope:target_country = target of a diplomatic play
 REPLACE_OR_CREATE:can_start_diplomatic_plays_against = {
+
 	# Not allowed to attack subjects of play participants
 	NOT = {
 		scope:target_country.top_overlord ?= {
 			is_diplomatic_play_participant_with = root
 		}
 	}
-	# Might be disallowed by power bloc
 	NOT = {
 		scope:target_country.top_overlord ?= {
 			is_diplomatic_play_involved_with = root
 		}
 	}
+	
+	# Might be disallowed by power bloc
 	NOT = {
 		custom_tooltip = {
 			text = "power_bloc_disallow_war_bool"
@@ -41,6 +43,25 @@ REPLACE_OR_CREATE:can_start_diplomatic_plays_against = {
 			is_indirect_subject_of = root
 		}
 	}
+	
+	#Has interest in region
+	OR = {
+		has_strategic_region_interest_tier = {
+			strategic_region = scope:region
+			value >= interest_tier_effect_can_start_diplomatic_plays_min_tier
+		}
+		is_direct_subject_of = scope:target_country
+		scope:target_country = { is_direct_subject_of = root }
+	}
+	
+	#Not has a non-aggression pact
+	NOT = { 
+		any_scope_treaty = { 
+			binds = scope:target_country 
+			any_scope_article = { has_type = non_aggression_pact } 
+		}
+	}
+	
 }
 
 # Checks if Country can join the target country's side in a diplomatic play
@@ -70,52 +91,70 @@ REPLACE_OR_CREATE:can_join_side_in_diplomatic_play = {
 			is_indirect_subject_of = root
 		}
 	}
-	custom_tooltip = {
-		text = can_go_to_war.tt
-		OR = {
+	
+	OR = {
+		AND = {
+			has_strategic_region_interest_tier = {
+				strategic_region = scope:region
+				value >= interest_tier_effect_can_join_diplomatic_plays_min_tier
+			}
 			can_go_to_war = yes
-			AND = {
-				is_neutral = no
-				OR = {
-					any_scope_treaty = {
-						binds = scope:target_country
-						any_scope_article = {
-							OR = {
-								has_type = defensive_pact
-								has_type = alliance
-								has_type = guarantee_independence
-							}
+		}
+		AND = {
+			is_neutral = no
+			OR = {
+				any_scope_treaty = {
+					binds = scope:target_country
+					any_scope_article = {
+						OR = {
+							has_type = defensive_pact
+							has_type = alliance
+							has_type = guarantee_independence
+							has_type = support_independence
 						}
-					}
-					any_diplomatic_play = {
-						initiator = scope:enemy_country
-						target = scope:target_country
-						has_an_aggressive_war_goal = yes
-					}
-					any_diplomatic_play = {
-						initiator = scope:target_country
-						target = scope:enemy_country
-						has_an_aggressive_war_goal = no
 					}
 				}
 			}
-			scope:enemy_country = {
-				has_modifier = condominium_modifier
-				has_diplomatic_pact = { who = ROOT type = condominium is_initiator = no }
+		}
+		AND = {
+			has_strategic_region_interest_tier = {
+				strategic_region = scope:region
+				value >= interest_tier_effect_can_join_diplomatic_plays_min_tier
 			}
-			scope:target_country = {
-				has_modifier = condominium_modifier
-				has_diplomatic_pact = { who = ROOT type = condominium is_initiator = no }
+			is_neutral = no
+			any_diplomatic_play = {
+				initiator = scope:enemy_country
+				target = scope:target_country
+				has_an_aggressive_war_goal = yes
 			}
-			is_subject_of = scope:enemy_country
+			any_diplomatic_play = {
+				initiator = scope:target_country
+				target = scope:enemy_country
+				has_an_aggressive_war_goal = no
+			}
+		}
+		is_direct_subject_of = scope:enemy_country
+		scope:enemy_country = { is_direct_subject_of = root }
+		is_direct_subject_of = scope:target_country
+		scope:target_country = { is_direct_subject_of = root }
+		scope:enemy_country = {
+			has_modifier = condominium_modifier
+			has_diplomatic_pact = { who = ROOT type = condominium is_initiator = no }
+		}
+		scope:target_country = {
+			has_modifier = condominium_modifier
+			has_diplomatic_pact = { who = ROOT type = condominium is_initiator = no }
 		}
 	}
+	
+	#Not has a non-aggression pact
 	NOT = { 
 		any_scope_treaty = { 
 			binds = scope:enemy_country 
 			any_scope_article = { has_type = non_aggression_pact } 
 		} 
 	}
+	
 }
 
 REPLACE_OR_CREATE:unlock_power_bloc_principle_slot_2 = {
