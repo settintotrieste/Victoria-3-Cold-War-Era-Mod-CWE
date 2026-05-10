@@ -1,7 +1,113 @@
 namespace = MLY_gov_changes
 
-# Full internal self government for Malaya
+# Assassination of Henry Gurney
 MLY_gov_changes.1 = {
+    type = country_event
+
+    title = MLY_1951_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = MLY_1951_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = MLY_1951_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "southamerica_public_figure_assassination" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:MLY ?= this
+		game_date >= 1951.10.6									# START DATE: Date colony became self governing ****
+		game_date < 1961.10.6									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		ruler_is_governor_general = yes
+		is_sufficiently_independent = no						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		ruler ?= { has_variable = Henry_Gurney }
+		
+		# Event has not been fired before
+		NOT = { has_variable = MLY_1951_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = MLY_1951_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Kill character
+		random_scope_character = {
+			limit = { has_variable = Henry_Gurney }
+			kill_character = yes
+		}
+		
+		#Gerald Templer
+		if = {
+			limit = { any_scope_character = { has_variable = Gerald_Templer } }
+			random_scope_character = {
+				limit = { has_variable = Gerald_Templer }
+				set_character_as_ruler = yes
+			}
+		}
+		else = {
+			create_character = {
+				first_name = "Gerald_Templer_first_name"
+				last_name = "Gerald_Templer_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1898.9.11
+				culture = cu:english
+				interest_group = ig_landowners
+				ideology = ideology_autocratic
+				religion = rel:protestant
+				traits = {
+					cruel
+					war_criminal
+					bigoted
+				}
+				on_created = { set_variable = Gerald_Templer }
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# Full internal self government for Malaya
+MLY_gov_changes.2 = {
     type = country_event
 
     title = MLY_1955_revolution.t 							# Title of the event; ADD LOCALISATION
