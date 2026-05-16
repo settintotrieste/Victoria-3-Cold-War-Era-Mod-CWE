@@ -103,16 +103,27 @@ REPLACE_OR_CREATE:can_join_side_in_diplomatic_play = {
 		AND = {
 			is_neutral = no
 			OR = {
-				any_scope_treaty = {
-					binds = scope:target_country
-					any_scope_article = {
-						OR = {
-							has_type = defensive_pact
-							has_type = alliance
-							has_type = guarantee_independence
-							has_type = support_independence
+				has_treaty_alliance_with = { TARGET = scope:target_country }
+				AND = {
+					has_treaty_defensive_pact_with = { TARGET = scope:target_country }
+					hidden_trigger = {
+						scope:target_country = {
+							scope:initiator != this
 						}
 					}
+				}
+				AND = {
+					scope:target_country = {
+						has_treaty_guarantee_independence_with = { TARGET = root }
+					}
+					hidden_trigger = {
+						scope:target_country = {
+							scope:initiator != this
+						}
+					}
+				}
+				scope:target_country = {
+					has_treaty_support_independence_with = { TARGET = root }
 				}
 			}
 		}
@@ -208,4 +219,48 @@ REPLACE_OR_CREATE:unlock_power_bloc_formation_principle_slot_3 = {
 
 REPLACE_OR_CREATE:unlock_power_bloc_formation_principle_slot_4 = {
 	has_technology_researched = tech_geopolitics_6
+}
+
+# Evaluated when checking if a country can threaten naval hostilities in a treaty
+# root = threatening country
+# scope:other_country = threatened country
+REPLACE_OR_CREATE:can_threaten_naval_hostilities = {
+	navy_size >= 10
+
+	custom_tooltip = {
+		text = "THREATEN_NAVAL_HOSTILITIES_NAVY_MUST_BE_STRONGER"
+		naval_combat_power > scope:other_country.naval_combat_power
+	}
+
+	custom_tooltip = {
+		text = "THREATEN_NAVAL_HOSTILITIES_NOT_LANDLOCKED"
+		scope:other_country = {
+			any_scope_state = {
+				is_coastal = yes
+			}
+		}
+	}
+	
+	can_go_to_war = yes
+
+	"relations(scope:other_country)" < relations_threshold:cordial
+	NOR = {
+		is_diplomatic_play_ally_of = scope:other_country
+		any_scope_treaty = {
+			binds = scope:other_country
+			any_scope_article = {
+				OR = {
+					has_type = alliance
+					has_type = defensive_pact
+					has_type = guarantee_independence
+				}
+			}
+		}
+		is_direct_subject_of = scope:other_country
+		scope:other_country = { is_direct_subject_of = root }
+		any_scope_treaty = { 
+			binds = scope:other_country 
+			any_scope_article = { has_type = non_aggression_pact } 
+		}
+	}
 }
