@@ -1,103 +1,40 @@
-﻿leverage_threshold_to_invite = 200 	# Minimum leverage advantage from power bloc on country to be able to invite the country
-decrease_autonomy_liberty_desire_to_add = 10 	# When you decrease autonomy of one of your subject, other direct subjects increase their liberty desire by this
-
-annex_subject_max_liberty_desire_change = 25
-annex_subject_intermediate_desire_change = 15
-prestige_to_libery_desire_factor = 5 #converts ratio of prestige to liberty desire when subject over the expected
-army_projection_to_libery_desire_factor = 10 #converts ratio of armed forces to liberty desire when subject over the expected
-army_projection_comparison = {
-	add = overlord.army_power_projection
-	if = {
-		limit = {
-			army_power_projection > 0
-		}
-		divide = army_power_projection 
-	}
-}
-
-overlords_overlord_army_projection_comparison = { 
-	if = {
-		limit = {
-			exists = this.overlord.overlord
-		}
-		add = this.overlord.overlord.army_power_projection
-	}
-	if = {
-		limit = {
-			army_power_projection > 0
-		}
-		divide = army_power_projection 
-	}
-}
-
-num_primary_cultures = {
-	every_primary_culture = {
-		add = 1
-	}
-}
-
-annex_subject_base_liberty_desire_change = {
-	scope:target_country ?= {
-		add = prestige
-	}
-	round = yes
-	min = 1
-	max = annex_subject_max_liberty_desire_change
-}
-
-# root = pact
+﻿# root = pact
 # root.first_country: first country in the pact. Overlord.
 # root.second_country: second country in the pact. Subject.
 # root = { liberty_desire < 50 }: compare trigger for current Liberty Desire value root.
 # Must return a value which will be added to the current Liberty Desire in this pact.
-liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
+REPLACE_OR_CREATE:liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 	add = {
 		value = 0.1
 		desc = "base_value"
-	}	
-	
-	# Fervor and primary cultures
+	}
+
 	if = {
-		limit = {
-			#root.second_country = {
-			#	NOT = {
-			#		has_law_or_variant = law_type:law_subjecthood
-			#	}
-			#}
-			NOT = {
-				root.second_country = {
-					any_primary_culture = {
-						is_primary_culture_of = root.first_country
-					}
-				}
-			}
-		}
+		limit = { root.second_country = { has_government_type = gov_chartered_company } }
 		add = {
-			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_CULTURAL_FERVOUR"
-			value = root.second_country.country_fervor_primary_culture #grabs culture with highest fervor
-			subtract = 25
-			divide = 150
-			min = -0.10
-			max = 0.5
+			value = -0.2
+			desc = "gov_chartered_company"
 		}
 	}
-	else_if = { #if shares primary culture and no others
+
+	# Fervor and primary cultures
+	if = { #if shares primary culture and no others
 		limit = {
 			root.second_country = {
 				any_primary_culture = {
 					percent = 1
-					is_primary_culture_of = root.first_country  
+					is_primary_culture_of = root.first_country
 				}
 			}
 		}
-		add = { #extra for overlord culture's fervor. Note many overlord cultures do have high fervor because of literacy. 
+		add = { #extra for overlord culture's fervor. Note many overlord cultures do have high fervor because of literacy.
 			desc = "LIBERTY_DESIRE_SHARED_PRIMARY_CULTURE"
 			add = -0.05 #base for overlord having same culture
 			root.second_country = {
 				every_primary_culture = {
 					limit = {
 						is_primary_culture_of = root.first_country
-					}	
+					}
 					add = culture_current_fervor
 					subtract = 25
 					divide = 150
@@ -119,7 +56,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 		}
 		add = {
 			desc = "LIBERTY_DESIRE_SHARED_PRIMARY_CULTURE_MIX"
-			add = { #extra for overlord culture's fervor. Note many overlord cultures do have high fervor because of literacy. 
+			add = { #extra for overlord culture's fervor. Note many overlord cultures do have high fervor because of literacy.
 				root.second_country = {
 					every_primary_culture = {
 						limit = {
@@ -133,31 +70,24 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 						max = 0
 						min = -0.25
 					}
-					if = {
+					every_primary_culture = {
 						limit = {
 							NOT = {
-								has_law_or_variant = law_type:law_subjecthood
+								is_primary_culture_of = root.first_country
 							}
 						}
-						every_primary_culture = {
-							limit = {
-								NOT = {
-									is_primary_culture_of = root.first_country
-								}
-							}
-							add = culture_current_fervor
-							subtract = 25
-							divide = 150
-							divide = root.second_country.num_primary_cultures
-							min = 0
-							max = 0.50
-						}
+						add = culture_current_fervor
+						subtract = 25
+						divide = 150
+						divide = root.second_country.num_primary_cultures
+						min = 0
+						max = 0.50
 					}
 				}
 			}
 		}
 	}
-	
+
 	#relations
 	add = {
 		if = {
@@ -248,8 +178,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 		limit = {
 			OR = {
 				is_diplomatic_action_type = protectorate
-				is_diplomatic_action_type = personal_union
-				is_diplomatic_action_type = confederal_state
+				is_diplomatic_action_type = satellite
 			}
 		}
 		if = {
@@ -284,9 +213,9 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 	else_if = {
 		limit = {
 			OR = {
+				is_diplomatic_action_type = confederal_state
+				is_diplomatic_action_type = personal_union
 				is_diplomatic_action_type = dominion
-				is_diplomatic_action_type = satellite
-				is_diplomatic_action_type = chartered_company
 			}
 		}
 		if = {
@@ -322,8 +251,9 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 		limit = {
 			OR = {
 				is_diplomatic_action_type = puppet
-				is_diplomatic_action_type = ﻿special_administrative_region
 				is_diplomatic_action_type = ﻿semi_autonomous_colony
+				is_diplomatic_action_type = ﻿mandate
+				is_diplomatic_action_type = ﻿special_administrative_region
 			}
 		}
 		if = {
@@ -355,7 +285,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 			}
 		}
 	}
-	
+
 	#army projection power
 	if = {
 		limit = { root.first_country.army_power_projection < 1 }
@@ -375,8 +305,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 		limit = {
 			OR = {
 				is_diplomatic_action_type = protectorate
-				is_diplomatic_action_type = personal_union
-				is_diplomatic_action_type = confederal_state
+				is_diplomatic_action_type = satellite
 			}
 		}
 		if = {
@@ -402,7 +331,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 				add = root.second_country.army_power_projection
 				multiply = 5
 				divide = root.first_country.army_power_projection
-				divide = army_projection_to_libery_desire_factor 
+				divide = army_projection_to_libery_desire_factor
 				max = 0.5
 				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ARMY_POWER_PROJECTION_DIFFERENCE_5_0_POSITIVE"
 			}
@@ -411,9 +340,9 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 	else_if = {
 		limit = {
 			OR = {
+				is_diplomatic_action_type = confederal_state
+				is_diplomatic_action_type = personal_union
 				is_diplomatic_action_type = dominion
-				is_diplomatic_action_type = satellite
-				is_diplomatic_action_type = chartered_company
 			}
 		}
 		if = {
@@ -438,7 +367,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 				add = root.second_country.army_power_projection
 				multiply = 7.5
 				divide = root.first_country.army_power_projection
-				divide = army_projection_to_libery_desire_factor 
+				divide = army_projection_to_libery_desire_factor
 				max = 0.5
 				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ARMY_POWER_PROJECTION_DIFFERENCE_7_5_POSITIVE"
 			}
@@ -448,8 +377,9 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 		limit = {
 			OR = {
 				is_diplomatic_action_type = puppet
-				is_diplomatic_action_type = ﻿special_administrative_region
 				is_diplomatic_action_type = ﻿semi_autonomous_colony
+				is_diplomatic_action_type = ﻿mandate
+				is_diplomatic_action_type = ﻿special_administrative_region
 			}
 		}
 		if = {
@@ -474,7 +404,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 				add = root.second_country.army_power_projection
 				multiply = 10
 				divide = root.first_country.army_power_projection
-				divide = army_projection_to_libery_desire_factor 
+				divide = army_projection_to_libery_desire_factor
 				max = 0.5
 				desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ARMY_POWER_PROJECTION_DIFFERENCE_10_0_POSITIVE"
 			}
@@ -508,7 +438,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 			}
 		}
 	}
-	
+
 	# alliances and defensive pacts of first country (partially counters support independence). Negative.
 	first_country = {
 		add = {
@@ -521,7 +451,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 						}
 					}
 				}
-				add = { 
+				add = {
 					every_scope_ally = {
 						limit = {
 							country_rank >= rank_value:great_power
@@ -591,7 +521,6 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 			multiply = -1
 		}
 	}
-	
 	#lobbies
 	second_country = {
 		add = {
@@ -639,7 +568,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ANTI_LOBBY_INTEREST_GROUP_IN_OPPOSITION"
 		}
 	}
-	
+
 	#economic dependence
 	if = {
 		limit = { "root.second_country.economic_dependence(root.first_country)" > 0 }
@@ -683,7 +612,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_LOW_SUPPLY_NETWORK_STRENGTH"
 		}
 	}
-	
+
 	#power bloc sacred civics effect
 	if = {
 		limit = {
@@ -721,7 +650,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 		value = root.first_country.modifier:country_liberty_desire_of_subjects_add
 		desc = "LIBERTY_SUBJECT_DESIRE_WEEKLY_CHANGE_DESC_ADDITIONAL_ADDS"
 	}
-	
+
 	if = {
 		limit = {
 			ROOT.first_country = { has_law_or_variant = law_type:law_isolationism }
@@ -733,7 +662,7 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 	}
 
 	save_temporary_value_as = pre_scaling_value
-	
+
 	#apply scaling
 	if = {
 		limit = {
@@ -793,405 +722,4 @@ liberty_desire_weekly_change = { #AKA liberty_desire_weekly_progress
 			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_TRUCE"
 		}
 	}
-
-	second_country = {
-		if = {
-			limit = { 
-				OR = { 
-					is_a_colonial_subject_gov = yes 
-					is_subject_type = subject_type_puppet
-				}
-			}
-			add = {
-				if = {
-					limit = {  
-						root.first_country = { has_law_or_variant = law_type:law_colonial_exploitation }
-					}
-					add = {
-						add = 0.08
-						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ANTI_COLONIALISM"
-					}
-				}
-				else_if = {
-					limit = {  
-						root.first_country = { has_law_or_variant = law_type:law_colonial_resettlement }
-					}
-					add = {
-						add = 0.04
-						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ANTI_COLONIALISM"
-					}
-				}
-				else = {
-					add = {
-						add = 0.02
-						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_ANTI_COLONIALISM"
-					}
-				}
-			}
-		}
-		add = {
-			if = {
-				limit = {  
-					has_jingoistic_ruler = yes
-					ruler ?= { culture = { culture_is_discriminated_in = root.second_country } }
-				}
-				add = {
-					add = 0.1
-					desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_NON_NATIVE_RULER"
-				}
-			}
-		}
-		add = {
-			if = {
-				limit = {  
-					has_jingoistic_ruler = yes
-					ruler ?= { NOT = { has_jingoistic_ruler = yes } }
-				}
-				add = {
-					add = 0.05
-					desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_RULER_IDEOLOGY"
-				}
-			}
-		}
-		add = {
-			if = {
-				limit = {
-					OR = { 
-						AND = { 
-							root.first_country = { has_law_or_variant = law_type:law_HOS_monarch }
-							ruler ?= {
-								OR = {
-									law_stance = {
-										law = law_type:law_HOS_monarch
-										value > neutral
-									}
-									interest_group = {
-										law_stance = {
-											law = law_type:law_HOS_monarch
-											value > neutral
-										}
-									}
-								}
-							}
-						}
-						AND = { 
-							root.first_country = { has_law_or_variant = law_type:law_HOS_religious_leader }
-							ruler ?= {
-								OR = {
-									law_stance = {
-										law = law_type:law_HOS_religious_leader
-										value > neutral
-									}
-									interest_group = {
-										law_stance = {
-											law = law_type:law_HOS_religious_leader
-											value > neutral
-										}
-									}
-								}
-							}
-						}
-						AND = { 
-							root.first_country = { has_law_or_variant = law_type:law_HOS_nationalist_leader }
-							ruler ?= {
-								OR = {
-									law_stance = {
-										law = law_type:law_HOS_nationalist_leader
-										value > neutral
-									}
-									interest_group = {
-										law_stance = {
-											law = law_type:law_HOS_nationalist_leader
-											value > neutral
-										}
-									}
-								}
-							}
-						}
-						AND = { 
-							root.first_country = { has_law_or_variant = law_type:law_HOS_communist_leader }
-							ruler ?= {
-								OR = {
-									law_stance = {
-										law = law_type:law_HOS_communist_leader
-										value > neutral
-									}
-									interest_group = {
-										law_stance = {
-											law = law_type:law_HOS_communist_leader
-											value > neutral
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-				add = {
-					add = -0.20
-					desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_SIMILAR_GOV_TYPE"
-				}
-			}
-		}
-		add = {
-			if = {
-				limit = {
-					OR = { 
-						AND = { 
-							root.first_country = { has_law_or_variant = law_type:law_HOS_monarch }
-							ruler ?= {
-								OR = {
-									law_stance = {
-										law = law_type:law_HOS_monarch
-										value < neutral
-									}
-									interest_group = {
-										law_stance = {
-											law = law_type:law_HOS_monarch
-											value < neutral
-										}
-									}
-								}
-							}
-						}
-						AND = { 
-							root.first_country = { has_law_or_variant = law_type:law_HOS_religious_leader }
-							ruler ?= {
-								OR = {
-									law_stance = {
-										law = law_type:law_HOS_religious_leader
-										value < neutral
-									}
-									interest_group = {
-										law_stance = {
-											law = law_type:law_HOS_religious_leader
-											value < neutral
-										}
-									}
-								}
-							}
-						}
-						AND = { 
-							root.first_country = { has_law_or_variant = law_type:law_HOS_nationalist_leader }
-							ruler ?= {
-								OR = {
-									law_stance = {
-										law = law_type:law_HOS_nationalist_leader
-										value < neutral
-									}
-									interest_group = {
-										law_stance = {
-											law = law_type:law_HOS_nationalist_leader
-											value < neutral
-										}
-									}
-								}
-							}
-						}
-						AND = { 
-							root.first_country = { has_law_or_variant = law_type:law_HOS_communist_leader }
-							ruler ?= {
-								OR = {
-									law_stance = {
-										law = law_type:law_HOS_communist_leader
-										value < neutral
-									}
-									interest_group = {
-										law_stance = {
-											law = law_type:law_HOS_communist_leader
-											value < neutral
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-				add = {
-					add = 0.20
-					desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_GOV_TYPE"
-				}
-			}
-		}
-		add = {
-			if = {
-				limit = {  
-					has_variable = SEZ_country_var
-				}
-				add = {
-					add = -0.50
-					desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_SPECIAL_ECONOMIC_ZONE"
-				}
-			}
-		}
-	}
-	
-	first_country = {
-		add = {
-			if = {
-				limit = {  
-					ruler ?= { culture = { culture_is_discriminated_in = root.second_country } }
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_multicultural }
-					add = {
-						add = 0.02
-						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_CULTURES"
-					}
-				}
-				else_if = {
-					limit = { has_law_or_variant = law_type:law_cultural_exclusion }
-					add = {
-						add = 0.04
-						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_CULTURES"
-					}
-				}
-				else_if = {
-					limit = { has_law_or_variant = law_type:law_racial_segregation }
-					add = {
-						add = 0.06
-						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_CULTURES"
-					}
-				}
-				else_if = {
-					limit = { has_law_or_variant = law_type:law_national_supremacy }
-					add = {
-						add = 0.08
-						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_CULTURES"
-					}
-				}
-				else = {
-					add = {
-						add = 0.10
-						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_CULTURES"
-					}
-				}
-			}
-		}
-		add = {
-			if = {
-				limit = {  
-					religion = { NOT = { shares_trait_with_state_religion = root.second_country } }
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_freedom_of_conscience }
-					add = {
-						add = 0.02
-						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_RELIGIONS"
-					}
-				}
-				else_if = {
-					limit = { has_law_or_variant = law_type:law_total_separation }
-					add = {
-						add = 0.04
-						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_RELIGIONS"
-					}
-				}
-				else = {
-					add = {
-						add = 0.05
-						desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_RELIGIONS"
-					}
-				}
-			}
-		}
-	}
-	
-	if = {
-		limit = { root.second_country.country_turmoil > 0.01 }
-		add = {
-			add = root.second_country.country_turmoil
-			max = 0.50
-			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_SUBJECT_TURMOIL"
-		}
-	}
-	
-	add = {
-		add = root.second_country.legitimacy
-		subtract = root.first_country.legitimacy
-		divide = 1000
-		desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_DIFFERENT_LEGITIMACY"
-	}
-	
 }
-
-# root = pop
-support_separatism_total_pop_support = {
-	value = 10
-
-	owner = {
-		every_scope_diplomatic_pact = {
-			limit = {
-				is_diplomatic_action_type = support_separatism
-				second_country = prev
-				"diplomatic_pact_other_country(prev)" = {
-					country_has_primary_culture = root.culture
-				}
-			}
-			add = {
-				value = 10
-				add = this.first_country.country_rank
-				subtract = this.second_country.country_rank
-				multiply = {
-					value = 1
-					add = this.first_country.modifier:country_support_separatism_strength_mult
-					subtract = this.second_country.modifier:country_support_separatism_resistance_mult
-				}
-			}
-		}
-	}
-
-	max = 100 # ya never know
-}
-
-# root = movement
-support_separatism_radicalism = {
-	value = 0.05
-
-	owner = {
-		every_scope_diplomatic_pact = {
-			limit = {
-				is_diplomatic_action_type = support_separatism
-				second_country = prev
-				"diplomatic_pact_other_country(prev)" = {
-					country_has_primary_culture = root.culture
-				}
-			}
-			add = {
-				value = 10
-				add = this.first_country.country_rank
-				subtract = this.second_country.country_rank
-				multiply = {
-					value = 1
-					add = this.first_country.modifier:country_support_separatism_strength_mult
-					subtract = this.second_country.modifier:country_support_separatism_resistance_mult
-				}
-				divide = 100
-			}
-		}
-	}
-	max = 0.5
-}
-
-## Interest Tier Effects & Trigger Values
-# When adjusting these ensure that you also adjust the effect tooltips in the interest_tier_types
-interest_tier_effect_infamy_cost_increase_high_value = 0.25
-interest_tier_effect_infamy_cost_increase_medium_value = 0.1
-interest_tier_effect_infamy_cost_decrease_medium_value = -0.2
-
-interest_tier_effect_infamy_cost_increase_max_tier = 2
-interest_tier_effect_infamy_cost_decrease_min_tier = 5
-
-interest_tier_effect_colonial_claim_generation_threshold = 0.5
-interest_tier_effect_colonial_claim_generation_minor_threshold = 0.2
-interest_tier_effect_colonial_claim_generation_min_tier = 2
-
-interest_tier_effect_can_start_diplomatic_plays_min_tier = 2
-interest_tier_effect_can_join_diplomatic_plays_min_tier = 2
-interest_tier_effect_can_sign_alliance_min_tier = 3
-interest_tier_effect_can_sign_defensive_pact_min_tier = 2
-interest_tier_effect_can_sign_support_independence_min_tier = 3
-interest_tier_effect_can_sign_guarantee_independence_min_tier = 2
-interest_tier_effect_stake_colonial_claim_min_tier = 3
-interest_tier_effect_stake_colonial_claim_unrecognized_min_tier = 4
-interest_tier_effect_can_establish_missions_min_tier = 3
