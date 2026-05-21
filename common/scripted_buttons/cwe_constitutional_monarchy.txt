@@ -340,6 +340,7 @@ je_enact_symbolic_monarchy_button = {
 		#AI will only do this if monarch is disliked
 		modifier = { 
 			trigger = { 
+				NOT = { historical_railroading_active = yes }
 				any_scope_character = {
 					has_role = character_role_monarch
 					popularity <= -50
@@ -365,9 +366,6 @@ je_enact_elective_monarchy_button = {
 			}
 		}
 		
-		#Federal states only
-		has_law_or_variant = law_type:law_federal_state
-		
 		#Cannot weaken overlord monarchy
 		trigger_if = {
 			limit = { is_subject = yes }
@@ -380,6 +378,9 @@ je_enact_elective_monarchy_button = {
 	}
 
 	possible = {
+	
+		#Federal states only
+		has_law_or_variant = law_type:law_federal_state
 	
 		#Legal requirements
 		government_has_legislative_super_majority = yes
@@ -404,6 +405,69 @@ je_enact_elective_monarchy_button = {
 		#AI will only do this if monarch is disliked
 		modifier = { 
 			trigger = { 
+				NOT = { historical_railroading_active = yes }
+				any_scope_character = {
+					has_role = character_role_monarch
+					popularity <= -50
+				}
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_enact_no_nobility_button = {
+	name = "je_enact_no_nobility_button"
+	desc = "je_enact_no_nobility_button_desc"
+
+	visible = { 
+		
+		#Has aristocracy
+		NOT = { 
+			active_law:lawgroup_governance_principles ?= {
+				has_amendment = amendment_type:amendment_no_nobility
+			}
+		}
+		
+		#Cannot weaken overlord monarchy
+		trigger_if = {
+			limit = { is_subject = yes }
+			NAND = {
+				overlord ?= { is_a_monarchy = yes }
+				shares_same_monarch = yes
+			}
+		}
+		
+	}
+
+	possible = {
+	
+		#Legal requirements
+		government_has_legislative_super_majority = yes
+		
+	}
+
+	effect = {
+	
+		#Add Amendment
+		active_law:lawgroup_governance_principles ?= {
+			add_amendment = {
+				type = amendment_no_nobility
+				sponsor = PREV.ig:ig_trade_unions 
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if monarch is disliked and there is revolution
+		if = {
+			limit = {
+				has_revolution = yes
 				NOT = { historical_railroading_active = yes }
 				any_scope_character = {
 					has_role = character_role_monarch
