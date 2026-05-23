@@ -1052,6 +1052,49 @@ on_new_ruler = {
 						has_gov_regency = no
 					}
 				}
+				
+				owner ?= {
+				
+					#Colonial Regimes only allow rulers with Overlord's culture
+					if = {
+						limit = {
+							ruler_is_governor_general = yes
+							OR = {
+								has_law_or_variant = law_type:law_appointed_legislature
+								has_law_or_variant = law_type:law_technocratic_legislature
+							}
+						}
+						if = {
+							limit = { exists = overlord }
+							overlord ?= {
+								random_primary_culture = { save_scope_as = culture_to_add }
+								save_scope_as = religion_to_add
+							}
+						}
+						else_if = {
+							limit = { has_modifier = condominium_modifier }
+							random_country = {
+								limit = { has_diplomatic_pact = { who = root.owner type = condominium is_initiator = yes } }
+								random_primary_culture = { save_scope_as = culture_to_add }
+								save_scope_as = religion_to_add
+							}
+						}
+						if = {
+							limit = { exists = scope:culture_to_add }
+							create_character = {
+								save_scope_as = ruler_to_be
+								ruler = yes
+								culture = scope:culture_to_add
+								religion = scope:religion_to_add.religion
+								on_created = { 
+									
+								}
+							}
+						}
+					}
+					
+				}
+				
 				post_notification = new_ruler
 			}
 		}
