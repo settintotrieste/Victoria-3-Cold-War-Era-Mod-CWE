@@ -1578,3 +1578,56 @@ revolution_system.19 = {
     }
 
 }
+
+#Ensure correct ruler in colonial regimes
+revolution_system.20 = {
+	type = country_event
+	hidden = yes
+	
+	trigger = {
+	
+		# Triggered by event
+		
+	}
+	
+	immediate = {
+		
+		if = {
+			limit = { exists = overlord }
+			overlord ?= {
+				random_primary_culture = { save_scope_as = culture_to_add }
+				save_scope_as = religion_to_add
+			}
+		}
+		else_if = {
+			limit = { has_modifier = condominium_modifier }
+			random_country = {
+				limit = { has_diplomatic_pact = { who = ROOT type = condominium is_initiator = yes } }
+				random_primary_culture = { save_scope_as = culture_to_add }
+				save_scope_as = religion_to_add
+			}
+		}
+		if = {
+			limit = { 
+				exists = scope:culture_to_add
+				exists = scope:religion_to_add
+			}
+			create_character = {
+				ruler = yes
+				culture = scope:culture_to_add
+				religion = scope:religion_to_add.religion
+				on_created = { 
+					add_trait = political_appointee
+					save_scope_as = new_ruler_scope
+					owner = { 
+						save_scope_as = new_ruler_country_scope 
+						overlord ?= { save_scope_as = new_ruler_overlord_scope } 
+					}
+					post_notification = new_ruler_colonial
+				}
+			}
+		}
+		
+	}
+	
+}
