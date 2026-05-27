@@ -32,7 +32,7 @@
 	first_state_trigger = {
 		OR = {
 			AND = {
-				owner = scope:country
+				owner ?= scope:country
 				NAND = { # cannot give away primary homelands unless they're unincorporated
 					is_incorporated = yes
 					is_homeland_of_country_cultures = scope:country
@@ -40,8 +40,8 @@
 			}
 			scope:country = { 
 				any_subject_or_below = { # can give away states owned by other subjects
-					root.owner = this
-					NOT = { root.owner = scope:target_country }
+					root.owner ?= this
+					NOT = { root.owner ?= scope:target_country }
 					is_not_sufficiently_independent = yes
 				}
 			}
@@ -67,8 +67,8 @@
 			
 			# Giving a state from one subject to another
 			if = {
-				limit = { scope:first_state = { NOT = { owner = root } } }	
-				scope:first_state.owner = { save_temporary_scope_as = subject_taken_from }
+				limit = { scope:first_state = { NOT = { owner ?= root } } }	
+				scope:first_state.owner ?= { save_temporary_scope_as = subject_taken_from }
 				scope:subject_taken_from = {
 					add_liberty_desire = {
 						value = "scope:first_state.ai_state_value(scope:subject_taken_from)"
@@ -114,7 +114,7 @@
 			scope:first_state = {
 				NOT = {
 					any_neighbouring_state = {
-						owner = root
+						owner ?= root
 						is_incorporated = yes
 					}
 				}			
@@ -140,11 +140,11 @@
 					has_port_country = no
 					NOT = {
 						any_neighbouring_state = {
-							owner = root
+							owner ?= root
 						}					
 					}
 					any_neighbouring_state = {
-						owner = scope:target_country
+						owner ?= scope:target_country
 					}					
 				}			
 			}
@@ -204,7 +204,7 @@ take_state = {
 	}
 	
 	second_state_trigger = {
-		owner = scope:target_country
+		owner ?= scope:target_country
 		is_capital = no
 		is_under_colonization = no
 		
@@ -321,14 +321,14 @@ take_state = {
 			# The AI only uses take state on disconnected colonial bits of subjects which are adjacent to their own lands
 			NOT = {
 				any_neighbouring_state = {
-					owner = root.owner
+					owner ?= root.owner
 					is_incorporated = yes
 				}
 			}			
 			
 			scope:second_state = {
 				any_neighbouring_state = {
-					owner = root
+					owner ?= root
 				}
 			}
 
@@ -379,13 +379,13 @@ demand_state = {
 		}
 		OR = {
 			AND = { 										# if owned by the target of the action, it must not be incorporated
-				owner = scope:target_country
+				owner ?= scope:target_country
 				is_incorporated = no
 			}
 			scope:target_country = { 						# if owned by one of the target's subjects, that subject must either be a Puppet or a Vassal
 				any_subject_or_below = {
-					root.owner = this
-					NOT = { root.owner = scope:country }
+					root.owner ?= this
+					NOT = { root.owner ?= scope:country }
 					OR = { 
 						is_not_sufficiently_independent = yes
 						is_a_colonial_subject_gov = yes
@@ -404,8 +404,8 @@ demand_state = {
 			
 			# Giving a state from one subject to another
 			if = {
-				limit = { scope:second_state = { NOT = { owner = scope:target_country } } }	
-				scope:second_state.owner = { save_temporary_scope_as = subject_taken_from }
+				limit = { scope:second_state = { NOT = { owner ?= scope:target_country } } }	
+				scope:second_state.owner ?= { save_temporary_scope_as = subject_taken_from }
 				scope:subject_taken_from = {
 					add_liberty_desire = {
 						value = "scope:second_state.ai_state_value(scope:subject_taken_from)"
@@ -458,7 +458,7 @@ demand_state = {
 					
 					if = {
 						limit = {
-							scope:second_state = { owner = root }					
+							scope:second_state = { owner ?= root }					
 						}
 						multiply = 2
 					}						

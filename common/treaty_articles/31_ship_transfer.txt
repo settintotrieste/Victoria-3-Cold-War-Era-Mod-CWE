@@ -19,8 +19,8 @@
     }
 
 	visible = {
-		is_not_revolutionary_or_decentralised = yes
-		is_sufficiently_independent = yes
+		is_revolutionary = no
+		has_dlc_feature = ep2_content
 	}
 
 	can_ratify = {
@@ -126,8 +126,8 @@
         }
 
         combined_acceptance_cap_max = 50
-
-		# Proactively pick this article when the candidate ship has been obsolete for a while:
+		
+		# Proactively pick this article when the candidate ship is obsolete for us but not for them
 		# 5x the normal proposal weight nudges the treaty composer toward proactively offering the sale.
 		proposal_weight = {
 			value = 1
@@ -135,12 +135,13 @@
 			if = {
 				limit = {
 					scope:article.input_ship ?= {
-						days_obsolete > 1000
+						is_ship_obsolete_for = root
+						NOT = { is_ship_obsolete_for = scope:other_country }
 					}
 				}
 				multiply = 5
 			}
-		}
+		}		
 
 		# Ship valuation lives in contextual_accept_score because it depends on
 		# scope:treaty.binding_period, which is only bound in contextual (where
@@ -167,19 +168,24 @@
 					}
 				}
 
-				# Ships that have been obsolete for a while are much less
-				# painful to part with: 5x lower penalty once the obsolescence
-				# tick task has had time to stamp them (100-day grace avoids
-				# AI fire-selling the moment the enabling tech is researched).
+				# Obsolete ships are much less painful to part with.
 				if = {
 					limit = {
 						scope:article.input_ship = {
-							days_obsolete > 100
+							is_ship_obsolete_for = scope:source_country
 						}
 					}
 					multiply = {
 						desc = "DIPLOMATIC_ACCEPTANCE_SHIP_OBSOLETE"
-						value = 0.2
+						value = 0.3
+						if = {
+							limit = {
+								scope:article.input_ship = {
+									is_ship_very_obsolete_for = scope:source_country
+								}
+							}	
+							value = 0.1
+						}
 					}
 				}
 			}
@@ -197,6 +203,19 @@
 					}
 					max = 75
 				}
+
+				# Don't want to receive a ship that is already obsolete for us
+				if = {
+					limit = {
+						scope:article.input_ship = {
+							is_ship_obsolete_for = scope:target_country
+						}
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_SHIP_OBSOLETE"
+						value = -500
+					}
+				}
 			}
 
 			# Binding-period amplifier mirroring money_transfer: treaties of
@@ -213,9 +232,10 @@
 					value = 1
 					add = {
 						value = scope:treaty.binding_period
-						min = 365
+						subtract = 1825
 						divide = 3650
 					}
+					min = 1
 					max = 2
 				}
 			}

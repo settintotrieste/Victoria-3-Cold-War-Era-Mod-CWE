@@ -1663,59 +1663,37 @@ ai_strategy_default = {
 
 			add = {
 				desc = "AI_REGION_STANCE_BASE_VALUE"
-				value = 200
-			}
-
-			if = {
-				limit = {
-					scope:target_region != capital.region
-					any_country_strategic_region = {
-						NOT = {
-							root = {
-								has_region_stance = {
-									region = prev
-									stance = stance_none
-								}
-							}
-						}
-					}
-				}
-				add = {
-					desc = "AI_REGION_STANCE_EXISTING_REGION_STANCES"
-					every_country_strategic_region = {
-						limit = {
-							NOT = {
-								root = {
-									has_region_stance = {
-										region = prev
-										stance = stance_none
-									}
-								}
-							}
-						}
-						add = 200
-						multiply = {
-							value = 10
-							subtract = root.country_rank
-							min = 1
-						}
-						round = yes
-						min = 100
-					}
-				}
-			}
-
-			if = {
-				limit = {
-					has_strategy = ai_strategy_armed_isolationism
-					scope:target_region != capital.region
-				}
-				multiply = {
-					desc = "ai_strategy_armed_isolationism"
-					value = 1.5
-				}
+				value = 100
+				subtract = scope:region_score
+				min = 1
 			}
 		}
+	}
+	
+	# Maximum number of strategic regions where the AI can have an active (non-none) stance
+	# Using this value in other strategies will function additively
+	max_active_stances = {
+		value = 1
+		
+		add = {
+			value = country_rank
+			divide = 2
+		}
+		
+		add = {
+			value = navy_size
+			divide = 25
+		}
+		
+		if = {
+			limit = {
+				has_strategy = ai_strategy_armed_isolationism
+			}
+			multiply = 0.5
+		}
+		
+		min = 1
+		max = 10
 	}
 	
 	# How much does the AI want to prioritize economic construction vs government spending?
@@ -4367,6 +4345,176 @@ ai_strategy_default = {
 
 			high_tolls = {
 				value = 0
+			}
+		}
+	}
+	
+	# A fleet composition describes a role a fleet can take (e.g. main_battle_fleet, raid_fleet):
+	# what kind of ships it should be made of and what missions it should pursue. The AI will try
+	# to match each of the country's existing fleets to the role they best fit.
+	# All numeric fields accept script values, so weights can be tuned from country scope.
+	#
+	# ship_group_weights:
+	#   Per ship group desire for this role. Across all available roles, weights are summed per
+	#   group, and each role's share becomes its target ratio of the country's total ships in
+	#   that group. Existing fleets are scored against every role's target ratios and assigned to
+	#   the role they fit best, so these weights drive both "how should the country's ships be
+	#   split across roles" and "which fleet plays which role".
+	#
+	# mission_type_weights:
+	#   Multiplier applied when a fleet in this role picks which mission to pursue. 1.0 is
+	#   neutral, higher biases the fleet toward that mission, 0.0 disables it for this role.
+	#   IMPORTANT: if the block is present, any mission type not listed is treated as 0, so the
+	#   list gates which missions this role will take. Omit the whole block to leave every
+	#   mission neutral.
+	#
+	# min_ships_wanted:
+	#   Soft floor on fleet size used during role-fit scoring. Fleets smaller than this take a
+	#   penalty when matched to this role; it does not disqualify them and is not a hard cap.
+	#
+	# potential:
+	#   Country-scoped trigger. If it fails the role is dropped entirely, so no fleet will be
+	#   assigned to it.
+	#
+	# replace_key:
+	#   Optional key of another composition that this one should replace when both are collected
+	#   from the country's active strategies. Use it in a country-specific strategy to override a
+	#   default role (e.g. a custom raid_fleet with replace_key = raid_fleet swaps out the one
+	#   defined here). Without a replace_key the composition is added alongside the existing set.
+	fleet_compositions = {
+		main_battle_fleet = {
+			ship_group_weights = {
+				ship_group_capital_ships = 200.0
+				ship_group_cruisers = 200.0
+				ship_group_torpedo_craft = 200.0
+			}
+			mission_type_weights = {
+				intercept = 1.0
+				project_power = 1.0
+				blockade = 1.0
+				raid_supply = 0.0
+				protect_supply = 0.0
+				port_bombardment = 1.0
+				piracy = 0.0
+				privateer = 0.0
+				hunt_pirates = 0.0
+			}
+
+			min_ships_wanted = 30 # This is a soft limit
+			num_fleets_wanted = {
+				value = 0
+
+				# At least 1 if matching law
+				if = {
+					limit = {
+						has_law_or_variant = law_type:law_professional_navy
+					}
+
+					add = 1
+				}
+
+				# 1 per 30 capital ships
+				add = {
+					value = "num_ships_of_group(ship_group:ship_group_capital_ships)"
+					divide = 30
+				}
+
+				max = 2 # No more than 2
+			}
+
+			potential = { # No main battle fleet if you don't even have capital ships!
+				any_scope_ship = {
+					ship_group = ship_group:ship_group_capital_ships
+				}
+			}
+		}
+		secondary_fleet = {
+			ship_group_weights = {
+				ship_group_capital_ships = 25.0
+				ship_group_cruisers = 100.0
+				ship_group_torpedo_craft = 50.0
+			}
+			mission_type_weights = {
+				intercept = 0.5
+				project_power = 1.0
+				blockade = 0.25
+				raid_supply = 0.5
+				protect_supply = 1.0
+				port_bombardment = 0.25
+				piracy = 0.0
+				privateer = 0.0
+				hunt_pirates = 1.0
+			}
+
+			min_ships_wanted = 10 # This is a soft limit
+			num_fleets_wanted = {
+				value = 0
+
+				# At least 1 if matching law
+				if = {
+					limit = {
+						OR = {
+							has_law_or_variant = law_type:law_jeune_ecole
+							has_law_or_variant = law_type:law_diplomatic_navy
+							has_law_or_variant = law_type:law_professional_navy
+						}
+					}
+
+					add = 1
+				}
+
+				# 1 per 50 capital & cruiser ships
+				add = {
+					value = "num_ships_of_group(ship_group:ship_group_capital_ships)"
+					add = "num_ships_of_group(ship_group:ship_group_cruisers)"
+					divide = 50
+				}
+
+				max = 4 # No more than 4
+			}
+		}
+		raid_fleet = {
+			ship_group_weights = {
+				ship_group_capital_ships = 0.0
+				ship_group_cruisers = 50.0
+				ship_group_torpedo_craft = 100.0
+			}
+			mission_type_weights = {
+				intercept = 0.25
+				project_power = 0.25
+				blockade = 0.0
+				raid_supply = 1.0
+				protect_supply = 1.0
+				port_bombardment = 0.0
+				piracy = 1.0
+				privateer = 1.0
+				hunt_pirates = 1.0
+			}
+
+			min_ships_wanted = 10 # This is a soft limit
+			num_fleets_wanted = {
+				value = 0
+
+				# At least 1 if matching law
+				if = {
+					limit = {
+						OR = {
+							has_law_or_variant = law_type:law_jeune_ecole
+							has_law_or_variant = law_type:law_merchant_navy
+						}
+					}
+
+					add = 1
+				}
+
+				# 1 raid fleet per 50 torpedo ships & cruisers
+				add = {
+					value = "num_ships_of_group(ship_group:ship_group_torpedo_craft)"
+					add = "num_ships_of_group(ship_group:ship_group_cruisers)"
+					divide = 50
+				}
+
+				max = 2 # No more than 2
 			}
 		}
 	}
