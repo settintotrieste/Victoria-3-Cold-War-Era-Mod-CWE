@@ -2450,3 +2450,186 @@ historical_union_formation.30 = {
     }
 
 }
+
+#Unitary Republic of Indonesia
+historical_union_formation.31 = {
+    type = country_event
+
+    title = IDO_EID_union.t 									# Title of the event; ADD LOCALISATION
+    desc = IDO_EID_union.d 										# Description of the event; ADD LOCALISATION
+    #flavor = IDO_EID_union.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:IDO ?= this
+		game_date >= 1950.8.17									# START DATE: Date colony became self governing ****
+		game_date < 1960.8.17									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_some_kind_of_democracy = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Union candidate conditions
+		OR = { 
+			AND = {
+				exists = c:EID
+				c:EID ?= {
+					is_some_kind_of_democracy = yes
+					is_sufficiently_independent = no
+					is_direct_subject_of = ROOT
+					is_at_war = no
+				}
+			}
+			AND = {
+				exists = c:DYK
+				c:DYK ?= {
+					is_some_kind_of_democracy = yes
+					is_sufficiently_independent = no
+					is_direct_subject_of = ROOT
+					is_at_war = no
+				}
+			}
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = IDO_EID_union_huf }				# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = IDO_EID_union_huf						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_yes_no.option.1						# Accept annexation by FROM
+        highlighted_option = yes
+		
+		#Option to accept
+		every_country = {
+			limit = { 
+				OR = {
+					c:EID ?= this 
+					c:DYK ?= this 
+				}
+				is_some_kind_of_democracy = yes
+				is_sufficiently_independent = no
+				is_direct_subject_of = ROOT
+				is_at_war = no
+			}
+			trigger_event = { id = historical_union_formation.32 } 
+		}
+		
+		#Become unitary
+		activate_law = law_type:law_unitary_state
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_yes_no.option.2						# Refuse annexation by FROM
+		default_option = yes
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_landowners
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+#Unitary Republic of Indonesia
+historical_union_formation.32 = {
+    type = country_event
+
+    title = IDO_EID_union.t 										# Title of the event; ADD LOCALISATION
+    desc = IDO_EID_union.d 											# Description of the event; ADD LOCALISATION
+    #flavor = IDO_EID_union.f 										# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by another event
+		
+    }
+    
+    option = {
+        name = historical_union_formation.option.1					# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Unite with Indonesia
+		c:IDO ?= { annex_with_incorporation = ROOT }
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = historical_union_formation.option.2					# Refuse land transfer request by FROM
+		default_option = yes
+		
+		#War
+		create_diplomatic_play = {
+			name = kashmir_insurgency_war
+			type = dp_independence
+			target_country = c:IDO
+		
+			war = no
+			
+			add_war_goal = {
+				holder = c:IDO
+				type = annex_country
+				target_country = ROOT
+			}
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
