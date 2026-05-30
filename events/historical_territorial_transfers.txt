@@ -1484,8 +1484,16 @@ historical_territorial_transfers.12 = {
 		#Colony conditions
 		exists = c:WPA
 		c:WPA ?= { 												# Change TAG of the transferee ****
-			has_diplomatic_pact = { who = c:NET type = condominium is_initiator = no }
-			has_diplomatic_pact = { who = c:IDO type = condominium is_initiator = no }
+			OR = { 
+				AND = { 
+					is_a_colonial_non_mandate_subject_gov = yes
+					is_direct_subject_of = ROOT
+				}
+				AND = {
+					has_diplomatic_pact = { who = c:NET type = condominium is_initiator = no }
+					has_diplomatic_pact = { who = c:IDO type = condominium is_initiator = no }
+				}
+			}
 		}
 		
 		#Recipent conditions
@@ -1513,9 +1521,53 @@ historical_territorial_transfers.12 = {
         highlighted_option = yes
 		
 		#Cede WPA to IDO
-		remove_diplomatic_pact = { country = c:WPA type = condominium }
-		c:WPA ?= {
-			change_subject_type = subject_type_mandate
+		if = {
+			limit = { 
+				c:WPA ?= {
+					is_a_colonial_non_mandate_subject_gov = yes
+					is_direct_subject_of = ROOT
+				}
+			}
+			hidden_effect = { 
+				c:WPA ?= {
+					make_independent = yes
+				}
+			}
+			c:IDO ?= {
+				create_diplomatic_pact = {
+					country = c:WPA
+					type = mandate
+				}
+			}
+		}
+		else_if = {
+			limit = { 
+				c:WPA ?= {
+					has_diplomatic_pact = { who = c:NET type = condominium is_initiator = no }
+					has_diplomatic_pact = { who = c:IDO type = condominium is_initiator = no }
+				}
+			}
+			remove_diplomatic_pact = { country = c:WPA type = condominium }
+			hidden_effect = {
+				c:WPA ?= {
+					make_independent = yes
+				}
+			}
+			c:IDO ?= {
+				create_diplomatic_pact = {
+					country = c:WPA
+					type = mandate
+				}
+			}
+		}
+		
+		#New Administration
+		hidden_effect = {
+			c:WPA ?= {
+				effect_starting_politics_semi_presidential_republic = yes
+				effect_starting_politics_democratic = yes
+				ruler ?= { retire_character = yes }
+			}
 		}
 		
 		#FROM is happy!
