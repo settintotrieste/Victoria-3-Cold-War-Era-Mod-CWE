@@ -19,7 +19,7 @@ dutch_decolonisation.1 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:NET this = c:NET											# Change TAG of the overlord ****
+		c:NET ?= this											# Change TAG of the overlord ****
 		game_date >= 1954.12.15									# START DATE: Date colony became self governing ****
 		game_date < 1964.12.15									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -149,10 +149,10 @@ dutch_decolonisation.1 = {
 
 }
 
-# West Papua
+# West Papua - UN Trust Territory
 dutch_decolonisation.2 = {
     type = country_event
-	placement = scope:colonial_state
+	placement = c:WPA
 
     title = dutch_west_papua.sgc.t 			# Title of the event; ADD LOCALISATION
     desc = dutch_west_papua.sgc.d 			# Description of the event; ADD LOCALISATION
@@ -168,7 +168,7 @@ dutch_decolonisation.2 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:NET this = c:NET											# Change TAG of the overlord ****
+		c:NET ?= this											# Change TAG of the overlord ****
 		game_date >= 1962.10.1									# START DATE: Date colony became self governing ****
 		game_date < 1972.10.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -177,13 +177,24 @@ dutch_decolonisation.2 = {
 		is_at_war = no											# war = no
 		
 		#Colony conditions
-		NOT = { 												# Colony to be released must not already exist on the map
-			exists = c:WPA										# Change TAG of the colony ****
+		exists = c:WPA
+		c:WPA ?= { 												# Change TAG of the transferee ****
+			is_direct_subject_of = ROOT
+			is_a_colonial_non_mandate_subject_gov = yes
 		}
-		any_scope_state = { 									# Overlord owns the states of the colony to be released
-			state_region = { is_homeland = cu:west_papuan }		# Change homeland identity to match colony to be released ****
-			#is_incorporated = no								# State is a colony
-			#owner = THIS										# Overlord must own the state to be released
+		
+		#Denpassar Conference
+		trigger_if = {
+			limit = { has_global_variable = 1946_start_date }
+			has_global_variable = NET_IDO_union_option
+		}
+		
+		#Indonesia
+		exists = c:IDO
+		c:IDO ?= { 													# Change TAG of the transferee ****
+			is_some_kind_of_democracy = yes							# Correct gov types
+			is_sufficiently_independent = yes						# is_vassal = no		
+			is_at_war = no											# war = no
 		}
 		
 		# Event has not been fired before
@@ -192,16 +203,9 @@ dutch_decolonisation.2 = {
     }
 	
 	immediate = {
-	
-		# Generate list of provinces to be released				# DO NOT TOUCH THIS SECTION
-		every_scope_state = {
-			limit = {
-				state_region = { is_homeland = cu:west_papuan }	# Change homeland identity to match colony to be released ****
-				#is_incorporated = no							# State is a colony
-				#contains_capital_of = c:WPA					# State is the capital of colony ****
-			}
-			save_scope_as = colonial_state
-		}
+		
+		# Fire only once
+		set_variable = dutch_west_papua_sgc						# Change variable ****
 		
 	}
     
@@ -209,62 +213,31 @@ dutch_decolonisation.2 = {
         name = dutch_decolonisation.option.1				#Grant them self-government
         default_option = yes highlighted_option = yes
 		
-		#Release country
-		create_country = {
-			tag = WPA										# Change TAG of country being released ****
-			origin = THIS									# TAG where the created country takes tech from
-			state = scope:colonial_state
+		#Convert to Condominium
+		c:WPA ?= {
+			make_independent = yes
+			effect_starting_politics_democratic = yes
+		}
+		
+		#Condominium Treaty
+		create_treaty = {
+			name = treaty_name_New_York_Agreement_NET_IDO
+			first_country = c:NET
+			second_country = c:IDO
 			
-			on_created = {									# Set government laws & rulers here
-				
-				# SET laws for colony ****
-				effect_starting_politics_constitutional_monarchy = yes
-				effect_starting_politics_democratic = yes
-				effect_starting_politics_constitutional_unitary_state = yes
-				effect_starting_politics_war_policy_anti_military = yes
-				effect_starting_politics_economic_policy_interventionism = yes
-				effect_starting_politics_trade_policy_protectionism = yes
-				effect_starting_politics_anti_nuclear_policy = yes
-				
-				# CREATE leader for colony ****
-				create_character = {
-					first_name = "guy_incognito_first_name"		# CHANGE
-					last_name = "guy_incognito_last_name"		# CHANGE
-					ruler = yes
-					#birth_date = 1910.1.1						# CHANGE
-					interest_group = ig_rural_folk					# CHANGE
-					ideology = ideology_democratic				# CHANGE
-					traits = {
-						charismatic								# CHANGE
-						persistent								# CHANGE
-						meticulous								# CHANGE
+			binding_period = { years = 10 }
+
+			articles_to_create = {
+				{
+					article = create_condominium
+					source_country = c:NET
+					target_country = c:IDO
+					inputs = {
+						{ country = c:WPA }
 					}
 				}
-				
-				# Set diplomatic recognition
-				set_country_type = unrecognized
 			}
 		}
-		every_scope_state = {
-			limit = {
-		 		state_region = { is_homeland = cu:west_papuan }	# Change homeland identity to match colony to be released ****
-				#is_incorporated = no							# State is a colony
-		 	}
-			set_state_owner = c:WPA								# Change TAG to colony ****
-		}
-		
-		# Overlord create self governing colony pact with colony
-		if = {
-			limit = { exists = c:WPA }
-			create_diplomatic_pact = {
-				country = c:WPA										# Change TAG ****
-				type = mandate
-			}
-			create_decolonisation_pacts = yes
-		}
-		
-		# Fire only once
-		set_variable = dutch_west_papua_sgc						# Change variable ****
 		
 		ai_chance = { 
 			base = 90 
@@ -276,22 +249,24 @@ dutch_decolonisation.2 = {
         name = dutch_decolonisation.option.2					# REFUSE
 		
 		# Natives are angry!
-		every_scope_state = {
-			limit = {
-		 		state_region = { is_homeland = cu:west_papuan }	# Change homeland identity to match colony to be released ****
-		 	}
-			add_radicals_in_state = {
-				culture = cu:west_papuan							# Change culture ****
-				value = large_radicals
+		c:WPA ?= {
+			every_scope_state = {
+				limit = {
+					state_region = { is_homeland = cu:west_papuan }	# Change homeland identity to match colony to be released ****
+				}
+				add_radicals_in_state = {
+					culture = cu:west_papuan							# Change culture ****
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
 			}
-			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
 		}
 		
 		# Add Infamy because doing this is against international law
-		change_infamy = 10
-		
-		# Fire only once
-		set_variable = dutch_west_papua_sgc						# Change variable ****
+		create_incident = {
+			country = c:IDO
+			value = 10
+		}
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
@@ -320,8 +295,7 @@ dutch_decolonisation.3 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:NET
-		this = c:NET											# Change TAG of the overlord ****
+		c:NET ?= this
 		game_date >= 1954.12.15									# START DATE: Date colony became self governing ****
 		game_date < 1964.12.15									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -452,6 +426,153 @@ dutch_decolonisation.3 = {
 		
 		# Fire only once
 		set_variable = dutch_antilles_sgc						# Change variable ****
+		
+		ai_chance = { 
+			base = 10 
+		}
+		
+    }
+
+}
+
+# Dutch New Guinea
+dutch_decolonisation.4 = {
+    type = country_event
+	placement = scope:colonial_state
+	
+    title = dutch_New_Guinea.sgc.t 			# Title of the event; ADD LOCALISATION
+    desc = dutch_New_Guinea.sgc.d 			# Description of the event; ADD LOCALISATION
+    #flavor = dutch_New_Guinea.sgc.f 			# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_decolonisation" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:NET ?= this
+		game_date >= 1950.2.8									# START DATE: Date colony became self governing ****
+		game_date < 1960.2.8									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democratic_monarchy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		NOT = { 												# Colony to be released must not already exist on the map
+			exists = c:WPA										# Change TAG of the colony ****
+		}
+		any_scope_state = { 									# Overlord owns the states of the colony to be released
+			state_region = { is_homeland = cu:west_papuan }		# Change homeland identity to match colony to be released ****
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = dutch_New_Guinea_sgc }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Generate list of provinces to be released				# DO NOT TOUCH ROOT SECTION
+		every_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:west_papuan }	# Change homeland identity to match colony to be released ****
+			}
+			save_scope_as = colonial_state
+		}
+		
+		# Fire only once
+		set_variable = dutch_New_Guinea_sgc						# Change variable ****
+		
+	}
+    
+    option = {
+        name = dutch_decolonisation.option.1				#Grant them self-government
+        default_option = yes highlighted_option = yes
+		
+		#Release country
+		create_country = {
+			tag = WPA										# Change TAG of country being released ****
+			origin = ROOT									# TAG where the created country takes tech from
+			state = scope:colonial_state
+			
+			on_created = {									# Set government laws & rulers here
+				
+				# SET laws for colony ****
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_anti_military = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_protectionism = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				# CREATE leader for colony ****
+				create_character = {
+					first_name = "Stephan_Van_Waardenburg_first_name"
+					last_name = "Stephan_Van_Waardenburg_last_name"
+					ruler = yes historical = yes
+					birth_date = 1900.2.21
+					interest_group = ig_landowners
+					ideology = ideology_elitist
+					culture = cu:dutch
+					religion = rel:protestant
+					traits = {
+						honorable
+						ambitious
+						tactful
+					}
+					on_created = { set_variable = Stephan_Van_Waardenburg }
+				}
+				
+				# Set diplomatic recognition
+				set_country_type = unrecognized
+			}
+		}
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:west_papuan }
+		 	}
+			set_state_owner = c:WPA									# Change TAG to colony ****
+		}
+		
+		# Overlord create self governing colony pact with colony
+		if = {
+			limit = { exists = c:WPA }
+			create_diplomatic_pact = {
+				country = c:WPA										# Change TAG ****
+				type = semi_autonomous_colony
+			}
+			create_decolonisation_pacts = yes
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = dutch_decolonisation.option.2						# REFUSE
+		
+		# Natives are angry!
+		every_scope_state = {
+			limit = {
+		 		state_region = { is_homeland = cu:west_papuan }		# Change homeland identity to match colony to be released ****
+		 	}
+			add_radicals_in_state = {
+				culture = cu:west_papuan							# Change culture ****
+				value = large_radicals
+			}
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		# Add Infamy because doing this is against international law
+		change_infamy = 10
 		
 		ai_chance = { 
 			base = 10 

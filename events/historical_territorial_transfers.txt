@@ -1457,6 +1457,7 @@ historical_territorial_transfers.11 = {
 #West Papua
 historical_territorial_transfers.12 = {
     type = country_event
+	placement = c:WPA
 
     title = transfer_territory_west_papua.t 				# Title of the event; ADD LOCALISATION
     desc = transfer_territory_west_papua.d 					# Description of the event; ADD LOCALISATION
@@ -1472,7 +1473,7 @@ historical_territorial_transfers.12 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:NET this = c:NET											# Change TAG of the overlord ****
+		c:NET ?= this											# Change TAG of the overlord ****
 		game_date >= 1963.5.1									# START DATE: Date colony became self governing ****
 		game_date < 1973.5.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -1480,40 +1481,48 @@ historical_territorial_transfers.12 = {
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
-		#Recipent conditions
-		exists = c:IDO
-		c:IDO = { 												# Change TAG of the transferee ****
-			is_sufficiently_independent = yes
-			is_at_war = no
-		}
-		
 		#Colony conditions
 		exists = c:WPA
-		c:WPA = { 												# Change TAG of the transferee ****
-			is_direct_subject_of = ROOT
-			is_subject_type = subject_type_mandate
+		c:WPA ?= { 												# Change TAG of the transferee ****
+			has_diplomatic_pact = { who = c:NET type = condominium is_initiator = no }
+			has_diplomatic_pact = { who = c:IDO type = condominium is_initiator = no }
+		}
+		
+		#Recipent conditions
+		exists = c:IDO
+		c:IDO ?= { 												# Change TAG of the transferee ****
+			is_some_kind_of_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
 		}
 		
 		# Event has not been fired before
 		NOT = { has_variable = dutch_west_papua_htt }			# CHANGE ****
 		
     }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = dutch_west_papua_htt						# Change variable ****
+	
+	}
     
     option = {
         name = historical_territorial_transfers.option.1		# Accept annexation by FROM
         highlighted_option = yes
 		
-		#THIS is annexed by FROM
-		c:IDO = { annex = c:WPA }
+		#Cede WPA to IDO
+		remove_diplomatic_pact = { country = c:WPA type = condominium }
+		c:WPA ?= {
+			change_subject_type = subject_type_mandate
+		}
 		
 		#FROM is happy!
 		change_relations = {
 			country = c:IDO
 			value = 50
 		}
-		
-		# Fire only once
-		set_variable = dutch_west_papua_htt						# Change variable ****
 		
 		ai_chance = { 
 			base = 90 
@@ -1532,10 +1541,10 @@ historical_territorial_transfers.12 = {
 		}
 		
 		# Add Infamy because doing this is against international law
-		change_infamy = 10
-		
-		# Fire only once
-		set_variable = dutch_west_papua_htt						# Change variable ****
+		create_incident = {
+			country = c:IDO
+			value = 10
+		}
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
@@ -3527,6 +3536,7 @@ historical_territorial_transfers.30 = {
 		
 		#Mark for Union
 		set_global_variable = NET_IDO_union_option
+		trigger_event = { id = historical_union_formation.12 }
 		
 		ai_chance = { 
 			base = 90 
@@ -5624,6 +5634,184 @@ historical_territorial_transfers.51 = {
 		}
 		
 		ai_chance = {
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+#West Papua - Act of Free Choice
+historical_territorial_transfers.52 = {
+    type = country_event
+	placement = c:WPA
+
+    title = transfer_territory_west_papua_1969.t 				# Title of the event; ADD LOCALISATION
+    desc = transfer_territory_west_papua_1969.d 				# Description of the event; ADD LOCALISATION
+    #flavor = transfer_territory_west_papua_1969.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/event_map.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:IDO ?= this											# Change TAG of the overlord ****
+		game_date >= 1969.8.2									# START DATE: Date colony became self governing ****
+		game_date < 1979.8.2									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_republican_regime = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		exists = c:WPA
+		c:WPA ?= { 												# Change TAG of the transferee ****
+			is_direct_subject_of = ROOT
+			is_subject_type = subject_type_mandate
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = west_papua_1969_htt }			# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = west_papua_1969_htt						# Change variable ****
+	
+	}
+    
+    option = {
+        name = historical_territorial_transfers.option.1		# Accept annexation by FROM
+        highlighted_option = yes
+		
+		# Add Infamy because doing this is against international law
+		create_incident = {
+			country = c:WPA
+			value = 10
+		}
+		
+		#Annex WPA
+		c:WPA ?= { trigger_event = { id = historical_territorial_transfers.53 } }
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_territorial_transfers.option.2		# Refuse annexation by FROM
+		default_option = yes
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_landowners
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_devout
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+#West Papua - Act of Free Choice - WPA
+historical_territorial_transfers.53 = {
+    type = country_event
+
+    title = transfer_territory_west_papua_1969.t 				# Title of the event; ADD LOCALISATION
+    desc = transfer_territory_west_papua_1969.d 				# Description of the event; ADD LOCALISATION
+    #flavor = transfer_territory_west_papua_1969.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/event_map.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = historical_territorial_transfers.option.1		# Accept annexation by FROM
+        highlighted_option = yes
+		
+		#Domestic Reaction
+		every_scope_state = {
+			limit = {
+				state_region = { is_homeland = cu:west_papuan }		# Change homeland identity to match colony to be released ****
+			}
+			add_radicals_in_state = {
+				culture = cu:west_papuan							# Change culture ****
+				value = large_radicals
+			}
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+		}
+		
+		#Annex WPA
+		c:IDO ?= {
+			annex_with_incorporation = ROOT
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_territorial_transfers.option.2		# Refuse annexation by FROM
+		default_option = yes
+		
+		#War
+		create_diplomatic_play = {
+			name = kashmir_insurgency_war
+			type = dp_independence
+			target_country = c:IDO
+		
+			war = no
+			
+			add_war_goal = {
+				holder = c:IDO
+				type = annex_country
+				target_country = ROOT
+			}
+		}
+		
+		ai_chance = { 
 			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
 		}
 		

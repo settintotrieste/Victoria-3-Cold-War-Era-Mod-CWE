@@ -836,7 +836,7 @@ historical_union_formation.12 = {
         highlighted_option = yes
 		
 		#Option to accept
-		c:IDO = { 
+		c:IDO ?= { 
 			trigger_event = { id = historical_union_formation.13 } 
 		}
 		
@@ -883,14 +883,14 @@ historical_union_formation.13 = {
         name = historical_union_formation.option.1			# Accept land transfer request by FROM
         highlighted_option = yes
 		
-		hidden_effect = { make_independent = yes }
-		c:NET = {
+		make_independent_effect = yes
+		c:NET ?= {
 			create_diplomatic_pact = {
 				country = ROOT
 				type = confederal_state
 			}
+			change_relations = { country = ROOT value = 50 }
 		}
-		set_relations = { country = c:NET value = 100 }
 		
 		ai_chance = { 
 			base = 99 
@@ -902,10 +902,39 @@ historical_union_formation.13 = {
         name = historical_union_formation.option.2			# Refuse land transfer request by FROM
 		default_option = yes
 		
-		#FROM is angry!
-		change_relations = {
-			country = c:NET
-			value = -100
+		#War
+		c:NET ?= {
+			create_diplomatic_play = {
+				name = kashmir_insurgency_war
+				type = dp_annex_war
+				target_country = c:IDO
+			
+				war = no
+			}
+		}
+		if = {
+			limit = { 
+				exists = c:EID
+				c:EID ?= {
+					is_direct_subject_of = ROOT
+					is_sufficiently_independent = no
+				}
+			}
+			c:EID ?= {
+				create_diplomatic_play = {
+					name = kashmir_insurgency_war
+					type = dp_independence
+					target_country = c:IDO
+				
+					war = no
+					
+					add_war_goal = {
+						holder = c:IDO
+						type = annex_country
+						target_country = c:EID
+					}
+				}
+			}
 		}
 		
 		ai_chance = { 
