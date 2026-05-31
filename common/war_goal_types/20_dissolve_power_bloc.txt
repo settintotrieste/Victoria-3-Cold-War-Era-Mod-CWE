@@ -1,0 +1,221 @@
+﻿dissolve_power_bloc = {
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/invite_to_power_bloc_treaties.dds"
+
+	kind = custom
+
+	settings = {
+		require_target_be_part_of_war
+
+		# Validation
+		validate_conflicts_war_goals_all
+		validate_conflicts_annex_country
+		validate_conflicts_make_subject
+		validate_conflicts_existing_subject
+	}
+
+	execution_priority = 21
+
+	contestion_type = control_any_target_incorporated_state
+
+	target_type = country
+
+	possible = {
+		# trigger to determine if a goal with its target data is listed when selecting a war goal in the diplo play panel
+		# scopes: root = holder, creator_country, diplomatic_play, target_country, target_state, stakeholder, target_region, article_options
+		
+		#THIS are proper countries
+		is_not_revolutionary_or_decentralised = yes
+		scope:target_country = { is_not_revolutionary_or_decentralised = yes }
+		
+		#THIS is sufficiently independent
+		is_sufficiently_independent = yes
+		scope:target_country = { is_subject = no }
+		
+		#TARGET is a power bloc leader
+		scope:target_country = { 
+			is_power_bloc_leader = yes
+		}
+		
+	}
+
+	valid = {
+		# trigger in addition to some basic validation code-side
+		# scopes: root = holder, creator_country, diplomatic_play, target_country, target_state, stakeholder, target_region, article_options
+		
+		#THIS is a power bloc leader
+		scope:target_country = { 
+			is_power_bloc_leader = yes
+			is_subject = no
+		}
+	}
+
+	maneuvers = {
+		value = 0
+
+		add = {
+			desc = "MANEUVERS_BASE_VALUE"
+			value = 10
+		}
+	}
+
+	infamy = {
+		value = 0
+
+		add = {
+			desc = "INFAMY_BASE_VALUE"
+			value = 0.2
+		}
+
+		scope:target_country = {
+			multiply = {
+				desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
+				add = {
+					every_scope_state = {
+						add = {
+							value = state_population
+							divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+							multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+							multiply = {
+								value = 1
+								if = {
+									limit = {
+										is_incorporated = no
+									}
+									add = define:NDiplomacy|WAR_GOAL_INFAMY_UNINCORPORATED_FACTOR
+								}
+							}
+							max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_PER_STATE
+						}
+					}
+				}
+				add = 1
+				max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+			}
+		}
+
+		multiply = {
+			desc = "country_infamy_generation_against_unrecognized_mult"
+			value = 1
+			if = {
+				limit = {
+					scope:target_country = {
+						is_country_type = unrecognized
+					}
+				}
+				add = modifier:country_infamy_generation_against_unrecognized_mult
+			}
+		}
+
+		multiply = {
+			desc = "INFAMY_FROM_LOYAL_SUBJECT"
+			value = 1
+
+			if = {
+				limit = {
+					scope:target_country = {
+						is_subject_of = root
+						liberty_desire < define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_THRESHOLD
+					}
+				}
+				multiply = define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_SUBJECT_MULT
+			}
+		}
+
+		multiply = {
+			desc = "INFAMY_FROM_REBELLIOUS_SUBJECT" # Rebellious as in they are the aggressor in the play
+			value = 1
+
+			if = {
+				limit = {
+					scope:target_country = {
+						is_subject_of = root
+						is_diplomatic_play_enemy_of = root
+						scope:diplomatic_play ?= {
+							initiator_is = scope:target_country
+						}
+					}
+				}
+				multiply = define:NDiplomacy|WAR_GOAL_INFAMY_REBELLING_SUBJECT_MULT
+			}
+		}
+		
+		multiply = {
+			desc = "concept_interest_tier"
+			value = 1
+
+			# Tier 0-1 (none, observant): high infamy increase
+			if = {
+				limit = {
+					NOT = {
+						has_strategic_region_interest_tier = {
+							strategic_region = scope:target_region
+							value >= 2
+						}
+					}
+				}
+				add = interest_tier_effect_infamy_cost_increase_high_value
+			}
+
+			# Tier 2 (engaged): medium infamy increase
+			if = {
+				limit = {
+					has_strategic_region_interest_tier = {
+						strategic_region = scope:target_region
+						value >= 2
+					}
+					NOT = {
+						has_strategic_region_interest_tier = {
+							strategic_region = scope:target_region
+							value >= 3
+						}
+					}
+				}
+				add = interest_tier_effect_infamy_cost_increase_medium_value
+			}
+
+			# Tier 5 (hegemonic): medium infamy decrease
+			if = {
+				limit = {
+					has_strategic_region_interest_tier = {
+						strategic_region = scope:target_region
+						value >= 5
+					}
+				}
+				add = interest_tier_effect_infamy_cost_decrease_medium_value
+			}
+		}
+
+		min = {
+			desc = "INFAMY_MINIMUM_VALUE"
+			value = 0.5
+		}
+	}
+
+	on_enforced = {
+		# script effect on top of the predefined code effect
+		
+		#Loser dissolves power bloc
+		scope:target_country = {
+			every_country = {
+				limit = {
+					is_power_bloc_leader = no
+					is_in_same_power_bloc = scope:target_country
+					is_sufficiently_independent = no
+				}
+				add_modifier = {
+					name = forced_to_dissolve_power_bloc_modifier 
+					years = 5 
+				}
+			}
+			add_modifier = { 
+				name = forced_to_dissolve_power_bloc_modifier 
+				years = 5 
+			}
+		}
+		
+	}
+
+	ai = {
+		is_significant_demand = no
+	}
+}
