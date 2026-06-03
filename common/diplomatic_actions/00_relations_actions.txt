@@ -83,22 +83,19 @@
 			value = 5	
 		}		
 	
-		will_propose = { 
-		
+		will_propose = {
 			OR = {
-			
-				#Country relations
 				AND = {
 					has_attitude = {
 						who = scope:target_country
 						attitude = cooperative
 					}
-					country_rank <= scope:target_country.country_rank				
+					country_rank <= scope:target_country.country_rank
 				}
 				has_attitude = {
 					who = scope:target_country
 					attitude = conciliatory
-				}	
+				}
 				has_attitude = {
 					who = scope:target_country
 					attitude = genial
@@ -107,62 +104,43 @@
 					who = scope:target_country
 					attitude = protective
 				}
-				
-				#THIS has the same ideology as TARGET
-				OR = {
-					AND = { radical_left_wing_ruling_coalition = yes scope:target_country = { radical_left_wing_ruling_coalition = yes } }
-					AND = { radical_right_wing_ruling_coalition = yes scope:target_country = { radical_right_wing_ruling_coalition = yes } }
-				}
-				
-				#AI wants to lift or avoid OPEC embargoes against it
-				scope:target_country = {
-					has_modifier = OPEC_leader
-					any_scope_diplomatic_pact = { is_diplomatic_action_type = OPEC_oil_embargo }
-				}
-				
 			}
-			
 		}
-		
-		will_break = { 
-		
-			NOR = {
-			
-				#Country relations
-				AND = {
+
+		will_break = {
+			OR = {
+				NOR = {
+					has_attitude = {
+						who = scope:target_country
+						attitude = genial
+					}
+					has_attitude = {
+						who = scope:target_country
+						attitude = conciliatory
+					}
 					has_attitude = {
 						who = scope:target_country
 						attitude = cooperative
 					}
-					country_rank <= scope:target_country.country_rank				
+					has_attitude = {
+						who = scope:target_country
+						attitude = protective
+					}
 				}
-				has_attitude = {
-					who = scope:target_country
-					attitude = conciliatory
-				}	
-				has_attitude = {
-					who = scope:target_country
-					attitude = genial
+				AND = {
+					scope:target_country.relations:root >= relations_threshold:amicable
+					OR = {
+						country_rank >= rank_value:minor_power
+						NOT = {
+							has_attitude = {
+								who = scope:target_country
+								attitude = genial
+							}
+						}
+					}
 				}
-				has_attitude = {
-					who = scope:target_country
-					attitude = protective
-				}
-				
-				#THIS has the same ideology as TARGET
-				OR = {
-					AND = { radical_left_wing_ruling_coalition = yes scope:target_country = { radical_left_wing_ruling_coalition = yes } }
-					AND = { radical_right_wing_ruling_coalition = yes scope:target_country = { radical_right_wing_ruling_coalition = yes } }
-				}
-				
-				#AI wants to lift or avoid OPEC embargoes against it
-				scope:target_country = {
-					has_modifier = OPEC_leader
-					any_scope_diplomatic_pact = { is_diplomatic_action_type = OPEC_oil_embargo }
-				}
-				
 			}
-			
+
 		}
 		
 	}
@@ -246,15 +224,14 @@ damage_relations = {
 		}	
 	
 		will_propose = {
-		
 			OR = {
 				AND = {
 					has_attitude = {
 						who = scope:target_country
 						attitude = antagonistic
-					}				
+					}
 					scope:target_country.relations:root > 0
-				}				
+				}
 				has_attitude = {
 					who = scope:target_country
 					attitude = belligerent
@@ -262,58 +239,37 @@ damage_relations = {
 				has_attitude = {
 					who = scope:target_country
 					attitude = domineering
-				}					
+				}
 				has_attitude = {
 					who = scope:target_country
 					attitude = rebellious
-				}	
-				
-				#THIS has a different ideology than TARGET
-				OR = {
-					AND = { radical_left_wing_ruling_coalition = yes scope:target_country = { radical_left_wing_ruling_coalition = no } }
-					AND = { radical_right_wing_ruling_coalition = yes scope:target_country = { radical_right_wing_ruling_coalition = no } }
 				}
 			}
-			
-			#Democratic leaders will not actively decrease relations
-			has_jingoistic_ruler = yes
-			
+			scope:target_country.relations:root > relations_threshold:poor
 		}
-		
-		will_break = { 
-			
-			NOR = {
-				has_attitude = {
-					who = scope:target_country
-					attitude = belligerent
-				}
-				has_attitude = {
-					who = scope:target_country
-					attitude = domineering
-				}				
-				has_attitude = {
-					who = scope:target_country
-					attitude = antagonistic
-				}				
-				has_attitude = {
-					who = scope:target_country
-					attitude = rebellious
-				}
-			}
-			
+
+		will_break = {
 			OR = {
-			
-				#THIS has the same ideology as TARGET
 				NOR = {
-					AND = { radical_left_wing_ruling_coalition = yes scope:target_country = { radical_left_wing_ruling_coalition = no } }
-					AND = { radical_right_wing_ruling_coalition = yes scope:target_country = { radical_right_wing_ruling_coalition = no } }
+					has_attitude = {
+						who = scope:target_country
+						attitude = belligerent
+					}
+					has_attitude = {
+						who = scope:target_country
+						attitude = domineering
+					}
+					has_attitude = {
+						who = scope:target_country
+						attitude = antagonistic
+					}
+					has_attitude = {
+						who = scope:target_country
+						attitude = rebellious
+					}
 				}
-				
-				#Democratic leaders will not actively decrease relations
-				NOT = { has_jingoistic_ruler = yes }
-				
+				scope:target_country.relations:root <= relations_threshold:poor
 			}
-			
 		}
 		
 	}
