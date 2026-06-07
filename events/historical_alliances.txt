@@ -1905,29 +1905,37 @@ historical_alliances_system.20 = {
 	
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
-		#Not already formed
-		NOT = { has_global_variable = NAM_PB_global_var }
-		
-		#Overlord conditions
-		country_rank >= rank_value:great_power
-		is_in_power_bloc = no
-		NOR = {
-			country_is_in_north_america = yes
-			country_is_in_europe = yes
+		OR = { 
+			c:HND ?= this
+			c:EGY ?= this
+			c:IDO ?= this
 		}
+		game_date >= 1946.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1966.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		# Event has not been fired before
+		NOT = { has_variable = NAM_PB_form_hae }				# CHANGE ****
 		
 		OR = { 
 			is_a_democracy = yes
 			is_some_kind_of_democracy = yes
+			is_a_nationalist_government = yes
 		}
 		is_sufficiently_independent = yes						# is_vassal = no	
 		is_subject = no
 		is_at_war = no											# war = no
 		
+		is_power_bloc_leader = no
 		is_not_neutral = yes
 		
-		# Event has not been fired before
-		NOT = { has_variable = NAM_PB_form_hae }				# CHANGE ****
+		#Leader of NAM
+		exists = c:YUG
+		c:YUG ?= {
+			is_power_bloc_leader = yes
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
 		
     }
 
@@ -1936,44 +1944,19 @@ historical_alliances_system.20 = {
 		# Fire only once
 		set_variable = NAM_PB_form_hae							# Change variable ****
 		
-		# Fire only once
-		set_global_variable = NAM_PB_global_var
-		
 	}
     
     option = {
         name = historical_alliances_system.option.1				# Accept
         highlighted_option = yes
 		
-		#Antagonise other power blocs
-		every_country = {
+		#Join NAM
+		random_country = {
 			limit = { 
 				is_power_bloc_leader = yes
+				c:YUG ?= this
 			}
-			change_relations = {
-				country = ROOT
-				value = -50
-			}
-		}
-		
-		#Create own bloc
-		if = {
-			limit = { is_in_power_bloc = no }
-			create_power_bloc = {
-				name = NON_ALIGNED_MOVEMENT
-
-				map_color = { 150 77 240 }
-
-				identity = identity_ideological_union
-
-				# subjects are automatically part of the bloc
-			}
-			power_bloc ?= { 
-				if = {
-					limit = { NOT = { has_principle = principle:principle_ideological_truth_1 } }
-					add_principle = principle_ideological_truth_1
-				}
-			}
+			ROOT = { join_power_bloc = c:YUG }
 		}
 		
 		ai_chance = { 
