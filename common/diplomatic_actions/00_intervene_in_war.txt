@@ -77,28 +77,56 @@ intervene_in_war = {
 		NOT = { has_truce_with = scope:target_country }
 	
 		# THIS can and wants to intervene
-		OR = { 
+		OR = {
 		
-			can_go_to_war = yes
-			
-			AND = { 
-				is_a_dictatorship = yes
-				exists = ruler
-				ruler = {
-					OR = {
-						has_ideology = ideology:ideology_autocratic
-						has_ideology = ideology:ideology_power_hungry
-					}
+			AND = {
+				has_strategic_region_interest_tier = {
+					strategic_region = scope:target_country.capital.region
+					value >= interest_tier_effect_can_join_diplomatic_plays_min_tier
 				}
-				scope:target_country = { has_strategic_land_adjacency = scope:actor }
+				can_go_to_war = yes
 			}
 			
-			scope:target_country = { 
-				OR = { 
-					is_subject_of = scope:actor
-					has_diplomatic_pact = { who = scope:actor type = condominium is_initiator = no }
+			AND = {
+				is_neutral = no
+				OR = {
+					has_treaty_alliance_with = { TARGET = scope:target_country }
+					AND = {
+						OR = { 
+							has_treaty_defensive_pact_with = { TARGET = scope:target_country }
+							scope:target_country = {
+								has_treaty_guarantee_independence_with = { TARGET = root }
+							}
+							scope:target_country = {
+								has_treaty_support_independence_with = { TARGET = root }
+							}
+						}
+						OR = {
+							any_diplomatic_play = {
+								target = scope:target_country
+								custom_tooltip = {
+									text = "has_aggressive_war_goal.tt"
+									has_an_aggressive_war_goal = yes
+								}
+							}
+							any_diplomatic_play = {
+								initiator = scope:target_country
+								custom_tooltip = {
+									text = "has_no_aggressive_war_goal.tt"
+									has_an_aggressive_war_goal = no
+								}
+							}
+						}
+					}
 				}
-				is_not_sufficiently_independent = yes
+			}
+			
+			is_direct_subject_of = scope:target_country
+			scope:target_country = { is_direct_subject_of = root }
+			
+			scope:target_country = {
+				has_modifier = condominium_modifier
+				has_diplomatic_pact = { who = ROOT type = condominium is_initiator = no }
 			}
 			
 		}
@@ -212,11 +240,14 @@ intervene_in_war = {
 						any_scope_treaty = { binds = scope:actor any_scope_article = { has_type = defensive_pact } } 
 						is_subject_of = scope:actor
 					}
-					any_scope_war = {
-						has_war_support = {
-							target = scope:target_country
-							value < 25
+					OR = {
+						any_scope_war = {
+							has_war_support = {
+								target = scope:target_country
+								value < 25
+							}
 						}
+						has_revolution = yes
 					}
 				}
 				
