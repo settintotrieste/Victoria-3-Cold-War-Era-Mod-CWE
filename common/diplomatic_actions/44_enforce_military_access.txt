@@ -11,22 +11,32 @@
 	can_use_obligations = no
 
 	possible = {
+	
+		#THIS is at war
 		is_at_war = yes
-		NOR = { 
+		
+		#TARGET is a non-sovereign country
+		scope:target_country = {
+			is_sufficiently_independent = no
+		}
+		
+		#Not at war with TARGET
+		NOR = {
 			is_diplomatic_play_enemy_of = scope:target_country 
 			has_war_with = scope:target_country
 		}
+		
+		#TARGET is not involved in war & is land adjacent to enemy
 		any_scope_war = {
 			NOT = { is_war_participant = scope:target_country }
-		}
-		
-		scope:target_country = {
-			is_sufficiently_independent = no
-			any_country = {
-				has_war_with = ROOT
-				is_adjacent_to_country = scope:target_country
+			any_war_participant = {
+				NOT = { this = root }
+				has_war_with = root
+				has_strategic_land_adjacency = scope:target_country
+				NOT = { has_strategic_land_adjacency = root }
 			}
 		}
+		
 	}
 
 	accept_effect = {
@@ -74,8 +84,12 @@
 				NOT = { is_war_participant = scope:target_country }
 				any_war_participant = {
 					NOT = { this = root }
-					is_adjacent_to_country = scope:target_country
-					NOT = { is_adjacent_to_country = root }
+					has_war_with = root
+					has_strategic_land_adjacency = scope:target_country
+					OR = {
+						NOT = { has_strategic_land_adjacency = root }
+						has_port_country = no
+					}
 				}
 			}
 		}
