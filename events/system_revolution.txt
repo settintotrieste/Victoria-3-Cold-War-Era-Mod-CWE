@@ -1757,3 +1757,103 @@ revolution_system.21 = {
 	}
 	
 }
+
+# Client State breaks free
+revolution_system.22 = {
+    type = country_event
+	placement = scope:protectorate_subject_country
+
+    title = protectorate_independence.t 							# Title of the event; ADD LOCALISATION
+    desc = protectorate_independence.d 								# Description of the event; ADD LOCALISATION
+    flavor = protectorate_independence.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "europenorthamerica_political_extremism" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		random_country = {
+			limit = { 
+				has_variable = protectorate_terminating_country 
+				is_subject_of = ROOT
+			}
+			remove_variable = protectorate_terminating_country
+			save_scope_as = protectorate_subject_country
+		}
+		
+	}
+    
+	option = {
+        name = protectorate_independence.option.1							# Let them be free
+		highlighted_option = yes
+		
+		#Free subject
+		scope:protectorate_subject_country ?= {
+			ROOT = { remove_diplomatic_pact = { country = scope:protectorate_subject_country type = protectorate } }
+			change_relations = {
+				country = ROOT
+				value = 50
+			}
+		}
+		
+		#Minor discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		
+		ai_chance = {
+			base = 10
+			modifier = { trigger = { is_a_dictatorship = yes } add = -100 }
+		}
+		
+    }
+	
+	option = {
+        name = protectorate_independence.option.2							# Declare war
+		
+		#War of independence
+		scope:protectorate_subject_country ?= {
+			create_diplomatic_play = {
+				name = us_panama_war
+				type = dp_independence
+				target_country = ROOT
+				
+				#war = yes
+				
+				add_war_goal = {
+					holder = ROOT
+					type = reduce_autonomy
+					target_country = scope:protectorate_subject_country
+				}
+			}
+			ROOT = {
+				create_incident = {
+					value = 5
+					country = scope:protectorate_subject_country
+				}
+			}
+		}
+		
+		ai_chance = {
+			base = 0
+			modifier = { trigger = { is_a_dictatorship = yes } add = 100 }
+		}
+		
+    }
+
+}

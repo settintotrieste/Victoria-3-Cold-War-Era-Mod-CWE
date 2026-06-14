@@ -1,0 +1,84 @@
+je_end_protectorate_button = {
+	name = "je_end_protectorate_button"
+	desc = "je_end_protectorate_button_desc"
+
+	visible = { 
+		
+	}
+
+	possible = {
+	
+		#Timer
+		hidden_effect = {
+			NOT = { has_variable = protectorate_terminating_country_timer }
+		}
+	
+		#Is a protectorate
+		is_subject_type = subject_type_protectorate
+		
+		#Government has sufficient domestic support
+		government_has_legislative_simple_majority = yes
+		
+		#Diplomatic requirements
+		is_diplomatic_play_committed_participant = no
+		is_at_war = no
+			
+		#TARGET does not have troops from THIS stationed in it
+		custom_tooltip = {
+			text = no_foreign_bases.tt
+			overlord ?= {
+				NOT = {
+					has_diplomatic_pact = { 
+						who = ROOT
+						type = military_cooperation_agreement 
+						is_initiator = yes 
+					}
+				}
+			}
+		}
+		
+		#THIS not has dominate politics on TARGET
+		NOT = {
+			has_diplomatic_pact = { 
+				who = overlord
+				type = dominate_politics 
+				is_initiator = no 
+			}
+		}
+		
+		#Not imposed on country
+		NOT = { has_truce_with = overlord }
+		
+	}
+
+	effect = {
+	
+		#End protectorate
+		set_variable = { name = protectorate_terminating_country days = 1 }
+		set_variable = { name = protectorate_terminating_country_timer days = 32 }
+		overlord ?= { trigger_event = { id = revolution_system.22 } }
+		
+		#Domestic effect
+		add_loyalists = {
+			value = medium_radicals
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if this if has hostile relations with overlord or high liberty desire
+		if = {
+			limit = {
+				OR = { 
+					liberty_desire = 100
+					overlord.relations:root = relations_threshold:hostile
+				}
+			}
+			add = 10
+		}
+		
+	}
+	
+}
