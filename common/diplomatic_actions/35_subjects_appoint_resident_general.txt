@@ -1,0 +1,120 @@
+﻿da_appoint_resident_general = {
+	groups = { general }
+	
+	requires_approval = no
+	should_notify_third_parties = yes
+	show_effect_in_tooltip = yes
+
+	texture = "gfx/interface/icons/lens_toolbar_icons/create_army_lens_option.dds"
+	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_04_appoint_governor_benign"
+	selectable = {
+		is_revolutionary = no is_secessionist = no
+	}
+	
+	potential = {
+		scope:target_country = {
+			NOT = { has_variable = gubernatorial_candidate }
+			NOT = { is_diplomatic_play_enemy_of = root }
+			has_journal_entry = je_resident_general
+		}
+	}
+	
+	possible = {
+		custom_tooltip = {
+			text = "APPOINT_RESIDENT_GENERAL_ON_COOLDOWN"
+			scope:target_country = {
+				NOR = { 
+					has_variable = gubernatorial_candidate 
+					has_variable = gubernatorial_candidate_timed
+				}
+			}
+		}
+		scope:target_country = {
+			any_scope_character = {
+				has_role = character_role_resident_general
+				custom_tooltip = {
+					text = "CHARACTER_HOME_COUNTRY_ACTOR"
+					scope:actor = this.home_country 
+				}
+				interest_group ?= { NOT = { is_same_interest_group_type = scope:actor.ruler.interest_group } }
+			}
+		}
+	}
+
+	accept_effect = {
+		scope:target_country = {
+			set_variable = gubernatorial_candidate
+			set_variable = {
+				name = gubernatorial_candidate_timed
+				days = normal_modifier_time
+			}
+			random_scope_character = {
+				limit = { 
+					has_role = character_role_resident_general
+					scope:actor = this.home_country
+				}
+				retire_character = yes
+			}
+			scope:actor = {
+				save_scope_as = dominant_country
+				random_primary_culture = { save_scope_as = dominant_country_culture }
+				ruler ?= { interest_group = { save_scope_as = dominant_country_IG } }
+			}
+			create_character = {
+				role = character_role_resident_general
+				culture = scope:dominant_country_culture
+				religion = scope:dominant_country.religion
+				interest_group = scope:dominant_country_IG
+				on_created = {
+					#add_character_role = character_role_agitator
+					set_variable = { name = new_resident_general days = 1 }
+				}
+			}
+			random_scope_character = {
+				limit = { has_variable = new_resident_general }
+				remove_variable = new_resident_general
+				set_home_country = scope:dominant_country
+				set_home_state = scope:dominant_country.capital
+				set_appropriate_character_ideology_from_scope = yes
+				save_scope_as = new_resident_general
+			}
+			post_notification = appointed_new_resident_general_notification
+			every_interest_group = {
+				limit = { NOT = { is_same_interest_group_type = scope:actor.ruler.interest_group } }
+				save_scope_as = angry_IG_scope
+				owner = {
+					add_radicals = {
+						interest_group = scope:angry_IG_scope
+						value = 0.02
+					}
+				}
+			}
+		}
+	}
+	
+	ai = {
+		evaluation_chance = {
+			value = 0.25		
+		}		
+	
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = {
+			"ai_ideological_opinion(scope:target_country)" <= -25
+			OR = {
+				scope:target_country = { liberty_desire < define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_THRESHOLD }
+				has_attitude = {
+					who = scope:target_country
+					attitude = domineering
+				}
+			}
+			OR = {
+				has_strategy = ai_strategy_maintain_power_balance
+				has_strategy = ai_strategy_anti_imperialism
+				has_strategy = ai_strategy_world_revolution
+			}		
+		}				
+	}
+}
