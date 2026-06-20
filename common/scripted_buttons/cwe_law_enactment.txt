@@ -103,3 +103,106 @@ je_law_enactment_system_resume_enactment_button = {
 	}
 	
 }
+
+je_law_enactment_system_foreign_assistance_button = {
+	name = "je_law_enactment_system_foreign_assistance_button"
+	desc = "je_law_enactment_system_foreign_assistance_button_desc"
+
+	visible = { 
+		has_journal_entry = je_resident_general
+		enacting_any_law = yes
+	}
+
+	possible = {
+		
+		#Has at least 1 set back
+		enactment_setback_count >= 1
+		
+		#Law enactment ongoing
+		NOT = { has_modifier = law_enactment_paused_modifier }
+		
+		#Timer
+		custom_tooltip = {
+			text = law_enactment_timer_2.tt
+			NOT = { has_variable = law_enactment_timer }
+		}
+		
+		#Resident-General
+		custom_tooltip = {
+			text = law_enactment_foreign_assistance.tt
+			any_scope_character = {
+				has_role = character_role_resident_general
+				OR = {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value >= approve
+					}
+					interest_group ?= {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value >= approve
+						}
+					}
+				}
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Remove set back
+		add_enactment_setback = -1
+		
+		#Law supporters disapprove of this
+		every_interest_group = {
+			limit = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+			}
+			save_scope_as = law_supporter_IG
+			owner = {
+				add_radicals = {
+					value = 0.02
+					interest_group = scope:law_supporter_IG
+				}
+			}
+		}
+		
+		#Add timer
+		set_variable = {
+			name = law_enactment_timer
+			months = 6
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		#AI will only do this if this if ruler likes law
+		if = {
+			limit = {
+				ruler ?= {
+					OR = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value > neutral
+						}
+						interest_group = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value > neutral
+							}
+						}
+					}
+				}
+			}
+			add = 10
+		}
+		
+	}
+	
+}
