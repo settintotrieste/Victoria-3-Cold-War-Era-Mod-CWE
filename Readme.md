@@ -1,0 +1,22 @@
+![image](thumbnail.png)
+# CWE (cold war era mod for victoria 3)
+
+The Cold War Era mod is the successor to the V2 Cold War Enhancement mod
+
+This is the less stable version of the V3 CWE mod as it is the main dev branch.
+
+The more stable steam version can be found here: https://steamcommunity.com/sharedfiles/filedetails/?id=2988303719
+
+### How to install the Github version of CWE
+
+ - Step 1: Click the green `Code` button and then click the `Download ZIP` option.
+
+ - Step 2: Extract out the folder `Victoria-3-Cold-War-Era-Mod-CWE` from the zip file.
+
+ - Step 3: Place the entire folder into `%USERPROFILE%\Documents\Paradox Interactive\Victoria 3\mod`.
+
+ - Step 4: Check the option for only the CWE mod in the playlist for the Victoria 3 launcher.
+
+**Note**: This mod is still in its early experimental stages.
+
+Enjoy!
