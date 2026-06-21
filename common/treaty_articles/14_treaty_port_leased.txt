@@ -1,8 +1,8 @@
-﻿treaty_port = {
+﻿treaty_port_leased = {
     kind = directed
-    cost = 50
+    cost = 25
 
-    relations_progress_per_day = -0.5
+    relations_progress_per_day = -0.25
     relations_improvement_min = 0
 
 	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/treaty_port_treaties.dds"
@@ -138,7 +138,6 @@
 				scope:withdrawing_country = scope:source_country
 			}
 			scope:withdrawing_country = {
-				country_rank > scope:non_withdrawing_country.country_rank
 				is_sufficiently_independent = yes
 				custom_tooltip = {
 					text = treaty_port_lease_expired.tt
@@ -211,7 +210,6 @@
 			}
 		}
 
-
 		scope:state_giver ?= {
 			if = {
 				limit = {
@@ -246,6 +244,70 @@
 				add_claim = scope:article_options.source_country
 			}
 		}
+		
+		#Return state
+		scope:article_options.input_state = {
+			#set_variable = { name = treaty_port_lease_state days = 1 }
+			state_region = { save_scope_as = treaty_port_lease_state }
+		}
+		scope:article_options.source_country = {
+			set_variable = { name = treaty_port_lease_landlord days = 1 }
+			save_scope_as = treaty_port_lease_landlord
+		}
+		scope:article_options.target_country = {
+			set_variable = { name = treaty_port_lease_tenant days = 1 }
+			save_scope_as = treaty_port_lease_tenant
+			if = {
+				limit = {
+					scope:article_options.input_state ?= {
+						state_region = {
+							any_scope_state = {
+								owner = {
+									is_subject_of = scope:article_options.target_country
+									is_sufficiently_independent = no
+								}
+								controls_treaty_port_province = yes
+							}
+						}
+					}
+				}
+				scope:article_options.input_state ?= {
+					state_region = {
+						every_scope_state = {
+							limit = { 
+								owner = {
+									is_subject_of = scope:article_options.target_country
+									is_sufficiently_independent = no
+								}
+								controls_treaty_port_province = yes
+							}
+							set_variable = { name = treaty_port_lease_state days = 1 }
+							save_scope_as = treaty_port_lease_state_3
+							owner = { 
+								save_scope_as = treaty_port_lease_state_subject 
+								top_overlord ?= { save_scope_as = treaty_port_lease_tenant }
+							}
+						}
+					}
+				}
+				custom_tooltip = {
+					text = terminate_treaty_port_lease_2.tt
+					scope:treaty_port_lease_tenant ?= { trigger_event = { id = treaty_ports_system.1 } }
+				}
+			}
+			else = {
+				random_scope_state = {
+					limit = { state_region = scope:treaty_port_lease_state }
+					set_variable = { name = treaty_port_lease_state days = 1 }
+					save_scope_as = treaty_port_lease_state_2
+				}
+				custom_tooltip = {
+					text = terminate_treaty_port_lease.tt
+					scope:treaty_port_lease_tenant ?= { trigger_event = { id = treaty_ports_system.1 } }
+				}
+			}
+		}
+		
 	}
 	on_break = {
 		scope:withdrawing_country = {
@@ -375,7 +437,7 @@
 	}
 
 	wargoal = {
-		execution_priority = 71
+		execution_priority = 70
 		contestion_type = control_target_state
 
 		maneuvers = {
@@ -411,16 +473,16 @@
 					desc = "INFAMY_STATE_POPULATION_FACTOR"
 					value = scope:state.state_population
 					divide = 10000
-					max = 5
+					max = 2.5
 				}
 				add = {
 					desc = "INFAMY_STATE_GDP_FACTOR"
 					value = scope:state.gdp
 					divide = 50000
-					max = 5
+					max = 2.5
 				}
 			}
-			min = 5
+			min = 2.5
 		}
 	}
 }
