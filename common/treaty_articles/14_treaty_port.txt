@@ -142,6 +142,7 @@
 				is_sufficiently_independent = yes
 				custom_tooltip = {
 					text = treaty_port_lease_expired.tt
+					exists = scope:treaty_options.remaining_binding_period
 					scope:treaty_options.remaining_binding_period = 0
 				}
 			}
@@ -246,6 +247,162 @@
 				add_claim = scope:article_options.source_country
 			}
 		}
+		
+		if = {
+			limit = {
+				scope:withdrawing_country = scope:article_options.source_country
+			}
+			scope:article_options.input_state = {
+				#set_variable = { name = treaty_port_lease_state days = 1 }
+				state_region = { save_scope_as = treaty_port_lease_state }
+			}
+			scope:article_options.source_country = {
+				set_variable = { name = treaty_port_lease_landlord days = 1 }
+				save_scope_as = treaty_port_lease_landlord
+			}
+			scope:article_options.target_country = {
+				set_variable = { name = treaty_port_lease_tenant days = 1 }
+				save_scope_as = treaty_port_lease_tenant
+				if = {
+					limit = {
+						scope:article_options.input_state ?= {
+							state_region = {
+								any_scope_state = {
+									owner = {
+										is_subject_of = scope:article_options.target_country
+										is_sufficiently_independent = no
+									}
+									controls_treaty_port_province = yes
+								}
+							}
+						}
+					}
+					scope:article_options.input_state ?= {
+						state_region = {
+							every_scope_state = {
+								limit = { 
+									owner = {
+										is_subject_of = scope:article_options.target_country
+										is_sufficiently_independent = no
+									}
+									controls_treaty_port_province = yes
+								}
+								set_variable = { name = treaty_port_lease_state days = 1 }
+								save_scope_as = treaty_port_lease_state_3
+								owner = { 
+									save_scope_as = treaty_port_lease_state_subject 
+									top_overlord ?= { save_scope_as = treaty_port_lease_tenant }
+								}
+							}
+						}
+					}
+					custom_tooltip = {
+						text = terminate_treaty_port_2.tt
+						scope:treaty_port_lease_tenant ?= { trigger_event = { id = treaty_ports_system.4 } }
+					}
+				}
+				if = {
+					limit = {
+						scope:article_options.input_state ?= {
+							state_region = {
+								any_scope_state = {
+									owner = scope:article_options.target_country
+								}
+							}
+						}
+					}
+					random_scope_state = {
+						limit = { state_region = scope:treaty_port_lease_state }
+						set_variable = { name = treaty_port_lease_state days = 1 }
+						save_scope_as = treaty_port_lease_state_2
+					}
+					custom_tooltip = {
+						text = terminate_treaty_port.tt
+						scope:treaty_port_lease_tenant ?= { trigger_event = { id = treaty_ports_system.4 } }
+					}
+				}
+			}
+			
+		}
+		
+		if = {
+			limit = {
+				scope:withdrawing_country = scope:article_options.target_country
+			}
+			scope:article_options.input_state = {
+				#set_variable = { name = treaty_port_lease_state days = 1 }
+				state_region = { save_scope_as = treaty_port_lease_state }
+			}
+			scope:article_options.source_country = {
+				set_variable = { name = treaty_port_lease_landlord days = 1 }
+				save_scope_as = treaty_port_lease_landlord
+			}
+			scope:article_options.target_country = {
+				set_variable = { name = treaty_port_lease_tenant days = 1 }
+				save_scope_as = treaty_port_lease_tenant
+				if = {
+					limit = {
+						scope:article_options.input_state ?= {
+							state_region = {
+								any_scope_state = {
+									owner = {
+										is_subject_of = scope:article_options.target_country
+										is_sufficiently_independent = no
+									}
+									controls_treaty_port_province = yes
+								}
+							}
+						}
+					}
+					scope:article_options.input_state ?= {
+						state_region = {
+							every_scope_state = {
+								limit = { 
+									owner = {
+										is_subject_of = scope:article_options.target_country
+										is_sufficiently_independent = no
+									}
+									controls_treaty_port_province = yes
+								}
+								set_variable = { name = treaty_port_lease_state days = 1 }
+								save_scope_as = treaty_port_lease_state_3
+								owner = { 
+									save_scope_as = treaty_port_lease_state_subject 
+									scope:treaty_port_lease_landlord ?= {
+										annex_with_incorporation = scope:treaty_port_lease_state_subject
+									}
+								}
+							}
+						}
+					}
+				}
+				if = {
+					limit = {
+						scope:article_options.input_state ?= {
+							state_region = {
+								any_scope_state = {
+									owner = scope:article_options.target_country
+								}
+							}
+						}
+					}
+					scope:article_options.input_state ?= {
+						state_region = {
+							every_scope_state = {
+								limit = { NOT = { owner = scope:article_options.source_country } }
+								set_state_owner = scope:treaty_port_lease_landlord
+							}
+						}
+					}
+				}
+				change_infamy = -20
+				change_relations = { 
+					country = scope:treaty_port_lease_landlord 
+					value = 50 
+				}
+			}
+		}
+		
 	}
 	on_break = {
 		scope:withdrawing_country = {
