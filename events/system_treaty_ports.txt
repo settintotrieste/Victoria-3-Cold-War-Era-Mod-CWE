@@ -53,6 +53,11 @@ treaty_ports_system.1 = {
 				}
 			}
 		}
+		random_country = {
+			limit = { has_variable = treaty_port_lease_tenant }
+			save_scope_as = treaty_port_lease_tenant
+			remove_variable = treaty_port_lease_tenant
+		}
 		
 	}
     
@@ -227,6 +232,11 @@ treaty_ports_system.2 = {
 				}
 			}
 		}
+		random_country = {
+			limit = { has_variable = treaty_port_lease_landlord }
+			save_scope_as = treaty_port_lease_landlord
+			remove_variable = treaty_port_lease_landlord
+		}
 		
 	}
     
@@ -301,10 +311,61 @@ treaty_ports_system.2 = {
 treaty_ports_system.3 = {
     type = country_event
 	placement = scope:treaty_port_lease_state
-
-    title = treaty_port_lease_terminated_SAR.t 							# Title of the event; ADD LOCALISATION
-    desc = treaty_port_lease_terminated_SAR.d 							# Description of the event; ADD LOCALISATION
-    flavor = treaty_port_lease_terminated_SAR.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+	
+	title = {
+		first_valid = {
+			triggered_desc = {
+				desc = treaty_port_terminated_SAR.t
+				trigger = {
+					scope:treaty_port_lease_state ?= {
+						has_variable = treaty_port_non_lease
+					}
+				}
+			}
+			triggered_desc = {
+				desc = treaty_port_lease_terminated_SAR.t
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = treaty_port_terminated_SAR.d
+				trigger = {
+					scope:treaty_port_lease_state ?= {
+						has_variable = treaty_port_non_lease
+					}
+				}
+			}
+			triggered_desc = {
+				desc = treaty_port_lease_terminated_SAR.d
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+	flavor = {
+		first_valid = {
+			triggered_desc = {
+				desc = treaty_port_terminated_SAR.f
+				trigger = {
+					scope:treaty_port_lease_state ?= {
+						has_variable = treaty_port_non_lease
+					}
+				}
+			}
+			triggered_desc = {
+				desc = treaty_port_lease_terminated_SAR.f
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
 
     event_image = { texture = "unspecific_signed_contract" }
 
@@ -350,6 +411,11 @@ treaty_ports_system.3 = {
 					}
 				}
 			}
+		}
+		random_country = {
+			limit = { has_variable = treaty_port_lease_landlord }
+			save_scope_as = treaty_port_lease_landlord
+			remove_variable = treaty_port_lease_landlord
 		}
 		
 	}
@@ -402,6 +468,8 @@ treaty_ports_system.3 = {
 							
 							copy_laws = scope:treaty_port_lease_tenant
 							
+							set_variable = treaty_port_lease_SAR
+							
 						}
 					}
 				}
@@ -419,6 +487,67 @@ treaty_ports_system.3 = {
 					create_diplomatic_pact = {
 						country = scope:treaty_port_lease_state.owner
 						type = legal_union
+					}
+				}
+				
+				#Configure SAR
+				scope:treaty_port_lease_state.owner ?= {
+					if = {
+						limit = { has_variable = treaty_port_lease_SAR }
+					
+						remove_variable = treaty_port_lease_SAR
+					
+						#Blank all primary cultures
+						clear_all_primary_cultures = yes
+					
+						#Set primary culture of colony
+						set_primary_culture_generic = yes
+						
+						#Set state religion of colony
+						set_state_religion_generic = yes
+						
+						#Generate Ruler
+						every_scope_character = { kill_character = yes }
+						
+						#Set tag
+						save_scope_as = treaty_port_lease_state_created_country
+						if = {
+							limit = {
+								p:xB03161.state.owner = {
+									THIS = scope:treaty_port_lease_state_created_country
+								}
+								p:xB03161.state = {
+									is_capital = yes
+								}
+							}
+							change_tag = HKG
+							add_primary_culture = cu:hongkonger
+						}
+						else_if = {
+							limit = {
+								p:xB031E0.state.owner = {
+									THIS = scope:treaty_port_lease_state_created_country
+								}
+								p:xB031E0.state = {
+									is_capital = yes
+								}
+							}
+							change_tag = MCA
+							add_primary_culture = cu:macanese
+						}
+						else_if = {
+							limit = {
+								p:x51F0A0.state.owner = {
+									THIS = scope:treaty_port_lease_state_created_country
+								}
+								p:x51F0A0.state = {
+									is_capital = yes
+								}
+							}
+							change_tag = GOA
+							add_primary_culture = cu:goan
+						}
+						
 					}
 				}
 			}
@@ -537,6 +666,11 @@ treaty_ports_system.4 = {
 				}
 			}
 		}
+		random_country = {
+			limit = { has_variable = treaty_port_lease_tenant }
+			save_scope_as = treaty_port_lease_tenant
+			remove_variable = treaty_port_lease_tenant
+		}
 		
 	}
     
@@ -603,6 +737,49 @@ treaty_ports_system.4 = {
 		#Response
 		scope:treaty_port_lease_landlord ?= {
 			trigger_event = { id = treaty_ports_system.6 }
+		}
+		
+		ai_chance = { 
+			base = 15
+		}
+    }
+	
+	option = {
+        name = treaty_port_lease_terminated.2						# SAR
+		trigger = {
+			scope:treaty_port_lease_landlord ?= {
+				is_sufficiently_independent = yes
+				NOT = { is_subject_of = ROOT }
+			}
+			is_sufficiently_independent = yes
+			NOT = { is_subject_of = scope:treaty_port_lease_landlord }
+			NOR = {
+				AND = { has_law_or_variant = law_type:law_HOS_monarch scope:treaty_port_lease_landlord = { has_law_or_variant = law_type:law_HOS_monarch } }
+				AND = { has_law_or_variant = law_type:law_HOS_president scope:treaty_port_lease_landlord = { has_law_or_variant = law_type:law_HOS_president } }
+				AND = { has_law_or_variant = law_type:law_HOS_religious_leader scope:treaty_port_lease_landlord = { has_law_or_variant = law_type:law_HOS_religious_leader } }
+				AND = { has_law_or_variant = law_type:law_HOS_nationalist_leader scope:treaty_port_lease_landlord = { has_law_or_variant = law_type:law_HOS_nationalist_leader } }
+				AND = { has_law_or_variant = law_type:law_HOS_communist_leader scope:treaty_port_lease_landlord = { has_law_or_variant = law_type:law_HOS_communist_leader } }
+			}
+		}
+		
+		#Mark again
+		scope:treaty_port_lease_state = {
+			set_variable = { name = treaty_port_lease_state days = 1 }
+			set_variable = { name = treaty_port_non_lease days = 32 }
+		}
+		scope:treaty_port_lease_landlord = {
+			set_variable = { name = treaty_port_lease_landlord days = 1 }
+		}
+		ROOT = {
+			set_variable = { name = treaty_port_lease_tenant days = 1 }
+		}
+		
+		#Response
+		custom_tooltip = {
+			text = treaty_port_propose_SAR.tt
+			scope:treaty_port_lease_landlord ?= {
+				trigger_event = { id = treaty_ports_system.3 }
+			}
 		}
 		
 		ai_chance = { 
@@ -697,6 +874,11 @@ treaty_ports_system.5 = {
 					}
 				}
 			}
+		}
+		random_country = {
+			limit = { has_variable = treaty_port_lease_landlord }
+			save_scope_as = treaty_port_lease_landlord
+			remove_variable = treaty_port_lease_landlord
 		}
 		
 	}
@@ -827,6 +1009,11 @@ treaty_ports_system.6 = {
 					}
 				}
 			}
+		}
+		random_country = {
+			limit = { has_variable = treaty_port_lease_landlord }
+			save_scope_as = treaty_port_lease_landlord
+			remove_variable = treaty_port_lease_landlord
 		}
 		
 	}
