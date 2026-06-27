@@ -250,20 +250,21 @@ decree_events.3 = {
 	}
 
 	duration = 3
-	
+
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
-	
+
+	cooldown = { days = never_fire_again_modifier_time }
+
 	trigger = {
 		any_scope_state = {
 			is_incorporated = yes
 			has_decree = decree_promote_social_mobility
 		}
-		NOT = { has_variable = david_copperfield_var }
 		empty_agitator_slots >= 1
 	}
-	
+
 	immediate = {
 		random_scope_state = {
 			limit = {
@@ -272,47 +273,41 @@ decree_events.3 = {
 			}
 			save_scope_as = decree_state
 		}
-		ig:ig_petty_bourgeoisie = {
+		ig:ig_petty_bourgeoisie ?= {
 			save_scope_as = ig_petty_bourgeoisie
 		}
-		set_variable = david_copperfield_var
-	}
-	
-	option = { #support him to IG leader
-		name = decree_events.3.a
-		default_option = yes
 		create_character = {
-			#role = politician # Remove this line
 			female = no
 			interest_group = ig_petty_bourgeoisie
-			ig_leader = yes
+			role = character_role_politician
 			on_created = {
 				add_modifier = {
 					name = david_copperfield_modifier
 					days = normal_modifier_time
 				}
 			}
+			save_scope_as = david_copperfield_scope
 		}
 	}
-	
+
+	option = { #support him to IG leader
+		name = decree_events.3.a
+		default_option = yes
+		scope:david_copperfield_scope ?= {
+			set_as_interest_group_leader = yes
+		}
+	}
+
 	option = { #ignore him
 		name = decree_events.3.b
-		ig:ig_petty_bourgeoisie = {
+		ig:ig_petty_bourgeoisie ?= {
 			add_modifier = {
 				name = ignored_david_copperfield_modifier
 				days = normal_modifier_time
 			}
 		}
-		create_character = {
-			female = no
-			interest_group = ig_petty_bourgeoisie
-			is_agitator = yes
-			on_created = {
-				add_modifier = {
-					name = david_copperfield_modifier
-					days = normal_modifier_time
-				}
-			}
+		scope:david_copperfield_scope ?= {
+			replace_character_roles = { add = { agitator } remove_all = yes }
 		}
 	}
 }
@@ -535,7 +530,7 @@ decree_events.5 = {
 			name = opera_didnt_pay_modifier
 			days = long_modifier_time
 		}
-		ig:ig_intelligentsia = {
+		ig:ig_petty_bourgeoisie = {
 			add_modifier = {
 				name = refused_to_pay_modifier
 				days = normal_modifier_time

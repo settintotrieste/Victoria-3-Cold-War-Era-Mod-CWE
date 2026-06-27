@@ -391,29 +391,32 @@ election_contextual_events.4 = {
 	flavor = election_contextual_events.4.f
 
 	duration = 3
-	
+
 	cooldown = { days = very_long_modifier_time }
 
-	event_image = {
-		texture = "unspecific_politicians_arguing"
-	}
+	gui_window = event_window_2char
+
+	left_icon = scope:popular_leader_scope
+	right_icon = scope:young_leader_scope
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/2Characters"
 
 	icon = "gfx/interface/icons/event_icons/event_election.dds"
 
 	trigger = {
-		in_election_campaign = yes NOT = { has_variable = mute_election_events }
+		in_election_campaign = yes
 		NOT = { has_variable = election_event_cooldown }
-		NOT = { 
-			has_variable = election_leader_death_cooldown 
+		NOT = { has_variable = mute_election_events }
+		NOT = {
+			has_variable = election_leader_death_cooldown
 		}
 		any_interest_group = {
 			has_party = yes
-			leader = { 
-				age > define:NCharacters|OLD_AGE 
+			leader = {
+				age > define:NCharacters|OLD_AGE
 				is_busy = no
-				is_historical = no
+				is_immortal = no
 			}
 		}
 	}
@@ -426,18 +429,99 @@ election_contextual_events.4 = {
 		random_interest_group = {
 			limit = {
 				has_party = yes
-				leader = { 
+				leader = {
 					age > define:NCharacters|OLD_AGE
 					is_busy = no
-					is_historical = no
+					is_immortal = no
 				}
 			}
-			leader = { 
-				save_scope_as = decrepit_leader 
+			leader = {
+				save_scope_as = decrepit_leader
 			}
 			save_scope_as = decrepit_leader_ig
-			party = { 
-				save_scope_as = decrepit_leader_party 
+			party = {
+				save_scope_as = decrepit_leader_party
+			}
+			if = {
+				limit = {
+					any_scope_character = {
+						popularity > 0
+						age > 24
+						has_trait = inept # Most important trait
+					}
+				}
+				ordered_scope_character = {
+					limit = {
+						popularity > 0
+						age > 24
+						has_trait = inept
+					}
+					order_by = popularity
+					position = 0
+					save_scope_as = popular_leader_scope
+				}
+			}
+			else = {
+				ROOT = {
+					create_character = {
+						role = character_role_politician
+						interest_group = scope:decrepit_leader_ig
+						age = 48
+						traits = {
+							expensive_tastes
+							hedonist
+							charismatic
+							inept
+						}
+						save_scope_as = popular_leader_scope
+					}
+				}
+			}
+			if = {
+				limit = {
+					any_scope_character = {
+						age < scope:popular_leader_scope.age
+						OR = {
+							has_trait = ambitious # Most important traits
+							has_trait = imperious
+							has_trait = ruthless
+						}
+					}
+				}
+				ordered_scope_character = {
+					limit = {
+						age < scope:popular_leader_scope.age
+						OR = {
+							has_trait = ambitious
+							has_trait = imperious
+							has_trait = ruthless
+						}
+						NOT = {
+							scope:popular_leader_scope ?= this
+						}
+					}
+					order_by = {
+						value = popularity
+						multiply = -1
+					}
+					position = 0
+					save_scope_as = young_leader_scope
+				}
+			}
+			else = {
+				ROOT = {
+					create_character = {
+						role = character_role_politician
+						interest_group = scope:decrepit_leader_ig
+						age = 24
+						traits = {
+							ambitious
+							basic_political_operator
+							imperious
+						}
+						save_scope_as = young_leader_scope
+					}
+				}
 			}
 		}
 		set_variable = {
@@ -445,7 +529,7 @@ election_contextual_events.4 = {
 			days = long_modifier_time
 		}
 	}
-	
+
 	cancellation_trigger = {
 		in_election_campaign = no
 	}
@@ -453,48 +537,33 @@ election_contextual_events.4 = {
 	option = { # Popular, but useless replacement
 		name = election_contextual_events.4.a
 		default_option = yes
-		scope:decrepit_leader = {
-			kill_character = yes
-		}
-		scope:decrepit_leader_party = { 
-			add_momentum = momentum_small
-		}
-		create_character = {
-			ig_leader = yes
-			interest_group = scope:decrepit_leader_ig
-			age = 48
-			traits = { 
-				expensive_tastes
-				arrogant
-				hedonist
-			} 
-			on_created = {
-				add_modifier = {
-					name = well_connected
-					days = normal_modifier_time
-				}
+		show_as_tooltip = {
+			scope:decrepit_leader = {
+				kill_character = yes
 			}
+		}
+		scope:popular_leader_scope ?= {
+			set_as_interest_group_leader = yes
+		}
+		scope:decrepit_leader_party = {
+			add_momentum = momentum_large
 		}
 	}
 	option = { # Unpopular, but skilled replacement
 		name = election_contextual_events.4.b
-		scope:decrepit_leader = {
-			kill_character = yes
+		show_as_tooltip = {
+			scope:decrepit_leader = {
+				kill_character = yes
+			}
 		}
-		create_character = {
-			ig_leader = yes
-			interest_group = scope:decrepit_leader_ig
-			age = 24
-			traits = { 
-				ambitious
-				charismatic
-				imperious
-			} 
-			on_created = {
-				add_modifier = {
-					name = imperious_upstart
-					days = normal_modifier_time
-				}
+		scope:young_leader_scope ?= {
+			set_as_interest_group_leader = yes
+		}
+	}
+	after = {
+		hidden_effect = {
+			scope:decrepit_leader = {
+				kill_character = yes
 			}
 		}
 	}

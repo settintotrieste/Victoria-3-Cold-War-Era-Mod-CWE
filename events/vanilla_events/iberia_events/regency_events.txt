@@ -239,8 +239,25 @@ regency.2 = {
 	immediate = {
 		ruler ?= {
 			save_scope_as = regent_scope
-			interest_group = {
+			interest_group ?= {
 				save_scope_as = ig_candidate_1
+				if = {
+					limit = {
+						NOT = {
+							any_scope_character = {
+								is_ruler_of_own_country = no
+								is_heir_of_own_country = no
+							}
+						}
+					}
+					ROOT = {
+						create_character = {
+							interest_group = scope:ig_candidate_1
+							role = character_role_politician
+							save_scope_as = backup_regent_scope
+						}
+					}
+				}
 			}
 		}
 		ordered_interest_group = { # Just the most notable IG in government
@@ -300,23 +317,50 @@ regency.2 = {
 	option = {
 		name = regency.2.a
 		default_option = yes
-		create_character = {
-			culture = primary_culture
-			ig_leader = yes
-			interest_group = scope:ig_candidate_1
-			on_created = {
+		if = {
+			limit = {
+				scope:ig_candidate_1 ?= {
+					any_scope_character = {
+						is_ruler_of_own_country = no
+						is_heir_of_own_country = no
+					}
+				}
+			}
+			scope:ig_candidate_1 ?= {
+				ordered_scope_character = {
+					limit = {
+						is_ruler_of_own_country = no
+						is_heir_of_own_country = no
+					}
+					order_by = loyalty
+					position = 0
+					if = {
+						limit = {
+							has_role_of_type = agitator
+						}
+						replace_character_roles = { remove = { agitator } add = { politician } }
+					}
+					set_character_as_ruler = yes
+					designate_character_as_regent = {
+						YEARS = 0
+					}
+				}
+			}
+		}
+		else = {
+			scope:backup_regent_scope ?= {
 				set_character_as_ruler = yes
 				designate_character_as_regent = {
 					YEARS = 0
 				}
-				add_modifier = { name = regent_character }
 			}
 		}
-		scope:regent_scope ?= {
+		scope:regent_scope = {
 			hidden_effect = {
 				if = {
 					limit = {
 						is_immortal = yes
+						has_variable = regent_immortality_var
 					}
 					set_character_immortal = no
 				}
