@@ -294,7 +294,7 @@ ai_strategy_colonial_expansion = {
 
 		if = {
 			limit = {
-				scope:enemy_country = { is_country_type = unrecognized }
+				scope:enemy_country = { ai_country_is_valid_colonization_target = yes }
 			}
 			add = 0.25
 		}
@@ -333,18 +333,6 @@ ai_strategy_colonial_expansion = {
 				add = 0.75
 			}
 
-			if = {
-				limit = {
-					scope:target_country = {
-						is_subject = yes
-						is_country_type = unrecognized
-						top_overlord ?= {
-							NOT = { is_country_type = unrecognized }
-						}
-					}
-				}
-				multiply = 0.0
-			}
 		}
 
 		# Less aggressive against countries we're just antagonistic against, rather than belligerent/domineering
@@ -395,21 +383,32 @@ ai_strategy_colonial_expansion = {
 			add = 0.1
 		}
 	}
+	
+	strategic_region_scores = {
+		if = {
+			limit = {
+				scope:region = {
+					any_decentralized_country = {
+						exists = this
+					}
+				}
+			}
+			add = 50
+		}
+	}
 
 	secret_goal_scores = {
 		dominate = {
 			score = {
 				if = {
 					limit = {
-						scope:target_country = { NOT = { is_country_type = unrecognized } }
+						scope:target_country = { ai_country_is_valid_colonization_target = no }
 					}
 					add = -100
 				}
-				if = {
+				else_if = {
 					limit = {
-						NOT = { scope:target_country = { is_subject_of = root } }
-						has_strategic_adjacency = scope:target_country
-						scope:target_country = { is_country_type = unrecognized }
+						ai_country_is_valid_colonization_target = yes
 					}
 					add = 200
 				}
@@ -430,6 +429,18 @@ ai_strategy_colonial_expansion = {
 						scope:target_country = { is_country_type = unrecognized }
 					}
 					add = 200
+					if = {
+						limit = {
+							scope:target_country = {
+								is_subject = yes
+								is_country_type = unrecognized
+								top_overlord ?= {
+									NOT = { is_country_type = unrecognized }
+								}
+							}
+						}
+						multiply = 0.0
+					}
 				}
 			}
 		}
