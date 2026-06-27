@@ -187,6 +187,15 @@ on_monthly_pulse_country = {
 				NOT = {
 					modifier:country_electoral_confidence_over_time = 0
 				}
+				trigger_if = {
+					limit = {
+						modifier:country_electoral_confidence_over_time < 0
+					}
+					electoral_confidence > { # Can never drift to below 25%
+						value = 0.25
+						subtract = modifier:country_electoral_confidence_over_time
+					}
+				}
 			}
 			add_electoral_confidence = modifier:country_electoral_confidence_over_time
 		}
@@ -1066,6 +1075,18 @@ on_new_ruler = {
 				#Generic
 				else = {
 					post_notification = new_ruler
+				}
+				
+				#Supreme Leaders of Theocracies always have state religion
+				if = {
+					limit = {
+						owner = {
+							has_law_or_variant = law_type:law_HOS_religious_leader
+							NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+						}
+						NOT = { religion = owner.religion }
+					}
+					change_character_religion = owner.religion
 				}
 				
 			}
@@ -2739,7 +2760,6 @@ on_secession_end = {
 			days = 1
 			popup = yes
 		}
-		add_to_variable_list = { name = failed_uprisings_culture_list target = scope:rebel_culture years = 20 }
 	}
 }
 
@@ -3808,7 +3828,6 @@ on_national_awakening_started = {
 
 # Root = Country
 # scope:strait is the strait in question
-# TODO: PRCAL-41459 Straits Add the access level as event targets
 on_strait_access_setting_changed = {
 }
 
@@ -3844,4 +3863,19 @@ on_invasion_succeeded = {
 # scope:fleet = the fleet the ship was added to
 on_ship_constructed = {
 	
+}
+
+# Root = Character (the promoted commander)
+# scope:count = number of IGs that received unnecessary_promotion modifier (0 if promotion was not unnecessary)
+on_commander_promoted = {
+	effect = {
+		if = {
+			limit = {
+				scope:count >= 7
+			}
+			owner = {
+				set_variable = achievement_everyone_disliked_that_var
+			}
+		}
+	}
 }
