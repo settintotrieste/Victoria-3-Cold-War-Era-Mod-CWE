@@ -5,43 +5,61 @@ je_cohabitation_system = {
 	
 	scripted_button = je_fire_prime_minister_button
 
+	is_shown_when_inactive = {
+		
+	}
+	
 	possible = {
 		
 		#THIS has an executive PM and President
 		has_law_or_variant = law_type:law_HOG_president_prime_minister
-		
-		#More than 1 interest group in Government
-		any_interest_group = {
-			is_in_government = yes
-			count >= 2
-		}
-		
-		#Ruler's interest group is not the most powerful
-		NOT = { 
-			ruler ?= {
-				interest_group = { 
-					is_in_government = yes
-					ig_government_power_share > 0.5
-				}
-			}
-		}
 		
 	}
 
 	immediate = {
 		
 		#Find PM - Non 
-		random_scope_character = {
-			limit = { 
-				is_ruler_of_own_country = no
-				is_an_IG_leader = yes
-				interest_group = { 
-					is_in_government = yes 
-					is_strongest_ig_in_government = yes
+		if = {
+			limit = {
+				any_scope_character = {
+					is_ruler_of_own_country = no
+					is_an_IG_leader = yes
+					interest_group ?= { 
+						is_in_government = yes 
+						is_strongest_ig_in_government = yes
+					}
 				}
 			}
-			save_scope_as = cohabitation_pm_scope
-			add_modifier = { name = prime_minister }
+			random_scope_character = {
+				limit = { 
+					is_ruler_of_own_country = no
+					is_an_IG_leader = yes
+					interest_group ?= { 
+						is_in_government = yes 
+						is_strongest_ig_in_government = yes
+					}
+				}
+				save_scope_as = cohabitation_pm_scope
+				add_character_role = character_role_head_of_government
+			}
+		}
+		else = {
+			random_primary_culture = { save_scope_as = dominant_country_culture }
+			ruler ?= { interest_group = { save_scope_as = dominant_country_IG } }
+			create_character = {
+				role = character_role_head_of_government
+				culture = scope:dominant_country_culture
+				interest_group = scope:dominant_country_IG
+				on_created = {
+					
+				}
+			}
+			random_scope_character = {
+				limit = { 
+					has_role = character_role_head_of_government
+				}
+				save_scope_as = cohabitation_pm_scope
+			}
 		}
 		
 	}
@@ -53,39 +71,15 @@ je_cohabitation_system = {
 			#THIS has an executive PM and President
 			NOT = { has_law_or_variant = law_type:law_HOG_president_prime_minister }
 			
-			#More than 1 interest group in Government
-			NOT = { 
-				any_interest_group = {
-					is_in_government = yes
-					count >= 2
-				}
-			}
-			
-			NOT = { exists = scope:cohabitation_pm_scope }
-			
-			scope:cohabitation_pm_scope ?= {
-				OR = { 
-					NOT = { is_an_IG_leader = yes }
-					interest_group ?= { is_in_government = no }
-				}
-			}
-			
-			ruler ?= {
-				interest_group ?= { 
-					is_in_government = yes
-					ig_government_power_share > 0.5
-				}
-			}
-			
-			hidden_trigger = { 
+			hidden_trigger = {
 				NOT = { 
 					any_scope_character = {
-						has_modifier = prime_minister
+						has_role = character_role_head_of_government
 					}
 				}
 			}
 			
-			hidden_trigger = { ruler ?= { has_modifier = prime_minister } }
+			hidden_trigger = { ruler ?= { has_role = character_role_head_of_government } }
 		
 		}
 		
@@ -93,8 +87,8 @@ je_cohabitation_system = {
 	on_fail = {
 		
 		every_scope_character = {
-			limit = { has_modifier = prime_minister }
-			remove_modifier = prime_minister
+			limit = { has_role = character_role_head_of_government }
+			remove_character_role = character_role_head_of_government
 		}
 		
 	}
