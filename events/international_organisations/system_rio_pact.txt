@@ -301,7 +301,7 @@ rio_pact_system.5 = {
         highlighted_option = yes
 		
 		#Accept FROM into Rio Pact
-		scope:rio_pact_applicant = {
+		scope:rio_pact_applicant ?= {
 			#FROM joins Rio Pact
 			add_modifier = { name = rio_pact_member }
 			remove_variable = rio_pact_application_var
@@ -311,6 +311,7 @@ rio_pact_system.5 = {
 		every_country = {
 			limit = { 
 				NOT = { this = ROOT }
+				NOT = { this = scope:rio_pact_applicant }
 				OR = { has_modifier = rio_pact_member has_modifier = rio_pact_leader } 
 				NOR = { any_scope_treaty = { binds = ROOT any_scope_article = { has_type = defensive_pact } } any_scope_treaty = { binds = ROOT any_scope_article = { has_type = alliance } } }
 			}
@@ -329,19 +330,23 @@ rio_pact_system.5 = {
 					}
 				}
 			}
-			change_relations = {
-				country = scope:rio_pact_applicant
-				value = 50
+			scope:rio_pact_applicant ?= {
+				change_relations = {
+					country = THIS
+					value = 50
+				}
 			}
 		}
 		
 		#Inform applicant of successful outcome
-		scope:rio_pact_applicant = { trigger_event = { id = rio_pact_system.7 } }
+		scope:rio_pact_applicant ?= { trigger_event = { id = rio_pact_system.7 } }
 		
 		#FROM is happy with THIS
-		change_relations = {
-			country = scope:rio_pact_applicant
-			value = 50
+		scope:rio_pact_applicant ?= {
+			change_relations = {
+				country = ROOT
+				value = 50
+			}
 		}
 		
 		#Hostile countries become more hostile
@@ -369,15 +374,17 @@ rio_pact_system.5 = {
 		default_option = yes
 		
 		#Inform applicant of unsuccessful outcome
-		scope:rio_pact_applicant = { 
+		scope:rio_pact_applicant ?= { 
 			trigger_event = { id = rio_pact_system.6 } 
 			remove_variable = rio_pact_application_var
 		}
 		
 		#FROM is angry!
-		change_relations = {
-			country = scope:rio_pact_applicant
-			value = -50
+		scope:rio_pact_applicant ?= { 
+			change_relations = {
+				country = ROOT
+				value = -50
+			}
 		}
 		
 		#Hostile countries become less hostile

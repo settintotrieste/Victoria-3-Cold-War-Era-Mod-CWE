@@ -309,7 +309,7 @@ csto_system.5 = {
         highlighted_option = yes
 		
 		#Accept FROM into CSTO
-		scope:csto_applicant = {
+		scope:csto_applicant ?= {
 			#FROM joins CSTO
 			add_modifier = { name = csto_member }
 			remove_variable = csto_application_var
@@ -319,6 +319,7 @@ csto_system.5 = {
 		every_country = {
 			limit = { 
 				NOT = { this = ROOT }
+				NOT = { this = scope:csto_applicant }
 				OR = { has_modifier = csto_member has_modifier = csto_leader }
 				NOR = { any_scope_treaty = { binds = ROOT any_scope_article = { has_type = defensive_pact } } any_scope_treaty = { binds = ROOT any_scope_article = { has_type = alliance } } }
 			}
@@ -337,19 +338,23 @@ csto_system.5 = {
 					}
 				}
 			}
-			change_relations = {
-				country = scope:csto_applicant
-				value = 50
+			scope:csto_applicant ?= {
+				change_relations = {
+					country = THIS
+					value = 50
+				}
 			}
 		}
 		
 		#Inform applicant of successful outcome
-		scope:csto_applicant = { trigger_event = { id = csto_system.7 } }
+		scope:csto_applicant ?= { trigger_event = { id = csto_system.7 } }
 		
 		#FROM is happy with THIS
-		change_relations = {
-			country = scope:csto_applicant
-			value = 50
+		scope:csto_applicant ?= {
+			change_relations = {
+				country = ROOT
+				value = 50
+			}
 		}
 		
 		#Hostile countries become more hostile
@@ -377,15 +382,17 @@ csto_system.5 = {
 		default_option = yes
 		
 		#Inform applicant of unsuccessful outcome
-		scope:csto_applicant = { 
+		scope:csto_applicant ?= { 
 			trigger_event = { id = csto_system.6 } 
 			remove_variable = csto_application_var
 		}
 		
 		#FROM is angry!
-		change_relations = {
-			country = scope:csto_applicant
-			value = -50
+		scope:csto_applicant ?= {
+			change_relations = {
+				country = ROOT
+				value = -50
+			}
 		}
 		
 		#Hostile countries become less hostile
