@@ -15,8 +15,9 @@ conduct_self_coup_decision = {
 		#Sufficient government cohesion
 		government_legitimacy >= 60
 		
-		#Ruler's IG is in government and powerful
-		ruler.interest_group = { 
+		#Ruler supports Coup
+		ruler ?= { character_is_autocratic = yes }
+		ruler.interest_group ?= { 
 			save_temporary_scope_as = ruler_interest_group
 		}
 		scope:ruler_interest_group ?= { 
@@ -24,24 +25,77 @@ conduct_self_coup_decision = {
 			is_in_government = yes
 		}
 		
-		#Army OR Civil Service are in the Government & have autocratic ideologies
-		OR = {
-			ig:ig_armed_forces ?= { 
-				is_in_government = yes 
-				leader ?= { 
-					character_is_autocratic = yes 
-				} 
-			}
-			ig:ig_intelligentsia ?= { 
-				is_in_government = yes 
-				leader ?= { 
-					character_is_autocratic = yes 
-				} 
+		#Relevant institutional support
+		ig:ig_intelligentsia ?= {
+			is_in_government = yes
+			ig_approval > 0
+			leader ?= {
+				character_is_autocratic = yes 
 			}
 		}
-		
-		#Ruler is autocratic
-		ruler ?= { character_is_autocratic = yes }
+		trigger_if = {
+			limit = { has_journal_entry = je_armed_forces_system }
+			any_scope_character = {
+				has_modifier = head_of_armed_forces
+				interest_group ?= { OR = { is_interest_group_type = scope:ruler_interest_group AND = { ig_approval > 0 is_in_government = yes } } }
+				character_is_autocratic = yes
+			}
+		}
+		trigger_if = {
+			limit = { has_journal_entry = je_paramilitary_groups }
+			any_scope_character = {
+				has_modifier = head_of_paramilitary
+				interest_group ?= { OR = { is_interest_group_type = scope:ruler_interest_group AND = { ig_approval > 0 is_in_government = yes } } }
+				character_is_autocratic = yes
+			}
+		}
+		trigger_if = {
+			limit = { has_journal_entry = je_secret_police_system }
+			any_scope_character = {
+				has_role = character_role_head_of_intelligence
+				interest_group ?= { OR = { is_interest_group_type = scope:ruler_interest_group AND = { ig_approval > 0 is_in_government = yes } } }
+				character_is_autocratic = yes
+			}
+		}
+		trigger_if = {
+			limit = { has_journal_entry = je_reserved_powers }
+			any_scope_character = {
+				has_role = character_role_reserved_powers_holder
+				interest_group ?= { OR = { is_interest_group_type = scope:ruler_interest_group AND = { ig_approval > 0 is_in_government = yes } } }
+				character_is_autocratic = yes
+			}
+		}
+		trigger_if = {
+			limit = { has_journal_entry = je_constitutional_monarchy }
+			any_scope_character = {
+				OR = { has_role = character_role_monarch has_role = character_role_viceroy }
+				interest_group ?= { OR = { is_interest_group_type = scope:ruler_interest_group AND = { ig_approval > 0 is_in_government = yes } } }
+				character_is_autocratic = yes
+			}
+		}
+		trigger_if = {
+			limit = { has_journal_entry = je_cohabitation_system }
+			any_scope_character = {
+				has_role = character_role_head_of_government
+				interest_group ?= { OR = { is_interest_group_type = scope:ruler_interest_group AND = { ig_approval > 0 is_in_government = yes } } }
+				character_is_autocratic = yes
+			}
+		}
+		trigger_if = {
+			limit = {
+				has_journal_entry = je_national_religious_order
+				has_law_or_variant = law_type:law_HOS_religious_leader 
+				NOR = {
+					has_law_or_variant = law_type:law_HOG_none
+					has_law_or_variant = law_type:law_HOG_president_prime_minister
+				}
+			}
+			any_scope_character = {
+				has_role = character_role_chief_religious_officer
+				interest_group ?= { is_in_government = yes ig_approval > 0 }
+				character_is_autocratic = yes
+			}
+		}
 		
 	}
 	
