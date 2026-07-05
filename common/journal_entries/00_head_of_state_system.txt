@@ -19,10 +19,7 @@ je_head_of_state_system = {
 			has_law_or_variant = law_type:law_HOS_president
 			has_law_or_variant = law_type:law_HOS_nationalist_leader
 			has_law_or_variant = law_type:law_HOS_communist_leader
-			AND = { 
-				has_law_or_variant = law_type:law_HOS_religious_leader
-				has_journal_entry = je_national_religious_order
-			}
+			has_law_or_variant = law_type:law_HOS_religious_leader
 		}
 		has_law_or_variant = law_type:law_HOG_prime_minister
 		
@@ -30,16 +27,27 @@ je_head_of_state_system = {
 
 	immediate = {
 		
-		#Find President 
+		#Find President
 		if = {
 			limit = {
-				AND = {
-					has_law_or_variant = law_type:law_HOS_religious_leader
-					has_journal_entry = je_national_religious_order
+				any_scope_character = {
+					has_role = character_role_head_of_state
 				}
+			}
+			random_scope_character = {
+				limit = { 
+					has_role = character_role_head_of_state
+				}
+				save_scope_as = head_of_state_pm_scope
+			}
+		}
+		else_if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOS_religious_leader
 				any_scope_character = {
 					has_role = character_role_chief_religious_officer
 					is_ruler_of_own_country = no
+					NOT = { has_variable = excluded_head_of_state_candidate }
 				}
 				NOT = { has_variable = elected_head_of_state_system }
 			}
@@ -47,6 +55,7 @@ je_head_of_state_system = {
 				limit = { 
 					has_role = character_role_chief_religious_officer
 					is_ruler_of_own_country = no
+					NOT = { has_variable = excluded_head_of_state_candidate }
 				}
 				save_scope_as = head_of_state_pm_scope
 				add_character_role = character_role_head_of_state
@@ -54,14 +63,12 @@ je_head_of_state_system = {
 		}
 		else_if = {
 			limit = {
-				AND = {
-					has_law_or_variant = law_type:law_HOS_religious_leader
-					has_journal_entry = je_national_religious_order
-				}
+				has_law_or_variant = law_type:law_HOS_religious_leader
 				any_scope_character = {
 					has_role_of_type = politician
 					is_ruler_of_own_country = no
 					interest_group ?= { is_interest_group_type = ig_devout }
+					NOT = { has_variable = excluded_head_of_state_candidate }
 				}
 			}
 			ordered_scope_character = {
@@ -69,6 +76,7 @@ je_head_of_state_system = {
 					has_role_of_type = politician
 					is_ruler_of_own_country = no
 					interest_group ?= { is_interest_group_type = ig_devout }
+					NOT = { has_variable = excluded_head_of_state_candidate }
 				}
 				order_by = popularity
 				position = 0
@@ -86,6 +94,7 @@ je_head_of_state_system = {
 						is_in_government = yes 
 						is_strongest_ig_in_government = yes
 					}
+					NOT = { has_variable = excluded_head_of_state_candidate }
 				}
 				NOT = { has_variable = elected_head_of_state_system }
 			}
@@ -97,6 +106,7 @@ je_head_of_state_system = {
 						is_in_government = yes 
 						is_strongest_ig_in_government = yes
 					}
+					NOT = { has_variable = excluded_head_of_state_candidate }
 				}
 				save_scope_as = head_of_state_pm_scope
 				add_character_role = character_role_head_of_state
@@ -107,6 +117,7 @@ je_head_of_state_system = {
 				any_scope_character = {
 					has_role_of_type = politician
 					is_ruler_of_own_country = no
+					NOT = { has_variable = excluded_head_of_state_candidate }
 				}
 			}
 			ordered_interest_group = {
@@ -120,6 +131,7 @@ je_head_of_state_system = {
 					has_role_of_type = politician
 					is_ruler_of_own_country = no
 					interest_group ?= { is_interest_group_type = scope:elected_head_of_state_candidate_IG }
+					NOT = { has_variable = excluded_head_of_state_candidate }
 				}
 				save_scope_as = head_of_state_pm_scope
 				add_character_role = character_role_head_of_state
@@ -164,12 +176,17 @@ je_head_of_state_system = {
 		
 		#Add term ticker
 		effect = {
-		
-			change_variable = {
-				name = character_role_head_of_state_term
-				add = 1
+			#Unelected Theocratic Head of State has an unlimited term
+			if = {
+				limit = {
+					NOT = { has_variable = elected_head_of_state_system }
+					has_law_or_variant = law_type:law_HOS_religious_leader
+				}
+				change_variable = {
+					name = character_role_head_of_state_term
+					add = 1
+				}
 			}
-			
 		}
 		
 	}
@@ -214,10 +231,7 @@ je_head_of_state_system = {
 					has_law_or_variant = law_type:law_HOS_president
 					has_law_or_variant = law_type:law_HOS_nationalist_leader
 					has_law_or_variant = law_type:law_HOS_communist_leader
-					AND = { 
-						has_law_or_variant = law_type:law_HOS_religious_leader
-						has_journal_entry = je_national_religious_order
-					}
+					has_law_or_variant = law_type:law_HOS_religious_leader
 				}
 				has_law_or_variant = law_type:law_HOG_prime_minister
 			}
@@ -256,51 +270,23 @@ je_head_of_state_system = {
 	status_desc = {
 		first_valid = {
 			triggered_desc = {
-				desc = HOS_ig_industrialists
+				desc = HOS_theocracy_unelected
 				trigger = {
-					scope:head_of_state_pm_scope ?= { interest_group ?= { is_interest_group_type = ig_industrialists } }
+					NOT = { has_variable = elected_head_of_state_system }
+					has_law_or_variant = law_type:law_HOS_religious_leader
 				}
 			}
 			triggered_desc = {
-				desc = HOS_ig_petty_bourgeoisie
+				desc = HOS_general_unelected
 				trigger = {
-					scope:head_of_state_pm_scope ?= { interest_group ?= { is_interest_group_type = ig_petty_bourgeoisie } }
+					NOT = { has_variable = elected_head_of_state_system }
+					scope:head_of_state_pm_scope ?= { has_role = character_role_head_of_state }
 				}
 			}
 			triggered_desc = {
-				desc = HOS_ig_trade_unions
+				desc = HOS_general_elected
 				trigger = {
-					scope:head_of_state_pm_scope ?= { interest_group ?= { is_interest_group_type = ig_trade_unions } }
-				}
-			}
-			triggered_desc = {
-				desc = HOS_ig_landowners
-				trigger = {
-					scope:head_of_state_pm_scope ?= { interest_group ?= { is_interest_group_type = ig_landowners } }
-				}
-			}
-			triggered_desc = {
-				desc = HOS_ig_devout
-				trigger = {
-					scope:head_of_state_pm_scope ?= { interest_group ?= { is_interest_group_type = ig_devout } }
-				}
-			}
-			triggered_desc = {
-				desc = HOS_ig_rural_folk
-				trigger = {
-					scope:head_of_state_pm_scope ?= { interest_group ?= { is_interest_group_type = ig_rural_folk } }
-				}
-			}
-			triggered_desc = {
-				desc = HOS_ig_intelligentsia
-				trigger = {
-					scope:head_of_state_pm_scope ?= { interest_group ?= { is_interest_group_type = ig_intelligentsia } }
-				}
-			}
-			triggered_desc = {
-				desc = HOS_ig_armed_forces
-				trigger = {
-					scope:head_of_state_pm_scope ?= { interest_group ?= { is_interest_group_type = ig_armed_forces } }
+					scope:head_of_state_pm_scope ?= { has_role = character_role_head_of_state }
 				}
 			}
 			triggered_desc = {
@@ -318,5 +304,5 @@ je_head_of_state_system = {
 
 	transferable = no
 
-	progressbar = yes
+	progressbar = no
 }
