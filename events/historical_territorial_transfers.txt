@@ -3421,9 +3421,9 @@ historical_territorial_transfers.29 = {
 		
 		#Losing the war
 		OR = { 
-			enemy_occupation > 0.5
+			enemy_occupation > 0.75
 			any_scope_war = {
-				has_war_support = { target = ROOT value < -25 }
+				has_war_support = { target = ROOT value < -50 }
 			}
 		}
 		
@@ -3445,17 +3445,22 @@ historical_territorial_transfers.29 = {
 		
 		#Flee to Taiwan
 		every_scope_state = {
-			limit = { 
-				NOR = { 
+			limit = {
+				NOT = {
 					state_region = s:STATE_FORMOSA
-					state_region = s:STATE_GUANGDONG
 				}
 			}
 			set_state_owner = c:PRC
 		}
 		if = {
 			limit = { 
-				c:ROC = { has_state_in_state_region = STATE_GUANGDONG } 
+				c:PRC = { has_state_in_state_region = STATE_GUANGDONG }
+			}
+			s:STATE_GUANGDONG ?= {
+				set_owner_of_provinces = {
+					country = c:ROC
+					provinces = { xA92B88 xCB457A x156AC0 x62BF42 x156AC0 xDC137A x30B0E0 }
+				}
 			}
 			c:PRC = { trigger_event = { id = historical_civil_wars.24 } }
 		}
@@ -5925,6 +5930,202 @@ historical_territorial_transfers.53 = {
 				target_country = ROOT
 			}
 		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+#Soviet Manchuria
+historical_territorial_transfers.54 = {
+    type = country_event
+	placement = c:MCK
+
+    title = transfer_territory_soviet_manchuria.t 				# Title of the event; ADD LOCALISATION
+    desc = transfer_territory_soviet_manchuria.d 				# Description of the event; ADD LOCALISATION
+    #flavor = transfer_territory_soviet_manchuria.f 			# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/event_map.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		has_global_variable = 1946_start_date
+		
+		#Overlord conditions
+		c:SOV ?= this
+		game_date >= 1946.5.3									# START DATE: Date colony became self governing ****
+		game_date < 1956.5.3									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		
+		#Recipent conditions
+		exists = c:MCK
+		c:MCK ?= { 												# Change TAG of the transferee ****
+			is_subject_of = ROOT
+			is_subject_type = subject_type_mandate
+			is_at_war = no
+		}
+		exists = c:PRC
+		c:PRC ?= { 												# Change TAG of the transferee ****
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+		}
+		
+		#Not at war or at war with China
+		OR = {
+			is_at_war = no										# war = no
+			has_war_with = c:PRC
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = soviet_manchuria_htt }			# CHANGE ****
+		
+    }
+    
+	immediate = {
+		
+		# Fire only once
+		set_variable = soviet_manchuria_htt						# Change variable ****
+	
+	}
+	
+    option = {
+        name = historical_territorial_transfers.option.1		# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Return Manchuria
+		random_country = {
+			limit = {
+				c:PRC ?= this
+				is_a_communist_government = yes
+				is_sufficiently_independent = yes
+			}
+			annex_with_incorporation = c:MCK
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_territorial_transfers.option.2		# Refuse land transfer request by FROM
+		default_option = yes
+		
+		# Natives are angry!
+		c:MCK ?= {
+			add_radicals = {
+				value = large_radicals
+				culture = cu:manchu
+			}
+			every_scope_state = {
+				limit = { state_region = { is_homeland = cu:manchu } }
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes }
+			}
+		}
+		
+		# Add Infamy because doing this is against international law
+		create_incident = {
+			value = 20
+			country = c:MCK
+		}
+		
+		ai_chance = {
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+#KMT flees to Canton
+historical_territorial_transfers.55 = {
+    type = country_event
+
+    title = transfer_territory_KMT_PRC_1.t 						# Title of the event; ADD LOCALISATION
+    desc = transfer_territory_KMT_PRC_1.d 						# Description of the event; ADD LOCALISATION
+    #flavor = transfer_territory_KMT_PRC_1.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "asia_sepoy_mutiny" }
+
+    icon = "gfx/interface/icons/event_icons/event_map.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		has_global_variable = 1946_start_date
+		
+		#Overlord conditions
+		c:ROC ?= this
+		game_date >= 1946.1.1									# START DATE: Date colony became self governing ****
+		game_date < 1950.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		OR = { 
+			is_a_nationalist_government = yes
+			is_a_republican_regime = yes
+		}
+		is_sufficiently_independent = yes						# is_vassal = no		
+		
+		#Recipent conditions
+		exists = c:PRC
+		c:PRC = { 												# Change TAG of the transferee ****
+			is_a_communist_government = yes
+			is_sufficiently_independent = yes
+		}
+		has_war_with = c:PRC
+		
+		#Losing the war
+		capital ?= {
+			state_region = s:STATE_NANJING
+			market_access <= 0 # Occupied
+		}
+		has_state_in_state_region = STATE_GUANGDONG
+		
+		# Event has not been fired before
+		NOT = { has_variable = KMT_PRC_1_htt }					# CHANGE ****
+		
+    }
+    
+	immediate = {
+		
+		# Fire only once
+		set_variable = KMT_PRC_1_htt							# Change variable ****
+	
+	}
+	
+    option = {
+        name = historical_yes_no.option.1						# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Flee to Guangdong
+		set_capital = STATE_GUANGDONG
+		
+		#Reaction
+		add_radicals = {
+			value = small_radicals
+		}
+		
+		ai_chance = {
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_yes_no.option.2						# Refuse land transfer request by FROM
+		default_option = yes
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
