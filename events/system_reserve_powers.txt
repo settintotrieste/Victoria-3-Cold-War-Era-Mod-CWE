@@ -3178,3 +3178,213 @@ reserve_powers_system.18 = {
 	}
 	
 }
+
+#Separation of Powers
+reserve_powers_system.19 = {
+	type = country_event
+
+	title = breached_separation_of_powers.t
+	desc = breached_separation_of_powers.d
+	flavor = breached_separation_of_powers.f
+
+	event_image = {
+		texture = "asia_politician_parliament_motion"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		#Triggered by event
+		NOT = { has_variable = breached_separation_of_powers }
+		
+	}
+
+	immediate = {
+		
+		set_variable = breached_separation_of_powers
+		
+	}
+	
+	cancellation_trigger = {
+		NOR = {
+			#Head of Government is also Head of State
+			AND = {
+				has_law_or_variant = law_type:law_HOG_prime_minister
+				ruler ?= { 
+					OR = {
+						has_role = character_role_monarch
+						has_role = character_role_monarch_elective
+						has_role = character_role_viceroy
+						has_role = character_role_head_of_state
+					}
+				}
+			}
+			#Head of State is also Head of Government
+			AND = {
+				has_law_or_variant = law_type:law_HOG_president_prime_minister
+				ruler ?= { has_role = character_role_head_of_government }
+			}
+		}
+	}
+
+	option = {
+		name = breached_separation_of_powers_option.1				#Ruler resigns secondary positions and stays as ruler
+		default_option = yes
+		
+		ruler ?= {
+			if = {
+				limit = {
+					owner ?= { has_law_or_variant = law_type:law_HOG_president_prime_minister }
+					has_role = character_role_head_of_government
+				}
+				remove_character_role = character_role_head_of_government
+			}
+			if = {
+				limit = {
+					owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+					has_role = character_role_head_of_state
+				}
+				remove_character_role = character_role_head_of_state
+			}
+			if = {
+				limit = {
+					owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+					OR = {
+						has_role = character_role_monarch
+						has_role = character_role_monarch_elective
+						has_role = character_role_viceroy
+					}
+				}
+				if = { limit = { has_role = character_role_monarch } remove_character_role = character_role_monarch }
+				if = { limit = { has_role = character_role_monarch_elective } remove_character_role = character_role_monarch_elective }
+				if = { limit = { has_role = character_role_viceroy } remove_character_role = character_role_viceroy }
+			}
+		}
+		
+		remove_variable = breached_separation_of_powers
+		
+		ai_chance = {
+			base = 50
+			modifier = {
+				trigger = {
+					ruler ?= {
+						is_historical = no
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+				add = 50
+			}
+			modifier = { 
+				trigger = {
+					ruler ?= {
+						is_historical = yes
+					}
+				}
+				add = -50
+			}
+		}
+		
+	}
+	
+	option = {
+		name = breached_separation_of_powers_option.2				#Ruler keeps secondary positions and resigns as ruler
+		
+		ruler ?= {
+			if = {
+				limit = {
+					has_role_of_type = politician
+					OR = {
+						has_role = character_role_monarch
+						has_role = character_role_monarch_elective
+						has_role = character_role_viceroy
+					}
+				}
+				remove_character_role = politician
+			}
+			remove_character_role = ruler
+		}
+		
+		remove_variable = breached_separation_of_powers
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					ruler ?= {
+						is_historical = yes
+					}
+				}
+				add = 50
+			}
+		}
+		
+	}
+	
+	option = {
+		name = breached_separation_of_powers_option.3				#Ruler merges both HOG and HOS
+		trigger = {
+			OR = {
+				has_law_or_variant = law_type:law_appointed_legislature
+				has_law_or_variant = law_type:law_executive_supremacy
+				AND = { 
+					has_journal_entry = je_paramilitary_groups
+					any_scope_character = {
+						has_modifier = head_of_paramilitary
+						interest_group = { is_same_interest_group_type = root.ruler.interest_group }
+						character_is_autocratic = yes
+					}
+				}
+			}
+		}
+		
+		#Merge Offices
+		activate_law = law_type:law_HOG_none
+		
+		#Domestic reaction
+		every_scope_character = {
+			limit = {
+				has_role = character_role_ig_leader
+				OR = {
+					has_ideology = ideology:ideology_democratic
+					has_ideology = ideology:ideology_liberal
+					interest_group ?= { is_in_government = no }
+				}
+			}
+			interest_group ?= { save_scope_as = angry_ig_scope }
+			owner ?= {
+				add_radicals = {
+					value = large_radicals
+					interest_group = scope:angry_ig_scope
+				}
+			}
+		}
+		
+		remove_variable = breached_separation_of_powers
+		
+		ai_chance = {
+			base = 10
+			modifier = {
+				trigger = {
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
