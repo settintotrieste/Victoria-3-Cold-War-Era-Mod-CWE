@@ -2915,6 +2915,11 @@ reserve_powers_system.17 = {
 			interest_group ?= { save_scope_as = ceremonial_head_of_state_ig }
 		}
 		
+		set_variable = { 
+			name = ceremonial_head_of_state_replace_timer 
+			months = 2 
+		}
+		
 	}
 	
 	cancellation_trigger = {
@@ -3018,6 +3023,9 @@ reserve_powers_system.17 = {
 			interest_group = scope:ceremonial_head_of_state_ig
 		}
 		
+		#Clear timer
+		remove_variable = ceremonial_head_of_state_replace_timer
+		
 		ai_chance = {
 			base = 50
 			modifier = { 
@@ -3052,6 +3060,9 @@ reserve_powers_system.17 = {
 			value = medium_radicals
 			interest_group = scope:ceremonial_head_of_state_ig
 		}
+		
+		#Clear timer
+		remove_variable = ceremonial_head_of_state_replace_timer
 		
 		ai_chance = {
 			base = 50
@@ -3373,6 +3384,219 @@ reserve_powers_system.19 = {
 		ai_chance = {
 			base = 10
 			modifier = {
+				trigger = {
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
+
+#Head of State's Replacement
+reserve_powers_system.20 = {
+	type = country_event
+
+	title = head_of_state_system_replace.t
+	desc = head_of_state_system_replace.d
+	flavor = head_of_state_system_replace.f
+
+	event_image = {
+		texture = "asia_politician_parliament_motion"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		#Triggered by event
+		
+	}
+
+	immediate = {
+		
+		#Mark
+		random_scope_character = {
+			limit = { 
+				has_role = character_role_head_of_state
+			}
+			save_scope_as = ceremonial_head_of_state
+			interest_group ?= { save_scope_as = ceremonial_head_of_state_ig }
+		}
+		
+		#Timer
+		set_variable = { 
+			name = head_of_state_system_replace_timer 
+			months = 2 
+		}
+		
+	}
+	
+	cancellation_trigger = {
+		NOT = { exists = scope:ceremonial_head_of_state }
+	}
+
+	option = {
+		name = head_of_state_system_replace.option.1 					#Follow Ruler's Ideology
+		default_option = yes
+		
+		#Remove character
+		scope:ceremonial_head_of_state ?= {
+			set_variable = excluded_head_of_state_candidate
+			remove_character_role = character_role_head_of_state
+		}
+		
+		#Appoint new Head of State
+		if = {
+			limit = { 
+				any_scope_character = { 
+					has_role_of_type = politician
+					is_ruler_of_own_country = no
+					is_a_special_agitator = no
+					interest_group = { is_same_interest_group_type = root.ruler.interest_group }
+				}
+			}
+			random_scope_character = { 
+				limit = { 
+					has_role_of_type = politician
+					is_ruler_of_own_country = no
+					is_a_special_agitator = no
+					interest_group = { is_same_interest_group_type = root.ruler.interest_group }
+				}
+				add_character_role = character_role_head_of_state
+			}
+		}
+		else = {
+			save_scope_as = dominant_country
+			ruler ?= {
+				culture = { save_scope_as = reserved_powers_holder_culture_new }
+				religion = { save_scope_as = reserved_powers_holder_religion_new }
+				interest_group ?= { save_scope_as = reserved_powers_holder_IG_new }
+			}
+			if = {
+				limit = { 
+					exists = scope:dominant_country
+					exists = scope:reserved_powers_holder_culture_new
+					exists = scope:reserved_powers_holder_religion_new
+					exists = scope:reserved_powers_holder_IG_new
+				}
+				create_character = {
+					role = character_role_head_of_state
+					interest_group = scope:reserved_powers_holder_IG_new
+					religion = scope:reserved_powers_holder_religion_new
+					culture = scope:reserved_powers_holder_culture_new
+					on_created = { 
+						add_character_role = character_role_politician
+					}
+				}
+				random_scope_character = {
+					limit = {
+						has_role = character_role_head_of_state
+					}
+					set_appropriate_character_ideology_from_scope = yes
+				}
+			}
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			interest_group = scope:ceremonial_head_of_state_ig
+		}
+		
+		#Timer
+		remove_variable = head_of_state_system_replace_timer
+		
+		ai_chance = {
+			base = 50
+			modifier = {
+				trigger = {
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100
+			}
+		}
+		
+	}
+	
+	option = {
+		name = head_of_state_system_replace.option.2 				#Leave it to system
+		
+		#Remove character
+		scope:ceremonial_head_of_state ?= {
+			set_variable = excluded_head_of_state_candidate
+			remove_character_role = character_role_head_of_state
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = medium_radicals
+			interest_group = scope:ceremonial_head_of_state_ig
+		}
+		
+		#Timer
+		remove_variable = head_of_state_system_replace_timer
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = 100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = head_of_state_system_replace.option.3 				#Appoint the Ruler himself
+		
+		#Remove character
+		scope:ceremonial_head_of_state ?= {
+			set_variable = excluded_head_of_state_candidate
+			remove_character_role = character_role_head_of_state
+		}
+		
+		#Ruler becomes head of state
+		ruler ?= {
+			add_character_role = character_role_head_of_state
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = scope:ceremonial_head_of_state_ig
+		}
+		
+		#Timer
+		remove_variable = head_of_state_system_replace_timer
+		
+		ai_chance = {
+			base = 10
+			modifier = { 
 				trigger = {
 					ruler ?= {
 						OR = {
