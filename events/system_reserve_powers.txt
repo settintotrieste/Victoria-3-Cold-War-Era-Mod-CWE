@@ -2932,7 +2932,8 @@ reserve_powers_system.17 = {
 		
 		#Replace
 		scope:ceremonial_head_of_state ?= {
-			retire_character_scripted_effect = yes
+			set_variable = excluded_reserved_powers_holder_candidate
+			remove_character_role = character_role_reserved_powers_holder
 		}
 		ruler ?= {
 			culture = { save_scope_as = reserved_powers_holder_culture_new }
@@ -3047,12 +3048,9 @@ reserve_powers_system.17 = {
 		name = ceremonial_head_of_state.option.2 #Leave it to chance
 		
 		#Remove character
-		random_scope_character = { 
-			limit = {
-				has_role = character_role_reserved_powers_holder
-				is_ruler_of_own_country = no
-			}
-			retire_character_scripted_effect = yes
+		scope:ceremonial_head_of_state ?= {
+			set_variable = excluded_reserved_powers_holder_candidate
+			remove_character_role = character_role_reserved_powers_holder
 		}
 		
 		#Domestic reaction
@@ -3573,6 +3571,20 @@ reserve_powers_system.20 = {
 	
 	option = {
 		name = head_of_state_system_replace.option.3 				#Appoint the Ruler himself
+		trigger = {
+			OR = {
+				has_law_or_variant = law_type:law_appointed_legislature
+				has_law_or_variant = law_type:law_executive_supremacy
+				AND = { 
+					has_journal_entry = je_paramilitary_groups
+					any_scope_character = {
+						has_modifier = head_of_paramilitary
+						interest_group = { is_same_interest_group_type = root.ruler.interest_group }
+						character_is_autocratic = yes
+					}
+				}
+			}
+		}
 		
 		#Remove character
 		scope:ceremonial_head_of_state ?= {
@@ -3593,6 +3605,233 @@ reserve_powers_system.20 = {
 		
 		#Timer
 		remove_variable = head_of_state_system_replace_timer
+		
+		ai_chance = {
+			base = 10
+			modifier = { 
+				trigger = {
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
+
+#Head of Government's Replacement
+reserve_powers_system.21 = {
+	type = country_event
+
+	title = head_of_government_system_replace.t
+	desc = head_of_government_system_replace.d
+	flavor = head_of_government_system_replace.f
+
+	event_image = {
+		texture = "asia_politician_parliament_motion"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		#Triggered by event
+		
+	}
+
+	immediate = {
+		
+		#Mark
+		random_scope_character = {
+			limit = { 
+				has_role = character_role_head_of_government
+			}
+			save_scope_as = ceremonial_head_of_government
+			interest_group ?= { save_scope_as = ceremonial_head_of_government_ig }
+		}
+		
+		#Timer
+		set_variable = { 
+			name = head_of_government_system_replace_timer 
+			months = 2 
+		}
+		
+	}
+	
+	cancellation_trigger = {
+		NOT = { exists = scope:ceremonial_head_of_government }
+	}
+
+	option = {
+		name = head_of_government_system_replace.option.1 					#Follow Ruler's Ideology
+		default_option = yes
+		
+		#Remove character
+		scope:ceremonial_head_of_government ?= {
+			set_variable = excluded_head_of_government_candidate
+			remove_character_role = character_role_head_of_government
+		}
+		
+		#Appoint new Head of Government
+		if = {
+			limit = { 
+				any_scope_character = { 
+					has_role_of_type = politician
+					is_ruler_of_own_country = no
+					is_a_special_agitator = no
+					interest_group = { is_same_interest_group_type = root.ruler.interest_group }
+				}
+			}
+			random_scope_character = { 
+				limit = { 
+					has_role_of_type = politician
+					is_ruler_of_own_country = no
+					is_a_special_agitator = no
+					interest_group = { is_same_interest_group_type = root.ruler.interest_group }
+				}
+				add_character_role = character_role_head_of_government
+			}
+		}
+		else = {
+			save_scope_as = dominant_country
+			ruler ?= {
+				culture = { save_scope_as = reserved_powers_holder_culture_new }
+				religion = { save_scope_as = reserved_powers_holder_religion_new }
+				interest_group ?= { save_scope_as = reserved_powers_holder_IG_new }
+			}
+			if = {
+				limit = { 
+					exists = scope:dominant_country
+					exists = scope:reserved_powers_holder_culture_new
+					exists = scope:reserved_powers_holder_religion_new
+					exists = scope:reserved_powers_holder_IG_new
+				}
+				create_character = {
+					role = character_role_head_of_government
+					interest_group = scope:reserved_powers_holder_IG_new
+					religion = scope:reserved_powers_holder_religion_new
+					culture = scope:reserved_powers_holder_culture_new
+					on_created = { 
+						add_character_role = character_role_politician
+					}
+				}
+				random_scope_character = {
+					limit = {
+						has_role = character_role_head_of_government
+					}
+					set_appropriate_character_ideology_from_scope = yes
+				}
+			}
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			interest_group = scope:ceremonial_head_of_government_ig
+		}
+		
+		#Timer
+		remove_variable = head_of_government_system_replace_timer
+		
+		ai_chance = {
+			base = 50
+			modifier = {
+				trigger = {
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = -100
+			}
+		}
+		
+	}
+	
+	option = {
+		name = head_of_government_system_replace.option.2 				#Leave it to system
+		
+		#Remove character
+		scope:ceremonial_head_of_government ?= {
+			set_variable = excluded_head_of_government_candidate
+			remove_character_role = character_role_head_of_government
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = medium_radicals
+			interest_group = scope:ceremonial_head_of_government_ig
+		}
+		
+		#Timer
+		remove_variable = head_of_government_system_replace_timer
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					ruler ?= {
+						OR = {
+							has_ideology = ideology:ideology_democratic
+							has_ideology = ideology:ideology_liberal
+						}
+					}
+				}
+				add = 100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = head_of_government_system_replace.option.3 				#Appoint the Ruler himself
+		trigger = {
+			OR = {
+				has_law_or_variant = law_type:law_appointed_legislature
+				has_law_or_variant = law_type:law_executive_supremacy
+				AND = { 
+					has_journal_entry = je_paramilitary_groups
+					any_scope_character = {
+						has_modifier = head_of_paramilitary
+						interest_group = { is_same_interest_group_type = root.ruler.interest_group }
+						character_is_autocratic = yes
+					}
+				}
+			}
+		}
+		
+		#Remove character
+		scope:ceremonial_head_of_government ?= {
+			set_variable = excluded_head_of_government_candidate
+			remove_character_role = character_role_head_of_government
+		}
+		
+		#Ruler becomes head of government
+		ruler ?= {
+			add_character_role = character_role_head_of_government
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = scope:ceremonial_head_of_government_ig
+		}
+		
+		#Timer
+		remove_variable = head_of_government_system_replace_timer
 		
 		ai_chance = {
 			base = 10
