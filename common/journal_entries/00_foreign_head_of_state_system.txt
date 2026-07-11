@@ -1,0 +1,124 @@
+je_foreign_head_of_state_system = {
+	icon = "gfx/interface/icons/law_icons/racial_segregation.dds"
+
+	group = je_group_political_organs
+
+	is_shown_when_inactive = {
+		
+	}
+	
+	possible = {
+		
+		#THIS has an executive PM and Ceremonial President
+		OR = { 
+			has_law_or_variant = law_type:law_HOS_president
+			has_law_or_variant = law_type:law_HOS_nationalist_leader
+			has_law_or_variant = law_type:law_HOS_communist_leader
+			has_law_or_variant = law_type:law_HOS_religious_leader
+		}
+		has_law_or_variant = law_type:law_HOG_prime_minister
+		
+		#No foreign HOS
+		shares_same_monarch = yes
+		
+	}
+
+	immediate = {
+		
+		#Find Foreign HOS
+		if = {
+			limit = {
+				exists = overlord
+			}
+			overlord ?= {
+				if = {
+					limit = { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+					ruler ?= {
+						save_scope_as = head_of_state_pm_scope
+					}
+				}
+				else_if = {
+					limit = { has_law_or_variant = law_type:law_HOG_prime_minister }
+					random_scope_character = {
+						limit = { has_role = character_role_head_of_state }
+						save_scope_as = head_of_state_pm_scope
+					}
+				}
+			}
+		}
+		
+	}
+	
+	invalid = {
+		
+		OR = {
+		
+			#Inappropriate laws
+			NAND = {
+				OR = { 
+					has_law_or_variant = law_type:law_HOS_president
+					has_law_or_variant = law_type:law_HOS_nationalist_leader
+					has_law_or_variant = law_type:law_HOS_communist_leader
+					has_law_or_variant = law_type:law_HOS_religious_leader
+				}
+				has_law_or_variant = law_type:law_HOG_prime_minister
+			}
+			
+			#Not a foreign HOS, if applicable
+			shares_same_monarch = no
+			
+			#HOS does not exist
+			NOT = { exists = scope:head_of_state_pm_scope }
+			
+			#HOS is no longer a ruler
+			scope:head_of_state_pm_scope ?= {
+				OR = {
+					AND = {
+						owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+						is_ruler_of_own_country = no
+					}
+					AND = {
+						owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+						NOT = { has_role = character_role_head_of_state }
+					}
+				}
+			}
+		
+		}
+		
+	}
+	
+	on_invalid = {
+		
+	}
+	
+	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
+	modifiers_while_active = {
+		
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = HOS_foreign_ig
+				trigger = {
+					exists = scope:head_of_state_pm_scope
+				}
+			}
+			triggered_desc = {
+				desc = HOS_vacant
+				trigger = {
+					
+				}
+			}
+		}
+	}
+
+	weight = 200
+
+	should_be_pinned_by_default_uninvolved_or_context = no
+
+	transferable = no
+
+	progressbar = no
+}
