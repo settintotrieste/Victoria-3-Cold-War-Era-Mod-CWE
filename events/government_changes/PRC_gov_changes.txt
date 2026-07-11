@@ -1,7 +1,123 @@
 namespace = PRC_gov_changes
 
-# The Cultural Revolution
+# The 1954 Constitution
 PRC_gov_changes.1 = {
+    type = country_event
+
+    title = PRC_1954_revolution.t 								# Title of the event; ADD LOCALISATION
+    desc = PRC_1954_revolution.d 								# Description of the event; ADD LOCALISATION
+    #flavor = PRC_1954_revolution.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_politicians_arguing" }
+
+    icon = "gfx/interface/icons/event_icons/event_protest.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		OR = { c:PRC ?= this c:CHI ?= this }
+		game_date >= 1954.9.20									# START DATE: Date colony became self governing ****
+		game_date < 1964.9.20									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Not already enacted
+		NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+		
+		# Event has not been fired before
+		NOT = { has_variable = PRC_1954_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = PRC_1954_hgc								# Change variable ****
+		
+	}
+    
+	
+	option = {
+        name = historical_gov_changes.option.1					# Accept
+		highlighted_option = yes
+		
+		#Enact new regime
+		activate_law = law_type:law_HOG_prime_minister
+		activate_law = law_type:law_hybrid_chamber
+		
+		#New Office Holders
+		random_scope_character = {
+			limit = {
+				has_variable = liu_shaoqi
+			}
+			if = {
+				limit = { NOT = { has_role = character_role_head_of_state } }
+				add_character_role = character_role_head_of_state
+			}
+			if = {
+				limit = { has_role = character_role_reserved_powers_holder }
+				remove_character_role = character_role_reserved_powers_holder
+			}
+			if = {
+				limit = { has_role = character_role_head_of_government }
+				remove_character_role = character_role_head_of_government
+			}
+		}
+		random_scope_character = {
+			limit = {
+				has_variable = zhou_enlai
+			}
+			if = {
+				limit = { NOT = { has_role = character_role_reserved_powers_holder } }
+				add_character_role = character_role_reserved_powers_holder
+			}
+			if = {
+				limit = { has_role = character_role_head_of_government }
+				remove_character_role = character_role_head_of_government
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+    option = {
+        name = historical_gov_changes.option.2					# Reject
+        default_option = yes
+		
+		#Major discontent
+		add_loyalists = {
+			value = large_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		add_modifier = { 
+			name = stirrings_of_revolution
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+
+# The Cultural Revolution
+PRC_gov_changes.2 = {
     type = country_event
 
     title = PRC_1966_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -81,7 +197,29 @@ PRC_gov_changes.1 = {
 			interest_group = ig:ig_petty_bourgeoisie
 		}
 		
-		ai_chance = { 
+		#Sack Liu Shaoqi
+		random_scope_character = {
+			limit = {
+				has_variable = liu_shaoqi
+			}
+			if = {
+				limit = { has_role = character_role_head_of_state }
+				remove_character_role = character_role_head_of_state
+			}
+			if = {
+				limit = { has_role = character_role_reserved_powers_holder }
+				remove_character_role = character_role_reserved_powers_holder
+			}
+			if = {
+				limit = { has_role = character_role_head_of_government }
+				remove_character_role = character_role_head_of_government
+			}
+		}
+		
+		#Enact new regime
+		activate_law = law_type:law_HOG_president_prime_minister
+		
+		ai_chance = {
 			base = 90 
 		}
 		
@@ -118,7 +256,7 @@ PRC_gov_changes.1 = {
 }
 
 # Mao's Successor
-PRC_gov_changes.2 = {
+PRC_gov_changes.3 = {
     type = country_event
 
     title = PRC_mao_succession.t 						# Title of the event; ADD LOCALISATION
@@ -337,7 +475,7 @@ PRC_gov_changes.2 = {
 }
 
 # June Fourth Incident of 1989
-PRC_gov_changes.3 = {
+PRC_gov_changes.4 = {
     type = country_event
 
     title = PRC_1989_1_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -460,7 +598,7 @@ PRC_gov_changes.3 = {
 }
 
 # Jiang Zemin
-PRC_gov_changes.4 = {
+PRC_gov_changes.5 = {
     type = country_event
 
     title = PRC_1989_2_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -564,7 +702,7 @@ PRC_gov_changes.4 = {
 }
 
 # Hu Jintao
-PRC_gov_changes.5 = {
+PRC_gov_changes.6 = {
     type = country_event
 
     title = PRC_2002_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -653,7 +791,7 @@ PRC_gov_changes.5 = {
 }
 
 # Xi Jinping
-PRC_gov_changes.6 = {
+PRC_gov_changes.7 = {
     type = country_event
 
     title = PRC_2012_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -700,7 +838,7 @@ PRC_gov_changes.6 = {
 			last_name = "Xi_Jinping_last_name"
 			ruler = yes ig_leader = yes historical = yes
 			birth_date = 1953.6.15
-			interest_group = ig_rural_folk
+			interest_group = ig_petty_bourgeoisie
 			ideology = ideology_autocratic
 			culture = cu:han
 			religion = rel:atheist
