@@ -1,0 +1,581 @@
+namespace = territory_leased_system
+
+# Lease of Territory Terminated
+territory_leased_system.1 = {
+    type = country_event
+	placement = scope:territory_lease_state
+
+    title = territory_lease_terminated.t 							# Title of the event; ADD LOCALISATION
+    desc = territory_lease_terminated.d 							# Description of the event; ADD LOCALISATION
+    flavor = territory_lease_terminated.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by event
+		
+    }
+	
+	immediate = {
+	
+		# Markers
+		random_country = {
+			limit = { has_variable = territory_lease_landlord }
+			save_scope_as = territory_lease_landlord
+			remove_variable = territory_lease_landlord
+		}
+		if = {
+			limit = { any_scope_state = { has_variable = territory_lease_state } }
+			random_scope_state = {
+				limit = { has_variable = territory_lease_state }
+				save_scope_as = territory_lease_state
+				remove_variable = territory_lease_state
+			}
+		}
+		else = {
+			random_country = {
+				limit = {
+					is_subject_of = ROOT
+					is_sufficiently_independent = no
+					any_scope_state = { has_variable = territory_lease_state }
+				}
+				save_scope_as = territory_lease_state_subject
+				random_scope_state = {
+					limit = { has_variable = territory_lease_state }
+					save_scope_as = territory_lease_state
+					remove_variable = territory_lease_state
+				}
+			}
+		}
+		random_country = {
+			limit = { has_variable = territory_lease_tenant }
+			save_scope_as = territory_lease_tenant
+			remove_variable = territory_lease_tenant
+		}
+		
+	}
+    
+	cancellation_trigger = {
+		NOR = {
+			exists = scope:territory_lease_landlord
+			exists = scope:territory_lease_state
+		}
+	}
+	
+	option = {
+        name = territory_lease_terminated.1						# Return state
+		highlighted_option = yes
+		
+		#Return state unconditionally
+		if = {
+			limit = { 
+				exists = scope:territory_lease_state_subject
+				scope:territory_lease_state ?= { owner = scope:territory_lease_state_subject } 
+			}
+			scope:territory_lease_landlord ?= {
+				annex_with_incorporation = scope:territory_lease_state_subject
+			}
+		}
+		else = {
+			scope:territory_lease_state ?= {
+				set_state_owner = scope:territory_lease_landlord
+			}
+		}
+		
+		#Gain relations
+		change_relations = { 
+			country = scope:territory_lease_landlord 
+			value = 50 
+		}
+		
+		ai_chance = { 
+			base = 80
+		}
+    }
+	
+	option = {
+        name = territory_lease_terminated.2						# SAR
+		trigger = {
+			scope:territory_lease_landlord ?= {
+				is_sufficiently_independent = yes
+				NOT = { is_subject_of = ROOT }
+			}
+			is_sufficiently_independent = yes
+			NOT = { is_subject_of = scope:territory_lease_landlord }
+			AND = { is_a_democracy = yes scope:territory_lease_landlord ?= { is_a_democracy = no } }
+		}
+		
+		#Mark again
+		scope:territory_lease_state = {
+			set_variable = { name = territory_lease_state days = 1 }
+		}
+		scope:territory_lease_landlord = {
+			set_variable = { name = territory_lease_landlord days = 1 }
+		}
+		ROOT = {
+			set_variable = { name = territory_lease_tenant days = 1 }
+		}
+		
+		#Response
+		custom_tooltip = {
+			text = territory_propose_SAR.tt
+			scope:territory_lease_landlord ?= {
+				trigger_event = { id = territory_leased_system.3 }
+			}
+		}
+		
+		ai_chance = {
+			base = 15
+			modifier = { trigger = { has_dictatorial_ruler = yes } add = -100 }
+		}
+    }
+	
+    option = {
+        name = territory_lease_terminated.3						# Refuse
+		default_option = yes
+		trigger = {
+			scope:territory_lease_landlord ?= {
+				is_sufficiently_independent = yes
+				NOT = { is_subject_of = ROOT }
+			}
+			is_sufficiently_independent = yes
+			NOT = { is_subject_of = scope:territory_lease_landlord }
+		}
+		
+		# Add Infamy because doing this is against international law
+		create_incident = {
+			value = 10
+			country = scope:territory_lease_landlord
+		}
+		
+		#Mark again
+		scope:territory_lease_state = {
+			set_variable = { name = territory_lease_state days = 1 }
+		}
+		scope:territory_lease_landlord = {
+			set_variable = { name = territory_lease_landlord days = 1 }
+		}
+		ROOT = {
+			set_variable = { name = territory_lease_tenant days = 1 }
+		}
+		
+		#Response
+		scope:territory_lease_landlord ?= {
+			trigger_event = { id = territory_leased_system.2 }
+		}
+		
+		ai_chance = {
+			base = 5
+			modifier = { trigger = { has_jingoistic_ruler = no } add = -100 }
+		}
+    }
+
+}
+
+# Lease of Territory Terminated - War
+territory_leased_system.2 = {
+    type = country_event
+	placement = scope:territory_lease_state
+
+    title = territory_lease_terminated_war.t 							# Title of the event; ADD LOCALISATION
+    desc = territory_lease_terminated_war.d 							# Description of the event; ADD LOCALISATION
+    flavor = territory_lease_terminated_war.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by event
+		
+    }
+	
+	immediate = {
+	
+		# Mark
+		random_country = {
+			limit = { has_variable = territory_lease_tenant }
+			save_scope_as = territory_lease_tenant
+			remove_variable = territory_lease_tenant
+			if = {
+				limit = { any_scope_state = { has_variable = territory_lease_state } }
+				random_scope_state = {
+					limit = { has_variable = territory_lease_state }
+					save_scope_as = territory_lease_state
+					remove_variable = territory_lease_state
+				}
+			}
+			else = {
+				random_country = {
+					limit = {
+						is_subject_of = scope:territory_lease_tenant
+						is_sufficiently_independent = no
+						any_scope_state = { has_variable = territory_lease_state }
+					}
+					save_scope_as = territory_lease_state_subject
+					random_scope_state = {
+						limit = { has_variable = territory_lease_state }
+						save_scope_as = territory_lease_state
+						remove_variable = territory_lease_state
+					}
+				}
+			}
+		}
+		random_country = {
+			limit = { has_variable = territory_lease_landlord }
+			save_scope_as = territory_lease_landlord
+			remove_variable = territory_lease_landlord
+		}
+		
+	}
+    
+	cancellation_trigger = {
+		NOR = {
+			exists = scope:territory_lease_tenant
+			exists = scope:territory_lease_state
+		}
+	}
+	
+	option = {
+        name = territory_lease_war.1								# War
+		highlighted_option = yes
+		
+		#War to reclaim state
+		if = {
+			limit = { scope:territory_lease_state = { owner = { is_subject_of = scope:territory_lease_tenant } } }
+			create_diplomatic_play = {
+				name = second_indo_pakistan_war
+				type = dp_annex_war
+				target_country = scope:territory_lease_state.owner
+				
+				war = no
+			}
+		}
+		else = {
+			create_diplomatic_play = {
+				name = second_indo_pakistan_war
+				type = dp_return_state
+				target_state = scope:territory_lease_state
+				
+				war = no
+			}
+		}
+		
+		ai_chance = { 
+			base = 90
+			modifier = { trigger = { has_jingoistic_ruler = no } add = -100 }
+		}
+    }
+	
+    option = {
+        name = territory_lease_war.2								# Leave it be
+		default_option = yes
+		
+		#Give up claim
+		scope:territory_lease_state ?= {
+			state_region = {
+				remove_claim = ROOT
+			}
+		}
+		
+		#Domestic effects
+		add_modifier = { 
+			name = domestic_unrest
+			years = 5
+			is_decaying = yes 
+		}
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
+		}
+		
+		ai_chance = {
+			base = 10
+		}
+    }
+
+}
+
+# Lease of Territory Terminated - SAR
+territory_leased_system.3 = {
+    type = country_event
+	placement = scope:territory_lease_state
+	
+	title = {
+		first_valid = {
+			triggered_desc = {
+				desc = territory_terminated_SAR.t
+				trigger = {
+					scope:territory_lease_state ?= {
+						has_variable = territory_non_lease
+					}
+				}
+			}
+			triggered_desc = {
+				desc = territory_lease_terminated_SAR.t
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = territory_terminated_SAR.d
+				trigger = {
+					scope:territory_lease_state ?= {
+						has_variable = territory_non_lease
+					}
+				}
+			}
+			triggered_desc = {
+				desc = territory_lease_terminated_SAR.d
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+	flavor = {
+		first_valid = {
+			triggered_desc = {
+				desc = territory_terminated_SAR.f
+				trigger = {
+					scope:territory_lease_state ?= {
+						has_variable = territory_non_lease
+					}
+				}
+			}
+			triggered_desc = {
+				desc = territory_lease_terminated_SAR.f
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Is triggered by event
+		
+    }
+	
+	immediate = {
+	
+		# Mark
+		random_country = {
+			limit = { has_variable = territory_lease_tenant }
+			save_scope_as = territory_lease_tenant
+			remove_variable = territory_lease_tenant
+			if = {
+				limit = { any_scope_state = { has_variable = territory_lease_state } }
+				random_scope_state = {
+					limit = { has_variable = territory_lease_state }
+					save_scope_as = territory_lease_state
+					remove_variable = territory_lease_state
+					state_region = { save_scope_as = state_to_release }
+				}
+			}
+			else = {
+				random_country = {
+					limit = {
+						is_subject_of = scope:territory_lease_tenant
+						is_sufficiently_independent = no
+						any_scope_state = { has_variable = territory_lease_state }
+					}
+					save_scope_as = territory_lease_state_subject
+					random_scope_state = {
+						limit = { has_variable = territory_lease_state }
+						save_scope_as = territory_lease_state
+						remove_variable = territory_lease_state
+					}
+				}
+			}
+		}
+		random_country = {
+			limit = { has_variable = territory_lease_landlord }
+			save_scope_as = territory_lease_landlord
+			remove_variable = territory_lease_landlord
+		}
+		
+	}
+    
+	cancellation_trigger = {
+		NOR = {
+			exists = scope:territory_lease_tenant
+			exists = scope:territory_lease_state
+		}
+	}
+	
+	option = {
+        name = territory_lease_SAR.1								# SAR
+		highlighted_option = yes
+		
+		#Release 1 SAR
+		if = {
+			limit = { scope:territory_lease_state ?= { owner = scope:territory_lease_tenant } }
+			save_scope_as = territory_lease_landlord
+			scope:territory_lease_state ?= {
+				state_region = { save_scope_as = state_to_release }
+			}
+			scope:territory_lease_landlord ?= {
+				random_primary_culture = {
+					save_scope_as = scope:culture_to_release
+				}
+			}
+			custom_tooltip = {
+				text = territory_lease_special_administrative_region_2.tt
+				scope:territory_lease_tenant ?= {
+					random_scope_state = {
+						limit = { state_region = scope:state_to_release }
+						set_variable = { name = state_to_cede months = 3 }
+					}
+					create_dynamic_country = {
+						origin = ROOT
+						country_type = unrecognized
+						tier = city_state
+						state = scope:state_to_release
+						cede_state_trigger = {
+							has_variable = state_to_cede
+						}
+						on_created = {
+						
+							every_scope_state = {
+								remove_variable = state_to_cede
+							}
+						
+							set_release_vassal_effects = yes
+							
+							copy_laws = scope:territory_lease_tenant
+							
+							set_variable = territory_lease_SAR
+							
+						}
+					}
+				}
+				
+				#SAR diplomatic pacts
+				scope:territory_lease_landlord ?= {
+					create_diplomatic_pact = {
+						country = scope:territory_lease_state.owner
+						type = special_administrative_region
+					}
+					create_diplomatic_pact = {
+						country = scope:territory_lease_state.owner
+						type = currency_union
+					}
+					create_diplomatic_pact = {
+						country = scope:territory_lease_state.owner
+						type = legal_union
+					}
+				}
+				
+				#Configure SAR
+				scope:territory_lease_state.owner ?= {
+					if = {
+						limit = { has_variable = territory_lease_SAR }
+					
+						remove_variable = territory_lease_SAR
+					
+						#Blank all primary cultures
+						clear_all_primary_cultures = yes
+					
+						#Set primary culture of colony
+						set_primary_culture_generic = yes
+						
+						#Set state religion of colony
+						set_state_religion_generic = yes
+						
+						#Generate Ruler
+						every_scope_character = { kill_character = yes }
+						
+						#Set government type
+						effect_starting_politics_presidential_republic = yes
+						effect_starting_politics_democratic = yes
+						effect_starting_politics_economic_policy_laissez_faire = yes
+						
+					}
+				}
+			}
+		}
+		if = {
+			limit = { exists = scope:territory_lease_state_subject }
+			hidden_effect = {
+				scope:territory_lease_state_subject ?= { make_independent = yes }
+			}
+			custom_tooltip = {
+				text = terminate_territory_lease_transfer_subject.tt
+				scope:territory_lease_landlord ?= {
+					create_diplomatic_pact = {
+						country = scope:territory_lease_state_subject
+						type = special_administrative_region
+					}
+					create_diplomatic_pact = {
+						country = scope:territory_lease_state_subject
+						type = currency_union
+					}
+					create_diplomatic_pact = {
+						country = scope:territory_lease_state_subject
+						type = legal_union
+					}
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+    }
+	
+    option = {
+        name = territory_lease_SAR.2								# War
+		default_option = yes
+		
+		#War to reclaim state
+		if = {
+			limit = { scope:territory_lease_state = { owner = { is_subject_of = scope:territory_lease_tenant } } }
+			create_diplomatic_play = {
+				name = second_indo_pakistan_war
+				type = dp_annex_war
+				target_country = scope:territory_lease_state.owner
+				
+				war = no
+			}
+		}
+		else = {
+			create_diplomatic_play = {
+				name = second_indo_pakistan_war
+				type = dp_return_state
+				target_state = scope:territory_lease_state
+				
+				war = no
+			}
+		}
+		
+		ai_chance = {
+			base = 10
+			modifier = { trigger = { has_jingoistic_ruler = no } add = -100 }
+		}
+    }
+
+}

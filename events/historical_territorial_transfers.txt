@@ -6134,3 +6134,190 @@ historical_territorial_transfers.55 = {
     }
 
 }
+
+#US-UK Base in Chagos Island
+historical_territorial_transfers.56 = {
+    type = country_event
+	placement = scope:chagos_island
+
+    title = transfer_territory_british_chagos_islands.t 		# Title of the event; ADD LOCALISATION
+    desc = transfer_territory_british_chagos_islands.d 			# Description of the event; ADD LOCALISATION
+    #flavor = transfer_territory_british_chagos_islands.f 		# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/event_map.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:GBR ?= this
+		game_date >= 1977.10.1									# START DATE: Date colony became self governing ****
+		game_date < 1987.10.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no
+		is_at_war = no
+		
+		#Recipent conditions
+		exists = c:USA
+		c:USA ?= { 												# Change TAG of the transferee ****
+			is_a_democracy = yes
+			is_sufficiently_independent = yes
+			is_at_war = no
+			country_rank >= rank_value:great_power
+		}
+		OR = {
+			any_scope_treaty = { binds = c:USA any_scope_article = { OR = { has_type = alliance has_type = defensive_pact } } }
+			is_subject_of = c:USA
+		}
+		has_variable = expelled_chagos_islanders
+		
+		#Owns relevant province
+		p:x5B5C22.state.owner ?= {
+			THIS = ROOT
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = british_chagos_islands_htt }		# CHANGE ****
+		
+    }
+    
+	immediate = {
+		
+		p:x5B5C22.state ?= {
+			save_scope_as = chagos_island
+		}
+		
+		# Fire only once
+		set_variable = british_chagos_islands_htt				# Change variable ****
+	
+	}
+	
+    option = {
+        name = historical_yes_no.option.1						# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Return Manchuria
+		random_country = {
+			limit = {
+				c:USA ?= this
+				is_a_democracy = yes
+				is_sufficiently_independent = yes
+				is_at_war = no
+				country_rank >= rank_value:great_power
+			}
+			trigger_event = { id = historical_territorial_transfers.57 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_yes_no.option.2						# Refuse land transfer request by FROM
+		default_option = yes
+		
+		ai_chance = {
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+#US-UK Base in Chagos Island
+historical_territorial_transfers.57 = {
+    type = country_event
+	placement = scope:chagos_island
+
+    title = transfer_territory_british_chagos_islands.t 		# Title of the event; ADD LOCALISATION
+    desc = transfer_territory_british_chagos_islands.d 			# Description of the event; ADD LOCALISATION
+    #flavor = transfer_territory_british_chagos_islands.f 		# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/event_map.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+    
+	immediate = {
+		
+		c:GBR ?= {
+			p:x5B5C22.state ?= {
+				save_scope_as = chagos_island
+			}
+		}
+	
+	}
+	
+    option = {
+        name = historical_yes_no.option.1						# Accept land transfer request by FROM
+        highlighted_option = yes
+		
+		#Lease Chagos Island
+		c:GBR ?= {
+			scope:chagos_island ?= {
+				set_owner_of_provinces = {
+					country = ROOT
+					provinces = { x5B5C22 }
+				}
+			}
+		}
+		create_treaty = {
+			name = treaty_name_US_UK_chagos_island
+			first_country = c:GBR
+			second_country = ROOT
+
+			is_draft = no
+			binding_period = { years = 50 }
+
+			articles_to_create = {
+				{
+					article = territory_leased
+					source_country = c:GBR
+					target_country = ROOT
+					inputs = {
+						{ state = scope:chagos_island }
+					}
+				}
+				{
+					article = guarantee_independence
+					source_country = ROOT
+					target_country = c:GBR
+				}
+			}
+		}
+		
+		#Gain relations
+		change_relations = { country = c:GBR value = 50 }
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_yes_no.option.2						# Refuse land transfer request by FROM
+		default_option = yes
+		
+		ai_chance = {
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}

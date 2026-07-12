@@ -1,0 +1,496 @@
+﻿territory_leased = {
+    kind = directed
+    cost = 0
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/transfer_state.dds"
+
+	flags = {
+		causes_state_transfer
+		giftable
+		exclude_from_make_this_work
+		ai_consider_threaten_naval_hostilities
+	}
+
+    required_inputs = {
+        state
+    }
+
+	visible = {
+		is_not_revolutionary_or_decentralised = yes
+	}
+
+	possible = {
+	
+		#AI does not use this on its own
+		trigger_if = {
+			limit = { 
+				is_player = no
+				scope:other_country = { is_player = no }
+			}
+			is_player = yes
+		}
+	
+		#Both parties are sufficiently independent
+		OR = { 
+			is_sufficiently_independent = yes
+			is_subject_of = scope:other_country
+		}
+		scope:other_country = { 
+			OR = { 
+				is_sufficiently_independent = yes 
+				is_subject_of = ROOT
+			}
+		}
+		
+		#Political conditions
+		relinquishing_of_territory_permitted = yes
+		
+		#Not in a diplo play
+		is_diplomatic_play_committed_participant = no
+		scope:other_country = { is_diplomatic_play_committed_participant = no }
+		
+	}
+	
+	requirement_to_maintain = {
+		trigger = {
+			exists = scope:article.input_state
+		}
+	}
+
+	requirement_to_maintain = {
+		trigger = {
+			trigger_if = {
+				limit = {
+					exists = scope:is_treaty_active
+				}
+				scope:article.input_state ?= {
+					state_region = {
+						any_scope_state = {
+							OR = {
+								owner = scope:article.target_country
+								owner = {
+									OR = {
+										is_secessionist = yes
+										is_revolutionary = yes
+									}
+									is_diplomatic_play_enemy_of = scope:article.target_country
+								}
+								owner = {
+									is_subject_of = scope:article.target_country
+									is_sufficiently_independent = no
+								}
+							}
+						}
+					}
+				}
+			}
+			trigger_else = {
+				always = yes
+			}
+		}
+	}
+
+    can_ratify = {
+        scope:source_country = {
+			country_rank <= scope:target_country.country_rank
+        }
+		scope:source_country = {
+			num_states >= 2
+		}
+		custom_tooltip = {
+            text = DUPLICATE_ARTICLE_SAME_INPUTS
+            scope:treaty ?= {
+                NOT = {
+                    any_scope_article_option = {
+                        count > 1
+                        has_type = state_transfer
+                        source_country = scope:source_country
+                        input_state = root.input_state
+                    }
+                }
+            }
+        }
+		custom_tooltip = {
+            text = STATE_TRANSFER_NOT_OWNER
+            scope:article ?= {
+                input_state = {
+                    owner = scope:source_country
+                }
+            }
+        }
+    }
+	
+	state_valid_trigger = {
+		scope:input = {
+			owner = root
+			is_capital = no
+			is_under_colonization = no
+			OR = {
+				scope:other_country = { is_adjacent_to_state = prev }
+				AND = {
+					is_coastal = yes
+					scope:other_country = { has_port_country = yes }
+				}
+			}
+		}
+		NOT = {
+			any_treaty = {
+				any_scope_article = {
+					has_type = treaty_port
+					input_state = scope:input
+				}
+			}
+		}
+	}
+	
+	on_entry_into_force = {
+		scope:article_options = {
+			target_country = {
+				save_scope_as = state_taker
+			}
+			source_country = {
+				save_scope_as = state_giver
+			}
+
+			if = {
+				limit = { exists = input_state }
+				input_state = { set_state_owner = scope:state_taker }
+			}
+
+			scope:state_taker ?= {
+				if = {
+					limit = {
+						has_variable = recently_traded_states_counter
+					}
+					change_variable = {
+						name = recently_traded_states_counter
+						add = 1
+					}
+				}
+				else_if = {
+					limit = {
+						NOT = { has_variable = recently_traded_states_counter }
+					}
+					set_variable = {
+						name = recently_traded_states_counter
+						value = 1
+					}
+				}
+			}
+
+
+			scope:state_giver ?= {
+				if = {
+					limit = {
+						has_variable = recently_traded_states_counter
+					}
+					if = {
+						limit = {
+							var:recently_traded_states_counter > 1
+						}
+						change_variable = {
+							name = recently_traded_states_counter
+							subtract = 1
+						}
+					}
+					else = {
+						remove_variable = recently_traded_states_counter
+					}
+				}
+			}
+		}
+	}
+
+	can_withdraw = {
+		trigger_if = {
+			limit = {
+				scope:withdrawing_country = scope:source_country
+			}
+			scope:withdrawing_country = {
+				is_sufficiently_independent = yes
+				custom_tooltip = {
+					text = territory_lease_expired.tt
+					exists = scope:treaty_options.remaining_binding_period
+					scope:treaty_options.remaining_binding_period = 0
+				}
+			}
+		}
+		trigger_if = {
+			limit = {
+				scope:withdrawing_country = scope:target_country
+			}
+			scope:withdrawing_country = {
+				is_sufficiently_independent = yes
+			}
+		}
+		scope:withdrawing_country = {
+			NOT = { is_subject_of = scope:non_withdrawing_country }
+		}
+	}
+
+	on_withdrawal = {
+		scope:article_options.input_state = {
+			state_region = {
+				add_claim = scope:article_options.source_country
+			}
+		}
+		
+		#Return state
+		scope:article_options.input_state = {
+			#set_variable = { name = territory_lease_state days = 1 }
+			state_region = { save_scope_as = territory_lease_state }
+		}
+		scope:article_options.source_country = {
+			set_variable = { name = territory_lease_landlord days = 1 }
+			save_scope_as = territory_lease_landlord
+		}
+		scope:article_options.target_country = {
+			set_variable = { name = territory_lease_tenant days = 1 }
+			save_scope_as = territory_lease_tenant
+			if = {
+				limit = {
+					scope:article_options.input_state ?= {
+						state_region = {
+							any_scope_state = {
+								owner = {
+									is_subject_of = scope:article_options.target_country
+									is_sufficiently_independent = no
+								}
+							}
+						}
+					}
+				}
+				scope:article_options.input_state ?= {
+					state_region = {
+						every_scope_state = {
+							limit = { 
+								owner = {
+									is_subject_of = scope:article_options.target_country
+									is_sufficiently_independent = no
+								}
+							}
+							set_variable = { name = territory_lease_state days = 1 }
+							save_scope_as = territory_lease_state_3
+							owner = { 
+								save_scope_as = territory_lease_state_subject 
+								top_overlord ?= { save_scope_as = territory_lease_tenant }
+							}
+						}
+					}
+				}
+				custom_tooltip = {
+					text = terminate_territory_lease_2.tt
+					scope:territory_lease_tenant ?= { trigger_event = { id = territory_leased_system.1 } }
+				}
+			}
+			if = {
+				limit = {
+					scope:article_options.input_state ?= {
+						state_region = {
+							any_scope_state = {
+								owner = scope:article_options.target_country
+							}
+						}
+					}
+				}
+				random_scope_state = {
+					limit = { state_region = scope:territory_lease_state }
+					set_variable = { name = territory_lease_state days = 1 }
+					save_scope_as = territory_lease_state_2
+				}
+				custom_tooltip = {
+					text = terminate_territory_lease.tt
+					scope:territory_lease_tenant ?= { trigger_event = { id = territory_leased_system.1 } }
+				}
+			}
+		}
+		
+	}
+	on_break = {
+		scope:withdrawing_country = {
+			change_relations = {
+				country = scope:non_withdrawing_country
+				value = {
+					add = -10
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = -10
+					min = -50
+				}
+			}
+			change_infamy = {
+				value = {
+					add = 3
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = 20
+					min = 2
+				}
+			}
+		}
+	}
+
+	ai = {
+		treaty_categories = {
+			expansion
+		}
+
+		evaluation_chance = {
+			value = 0.1
+		}
+
+		article_ai_usage = {
+            request
+        }
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					exists = scope:is_renegotiation
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ALREADY_TRADED_STATE"
+					value = -1000
+				}
+			}
+			else_if = {
+				limit = {
+					exists = scope:article.input_state
+				}
+				if = {
+					limit = {
+						scope:source_country ?= this
+					}
+					if = {
+						limit = {
+							country_rank < rank_value:great_power
+						}
+						subtract = {
+							value = scope:article.input_state.ai_state_value:root
+							multiply = 0.5
+							desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_SOURCE"
+						}
+
+						if = {
+							limit = {
+								is_country_type = recognized
+							}
+							subtract = {
+								value = 50
+							}
+						}
+					}
+					else = {
+						subtract = {
+							value = 150
+							desc = "great_power"
+						}
+					}
+					
+					if = {
+						limit = {
+							scope:article.input_state = {
+								any_scope_strait = {
+									exists = this
+								}
+							}
+						}
+						subtract = {
+							value = 500
+							desc = "concept_strait_controller"
+						}
+					}
+
+					if = {
+						limit = {
+							has_law_or_variant = law_type:law_isolationism
+						}
+						add = {
+							desc = "law_isolationism"
+							add = -1000
+						}
+					}
+				}
+				else = {
+					if = {
+						limit = { "scope:article.input_state.ai_treaty_port_value(root)" > 0 }
+						add = {
+							value = "scope:article.input_state.ai_treaty_port_value(root)"
+							desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_TARGET"
+						}
+					}
+					else = {
+						add = {
+							value = -300
+							desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_REJECT"
+						}
+					}
+				}
+			}
+		}
+
+		wargoal_score_multiplier = {
+			value = 1
+		}
+	}
+
+	wargoal = {
+		execution_priority = 70
+		contestion_type = control_target_state
+
+		maneuvers = {
+			value = 0
+
+			add = {
+				desc = "MANEUVERS_BASE_VALUE"
+				value = 5
+			}
+
+			scope:target_country = {
+				multiply = {
+					desc = "MANEUVERS_TARGET_COUNTRY_POPULATION_FACTOR"
+					value = total_population
+					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
+					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
+                    max = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER_MAX_PER_STATE
+				}
+			}
+		}
+
+		infamy = {
+			value = 0
+
+			if = {
+				limit = {
+					exists = scope:state
+				}
+				scope:state = {
+					save_temporary_scope_as = target_state
+				}
+				add = {
+					desc = "INFAMY_STATE_POPULATION_FACTOR"
+					value = scope:state.state_population
+					divide = 10000
+					max = 2.5
+				}
+				add = {
+					desc = "INFAMY_STATE_GDP_FACTOR"
+					value = scope:state.gdp
+					divide = 50000
+					max = 2.5
+				}
+			}
+			min = 2.5
+		}
+	}
+	
+}
