@@ -8,25 +8,18 @@ je_political_trials_system = {
 
 	possible = {
 		
-		#There is a character to be tried and convicted
-		any_scope_character = {
-			has_modifier = indicted_character
-			NOR = { 
-				has_modifier = convicted_character 
-				has_modifier = unjustly_convicted_character
-			}
-		}
-		
 	}
 
 	immediate = {
 		
 		#Mark character to be tried
 		random_scope_character = {
-			limit = { has_modifier = indicted_character }
-			set_variable = indicted_character_je
+			limit = {
+				has_modifier = indicted_character
+				NOT = { has_role = character_role_prisoner }
+			}
 			save_scope_as = indicted_character_scope
-			interest_group = {
+			interest_group ?= {
 				save_scope_as = indicted_character_ig_scope
 			}
 		}
@@ -51,45 +44,89 @@ je_political_trials_system = {
 		scope:journal_entry = {
 			is_goal_complete = yes
 		}
+		scope:indicted_character_scope ?= {
+			has_modifier = indicted_character
+			NOT = { has_role = character_role_prisoner }
+			is_busy = no
+			is_in_battle = no
+		}
 	}
 	
 	on_complete = {
-	
-		#Clear variable
-		scope:indicted_character_scope = {
-			remove_variable = indicted_character_je
-		}
 	
 		#Guaranteed conviction if indicted character committed crimes OR there was a kangaroo court
 		if = {
 			limit = {
 				scope:indicted_character_scope ?= {
 					
-					#Corruption scandal
-					has_modifier = ignored_corruption
-					has_modifier = corrupt_connections_exposed
-					has_modifier = corrupt_connections_exposed_minor
-					has_modifier = dealing_with_corruption
-					
-					#Traitor
-					has_modifier = treasonous_traitor
-					
-					#Abuse of Power
-					has_modifier = seizing_power
+					OR = {
+						
+						## Character has committed a crime ##
+						
+						#Corruption scandal
+						has_modifier = ignored_corruption
+						has_modifier = corrupt_connections_exposed
+						has_modifier = corrupt_connections_exposed_minor
+						has_modifier = corruption_scandal_character_modifier
+						has_modifier = dealing_with_corruption
+						has_trait = grifter
+						has_trait = framed_for_crimes
+						
+						#Traitor
+						has_modifier = treasonous_traitor
+						
+						#Abuse of Power
+						has_modifier = seizing_power
+						has_trait = war_criminal
+						
+						# Personal Misconduct
+						AND = {
+							OR = {
+								has_trait = cocaine_addiction
+								has_trait = opium_addiction
+							}
+							owner ?= {
+								OR = {
+									has_law_or_variant = law_type:law_no_minority_issues
+									has_law_or_variant = law_type:law_some_minority_issues
+								}
+							}
+						}
+						AND = {
+							OR = { 
+								has_trait = alcoholic
+								has_trait = hedonist
+							}
+							owner ?= { 
+								has_law_or_variant = law_type:law_no_minority_issues
+							}
+						}
+						AND = {
+							has_trait = homosexual_character
+							owner ?= { has_law_or_variant = law_type:law_no_gender_issues }
+						}
+						
+					}
 					
 				}
 			}
 			scope:indicted_character_scope ?= {
+				
+				#Imprison Character
 				remove_modifier = indicted_character
+				replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
 				add_modifier = { name = convicted_character years = 10 }
 				set_variable = { name = convicted_character_flag months = 1 }
-			}
-			scope:indicted_character_ig_scope ?= {
-				hidden_effect = { 
-					remove_modifier = convicted_character_ig
-					remove_modifier = unjustly_convicted_character_ig 
+				
+				#Domestic reaction
+				interest_group ?= { save_scope_as = THIS_IG_scope }
+				owner ?= {
+					add_radicals = {
+						value = large_radicals
+						interest_group = scope:THIS_IG_scope
+					}
 				}
-				add_modifier = { name = convicted_character_ig years = 5 is_decaying = yes }
+				
 			}
 			trigger_event = { id = political_trials_system.1 } #Government won trial
 		}
@@ -104,16 +141,22 @@ je_political_trials_system = {
 				}
 			}
 			scope:indicted_character_scope ?= {
+			
+				#Imprison Character
 				remove_modifier = indicted_character
-				add_modifier = { name = unjustly_convicted_character years = 10 }
+				replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
+				add_modifier = { name = convicted_character years = 10 }
 				set_variable = { name = convicted_character_flag months = 1 }
-			}
-			scope:indicted_character_ig_scope ?= {
-				hidden_effect = { 
-					remove_modifier = convicted_character_ig
-					remove_modifier = unjustly_convicted_character_ig
+				
+				#Domestic reaction
+				interest_group ?= { save_scope_as = THIS_IG_scope }
+				owner ?= {
+					add_radicals = {
+						value = large_radicals
+						interest_group = scope:THIS_IG_scope
+					}
 				}
-				add_modifier = { name = unjustly_convicted_character_ig years = 5 is_decaying = yes }
+				
 			}
 			trigger_event = { id = political_trials_system.1 } #Government won trial
 		}
@@ -130,8 +173,8 @@ je_political_trials_system = {
 			random_list = { 
 			
 				#Character is acquitted
-				1 = { 
-					scope:indicted_character_scope = {
+				1 = {
+					scope:indicted_character_scope ?= {
 						remove_modifier = indicted_character
 						add_modifier = { name = acquitted_character years = 10 is_decaying = yes }
 						set_variable = { name = acquitted_character_flag months = 1 }
@@ -140,18 +183,24 @@ je_political_trials_system = {
 				}
 				
 				#Character is convicted
-				1 = { 
-					scope:indicted_character_scope = {
+				1 = {
+					scope:indicted_character_scope ?= {
+					
+						#Imprison Character
 						remove_modifier = indicted_character
-						add_modifier = { name = unjustly_convicted_character years = 10 }
+						replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
+						add_modifier = { name = convicted_character years = 10 }
 						set_variable = { name = convicted_character_flag months = 1 }
-					}
-					scope:indicted_character_ig_scope = {
-						hidden_effect = { 
-							remove_modifier = convicted_character_ig
-							remove_modifier = unjustly_convicted_character_ig
+						
+						#Domestic reaction
+						interest_group ?= { save_scope_as = THIS_IG_scope }
+						owner ?= {
+							add_radicals = {
+								value = large_radicals
+								interest_group = scope:THIS_IG_scope
+							}
 						}
-						add_modifier = { name = unjustly_convicted_character_ig years = 5 is_decaying = yes }
+						
 					}
 					trigger_event = { id = political_trials_system.1 } #Government won trial
 				}
@@ -163,7 +212,7 @@ je_political_trials_system = {
 		#Guaranteed acquittal if courts are independent
 		else = {
 			
-			scope:indicted_character_scope = {
+			scope:indicted_character_scope ?= {
 				remove_modifier = indicted_character
 				add_modifier = { name = acquitted_character years = 10 is_decaying = yes }
 				set_variable = { name = acquitted_character_flag months = 1 }
@@ -210,9 +259,26 @@ je_political_trials_system = {
 			}
 			
 			#Add domestic reaction
-			add_radicals = {
-				value = small_radicals
-				interest_group = scope:indicted_character_ig_scope
+			if = {
+				limit = { has_law_or_variant = law_type:law_full_free_speech }
+				add_radicals = {
+					value = 0.04
+					interest_group = scope:indicted_character_ig_scope
+				}
+			}
+			else_if = {
+				limit = { has_law_or_variant = law_type:law_limited_free_speech }
+				add_radicals = {
+					value = 0.02
+					interest_group = scope:indicted_character_ig_scope
+				}
+			}
+			else_if = {
+				limit = { has_law_or_variant = law_type:law_censorship }
+				add_radicals = {
+					value = 0.01
+					interest_group = scope:indicted_character_ig_scope
+				}
 			}
 			
 		}
@@ -220,48 +286,56 @@ je_political_trials_system = {
 	}
 	
 	fail = {
-	
 		OR = {
 			scope:indicted_character_scope ?= {
-				is_ruler_of_own_country = yes
-			}
-			scope:indicted_character_ig_scope ?= {
-				is_in_government = yes
+				OR = {
+					is_ruler_of_own_country = yes
+					is_heir_of_own_country = yes
+					character_has_diplomatic_immunity = yes
+				}
 			}
 			custom_tooltip = {
 				text = indicted_character_is_acquitted.tt
 				scope:indicted_character_scope ?= {
-					NOT = { has_modifier = indicted_character }
-					NOT = { has_variable = indicted_character_je }
-					has_modifier = acquitted_character
+					OR = {
+						NOT = { has_modifier = indicted_character }
+						has_modifier = acquitted_character
+					}
 				}
 			}
 		}
-	
 	}
 	
 	on_fail = {
-	
 		scope:indicted_character_scope ?= {
-			remove_variable = indicted_character_je
 			remove_modifier = indicted_character
 			add_modifier = { name = acquitted_character years = 2 is_decaying = yes }
 		}
-	
 	}
 	
 	invalid = {
-		
 		OR = {
+			
+			#Ineligible character
 			NOT = { exists = scope:indicted_character_scope }
-			NOT = { exists = scope:indicted_character_ig_scope }
+			scope:indicted_character_scope ?= { has_role = character_role_prisoner }
+			scope:indicted_character_scope ?= { NOT = { owner ?= ROOT } }
+			
+			#Prison Breakout
+			capital ?= {
+				market_access <= 0 # Occupied
+			}
+			
 		}
-		
 	}
 	
 	on_invalid = {
-		
-		
+		scope:indicted_character_scope ?= {
+			if = {
+				limit = { has_modifier = indicted_character }
+				remove_modifier = indicted_character
+			}
+		}
 	}
 	
 	weight = 200
