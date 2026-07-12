@@ -291,6 +291,11 @@ send_to_jail = {
 				interest_group = scope:THIS_IG_scope
 			}
 		}
+		if = {
+			limit = {
+				
+			}
+		}
 		
 	}
 
@@ -365,9 +370,7 @@ send_to_jail = {
 			limit = {
 				scope:actor ?= {
 					ruler = {
-						OR = {
-							has_trait = cruel
-						}
+						has_trait = cruel
 					}
 				}			
 			}
@@ -377,9 +380,7 @@ send_to_jail = {
 			limit = {
 				scope:actor ?= {
 					ruler = {
-						OR = {
-							has_trait = imperious
-						}
+						has_trait = imperious
 					}
 				}			
 			}
@@ -390,6 +391,92 @@ send_to_jail = {
 				is_historical = yes	
 			}
 			add = -1000
+		}
+	}
+	
+}
+
+grant_amnesty = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	potential = {
+		
+		#Character is owned by THIS
+		owner ?= scope:actor
+		
+		#Is in prison
+		has_role = character_role_prisoner
+		has_modifier = convicted_character
+		
+	}
+
+	show_requirements = yes
+
+	possible = {
+		
+		#Appropriate Laws
+		owner ?= {
+		
+			#Cabinet agrees with this
+			custom_tooltip = {
+				text = has_no_low_cabinet_unity.tt
+				NOT = { has_variable = low_cabinet_unity }
+			}
+			
+		}
+		
+	}
+
+	effect = {
+		
+		#Release Character
+		replace_character_roles = { add = { character_role_politician } remove_all = yes }
+		remove_modifier = convicted_character
+		save_scope_as = released_prisoner
+		post_notification = political_prisoner_released
+		
+		#Domestic reaction
+		interest_group ?= { save_scope_as = THIS_IG_scope }
+		owner ?= {
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:THIS_IG_scope
+			}
+		}
+		
+	}
+
+	cooldown = { months = 6 }
+	show_confirmation_box = yes
+
+	should_ai_evaluate = {
+		country_rank >= rank_value:minor_power # Don't burn performance on tiny AI countries messing around with character interactions
+	}
+
+	ai_chance = {
+		value = -50
+		if = {
+			limit = {
+				scope:actor ?= {
+					ruler ?= {
+						character_is_democratic = yes
+					}
+				}
+			}
+			add = 100
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					any_political_movement = {
+						is_revolutionary = yes
+					}
+					ruler ?= {
+						character_is_autocratic = no
+					}
+				}
+			}
+			add = 51
 		}
 	}
 	

@@ -10,7 +10,7 @@ political_trials_system.1 = {
 
     event_image = { texture = "middleeast_courtroom_upheaval" }
 
-    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    icon = "gfx/interface/icons/event_icons/event_scales.dds" 		# Icon that shows on the map or the outliner
     on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
 
     duration = 1 # Duration to fire if triggers are met
@@ -41,20 +41,15 @@ political_trials_system.1 = {
         name = won_a_political_trials.option.1					# Imprison character
 		default_option = yes
 		
-		if = {
-			limit = { 
-				exists = scope:convicted_character_scope
-				scope:convicted_character_scope = { has_modifier = unjustly_convicted_character } 
-			}
-			change_infamy = 2
+		#Imprison Character
+		custom_tooltip = {
+			text = imprison_character_for_10_years.tt
 		}
-		
 		if = {
 			limit = { 
 				has_law_or_variant = law_type:law_slavery_political 
-				exists = scope:convicted_character_scope
 			}
-			scope:convicted_character_scope = { 
+			scope:convicted_character_scope ?= {
 				if = {
 					limit = { NOT = { has_trait = sickly } }
 					add_trait = sickly
@@ -62,11 +57,99 @@ political_trials_system.1 = {
 			}
 		}
 		
+		#Domestic reaction
 		if = {
-			limit = { exists = scope:convicted_character_ig_scope }
-			add_radicals = {
-				value = medium_radicals
-				interest_group = scope:convicted_character_ig_scope
+			limit = {
+				scope:convicted_character_scope ?= { 
+					OR = {
+						
+						## Character has committed a crime ##
+						
+						#Corruption scandal
+						has_modifier = ignored_corruption
+						has_modifier = corrupt_connections_exposed
+						has_modifier = corrupt_connections_exposed_minor
+						has_modifier = corruption_scandal_character_modifier
+						has_modifier = dealing_with_corruption
+						has_trait = grifter
+						has_trait = framed_for_crimes
+						
+						#Traitor
+						has_modifier = treasonous_traitor
+						
+						#Abuse of Power
+						has_modifier = seizing_power
+						has_trait = war_criminal
+						
+					}
+				}
+			}
+			if = {
+				limit = { exists = scope:convicted_character_ig_scope }
+				add_radicals = {
+					value = small_radicals
+					interest_group = scope:convicted_character_ig_scope
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				scope:convicted_character_scope ?= { 
+					OR = {
+						
+						# Personal Misconduct
+						AND = {
+							OR = {
+								has_trait = cocaine_addiction
+								has_trait = opium_addiction
+							}
+							owner ?= {
+								OR = {
+									has_law_or_variant = law_type:law_no_minority_issues
+									has_law_or_variant = law_type:law_some_minority_issues
+								}
+							}
+						}
+						AND = {
+							OR = { 
+								has_trait = alcoholic
+								has_trait = hedonist
+							}
+							owner ?= { 
+								has_law_or_variant = law_type:law_no_minority_issues
+							}
+						}
+						AND = {
+							has_trait = homosexual_character
+							owner ?= { has_law_or_variant = law_type:law_no_gender_issues }
+						}
+						
+					}
+				}
+			}
+			if = {
+				limit = { exists = scope:convicted_character_ig_scope }
+				add_radicals = {
+					value = medium_radicals
+					interest_group = scope:convicted_character_ig_scope
+				}
+			}
+			create_incident = {
+				value = 1
+				country = ROOT
+			}
+		}
+		else = {
+			if = {
+				limit = { exists = scope:convicted_character_ig_scope }
+				add_radicals = {
+					value = large_radicals
+					interest_group = scope:convicted_character_ig_scope
+				}
+			}
+			create_incident = {
+				value = 3
+				country = ROOT
 			}
 		}
 		
@@ -82,13 +165,15 @@ political_trials_system.1 = {
 			has_law_or_variant = law_type:law_draconian_policing
 		}
 		
+		#Execute character
 		if = {
 			limit = { exists = scope:convicted_character_scope }
-			scope:convicted_character_scope = {
+			scope:convicted_character_scope ?= {
 				kill_character = yes
 			}
 		}
 		
+		#Domestic reaction
 		if = {
 			limit = { exists = scope:convicted_character_ig_scope }
 			add_radicals = {
@@ -97,14 +182,61 @@ political_trials_system.1 = {
 			}
 		}
 		
-		change_infamy = 5
+		#International reaction
+		create_incident = {
+			value = 5
+			country = ROOT
+		}
 		
 		ai_chance = {
 			base = 0
 			modifier = { 
 				trigger = {
-					exists = ruler
-					ruler = {
+					ruler ?= {
+						has_ideology = ideology:ideology_autocratic
+					}
+				}
+				add = 25
+			}
+		}
+    }
+	
+	option = {
+        name = won_a_political_trials.option.3					# Release
+		trigger = {
+			scope:convicted_character_scope ?= {
+				interest_group = { interest_group = { is_same_interest_group_type = root.ruler.interest_group } }
+			}
+		}
+		
+		#Release character
+		if = {
+			limit = { exists = scope:convicted_character_scope }
+			scope:convicted_character_scope ?= {
+				replace_character_roles = { add = { character_role_politician } remove_all = yes }
+				remove_modifier = convicted_character
+				save_scope_as = released_prisoner
+				post_notification = political_prisoner_released
+			}
+		}
+		
+		#Government reaction
+		if = {
+			limit = { 
+				is_a_dictatorship = yes 
+				scope:convicted_character_scope ?= { interest_group = { NOT = { is_same_interest_group_type = root.ruler.interest_group } } }
+			}
+			add_radicals = {
+				value = medium_radicals
+				interest_group = ruler.interest_group
+			}
+		}
+		
+		ai_chance = {
+			base = 0
+			modifier = { 
+				trigger = {
+					ruler ?= {
 						has_ideology = ideology:ideology_autocratic
 					}
 				}
@@ -125,7 +257,7 @@ political_trials_system.2 = {
 
     event_image = { texture = "middleeast_courtroom_upheaval" }
 
-    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    icon = "gfx/interface/icons/event_icons/event_scales.dds" 		# Icon that shows on the map or the outliner
     on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
 
     duration = 1 # Duration to fire if triggers are met
@@ -156,61 +288,24 @@ political_trials_system.2 = {
         name = lost_a_political_trials.option.1					# Let him be free
 		default_option = yes
 		
-		ruler = {
+		#Domestic effect
+		ruler ?= {
 			hidden_effect = { remove_modifier = embarassed_by_witch_hunt }
 			add_modifier = { name = embarassed_by_witch_hunt years = 5 is_decaying = yes }
 		}
-		
-		add_radicals = {
-			value = small_radicals
-			interest_group = scope:convicted_character_ig_scope
-		}
-		
-		ai_chance = {
-			base = 75
-		}
-    }
-	
-	option = {
-        name = lost_a_political_trials.option.2					# Assassinate Character
-		trigger = {
-			is_a_dictatorship = yes
-			has_law_or_variant = law_type:law_secret_police
-		}
-		
-		ruler = {
-			hidden_effect = { remove_modifier = embarassed_by_witch_hunt }
-			add_modifier = { name = embarassed_by_witch_hunt years = 5 is_decaying = yes }
-		}
-		
-		#Chance of killing character
-		scope:convicted_character_scope = { set_variable = state_assassination_target }
-		trigger_event = { id = political_trials_system.3 popup = yes }
-		
-		add_radicals = {
-			value = very_large_radicals
-			interest_group = scope:convicted_character_ig_scope
-		}
-		
-		change_infamy = 5
-		
-		ai_chance = {
-			base = 0
-			modifier = { 
-				trigger = {
-					exists = ruler
-					ruler = {
-						has_ideology = ideology:ideology_autocratic
-					}
-				}
-				add = 25
+		if = {
+			limit = { exists = scope:convicted_character_ig_scope }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:convicted_character_ig_scope
 			}
 		}
+		
     }
 
 }
 
-#Assassination of Character
+#Assassination of Character - Retired
 political_trials_system.3 = {
     type = country_event
 

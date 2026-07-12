@@ -10,8 +10,10 @@ je_political_trials_drop_charges_button = {
 
 	possible = {
 		
+		#A character is on trial
 		any_scope_character = {
 			has_modifier = indicted_character
+			NOT = { has_role = character_role_prisoner }
 		}
 		
 		#Cabinet agrees with this
@@ -24,19 +26,25 @@ je_political_trials_drop_charges_button = {
 
 	effect = {
 		
+		#Automatic acquittal
 		random_scope_character = {
 			limit = { 
 				has_modifier = indicted_character
-				has_variable = indicted_character_je
+				NOT = { has_role = character_role_prisoner }
 			}
 			remove_modifier = indicted_character
-			remove_variable = indicted_character_je
-			add_modifier = { name = acquitted_character years = 5 is_decaying = yes }
 		}
 		
-		add_radicals = {
-			value = small_radicals
-			interest_group = ruler.interest_group
+		#Government reaction
+		if = {
+			limit = { 
+				is_a_dictatorship = yes 
+				scope:convicted_character_scope ?= { interest_group = { NOT = { is_same_interest_group_type = root.ruler.interest_group } } }
+			}
+			add_radicals = {
+				value = medium_radicals
+				interest_group = ruler.interest_group
+			}
 		}
 		
 	}
@@ -48,7 +56,7 @@ je_political_trials_drop_charges_button = {
 			limit = { 
 				
 				exists = ruler
-				ruler = {
+				ruler ?= {
 					NOR = {
 						has_ideology = ideology:ideology_autocratic
 						has_ideology = ideology:ideology_power_hungry
