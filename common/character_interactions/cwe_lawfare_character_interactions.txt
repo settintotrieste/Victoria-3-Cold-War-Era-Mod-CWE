@@ -482,43 +482,52 @@ grant_amnesty = {
 	
 }
 
-sabotage_interest_group = {
+frame_character_for_crimes = {
 	icon = "gfx/interface/icons/event_icons/population_radical.dds"
 	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
 
 	potential = {
-	
+		
+		#Character is owned by THIS
 		owner ?= scope:actor
 		
-		#Not Ruler
+		#Not already framed
+		NOT = { has_trait = framed_for_crimes }
+		
+		#Not already a prisoner
+		NOT = { has_role = character_role_prisoner }
+		
+		#Not already on trial
+		NOR = {
+			has_modifier = indicted_character
+			has_modifier = convicted_character
+			has_modifier = unjustly_convicted_character
+			has_modifier = acquitted_character
+		}
+		
+		#Not an excluded character
+		character_has_diplomatic_immunity = no
+		is_in_exile_pool = no
+		is_in_void = no
 		is_ruler_of_own_country = no
 		is_heir_of_own_country = no
-		
-		#Leader of IG
-		is_an_IG_leader = yes
-		
-		#Not in Government
-		interest_group = {
-			is_in_government = no
-		}
-		NOR = { 
-			has_role = character_role_cabinet_minister
-			has_modifier = THIS_is_ruler 
-		}
-		
-		#Not already sabotaged
-		interest_group = { 
-			NOT = { has_modifier = ig_clout_sabotaged } 
-		}
+		NOT = { has_role = character_role_head_of_intelligence }
 		
 	}
 
 	possible = {
 	
+		#Legal & Political restrictions
 		owner ?= {
 		
 			#Ruler is willing to sabotage IG
-			has_dictatorial_ruler = yes
+			custom_tooltip = {
+				text = ruler_is_autocratic.tt
+				ruler ?= { character_is_autocratic = yes }
+			}
+			
+			#Politicised Civil Service
+			has_law_or_variant = law_type:law_politicised_bureaucrats
 			
 			#Country has a secret service
 			has_law_or_variant = law_type:law_secret_police
@@ -538,6 +547,22 @@ sabotage_interest_group = {
 				var:secret_police_action_points > 25
 			}
 			
+		}
+		
+		#Coup
+		custom_tooltip = {
+			text = pending_coup_event_tt
+			NOT = {
+				owner = {
+					has_variable = coup_event_active
+				}
+			}
+		}
+		custom_tooltip = {
+			text = doing_coup_for_player_tt
+			NOT = {
+				has_variable = commander_doing_coup_on_player_behalf
+			}
 		}
 		
 	}
@@ -589,13 +614,7 @@ sabotage_interest_group = {
 						add = 25
 					}
 				}
-				this.interest_group = {
-					add_modifier = { 
-						name = ig_clout_sabotaged
-						years = 5
-						is_decaying = yes
-					} 
-				}
+				add_trait = framed_for_crimes
 			}
 			40 = {
 				
@@ -631,12 +650,8 @@ sabotage_interest_group = {
 						subtract = 5
 					}
 				}
-				this.interest_group = {
-					add_modifier = { 
-						name = ig_clout_sabotaged
-						years = 5
-						is_decaying = yes
-					} 
+				add_trait = framed_for_crimes
+				this.interest_group ?= {
 					save_scope_as = relevant_ig
 				}
 				owner ?= {
@@ -644,7 +659,6 @@ sabotage_interest_group = {
 						value = large_radicals
 						interest_group = scope:relevant_ig
 					}
-					change_infamy = 5
 				}
 			}
 		}

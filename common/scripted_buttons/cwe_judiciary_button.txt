@@ -4,8 +4,19 @@ je_judiciary_appoint_judges_button = {
 
 	visible = { 
 		
-		#Not part of a Legal Union
-		NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = legal_union is_initiator = yes } } }
+		#Not in a legal union
+		custom_tooltip = {
+			text = is_not_in_a_legal_union.tt
+			NOT = {
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = legal_union
+					second_country = ROOT
+				}
+			}
+		}
+		
+		#Has variable
+		has_variable = judiciary_progressiveness
 		
 	}
 
@@ -45,212 +56,46 @@ je_judiciary_appoint_judges_button = {
 			name = recently_appointed_judges
 			year = 1 
 		}
-	
-		#Reduce progressiveness
+		
+		#Set progressiveness
 		if = {
-			limit = { 
-				OR = { 
-					has_modifier = traditionalist_ruling_party_ideology
-					has_modifier = conservative_ruling_party_ideology
-					has_modifier = fascist_ruling_party_ideology
-				}
-			}
-			if = {
-				limit = { root.var:judiciary_progressiveness >= 1 }
-				custom_tooltip = {
-					text = conservative_judge_appointed.tt
-					change_variable = { 
-						name = judiciary_progressiveness
-						add = -1
-					}
-				}
+			limit = { ruler ?= { character_is_autocratic = yes } }
+			change_variable = {
+				name = judiciary_progressiveness
+				add = -25
 			}
 		}
-		
-		#Increase progressiveness
-		if = {
-			limit = { 
-				OR = { 
-					has_modifier = communist_ruling_party_ideology
-					has_modifier = market_socialist_ruling_party_ideology
-					has_modifier = socialist_ruling_party_ideology
-					has_modifier = social_democratic_ruling_party_ideology
-					
-					has_modifier = liberal_ruling_party_ideology
-					has_modifier = libertarian_ruling_party_ideology
-					has_modifier = progressive_ruling_party_ideology
-				}
+		else_if = {
+			limit = { ruler ?= { character_is_democratic = yes } }
+			change_variable = {
+				name = judiciary_progressiveness
+				add = 25
 			}
-			if = {
-				limit = { root.var:judiciary_progressiveness < root.var:judiciary_size }
-				custom_tooltip = {
-					text = progressive_judge_appointed.tt
-					change_variable = { 
-						name = judiciary_progressiveness
-						add = 1
-					}
-				}
-			}
+		}
+		clamp_variable = {
+			name = judiciary_progressiveness
+			max = 100
+			min = 0
 		}
 		
 		#Domestic reaction
-		if = {
-			limit = { 
-				ig:ig_rural_folk = { leader = { is_ruler_of_own_country = no } } 
-			}
-			if = {
-				limit = { 
-					ig:ig_rural_folk = { is_in_government = yes } 
-				}
+		every_interest_group = {
+			limit = { is_in_government = no }
+			save_scope_as = THIS_IG_scope
+			owner ?= {
 				add_radicals = {
 					value = medium_radicals
-					interest_group = ig:ig_rural_folk
-				}
-			}
-			else = {
-				add_radicals = {
-					value = large_radicals
-					interest_group = ig:ig_rural_folk
+					interest_group = scope:THIS_IG_scope
 				}
 			}
 		}
-		if = {
-			limit = { 
-				ig:ig_devout = { leader = { is_ruler_of_own_country = no } } 
-			}
-			if = {
-				limit = { 
-					ig:ig_devout = { is_in_government = yes } 
-				}
-				add_radicals = {
-					value = medium_radicals
-					interest_group = ig:ig_devout
-				}
-			}
-			else = {
-				add_radicals = {
-					value = large_radicals
-					interest_group = ig:ig_devout
-				}
-			}
-		}
-		if = {
-			limit = { 
-				ig:ig_landowners = { leader = { is_ruler_of_own_country = no } } 
-			}
-			if = {
-				limit = { 
-					ig:ig_landowners = { is_in_government = yes } 
-				}
-				add_radicals = {
-					value = medium_radicals
-					interest_group = ig:ig_landowners
-				}
-			}
-			else = {
-				add_radicals = {
-					value = large_radicals
-					interest_group = ig:ig_landowners
-				}
-			}
-		}
-		if = {
-			limit = { 
-				ig:ig_trade_unions = { leader = { is_ruler_of_own_country = no } } 
-			}
-			if = {
-				limit = { 
-					ig:ig_trade_unions = { is_in_government = yes } 
-				}
-				add_radicals = {
-					value = medium_radicals
-					interest_group = ig:ig_trade_unions
-				}
-			}
-			else = {
-				add_radicals = {
-					value = large_radicals
-					interest_group = ig:ig_trade_unions
-				}
-			}
-		}
-		if = {
-			limit = { 
-				ig:ig_petty_bourgeoisie = { leader = { is_ruler_of_own_country = no } } 
-			}
-			if = {
-				limit = { 
-					ig:ig_petty_bourgeoisie = { is_in_government = yes } 
-				}
-				add_radicals = {
-					value = medium_radicals
-					interest_group = ig:ig_petty_bourgeoisie
-				}
-			}
-			else = {
-				add_radicals = {
-					value = large_radicals
-					interest_group = ig:ig_petty_bourgeoisie
-				}
-			}
-		}
-		if = {
-			limit = { 
-				ig:ig_industrialists = { leader = { is_ruler_of_own_country = no } } 
-			}
-			if = {
-				limit = { 
-					ig:ig_industrialists = { is_in_government = yes } 
-				}
-				add_radicals = {
-					value = medium_radicals
-					interest_group = ig:ig_industrialists
-				}
-			}
-			else = {
-				add_radicals = {
-					value = large_radicals
-					interest_group = ig:ig_industrialists
-				}
-			}
-		}
-		if = {
-			limit = { 
-				ig:ig_intelligentsia = { leader = { is_ruler_of_own_country = no } } 
-			}
-			if = {
-				limit = { 
-					ig:ig_intelligentsia = { is_in_government = yes } 
-				}
-				add_radicals = {
-					value = medium_radicals
-					interest_group = ig:ig_intelligentsia
-				}
-			}
-			else = {
-				add_radicals = {
-					value = large_radicals
-					interest_group = ig:ig_intelligentsia
-				}
-			}
-		}
-		if = {
-			limit = { 
-				ig:ig_armed_forces = { leader = { is_ruler_of_own_country = no } } 
-			}
-			if = {
-				limit = { 
-					ig:ig_armed_forces = { is_in_government = yes } 
-				}
-				add_radicals = {
-					value = medium_radicals
-					interest_group = ig:ig_armed_forces
-				}
-			}
-			else = {
-				add_radicals = {
-					value = large_radicals
-					interest_group = ig:ig_armed_forces
+		every_interest_group = {
+			limit = { is_in_government = yes }
+			save_scope_as = THIS_IG_scope
+			owner ?= {
+				add_loyalists = {
+					value = small_radicals
+					interest_group = scope:THIS_IG_scope
 				}
 			}
 		}
@@ -261,17 +106,13 @@ je_judiciary_appoint_judges_button = {
 		base = 0
 		
 		if = {
-			limit = { 
-				any_interest_group = { 
-					leader ?= { 
-						is_ruler_of_own_country = yes 
-						OR = {
-							has_ideology = ideology:ideology_autocratic
-							has_ideology = ideology:ideology_power_hungry
-						}
+			limit = {
+				ruler ?= {
+					character_is_autocratic = yes
+					interest_group ?= {
+						is_in_government = yes
+						is_strongest_ig_in_government = yes
 					}
-					is_in_government = yes
-					is_strongest_ig_in_government = yes
 				}
 			}
 			add = 10 

@@ -4,7 +4,7 @@
 	group = je_group_political_organs
 
 	scripted_button = je_judiciary_appoint_judges_button
-	scripted_button = je_judiciary_expand_court_button
+	#scripted_button = je_judiciary_expand_court_button
 
 	possible = {
 		
@@ -14,7 +14,12 @@
 		#Not in a legal union
 		custom_tooltip = {
 			text = is_not_in_a_legal_union.tt
-			NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = legal_union is_initiator = yes } } }
+			NOT = {
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = legal_union
+					second_country = ROOT
+				}
+			}
 		}
 		
 	}
@@ -24,13 +29,7 @@
 		#Default is an even split
 		set_variable = {
 			name = judiciary_progressiveness
-			value = 6
-		}
-		
-		#Default Supreme Court size is 12
-		set_variable = {
-			name = judiciary_size
-			value = 12
+			value = 50
 		}
 		
 	}
@@ -45,7 +44,10 @@
 			#Is in a legal union
 			custom_tooltip = {
 				text = is_in_a_legal_union.tt
-				any_country = { has_diplomatic_pact = { who = ROOT type = legal_union is_initiator = yes } }
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = legal_union
+					second_country = ROOT
+				}
 			}
 		
 		}
@@ -55,58 +57,26 @@
 	on_invalid = {
 		
 		#Reset judicial progressiveness
-		if = {
-			limit = { NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = legal_union is_initiator = yes } } } }
-			remove_variable = judiciary_progressiveness
-			remove_variable = judiciary_size
-			remove_variable = judiciary_size_majority
-		}
+		remove_variable = judiciary_progressiveness
 		
+		#Apply foreign Supreme Court
 		if = {
-			limit = { any_country = { has_diplomatic_pact = { who = ROOT type = legal_union is_initiator = yes } } }
+			limit = {
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = legal_union
+					second_country = ROOT
+				}
+			}
 			add_journal_entry = { type = je_judiciary_foreign }
 		}
 		
 	}
-
-	current_value = {
-		value =	root.var:judiciary_progressiveness
-	}
-
-	goal_add_value = {
-		value = root.var:judiciary_size
-	}
-
+	
 	on_monthly_pulse = {
 		
-		effect = {
-			
-			#Failsafe
-			if = {
-				limit = { NOT = { has_variable = judiciary_size } }
-				#Default Supreme Court size is 12
-				set_variable = {
-					name = judiciary_size
-					value = 12
-				}
-			}
-			
-			#Determine judiciary majority
-			if = {
-				limit = { 
-					has_variable = judiciary_size_majority
-					has_variable = judiciary_size
-				}
-				set_variable = { 
-					name = judiciary_size_majority
-					value = root.var:judiciary_size
-				}
-				change_variable = { 
-					name = judiciary_size_majority
-					divide = 2
-				}
-			}
-			
+		random_events = {
+			2 = 0
+			1 = judiciary_system.17
 		}
 		
 	}
@@ -115,77 +85,98 @@
 	
 		effect = {
 		
-			#Appoint judges automatically if judiciary is not politicised (gravitate to neutrality)
+			#Calculate Progressiveness
 			if = {
-				limit = { 
-					has_variable = judiciary_progressiveness
-					has_variable = judiciary_size_majority
-					has_variable = judiciary_size
-					root.var:judiciary_progressiveness >= root.var:judiciary_size_majority
-					root.var:judiciary_progressiveness < root.var:judiciary_size
-					root.var:judiciary_progressiveness >= 1
-					NOR = {
-						has_law_or_variant = law_type:law_politicised_judiciary
-						has_law_or_variant = law_type:law_partially_politicised_judiciary
+				limit = { has_variable = judiciary_progressiveness }
+				
+				#Ruler
+				if = {
+					limit = { ruler ?= { character_is_autocratic = yes } }
+					change_variable = {
+						name = judiciary_progressiveness
+						add = -1
 					}
-					
-					#Not part of a Legal Union
-					NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = legal_union is_initiator = yes } } }
 				}
-				random_list = {
-					2 = {
-						change_variable = { 
-							name = judiciary_progressiveness
-							add = -1
-						}
+				else_if = {
+					limit = { ruler ?= { character_is_democratic = yes } }
+					change_variable = {
+						name = judiciary_progressiveness
+						add = 1
 					}
-					1 = {
-						change_variable = { 
-							name = judiciary_progressiveness
-							add = 1
-						}
-					}
-					1 = { }
 				}
-			}
-			if = {
-				limit = { 
-					has_variable = judiciary_progressiveness
-					has_variable = judiciary_size_majority
-					has_variable = judiciary_size
-					root.var:judiciary_progressiveness <= root.var:judiciary_size_majority 
-					root.var:judiciary_progressiveness < root.var:judiciary_size
-					root.var:judiciary_progressiveness >= 1
-					NOR = {
-						has_law_or_variant = law_type:law_politicised_judiciary
-						has_law_or_variant = law_type:law_partially_politicised_judiciary
+				
+				#Head of State
+				if = {
+					limit = { has_journal_entry = je_head_of_state_system any_scope_character = { has_role = character_role_head_of_state character_is_autocratic = yes } }
+					change_variable = {
+						name = judiciary_progressiveness
+						add = -1
 					}
-					
-					#Not part of a Legal Union
-					NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = legal_union is_initiator = yes } } }
 				}
-				random_list = {
-					1 = {
-						change_variable = { 
-							name = judiciary_progressiveness
-							add = -1
-						}
+				else_if = {
+					limit = { has_journal_entry = je_head_of_state_system any_scope_character = { has_role = character_role_head_of_state character_is_democratic = yes } }
+					change_variable = {
+						name = judiciary_progressiveness
+						add = 1
 					}
-					2 = {
-						change_variable = { 
-							name = judiciary_progressiveness
-							add = 1
-						}
-					}
-					1 = { }
 				}
+				
+				#Head of Government
+				if = {
+					limit = { has_journal_entry = je_cohabitation_system any_scope_character = { has_role = character_role_head_of_government character_is_autocratic = yes } }
+					change_variable = {
+						name = judiciary_progressiveness
+						add = -1
+					}
+				}
+				else_if = {
+					limit = { has_journal_entry = je_cohabitation_system any_scope_character = { has_role = character_role_head_of_government character_is_democratic = yes } }
+					change_variable = {
+						name = judiciary_progressiveness
+						add = 1
+					}
+				}
+				
+				#Reserve Powers Holder
+				if = {
+					limit = { has_journal_entry = je_reserved_powers any_scope_character = { has_role = character_role_reserved_powers_holder character_is_autocratic = yes } }
+					change_variable = {
+						name = judiciary_progressiveness
+						add = -1
+					}
+				}
+				else_if = {
+					limit = { has_journal_entry = je_reserved_powers any_scope_character = { has_role = character_role_reserved_powers_holder character_is_democratic = yes } }
+					change_variable = {
+						name = judiciary_progressiveness
+						add = 1
+					}
+				}
+				
+				#Head of the Civil Service
+				if = {
+					limit = { has_journal_entry = je_civil_service_system any_scope_character = { is_an_IG_leader = yes interest_group ?= { is_interest_group_type = ig_intelligentsia } character_is_autocratic = yes } }
+					change_variable = {
+						name = judiciary_progressiveness
+						add = -1
+					}
+				}
+				else_if = {
+					limit = { has_journal_entry = je_civil_service_system any_scope_character = { is_an_IG_leader = yes interest_group ?= { is_interest_group_type = ig_intelligentsia } character_is_democratic = yes } }
+					change_variable = {
+						name = judiciary_progressiveness
+						add = 1
+					}
+				}
+				
+				clamp_variable = {
+					name = judiciary_progressiveness
+					max = 100
+					min = 0
+				}
+				
 			}
 			
-		}
-		
-		random_events = {
-			2 = 0
-			1 = judiciary_system.17
 		}
 		
 		random_events = {
@@ -231,9 +222,9 @@ je_judiciary_foreign = {
 		#Is in a legal union
 		custom_tooltip = {
 			text = is_in_a_legal_union.tt
-			any_country = { 
-				has_diplomatic_pact = { who = ROOT type = legal_union is_initiator = yes } 
-				has_journal_entry = je_judiciary
+			any_scope_diplomatic_pact = {
+				is_diplomatic_action_type = legal_union
+				second_country = ROOT
 			}
 		}
 		
@@ -246,29 +237,19 @@ je_judiciary_foreign = {
 			save_scope_as = legal_union_foreign_supreme_court
 		}
 		
+		#Set progressiveness
 		if = {
-			limit = { NOT = { has_variable = judiciary_progressiveness } }
+			limit = { scope:legal_union_foreign_supreme_court ?= { has_variable = judiciary_progressiveness } }
 			set_variable = {
 				name = judiciary_progressiveness
-				value = 6
+				value = scope:legal_union_foreign_supreme_court.var:judiciary_progressiveness
 			}
 		}
-		if = {
-			limit = { NOT = { has_variable = judiciary_size } }
+		else = {
 			set_variable = {
-				name = judiciary_size
-				value = 12
+				name = judiciary_progressiveness
+				value = 50
 			}
-		}
-		
-		#Determine judiciary majority
-		set_variable = { 
-			name = judiciary_size_majority 
-			value = root.var:judiciary_size
-		}
-		change_variable = { 
-			name = judiciary_size_majority 
-			divide = 2
 		}
 		
 	}
@@ -283,7 +264,12 @@ je_judiciary_foreign = {
 			#Not in a legal union
 			custom_tooltip = {
 				text = is_not_in_a_legal_union.tt
-				NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = legal_union is_initiator = yes } } }
+				NOT = { 
+					any_scope_diplomatic_pact = {
+						is_diplomatic_action_type = legal_union
+						second_country = ROOT
+					}
+				}
 			}
 			
 		}
@@ -294,44 +280,32 @@ je_judiciary_foreign = {
 		
 		#Reset judicial progressiveness
 		remove_variable = judiciary_progressiveness
-		remove_variable = judiciary_size
-		remove_variable = judiciary_size_majority
 		
-	}
-
-	current_value = {
-		value =	root.var:judiciary_progressiveness
-	}
-
-	goal_add_value = {
-		value = root.var:judiciary_size
 	}
 
 	on_monthly_pulse = {
 		
-		effect = {
-			
-			#Determine judiciary majority
-			if = {
-				limit = { 
-					has_variable = judiciary_size_majority
-					has_variable = judiciary_size
-				}
-				set_variable = { 
-					name = judiciary_size_majority 
-					value = root.var:judiciary_size
-				}
-				change_variable = { 
-					name = judiciary_size_majority
-					divide = 2
-				}
-			}
-			
+		random_events = {
+			2 = 0
+			1 = judiciary_system.17
 		}
 		
 	}
 	
 	on_yearly_pulse = {
+		
+		effect = {
+			
+			#Set progressiveness
+			if = {
+				limit = { scope:legal_union_foreign_supreme_court ?= { has_variable = judiciary_progressiveness } }
+				set_variable = {
+					name = judiciary_progressiveness
+					value = scope:legal_union_foreign_supreme_court.var:judiciary_progressiveness
+				}
+			}
+		
+		}
 		
 		random_events = {
 			15 = 0
