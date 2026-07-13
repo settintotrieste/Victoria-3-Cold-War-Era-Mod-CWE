@@ -40,14 +40,24 @@
 
 	immediate = {
 		
-		#Secret Police always start off as loyal
-		set_variable = { 
-			name = secret_police_loyalty
-			value = 100
+		#Loyalty of Head of Intelligence
+		if = {
+			limit = { exists = scope:head_of_intelligence }
+			set_variable = { 
+				name = secret_police_loyalty
+				value = scope:head_of_intelligence.loyalty
+			}
+			clamp_variable = {
+				name = secret_police_loyalty
+				max = 100
+				min = 0
+			}
 		}
-		set_variable = { 
-			name = secret_police_loyalty_monthly
-			value = 0
+		else = {
+			set_variable = { 
+				name = secret_police_loyalty
+				value = 0
+			}
 		}
 		
 		#Espionage points
@@ -193,275 +203,24 @@
 			
 			### Calculate loyalty ###
 			
-			#Failsafe
+			#Loyalty of Head of Intelligence
 			if = {
-				limit = { NOT = { has_variable = secret_police_loyalty } }
+				limit = { exists = scope:head_of_intelligence }
 				set_variable = { 
 					name = secret_police_loyalty
-					value = 100
+					value = scope:head_of_intelligence.loyalty
 				}
-			}
-			set_variable = { 
-				name = secret_police_loyalty_monthly
-				value = 0
-			}
-			
-			#Gain loyalty (Max: +10/month)
-			if = {
-				limit = { 
-					scope:secret_police_IG ?= { 
-						ig_approval >= 0 
-						ig_approval < 5
-					} 
-				}
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = 2
-				}
-			}
-			else_if = {
-				limit = { 
-					scope:secret_police_IG ?= { 
-						ig_approval >= 5
-						ig_approval < 10
-					}
-				}
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = 4
-				}
-			}
-			else_if = {
-				limit = { 
-					scope:secret_police_IG ?= { 
-						ig_approval >= 10
-						ig_approval < 15
-					}
-				}
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = 6
-				}
-			}
-			else_if = {
-				limit = { 
-					scope:secret_police_IG ?= { 
-						ig_approval >= 15
-						ig_approval < 20
-					}
-				}
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = 8
-				}
-			}
-			else_if = {
-				limit = { 
-					scope:secret_police_IG ?= { 
-						ig_approval >= 20
-					}
-				}
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = 10
-				}
-			}
-			
-			#Lose loyalty (Max: -15/month)
-			if = {
-				limit = { 
-					scope:secret_police_IG = { 
-						ig_approval < 0 
-						ig_approval >= -5
-					} 
-				}
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = -1
-				}
-			}
-			else_if = {
-				limit = { 
-					scope:secret_police_IG ?= { 
-						ig_approval < -5
-						ig_approval >= -10
-					}
-				}
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = -2
-				}
-			}
-			else_if = {
-				limit = { 
-					scope:secret_police_IG ?= { 
-						ig_approval < -10
-						ig_approval >= -15
-					}
-				}
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = -4
-				}
-			}
-			else_if = {
-				limit = { 
-					scope:secret_police_IG ?= { 
-						ig_approval < -15
-						ig_approval >= -20
-					}
-				}
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = -8
-				}
-			}
-			else_if = {
-				limit = { 
-					scope:secret_police_IG = { ig_approval < -20 } 
-				}
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = -10
-				}
-			}
-			
-			if = {
-				limit = { 
-					is_a_dictatorship = yes
-					scope:secret_police_IG = { 
-						is_in_government = no 
-						ig_counts_as_marginal = no
-					} 
-				}
-				change_variable = { 
-					name = secret_police_loyalty_monthly
-					add = -5
-				}
-			}
-			if = {
-				limit = { 
-					is_a_dictatorship = yes
-					scope:secret_police_IG = { 
-						ig_counts_as_marginal = yes
-					} 
-				}
-				change_variable = { 
-					name = secret_police_loyalty_monthly
-					add = 1
-				}
-			}
-			
-			#Corruption slows down reduction & speeds up increase
-			if = {
-				limit = { 
-					NOT = { root.var:secret_police_loyalty_monthly = 0 }
-					root.var:secret_police_loyalty_monthly < 0
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_very_low_anti_corruption }
-					change_variable = {
-						name = secret_police_loyalty_monthly
-						divide = 5
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_low_anti_corruption }
-					change_variable = {
-						name = secret_police_loyalty_monthly
-						divide = 4
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_medium_anti_corruption }
-					change_variable = {
-						name = secret_police_loyalty_monthly
-						divide = 3
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_high_anti_corruption }
-					change_variable = {
-						name = secret_police_loyalty_monthly
-						divide = 2
-					}
-				}
-			}
-			if = {
-				limit = { 
-					NOT = { root.var:secret_police_loyalty_monthly = 0 } 
-					NOT = { root.var:secret_police_loyalty_monthly < 0 }
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_very_low_anti_corruption }
-					change_variable = {
-						name = secret_police_loyalty_monthly
-						add = 10
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_low_anti_corruption }
-					change_variable = {
-						name = secret_police_loyalty_monthly
-						add = 8
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_medium_anti_corruption }
-					change_variable = {
-						name = secret_police_loyalty_monthly
-						add = 4
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_high_anti_corruption }
-					change_variable = {
-						name = secret_police_loyalty_monthly
-						add = 2
-					}
-				}
-			}
-			
-			#Total
-			change_variable = {
-				name = secret_police_loyalty
-				add = root.var:secret_police_loyalty_monthly
-			}
-			
-			#If more than 100
-			if = {
-				limit = { root.var:secret_police_loyalty > 100 }
-				
-				#Max display is 100 loyalty
-				set_variable = { 
+				clamp_variable = {
 					name = secret_police_loyalty
-					value = 100
+					max = 100
+					min = 0
 				}
-				
-				#Display 0 because cannot increase any further
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = 0
-				}
-				
 			}
-			
-			#If less than 0
-			if = {
-				limit = { root.var:secret_police_loyalty < 0 }
-				
-				#Min display is 0 loyalty
+			else = {
 				set_variable = { 
 					name = secret_police_loyalty
 					value = 0
 				}
-				
-				#Display 0 because cannot decrease any further
-				set_variable = { 
-					name = secret_police_loyalty_monthly
-					value = 0
-				}
-				
 			}
 			
 		}
