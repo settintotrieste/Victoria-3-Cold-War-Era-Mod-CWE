@@ -76,19 +76,29 @@
 			}
 		}
 		
-		#Paramilitary groups always start off as loyal
-		set_variable = { 
-			name = paramilitary_groups_loyalty
-			value = 100
+		#Loyalty of Paramilitary Group
+		if = {
+			limit = { exists = scope:head_of_paramilitary }
+			set_variable = { 
+				name = paramilitary_groups_loyalty
+				value = scope:head_of_paramilitary.loyalty
+			}
+			clamp_variable = {
+				name = paramilitary_groups_loyalty
+				max = 100
+				min = 0
+			}
 		}
-		set_variable = { 
-			name = paramilitary_groups_loyalty_monthly
-			value = 0
+		else = {
+			set_variable = { 
+				name = paramilitary_groups_loyalty
+				value = 0
+			}
 		}
 		
 	}
 
-	fail = {
+	invalid = {
 	
 		OR = {
 		
@@ -105,17 +115,22 @@
 			
 			}
 			
-			NOT = { exists = scope:paramilitary_IG }
-			
 			NOT = { exists = scope:head_of_paramilitary }
+			
+			scope:head_of_paramilitary ?= {
+				OR = { 
+					NOT = { owner ?= ROOT }
+					NOT = { has_modifier = head_of_paramilitary }
+				}
+			}
 			
 		}
 		
 	}
 	
-	on_fail = {
+	on_invalid = {
 		
-		if = { 
+		if = {
 			limit = { has_modifier = conducting_great_purge }
 			remove_modifier = conducting_great_purge
 		}
@@ -123,15 +138,12 @@
 		remove_variable = paramilitary_groups_loyalty
 		remove_variable = paramilitary_groups_loyalty_monthly
 		
-		every_interest_group = {
-			remove_variable = paramilitary_IG
-		}
-		
 		#Clear modifiers
-		every_scope_character = {
-			limit = { has_modifier = head_of_paramilitary }
-			#remove_modifier = head_of_paramilitary
-			retire_character = yes
+		scope:head_of_paramilitary ?= {
+			if = {
+				limit = { has_modifier = head_of_paramilitary }
+				remove_modifier = head_of_paramilitary
+			}
 		}
 		
 		remove_variable = paramilitary_group_veto_overruled
@@ -142,248 +154,24 @@
 	
 		effect = {
 			
-			#Failsafe
+			#Loyalty of Paramilitary Group
 			if = {
-				limit = { NOT = { has_variable = paramilitary_groups_loyalty } }
+				limit = { exists = scope:head_of_paramilitary }
 				set_variable = { 
 					name = paramilitary_groups_loyalty
-					value = 100
+					value = scope:head_of_paramilitary.loyalty
 				}
-			}
-			
-			### Calculate loyalty ###
-			
-			set_variable = { 
-				name = paramilitary_groups_loyalty_monthly
-				value = 0
-			}
-			
-			#Gain loyalty (Max: +20/month)
-			if = {
-				limit = {
-					enacting_any_law = yes 
-					scope:paramilitary_IG ?= {
-						law_stance = {
-							law = owner.currently_enacting_law.type
-							value > neutral
-						}
-					}
-				}
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = 10
-				}
-			}
-			if = {
-				limit = { 
-					scope:paramilitary_IG ?= { ig_approval > 0 } 
-				}
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = 2
-				}
-			}
-			if = {
-				limit = { 
-					scope:paramilitary_IG ?= { ig_approval > 5 } 
-				}
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = 4
-				}
-			}
-			if = {
-				limit = { 
-					scope:paramilitary_IG ?= { ig_approval > 10 } 
-				}
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = 6
-				}
-			}
-			if = {
-				limit = { 
-					scope:paramilitary_IG ?= { ig_approval > 15 } 
-				}
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = 8
-				}
-			}
-			if = {
-				limit = { 
-					scope:paramilitary_IG ?= { ig_approval >= 20 } 
-				}
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = 10
-				}
-			}
-			
-			#Lose loyalty (Max: -15/month)
-			if = {
-				limit = { 
-					scope:paramilitary_IG ?= { ig_approval < 0 }
-				}
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = -1
-				}
-			}
-			if = {
-				limit = { 
-					scope:paramilitary_IG ?= { ig_approval < -5 } 
-				}
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = -2
-				}
-			}
-			if = {
-				limit = { 
-					scope:paramilitary_IG ?= { ig_approval < -10 } 
-				}
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = -4
-				}
-			}
-			if = {
-				limit = { 
-					scope:paramilitary_IG ?= { ig_approval < -15 } 
-				}
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = -8
-				}
-			}
-			if = {
-				limit = { 
-					scope:paramilitary_IG ?= { ig_approval <= -20 } 
-				}
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = -10
-				}
-			}
-			if = {
-				limit = { scope:paramilitary_IG ?= { is_in_government = no } }
-				change_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					add = -5
-				}
-			}
-			
-			#Corruption slows down reduction & speeds up increase
-			if = {
-				limit = { 
-					NOT = { root.var:paramilitary_groups_loyalty_monthly = 0 }
-					root.var:paramilitary_groups_loyalty_monthly < 0
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_very_low_anti_corruption }
-					change_variable = {
-						name = paramilitary_groups_loyalty_monthly
-						divide = 5
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_low_anti_corruption }
-					change_variable = {
-						name = paramilitary_groups_loyalty_monthly
-						divide = 4
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_medium_anti_corruption }
-					change_variable = {
-						name = paramilitary_groups_loyalty_monthly
-						divide = 3
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_high_anti_corruption }
-					change_variable = {
-						name = paramilitary_groups_loyalty_monthly
-						divide = 2
-					}
-				}
-			}
-			if = {
-				limit = { 
-					NOT = { root.var:paramilitary_groups_loyalty_monthly = 0 } 
-					NOT = { root.var:paramilitary_groups_loyalty_monthly < 0 }
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_very_low_anti_corruption }
-					change_variable = {
-						name = paramilitary_groups_loyalty_monthly
-						add = 10
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_low_anti_corruption }
-					change_variable = {
-						name = paramilitary_groups_loyalty_monthly
-						add = 8
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_medium_anti_corruption }
-					change_variable = {
-						name = paramilitary_groups_loyalty_monthly
-						add = 4
-					}
-				}
-				if = {
-					limit = { has_law_or_variant = law_type:law_high_anti_corruption }
-					change_variable = {
-						name = paramilitary_groups_loyalty_monthly
-						add = 2
-					}
-				}
-			}
-			
-			#Total
-			change_variable = {
-				name = paramilitary_groups_loyalty
-				add = root.var:paramilitary_groups_loyalty_monthly
-			}
-			
-			#If more than 100
-			if = {
-				limit = { root.var:paramilitary_groups_loyalty > 100 }
-				
-				#Max display is 100 loyalty
-				set_variable = { 
+				clamp_variable = {
 					name = paramilitary_groups_loyalty
-					value = 100
+					max = 100
+					min = 0
 				}
-				
-				#Display 0 because cannot increase any further
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = 0
-				}
-				
 			}
-			
-			#If less than 0
-			if = {
-				limit = { root.var:paramilitary_groups_loyalty < 0 }
-				
-				#Min display is 0 loyalty
+			else = {
 				set_variable = { 
 					name = paramilitary_groups_loyalty
 					value = 0
 				}
-				
-				#Display 0 because cannot decrease any further
-				set_variable = { 
-					name = paramilitary_groups_loyalty_monthly
-					value = 0
-				}
-				
 			}
 			
 		}
