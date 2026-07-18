@@ -1,6 +1,6 @@
 ﻿enforce_military_access = {
 	groups = {
-		overlord
+		general
 	}
 
 	texture = "gfx/interface/icons/diplomatic_action_icons/enforce_military_access.dds"
@@ -10,60 +10,173 @@
 	show_effect_in_tooltip = yes
 	can_use_obligations = no
 
-	possible = {
+	potential = {
 	
 		#THIS is at war
 		is_at_war = yes
 		
-		#TARGET is a non-sovereign country
-		scope:target_country = {
-			is_sufficiently_independent = no
-		}
-		
-		#Not at war with TARGET
-		NOR = {
-			is_diplomatic_play_enemy_of = scope:target_country 
-			has_war_with = scope:target_country
-		}
-		
-		#TARGET is not involved in war & is land adjacent to enemy
+		#War leader only
 		any_scope_war = {
-			NOT = { is_war_participant = scope:target_country }
-			any_war_participant = {
-				NOT = { this = root }
-				has_war_with = root
-				has_strategic_land_adjacency = scope:target_country
-				NOT = { has_strategic_land_adjacency = root }
+			is_warleader = scope:actor
+		}
+		
+		#TARGET is not already in war with THIS
+		NOR = { 
+			any_cobelligerent_in_war = { this = scope:target_country } 
+			any_enemy_in_diplo_play = { this = scope:target_country }
+		}
+	
+	}
+
+	possible = {
+		
+		#TARGET has legal obligation to assist THIS
+		trigger_if = {
+			limit = {
+				scope:target_country = {
+					is_subject_of = scope:actor
+				}
 			}
+			scope:target_country = {
+				OR = { 
+					is_forced_to_join_plays = scope:actor
+					has_treaty_alliance_with = { TARGET = scope:target_country }
+				}
+			}
+		}
+		trigger_else_if = {
+			limit = { has_treaty_defensive_pact_with = { TARGET = scope:target_country } }
+			any_diplomatic_play = {
+				is_war = yes
+				initiator = {
+					NOT = { this = scope:actor }
+					is_sufficiently_independent = yes
+				}
+				target = {
+					this = scope:actor
+				}
+				has_an_aggressive_war_goal = yes
+			}
+		}
+		trigger_else = {
+			has_treaty_alliance_with = { TARGET = scope:target_country }
 		}
 		
 	}
 
 	accept_effect = {
-		every_scope_war = {
-			join_war = {
-				target = scope:target_country
-				side = root
-			}
-		}
+		
+		#Add to war
 		if = {
 			limit = {
-				scope:target_country = { 
-					OR = { 
+				has_treaty_defensive_pact_with = { TARGET = scope:target_country }
+				any_diplomatic_play = {
+					is_war = yes
+					any_scope_play_involved = {
+						this = scope:actor
+					}
+					initiator = {
+						NOT = { this = scope:actor }
+						is_sufficiently_independent = yes
+					}
+					target = {
+						this = scope:actor
+					}
+					has_an_aggressive_war_goal = yes
+				}
+			}
+			scope:target_country = {
+				save_scope_as = war_joiner_scope
+				every_diplomatic_play = {
+					limit = {
+						is_war = yes
+						any_scope_play_involved = {
+							this = scope:actor
+						}
+						initiator = {
+							NOT = { this = scope:actor }
+							is_sufficiently_independent = yes
+						}
+						target = {
+							this = scope:actor
+						}
+						has_an_aggressive_war_goal = yes
+					}
+					add_target_backers = { scope:war_joiner_scope }
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				has_treaty_alliance_with = { TARGET = scope:target_country }
+				any_diplomatic_play = {
+					is_war = yes
+					any_scope_play_involved = {
+						this = scope:actor
+					}
+					initiator = {
+						this = scope:actor
+					}
+					target = {
+						NOT = { this = scope:actor }
+						is_sufficiently_independent = yes
+					}
+					has_an_aggressive_war_goal = yes
+				}
+			}
+			scope:target_country = {
+				save_scope_as = war_joiner_scope
+				every_diplomatic_play = {
+					limit = {
+						is_war = yes
+						any_scope_play_involved = {
+							this = scope:actor
+						}
+						initiator = {
+							this = scope:actor
+						}
+						target = {
+							NOT = { this = scope:actor }
+							is_sufficiently_independent = yes
+						}
+						has_an_aggressive_war_goal = yes
+					}
+					add_initiator_backers = { scope:war_joiner_scope }
+				}
+			}
+		}
+		else = { 
+			every_scope_war = {
+				join_war = {
+					target = scope:target_country
+					side = root
+				}
+			}
+		}
+		
+		#Domestic Effects
+		if = {
+			limit = {
+				scope:target_country = {
+					OR = {
 						is_a_colonial_subject_gov = yes
 						is_in_our_personal_union = yes
 					}
 				}
 			}
 			scope:target_country = {
-				add_liberty_desire = 10
-			}			
+				add_liberty_desire = 50
+			}
 		}
-		else = {
+		else_if = {
+			limit = { 
+				scope:target_country = { is_subject_of = scope:actor } 
+			}
 			scope:target_country = {
-				add_liberty_desire = 20
-			}		
+				add_liberty_desire = 25
+			}
 		}
+		
 	}
 
 	ai = {
@@ -80,19 +193,58 @@
 		}
 
 		will_propose = {
-			any_scope_war = {
-				NOT = { is_war_participant = scope:target_country }
-				any_war_participant = {
-					NOT = { this = root }
-					has_war_with = root
-					has_strategic_land_adjacency = scope:target_country
-					OR = {
-						NOT = { has_strategic_land_adjacency = root }
-						has_port_country = no
+			
+			OR = {
+				
+				#Activate alliances
+				AND = {
+					any_scope_war = {
+						attacker_warleader ?= { this = scope:actor }
+						defender_warleader ?= {
+							NOT = { this = scope:actor }
+							country_rank >= scope:actor.country_rank
+						}
+					}
+					has_treaty_alliance_with = { TARGET = scope:target_country }
+				}
+				AND = {
+					any_scope_war = {
+						defender_warleader ?= { this = scope:actor }
+						attacker_warleader ?= {
+							NOT = { this = scope:actor }
+							country_rank >= scope:actor.country_rank
+						}
+					}
+					OR = { 
+						has_treaty_alliance_with = { TARGET = scope:target_country }
+						has_treaty_defensive_pact_with = { TARGET = scope:target_country }
 					}
 				}
+				
+				#Subject Obligations
+				scope:target_country = { 
+					is_subject_of = scope:actor
+					is_forced_to_join_plays = scope:actor
+				}
+				
+				#Need for land access
+				any_scope_war = {
+					NOT = { is_war_participant = scope:target_country }
+					any_war_participant = {
+						NOT = { this = scope:actor }
+						has_war_with = scope:actor
+						has_strategic_land_adjacency = scope:target_country
+						OR = {
+							NOT = { has_strategic_land_adjacency = scope:actor }
+							has_port_country = no
+						}
+					}
+				}
+				
 			}
+			
 		}
 		
 	}
+	
 }
