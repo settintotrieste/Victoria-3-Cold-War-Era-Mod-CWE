@@ -1751,3 +1751,185 @@ effect_update_voting_power_for_laws = {
 	}
 
 }
+
+effect_cwe_start_diplomatic_play = {
+	is_war = no
+	has_an_aggressive_war_goal = yes
+	
+	#Add Initiator backers
+	every_country = {
+		limit = {
+			NOR = {
+				this = scope:initiator
+				this = scope:target
+			}
+			OR = { 
+				has_treaty_alliance_with = { TARGET = scope:initiator }
+				AND = {
+					is_subject_of = scope:initiator
+					is_forced_to_join_plays = scope:initiator
+				}
+				AND = {
+					has_diplomatic_pact = { who = scope:initiator type = condominium is_initiator = no }
+					NOT = { has_diplomatic_pact = { who = scope:target type = condominium is_initiator = no } }
+				}
+			}
+			NOR = {
+				any_cobelligerent_in_war = { this = scope:initiator } 
+				any_enemy_in_diplo_play = { this = scope:initiator }
+			}
+			#NOT = { has_truce_with = scope:target }
+		}
+		save_scope_as = war_joiner_scope
+		ROOT = { add_initiator_backers = { scope:war_joiner_scope } }
+	}
+	
+	#Add Target backers
+	every_country = {
+		limit = {
+			NOR = {
+				this = scope:initiator
+				this = scope:target
+			}
+			OR = {
+				has_treaty_alliance_with = { TARGET = scope:target }
+				has_treaty_defensive_pact_with = { TARGET = scope:target }
+				AND = {
+					is_subject_of = scope:target
+					is_forced_to_join_plays = scope:target
+				}
+				AND = {
+					NOT = { has_diplomatic_pact = { who = scope:initiator type = condominium is_initiator = no } }
+					has_diplomatic_pact = { who = scope:target type = condominium is_initiator = no }
+				}
+			}
+			NOR = {
+				any_cobelligerent_in_war = { this = scope:target } 
+				any_enemy_in_diplo_play = { this = scope:target }
+			}
+			#NOT = { has_truce_with = scope:initiator }
+		}
+		save_scope_as = war_joiner_scope
+		ROOT = { add_target_backers = { scope:war_joiner_scope } }
+	}
+	
+}
+
+effect_honour_alliances_defensive_pacts = {
+
+	#Call all allies to join war automatically - if opposing power is of the same rank
+	if = {
+		limit = {
+			any_diplomatic_play = {
+				is_war = yes
+				any_scope_play_involved = {
+					this = root
+				}
+				initiator = {
+					NOT = { this = root }
+					is_sufficiently_independent = yes
+					country_rank >= root.country_rank
+				}
+				target = {
+					this = root
+				}
+				has_an_aggressive_war_goal = yes
+			}
+		}
+		save_scope_as = war_starter_scope
+		every_country = {
+			limit = {
+				NOT = { this = root }
+				OR = {
+					has_treaty_alliance_with = { TARGET = ROOT }
+					has_treaty_defensive_pact_with = { TARGET = ROOT }
+					AND = {
+						is_subject_of = ROOT
+						is_forced_to_join_plays = ROOT
+					}
+				}
+				NOR = { 
+					any_cobelligerent_in_war = { this = root } 
+					any_enemy_in_diplo_play = { this = root }
+				}
+			}
+			save_scope_as = war_joiner_scope
+			every_diplomatic_play = {
+				limit = {
+					is_war = yes
+					any_scope_play_involved = {
+						this = root
+					}
+					initiator = {
+						NOT = { this = root }
+						is_sufficiently_independent = yes
+						country_rank >= root.country_rank
+					}
+					target = {
+						this = root
+					}
+					has_an_aggressive_war_goal = yes
+				}
+				add_target_backers = { scope:war_joiner_scope }
+			}
+			post_notification = auto_war_join_notification
+		}
+	}
+	else_if = {
+		limit = {
+			any_diplomatic_play = {
+				is_war = yes
+				any_scope_play_involved = {
+					this = root
+				}
+				initiator = {
+					this = root
+				}
+				target = {
+					NOT = { this = root }
+					is_sufficiently_independent = yes
+					country_rank >= root.country_rank
+				}
+				has_an_aggressive_war_goal = yes
+			}
+		}
+		save_scope_as = war_starter_scope
+		every_country = {
+			limit = {
+				NOT = { this = root }
+				OR = { 
+					has_treaty_alliance_with = { TARGET = ROOT }
+					AND = {
+						is_subject_of = ROOT
+						is_forced_to_join_plays = ROOT
+					}
+				}
+				NOR = { 
+					any_cobelligerent_in_war = { this = root } 
+					any_enemy_in_diplo_play = { this = root }
+				}
+			}
+			save_scope_as = war_joiner_scope
+			every_diplomatic_play = {
+				limit = {
+					is_war = yes
+					any_scope_play_involved = {
+						this = root
+					}
+					initiator = {
+						this = root
+					}
+					target = {
+						NOT = { this = root }
+						is_sufficiently_independent = yes
+						country_rank >= root.country_rank
+					}
+					has_an_aggressive_war_goal = yes
+				}
+				add_initiator_backers = { scope:war_joiner_scope }
+			}
+			post_notification = auto_war_join_notification
+		}
+	}
+
+}
