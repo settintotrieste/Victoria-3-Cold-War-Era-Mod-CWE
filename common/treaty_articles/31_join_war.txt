@@ -25,23 +25,22 @@
 
 	possible = {
 		
+		#THIS has independent foreign affairs
+		is_sufficiently_independent = yes
+		
 		#TARGET is at war, is the war leader and not at war with THIS
-		scope:other_country = {
+		scope:other_country = { 
 			OR = { 
 				is_sufficiently_independent = yes
 				is_subject_of = ROOT
+				has_diplomatic_pact = { who = ROOT type = condominium is_initiator = no }
 			}
 			is_at_war = yes
+			NOT = { has_war_with = ROOT }
 			any_scope_war = {
 				is_warleader = scope:other_country
 				NOT = { is_war_participant = ROOT }
 			}
-		}
-		
-		#Not already part of the other country's wars
-		NOR = { 
-			is_in_war_together = scope:other_country 
-			has_war_with = scope:other_country 
 		}
 		
 		#THIS can reach the TARGET
@@ -79,33 +78,59 @@
 			}
 			
 		}
-	
+		
 		#THIS is interested in the TARGET
 		#has_diplomatic_relevance = scope:other_country
 	
 		#THIS does not have a truce with TARGET
-		NOT = { has_truce_with = scope:other_country }
-		
+		#NOT = { has_truce_with = scope:other_country }
+	
 		# THIS can and wants to intervene
-		OR = { 
+		OR = {
 		
-			can_go_to_war = yes
-			
-			AND = { 
-				is_a_dictatorship = yes
-				exists = ruler
-				ruler = {
-					OR = {
-						has_ideology = ideology:ideology_autocratic
-						has_ideology = ideology:ideology_power_hungry
-					}
+			AND = {
+				has_strategic_region_interest_tier = {
+					strategic_region = scope:other_country.capital.region
+					value >= interest_tier_effect_can_join_diplomatic_plays_min_tier
 				}
-				scope:other_country = { has_strategic_land_adjacency = ROOT }
+				can_go_to_war = yes
 			}
 			
-			scope:other_country = { 
-				is_subject_of = ROOT
-				is_not_sufficiently_independent = yes
+			AND = {
+				is_neutral = no
+				OR = {
+					has_treaty_alliance_with = { TARGET = scope:other_country }
+					AND = {
+						OR = {
+							has_treaty_defensive_pact_with = { TARGET = scope:other_country }
+							has_treaty_guarantee_independence_with = { TARGET = scope:other_country }
+						}
+						OR = {
+							any_diplomatic_play = {
+								target = scope:other_country
+								custom_tooltip = {
+									text = "has_aggressive_war_goal.tt"
+									has_an_aggressive_war_goal = yes
+								}
+							}
+							any_diplomatic_play = {
+								initiator = scope:other_country
+								custom_tooltip = {
+									text = "has_no_aggressive_war_goal.tt"
+									has_an_aggressive_war_goal = no
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			is_direct_subject_of = scope:other_country
+			scope:other_country = { is_direct_subject_of = root }
+			
+			scope:other_country = {
+				has_modifier = condominium_modifier
+				has_diplomatic_pact = { who = ROOT type = condominium is_initiator = no }
 			}
 			
 		}
@@ -114,7 +139,29 @@
 		OR = {
 			has_law_or_variant = law_type:law_regionalist_fp
 			has_law_or_variant = law_type:law_globalist_fp
-			scope:other_country = { has_strategic_land_adjacency = scope:source_country }
+			scope:other_country = { has_strategic_land_adjacency = ROOT }
+		}
+		
+		# THIS has good relations with TARGET
+		OR = {
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+				scope:other_country.relations:root >= relations_threshold:cordial
+			}
+			scope:other_country = { is_subject_of = ROOT }
+		}
+		
+		#Respect truces
+		any_diplomatic_play = {
+			is_war = yes
+			is_diplomatic_play_participant = scope:other_country
+			NOT = { is_diplomatic_play_participant = ROOT }
+			NOT = {
+				any_scope_play_involved = {
+					has_war_with = scope:other_country
+					OR = { has_truce_with = ROOT any_scope_treaty = { binds = ROOT any_scope_article = { has_type = non_aggression_pact } } }
+				}
+			}
 		}
 		
 	}
@@ -159,6 +206,7 @@
 				save_scope_as = actor
 			}
 			scope:actor ?= {
+			
 				#Lobby
 				add_lobby_appeasement_from_diplomacy_bidirectional = { 
 					FIRST = scope:actor
@@ -177,10 +225,16 @@
 				#THIS gains infamy from joining an Aggressive War
 				if = {
 					limit = {
-						any_diplomatic_play = { 
+						any_diplomatic_play = {
 							is_war = yes
 							is_diplomatic_play_participant = scope:target
 							NOT = { is_diplomatic_play_participant = scope:actor }
+							NOT = {
+								any_scope_play_involved = {
+									has_war_with = scope:target
+									OR = { has_truce_with = scope:actor any_scope_treaty = { binds = scope:actor any_scope_article = { has_type = non_aggression_pact } } }
+								}
+							}
 							initiator_is = scope:target
 						}
 					}
@@ -197,6 +251,12 @@
 							is_war = yes
 							is_diplomatic_play_participant = scope:target
 							NOT = { is_diplomatic_play_participant = scope:actor }
+							NOT = {
+								any_scope_play_involved = {
+									has_war_with = scope:target
+									OR = { has_truce_with = scope:actor any_scope_treaty = { binds = scope:actor any_scope_article = { has_type = non_aggression_pact } } }
+								}
+							}
 						}
 						if = {
 							limit = {
@@ -217,6 +277,7 @@
 					}
 				
 				}
+				
 			}
 		}
 	}
