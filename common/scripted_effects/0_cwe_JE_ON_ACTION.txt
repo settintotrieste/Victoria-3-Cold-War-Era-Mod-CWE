@@ -141,23 +141,12 @@ effect_journal_entry_cwe_on_action = {
 		
 			NOT = { has_journal_entry = je_vote_of_no_confidence_system }
 		
-			is_a_parliamentary_democracy = yes
-			any_interest_group = { 
-				exists = leader
-				leader = { is_ruler_of_own_country = yes }
-			}
-	
-			government_legitimacy < 25
-	
+			is_a_parliamentary_elective_system = yes
+			government_has_legislative_simple_majority = no
+			government_legitimacy < 50
 			in_election_campaign = no
-			
-			any_interest_group = {
-				is_in_government = no
-				is_powerful = yes
-				ig_approval < -5 # Unhappy
-			}
-			
 			NOT = { has_variable = vote_of_no_confidence_timer }
+		
 		}
 		add_journal_entry = { type = je_vote_of_no_confidence_system }
 	}
@@ -579,6 +568,43 @@ effect_journal_entry_cwe_on_action = {
 		
 		}
 		add_journal_entry = { type = je_impeachment_system }
+	}
+	if = {
+		limit = {
+		
+			NOT = { has_journal_entry = je_backbenchers_plot_system }
+		
+			any_scope_character = {
+				OR = {
+					AND = {
+						is_ruler_of_own_country = yes
+						owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+					}
+					AND = {
+						has_role = character_role_head_of_government
+						owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+					}
+				}
+				OR = {
+				
+					#Deep unpopularity
+					AND = {
+						popularity < -50
+						owner ?= {
+							government_legitimacy < 20
+							is_a_parliamentary_democracy = yes
+						}
+					}
+					
+					#Committeed Crimes
+					has_variable = investigation_found_crimes
+				
+				}
+			}
+			NOT = { has_variable = backbenchers_plot_timer }
+		
+		}
+		add_journal_entry = { type = je_backbenchers_plot_system }
 	}
 	if = {
 		limit = {
