@@ -1,0 +1,222 @@
+je_political_investigations_system = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	group = je_group_internal_affairs
+
+	scripted_button = je_political_investigation_drop_investigation_button
+
+	possible = {
+		
+		#Eligible character exists
+		any_scope_character = {
+			has_modifier = accused_of_crimes
+			NOT = { has_modifier = indicted_character }
+			NOT = { has_role = character_role_prisoner }
+			NOT = { has_variable = acquitted_of_investigation }
+		}
+		
+	}
+
+	immediate = {
+		
+		#Mark character to be tried
+		random_scope_character = {
+			limit = {
+				has_modifier = accused_of_crimes
+				NOT = { has_modifier = indicted_character }
+				NOT = { has_role = character_role_prisoner }
+			}
+			save_scope_as = investigated_character_scope
+			interest_group ?= {
+				save_scope_as = investigated_character_ig_scope
+			}
+		}
+		
+		#Trial duration
+		set_variable = {
+			name = investigation_progress_var
+			value = 0
+		}
+		
+	}
+	
+	current_value = {
+		value =	root.var:investigation_progress_var
+	}
+
+	goal_add_value = {
+		add = 6
+	}
+	
+	complete = {
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+		scope:investigated_character_scope ?= {
+			has_modifier = accused_of_crimes
+			NOT = { has_modifier = indicted_character }
+			NOT = { has_role = character_role_prisoner }
+			is_busy = no
+			is_in_battle = no
+		}
+	}
+	
+	on_complete = {
+	
+		#Indict character
+		if = {
+			limit = {
+				scope:investigated_character_scope ?= {
+					OR = {
+						AND = {
+							is_ruler_of_own_country = yes
+							owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+						}
+						AND = {
+							has_role = character_role_head_of_state
+							owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+						}
+					}
+				}
+			}
+			scope:investigated_character_scope ?= { 
+				set_variable = { name = investigation_found_crimes years = 5 }
+				owner ?= { hidden_effect = { add_journal_entry = { type = je_impeachment_system } } }
+			}
+		}
+		else_if = {
+			limit = {
+				scope:investigated_character_scope ?= { 
+					OR = {
+						AND = {
+							is_ruler_of_own_country = yes
+							owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+						}
+						AND = {
+							has_role = character_role_head_of_government
+							owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+						}
+					}
+				}
+			}
+			scope:investigated_character_scope ?= { 
+				set_variable = { name = investigation_found_crimes years = 5 }
+				owner ?= { hidden_effect = { add_journal_entry = { type = je_backbenchers_plot_system } } }
+			}
+		}
+		else = {
+			scope:investigated_character_scope ?= {
+				
+				#Timer
+				set_variable = { name = investigation_found_crimes years = 5 }
+			
+				#Put character on trial
+				add_modifier = { name = indicted_character }
+				owner ?= { hidden_effect = { add_journal_entry = { type = je_political_trials_system } } }
+				
+			}
+		}
+		
+	}
+
+	on_monthly_pulse = {
+		
+		effect = {
+		
+			#Add investigation ticker
+			if = {
+				limit = { 
+					has_law_or_variant = law_type:law_politicised_bureaucrats
+				}
+				change_variable = {
+					name = investigation_progress_var
+					add = 3
+				}
+			}
+			else_if = {
+				limit = { 
+					has_law_or_variant = law_type:law_elitist_bureaucrats
+				}
+				change_variable = {
+					name = investigation_progress_var
+					add = 2
+				}
+			}
+			else = {
+				change_variable = {
+					name = investigation_progress_var
+					add = 1
+				}
+			}
+			
+			#Add domestic reaction
+			if = {
+				limit = { has_law_or_variant = law_type:law_full_free_speech }
+				add_radicals = {
+					value = 0.03
+					interest_group = scope:investigated_character_ig_scope
+				}
+			}
+			else_if = {
+				limit = { has_law_or_variant = law_type:law_limited_free_speech }
+				add_radicals = {
+					value = 0.02
+					interest_group = scope:investigated_character_ig_scope
+				}
+			}
+			else_if = {
+				limit = { has_law_or_variant = law_type:law_censorship }
+				add_radicals = {
+					value = 0.01
+					interest_group = scope:investigated_character_ig_scope
+				}
+			}
+			
+		}
+		
+	}
+	
+	invalid = {
+		OR = {
+			
+			#Ineligible character
+			NOT = { exists = scope:investigated_character_scope }
+			scope:investigated_character_scope ?= { 
+				OR = { 
+					has_modifier = indicted_character 
+					has_role = character_role_prisoner 
+					has_modifier = impeached_politician 
+					has_modifier = backbenchers_plot_politician 
+				} 
+			}
+			scope:investigated_character_scope ?= { NOT = { owner ?= ROOT } }
+			scope:investigated_character_scope ?= { character_has_investigation_immunity = yes }
+			scope:investigated_character_scope ?= { NOT = { has_modifier = accused_of_crimes } }
+			
+			#Prison Breakout
+			capital ?= {
+				market_access <= 0 # Occupied
+			}
+			
+		}
+	}
+	
+	on_invalid = {
+		scope:investigated_character_scope ?= {
+			if = {
+				limit = { has_modifier = accused_of_crimes }
+				remove_modifier = accused_of_crimes
+			}
+			set_variable = { name = acquitted_of_investigation years = 5 }
+		}
+	}
+	
+	weight = 200
+
+	should_be_pinned_by_default_uninvolved_or_context = yes
+
+	transferable = no
+
+	progressbar = yes
+	
+}

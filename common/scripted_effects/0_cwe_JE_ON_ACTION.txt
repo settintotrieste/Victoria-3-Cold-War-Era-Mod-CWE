@@ -130,81 +130,6 @@ effect_journal_entry_cwe_on_action = {
 	if = {
 		limit = {
 		
-			NOT = { has_journal_entry = je_impeachment_system }
-		
-			is_a_presidential_democracy = yes
-			any_interest_group = { 
-				exists = leader
-				leader = { is_ruler_of_own_country = yes }
-			}
-			ruler = {
-				OR = {
-					has_modifier = ignored_corruption
-					has_modifier = corrupt_connections_exposed
-					has_modifier = corrupt_connections_exposed_minor
-					has_modifier = corruption_scandal_character_modifier
-					has_modifier = dealing_with_corruption
-					has_modifier = treasonous_traitor
-					has_modifier = seizing_power
-				}
-				NOR = { 
-					has_modifier = impeached_politician
-					has_modifier = survived_impeachment
-				}
-			}
-			government_legitimacy < 50
-		}
-		add_journal_entry = { type = je_impeachment_system }
-	}
-	if = {
-		limit = {
-		
-			NOT = { has_journal_entry = je_backbenchers_plot_system }
-		
-			NAND = {
-				historical_railroading_active = yes
-				ruler ?= { is_historical = yes }
-			}
-		
-			is_a_parliamentary_democracy = yes
-			any_interest_group = { 
-				exists = leader
-				leader = { is_ruler_of_own_country = yes }
-			}
-			OR = {
-				ruler = {
-					OR = {
-						has_modifier = ignored_corruption
-						has_modifier = corrupt_connections_exposed
-						has_modifier = corrupt_connections_exposed_minor
-						has_modifier = corruption_scandal_character_modifier
-						has_modifier = dealing_with_corruption
-						has_modifier = treasonous_traitor
-						has_modifier = seizing_power
-					}
-				}
-				any_interest_group = {
-					is_in_government = yes
-					leader = { is_ruler_of_own_country = no }
-					ig_approval < -5 # Unhappy
-					NOT = { has_modifier = party_in_chaos_modifier }
-				}
-			}
-			exists = ruler
-			ruler = {
-				NOR = { 
-					has_modifier = backbenchers_plot_politician
-					has_modifier = survived_backbenchers_plot
-				}
-			}
-			
-			NOT = { has_variable = backbenchers_plot_timer }
-		}
-		add_journal_entry = { type = je_backbenchers_plot_system }
-	}
-	if = {
-		limit = {
-		
 			has_law_or_variant = law_type:law_slavery_cultural
 			
 			NOT = { has_journal_entry = je_cultural_suppression_system }
@@ -619,11 +544,42 @@ effect_journal_entry_cwe_on_action = {
 	if = {
 		limit = {
 		
+			NOT = { has_journal_entry = je_political_investigations_system }
+		
+			any_scope_character = {
+				has_modifier = accused_of_crimes
+				NOT = { has_modifier = indicted_character }
+				NOT = { has_role = character_role_prisoner }
+				NOT = { has_variable = acquitted_of_investigation }
+			}
+		
+		}
+		add_journal_entry = { type = je_political_investigations_system }
+	}
+	if = {
+		limit = {
+		
+			NOT = { has_journal_entry = je_impeachment_system }
+		
+			any_scope_character = {
+				has_variable = investigation_found_crimes
+				NOT = { has_modifier = impeached_politician }
+				NOT = { has_modifier = indicted_character }
+				NOT = { has_role = character_role_prisoner }
+			}
+		
+		}
+		add_journal_entry = { type = je_impeachment_system }
+	}
+	if = {
+		limit = {
+		
 			NOT = { has_journal_entry = je_political_trials_system }
 		
 			any_scope_character = {
 				has_modifier = indicted_character
 				NOT = { has_role = character_role_prisoner }
+				character_has_legal_immunity = no
 			}
 		
 		}
@@ -1753,77 +1709,85 @@ effect_update_voting_power_for_laws = {
 }
 
 effect_cwe_start_diplomatic_play = {
-	is_war = no
-	has_an_aggressive_war_goal = yes
 	
-	#Add Initiator backers
-	every_country = {
+	if = {
 		limit = {
-			save_temporary_scope_as = war_joiner_candidate_scope
-			NOR = {
-				this = scope:initiator
-				this = scope:target
+			ROOT = {
+				is_war = no
+				has_an_aggressive_war_goal = yes
 			}
-			OR = { 
-				has_treaty_alliance_with = { TARGET = scope:initiator }
-				AND = {
-					is_subject_of = scope:initiator
+		}
+	
+		#Add Initiator backers
+		every_country = {
+			limit = {
+				save_temporary_scope_as = war_joiner_candidate_scope
+				NOR = {
+					this = scope:initiator
+					this = scope:target
+				}
+				OR = { 
+					has_treaty_alliance_with = { TARGET = scope:initiator }
 					AND = {
-						is_sufficiently_independent = no
-						NOT = { any_scope_diplomatic_pact = { is_diplomatic_action_type = exempt_from_service } }
+						is_subject_of = scope:initiator
+						AND = {
+							is_sufficiently_independent = no
+							NOT = { any_scope_diplomatic_pact = { is_diplomatic_action_type = exempt_from_service } }
+						}
+					}
+					AND = {
+						has_diplomatic_pact = { who = scope:initiator type = condominium is_initiator = yes }
+						NOT = { has_diplomatic_pact = { who = scope:target type = condominium is_initiator = yes } }
 					}
 				}
-				AND = {
-					has_diplomatic_pact = { who = scope:initiator type = condominium is_initiator = yes }
-					NOT = { has_diplomatic_pact = { who = scope:target type = condominium is_initiator = yes } }
+				ROOT = {
+					NOT = { is_diplomatic_play_participant = scope:war_joiner_candidate_scope }
 				}
+				NOT = {
+					any_enemy_in_diplo_play = { this = scope:initiator }
+				}
+				NOR = { has_truce_with = scope:initiator any_scope_treaty = { binds = scope:initiator any_scope_article = { has_type = non_aggression_pact } } }
 			}
-			ROOT = {
-				NOT = { is_diplomatic_play_participant = scope:war_joiner_candidate_scope }
-			}
-			NOT = {
-				any_enemy_in_diplo_play = { this = scope:initiator }
-			}
-			NOR = { has_truce_with = scope:initiator any_scope_treaty = { binds = scope:initiator any_scope_article = { has_type = non_aggression_pact } } }
+			save_scope_as = war_joiner_scope
+			ROOT = { add_initiator_backers = { scope:war_joiner_scope } }
 		}
-		save_scope_as = war_joiner_scope
-		ROOT = { add_initiator_backers = { scope:war_joiner_scope } }
-	}
-	
-	#Add Target backers
-	every_country = {
-		limit = {
-			save_temporary_scope_as = war_joiner_candidate_scope
-			NOR = {
-				this = scope:initiator
-				this = scope:target
-			}
-			OR = {
-				has_treaty_alliance_with = { TARGET = scope:target }
-				has_treaty_defensive_pact_with = { TARGET = scope:target }
-				has_treaty_guarantee_independence_with = { TARGET = scope:target }
-				AND = {
-					is_subject_of = scope:target
+		
+		#Add Target backers
+		every_country = {
+			limit = {
+				save_temporary_scope_as = war_joiner_candidate_scope
+				NOR = {
+					this = scope:initiator
+					this = scope:target
+				}
+				OR = {
+					has_treaty_alliance_with = { TARGET = scope:target }
+					has_treaty_defensive_pact_with = { TARGET = scope:target }
+					has_treaty_guarantee_independence_with = { TARGET = scope:target }
 					AND = {
-						is_sufficiently_independent = no
-						NOT = { any_scope_diplomatic_pact = { is_diplomatic_action_type = exempt_from_service } }
+						is_subject_of = scope:target
+						AND = {
+							is_sufficiently_independent = no
+							NOT = { any_scope_diplomatic_pact = { is_diplomatic_action_type = exempt_from_service } }
+						}
+					}
+					AND = {
+						NOT = { has_diplomatic_pact = { who = scope:initiator type = condominium is_initiator = yes } }
+						has_diplomatic_pact = { who = scope:target type = condominium is_initiator = yes }
 					}
 				}
-				AND = {
-					NOT = { has_diplomatic_pact = { who = scope:initiator type = condominium is_initiator = yes } }
-					has_diplomatic_pact = { who = scope:target type = condominium is_initiator = yes }
+				ROOT = {
+					NOT = { is_diplomatic_play_participant = scope:war_joiner_candidate_scope }
 				}
+				NOT = {
+					any_enemy_in_diplo_play = { this = scope:target }
+				}
+				NOR = { has_truce_with = scope:initiator any_scope_treaty = { binds = scope:initiator any_scope_article = { has_type = non_aggression_pact } } }
 			}
-			ROOT = {
-				NOT = { is_diplomatic_play_participant = scope:war_joiner_candidate_scope }
-			}
-			NOT = {
-				any_enemy_in_diplo_play = { this = scope:target }
-			}
-			NOR = { has_truce_with = scope:initiator any_scope_treaty = { binds = scope:initiator any_scope_article = { has_type = non_aggression_pact } } }
+			save_scope_as = war_joiner_scope
+			ROOT = { add_target_backers = { scope:war_joiner_scope } }
 		}
-		save_scope_as = war_joiner_scope
-		ROOT = { add_target_backers = { scope:war_joiner_scope } }
+		
 	}
 	
 }

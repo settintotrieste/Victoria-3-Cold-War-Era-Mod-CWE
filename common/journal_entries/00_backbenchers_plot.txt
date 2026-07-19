@@ -4,89 +4,82 @@ je_backbenchers_plot_system = {
 	group = je_group_crises
 
 	possible = {
-	
-		NAND = {
-			historical_railroading_active = yes
-			ruler ?= { is_historical = yes }
-		}
-	
-		is_a_parliamentary_democracy = yes
-		exists = ruler
 		
-		custom_tooltip = {
-			text = je_backbenchers_plot_system_5.tt
-			
+		#Cause
+		any_scope_character = {
 			OR = {
-		
-				#PM did something wrong
-				ruler ?= {
-		
-					#Ruler has committed an impeachable offence
-					OR = {
+				AND = {
+					is_ruler_of_own_country = yes
+					owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+				}
+				AND = {
+					has_role = character_role_head_of_government
+					owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+				}
+			}
+			OR = {
 			
-						#Corruption scandal
-						has_modifier = ignored_corruption
-						has_modifier = corrupt_connections_exposed
-						has_modifier = corrupt_connections_exposed_minor
-						has_modifier = dealing_with_corruption
-						has_modifier = corruption_scandal_character_modifier
-				
-						#Traitor
-						has_modifier = treasonous_traitor
-				
-						#Abuse of Power
-						has_modifier = seizing_power
-				
+				#Deep unpopularity
+				AND = {
+					popularity < -50
+					owner ?= {
+						government_legitimacy < 20
+						is_a_parliamentary_democracy = yes
 					}
-					
-					is_historical = no
-		
 				}
-			
-				#The most powerful IG within the ruling coalition hates the PM
-				any_interest_group = {
-					is_in_government = yes
-					leader = { is_ruler_of_own_country = no }
-					ig_approval < -5 # Unhappy
-					
-					#Did not call for a party leadership contest recently
-					NOT = { has_modifier = party_in_chaos_modifier }
-				}
-			
-			}
-			
-		}
-		
-		custom_tooltip = {
-			text = je_backbenchers_plot_system_3.tt
-			ruler ?= {
-		
-				#Ruler has not been subjected to a backbencher's plot recently recently
-				NOR = { 
-					has_modifier = backbenchers_plot_politician
-					has_modifier = survived_backbenchers_plot
-				}
+				
+				#Committeed Crimes
+				has_variable = investigation_found_crimes
 			
 			}
 		}
+		
+		#Timer
+		NOT = { has_variable = backbenchers_plot_timer }
 		
 	}
 
 	immediate = {
 		
 		#Mark ruler as backbenchers_plot so as to prevent JE from firing too frequently
-		ruler ?= {
-			hidden_effect = { remove_modifier = backbenchers_plot_politician }
-			add_modifier = { name = backbenchers_plot_politician years = 4 is_decaying = yes }
+		random_scope_character = {
+			limit = {
+				OR = {
+					AND = {
+						is_ruler_of_own_country = yes
+						owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+					}
+					AND = {
+						has_role = character_role_head_of_government
+						owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+					}
+				}
+				OR = {
+				
+					#Deep unpopularity
+					AND = {
+						popularity < -50
+						owner ?= {
+							government_legitimacy < 20
+							is_a_parliamentary_democracy = yes
+						}
+					}
+					
+					#Committeed Crimes
+					has_variable = investigation_found_crimes
+				
+				}
+			}
+			add_modifier = { name = backbenchers_plot_politician }
 			save_scope_as = backbenchers_plot_prime_minister_scope
 		}
 		
 	}
 	
-	# Ruler has 180 days to avoid backbenchers plot
-	timeout = 180
+	# Ruler has 90 days to avoid backbenchers plot
+	timeout = 90
 	
-	# Parliament/Party to vote after 180 days
+	# Parliament/Party to vote after 90 days
 	on_timeout = {
 	
 		#Timer
@@ -96,21 +89,33 @@ je_backbenchers_plot_system = {
 		if = {
 			limit = { 
 			
-				#The most powerful IG within the ruling coalition still hates the PM
-				any_interest_group = {
-					is_in_government = yes
-					leader = { is_ruler_of_own_country = no }
-					OR = { 
-						is_strongest_ig_in_government = yes
-						ig_government_power_share >= 0.35
+				OR = {
+				
+					#The most powerful IG within the ruling coalition still hates the PM
+					any_interest_group = {
+						is_in_government = yes
+						leader = { is_ruler_of_own_country = no }
+						OR = { 
+							is_strongest_ig_in_government = yes
+							ig_government_power_share >= 0.35
+						}
+						ig_approval < neutral
 					}
-					ig_approval < neutral
+					
+					#Low government support to protect criminality
+					AND = {
+						scope:backbenchers_plot_prime_minister_scope ?= {
+							has_variable = investigation_found_crimes
+						}
+						government_legitimacy < 66
+					}
+					
 				}
 			
 			}
 			
 			#PM's IG is tarnished for 1 electoral cycle
-			ruler ?= {
+			scope:backbenchers_plot_prime_minister_scope ?= {
 				interest_group = {
 					hidden_effect = { remove_modifier = party_in_chaos_modifier }
 					add_modifier = { 
@@ -124,13 +129,93 @@ je_backbenchers_plot_system = {
 			#PM is removed from office
 			custom_tooltip = {
 				text = je_backbenchers_plot_system_1.tt
-				ruler ?= { kill_character = yes }
+				if = {
+					limit = {
+						scope:backbenchers_plot_prime_minister_scope ?= { is_ruler_of_own_country = yes }
+					}
+					if = {
+						limit = {
+							any_scope_character = {
+								has_role_of_type = politician
+								is_ruler_of_own_country = no
+								interest_group ?= { is_interest_group_type = scope:backbenchers_plot_prime_minister_scope.interest_group }
+							}
+						}
+						ordered_scope_character = {
+							limit = {
+								has_role_of_type = politician
+								is_ruler_of_own_country = no
+								interest_group ?= { OR = { is_interest_group_type = scope:backbenchers_plot_prime_minister_scope.interest_group is_in_government = yes } }
+							}
+							order_by = popularity
+							position = 0
+							check_range_bounds = no
+							set_character_as_ruler = yes
+						}
+					}
+					else = {
+						create_character = {
+							ruler = yes
+							interest_group = scope:backbenchers_plot_prime_minister_scope.interest_group
+							on_created = {
+								add_character_role = politician
+							}
+						}
+					}
+				}
+				else_if = {
+					limit = {
+						scope:backbenchers_plot_prime_minister_scope ?= { has_role = character_role_head_of_government }
+					}
+					if = {
+						limit = {
+							any_scope_character = {
+								has_role_of_type = politician
+								is_ruler_of_own_country = no
+								NOT = { has_role = character_role_head_of_government }
+								interest_group ?= { OR = { is_interest_group_type = scope:backbenchers_plot_prime_minister_scope.interest_group is_in_government = yes } }
+							}
+						}
+						ordered_scope_character = {
+							limit = {
+								has_role_of_type = politician
+								is_ruler_of_own_country = no
+								NOT = { has_role = character_role_head_of_government }
+								interest_group ?= { OR = { is_interest_group_type = scope:backbenchers_plot_prime_minister_scope.interest_group is_in_government = yes } }
+							}
+							order_by = popularity
+							position = 0
+							check_range_bounds = no
+							add_character_role = character_role_head_of_government
+						}
+					}
+					else = {
+						create_character = {
+							has_role = character_role_head_of_government
+							interest_group = scope:backbenchers_plot_prime_minister_scope.interest_group
+							on_created = {
+								add_character_role = politician
+							}
+						}
+					}
+				}
+			}
+			
+			#PM is put on trial
+			if = {
+				limit = { scope:backbenchers_plot_prime_minister_scope ?= { has_variable = investigation_found_crimes } }
+				scope:backbenchers_plot_prime_minister_scope ?= {
+					remove_variable = investigation_found_crimes
+					replace_character_roles = { add = { character_role_politician } remove_all = yes }
+					add_modifier = { name = indicted_character }
+					owner ?= { hidden_effect = { add_journal_entry = { type = je_political_trials_system } } }
+				}
 			}
 			
 		}
 		
 		# backbencher's plot is unsuccessful
-		if = {
+		else_if = {
 			limit = { 
 			
 				NOT = { 
@@ -151,19 +236,19 @@ je_backbenchers_plot_system = {
 			custom_tooltip = {
 				text = je_backbenchers_plot_system_2.tt
 			}
-			ruler ?= { 
-				hidden_effect = { remove_modifier = backbenchers_plot_politician }
+			scope:backbenchers_plot_prime_minister_scope ?= {
 				add_modifier = { name = survived_backbenchers_plot years = 4 is_decaying = yes } 
 			}
 			
-			#All dissenting parties lose clout
+			#All dissenting factions lose clout
 			every_interest_group = {
-				limit = { 
+				limit = {
+					is_in_government = yes
 					leader = { is_ruler_of_own_country = no }
 					ig_approval < neutral
 				}
 				hidden_effect = { remove_modifier = party_in_chaos_modifier }
-				add_modifier = { 
+				add_modifier = {
 					name = party_in_chaos_modifier
 					years = 2
 					is_decaying = yes
@@ -172,27 +257,40 @@ je_backbenchers_plot_system = {
 			
 		}
 		
+		#Clear modifiers
+		scope:backbenchers_plot_prime_minister_scope ?= {
+			if = {
+				limit = { has_modifier = backbenchers_plot_politician }
+				remove_modifier = backbenchers_plot_politician
+			}
+		}
+		
 	}
 	
 	invalid = {
-	
+		
 		OR = {
-		
-			#PM has become the Parliament OR there is no longer a PM
-			NOT = { is_a_parliamentary_democracy = yes }
 			
-			#Ruler was changed midway
-			custom_tooltip = {
-				text = je_backbenchers_plot_system_4.tt
-				ruler ?= {
-		
-					#Ruler has not been subjected to a backbencher's plot recently recently
-					NOR = { 
-						has_modifier = backbenchers_plot_politician
-						has_modifier = survived_backbenchers_plot
+			#Ineligible character
+			NOT = { exists = scope:backbenchers_plot_prime_minister_scope }
+			scope:backbenchers_plot_prime_minister_scope ?= { OR = { has_modifier = indicted_character has_role = character_role_prisoner } }
+			scope:backbenchers_plot_prime_minister_scope ?= { 
+				NOR = {
+					AND = {
+						is_ruler_of_own_country = yes
+						owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
 					}
-			
+					AND = {
+						has_role = character_role_head_of_government
+						owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+					}
 				}
+			}
+			scope:backbenchers_plot_prime_minister_scope ?= { NOT = { owner ?= ROOT } }
+			
+			#Prison Breakout
+			capital ?= {
+				market_access <= 0 # Occupied
 			}
 		
 		}
@@ -202,9 +300,11 @@ je_backbenchers_plot_system = {
 	on_invalid = {
 	
 		#Clear backbenchers_plot markers
-		if = {
-			limit = { ruler ?= { has_modifier = backbenchers_plot_politician } }
-			ruler ?= { remove_modifier = backbenchers_plot_politician }
+		scope:backbenchers_plot_prime_minister_scope ?= {
+			if = {
+				limit = { has_modifier = backbenchers_plot_politician }
+				remove_modifier = backbenchers_plot_politician
+			}
 		}
 		
 	}

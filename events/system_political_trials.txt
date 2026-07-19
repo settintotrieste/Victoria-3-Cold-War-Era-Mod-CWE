@@ -72,7 +72,7 @@ political_trials_system.1 = {
 						has_modifier = corruption_scandal_character_modifier
 						has_modifier = dealing_with_corruption
 						has_trait = grifter
-						has_trait = framed_for_crimes
+						has_modifier = framed_for_crimes
 						
 						#Traitor
 						has_modifier = treasonous_traitor
@@ -151,6 +151,11 @@ political_trials_system.1 = {
 				value = 3
 				country = ROOT
 			}
+		}
+		
+		#Rehabilitate Character
+		scope:convicted_character_scope ?= {
+			effect_rehabilitate_convicted_character = yes
 		}
 		
 		ai_chance = {
@@ -232,6 +237,11 @@ political_trials_system.1 = {
 			}
 		}
 		
+		#Rehabilitate Character
+		scope:convicted_character_scope ?= {
+			effect_rehabilitate_convicted_character = yes
+		}
+		
 		ai_chance = {
 			base = 0
 			modifier = { 
@@ -289,9 +299,12 @@ political_trials_system.2 = {
 		default_option = yes
 		
 		#Domestic effect
-		ruler ?= {
-			hidden_effect = { remove_modifier = embarassed_by_witch_hunt }
-			add_modifier = { name = embarassed_by_witch_hunt years = 5 is_decaying = yes }
+		if = {
+			limit = { scope:convicted_character_scope ?= { is_ruler_of_own_country = no } }
+			ruler ?= {
+				hidden_effect = { remove_modifier = embarassed_by_witch_hunt }
+				add_modifier = { name = embarassed_by_witch_hunt years = 5 is_decaying = yes }
+			}
 		}
 		if = {
 			limit = { exists = scope:convicted_character_ig_scope }
@@ -305,147 +318,136 @@ political_trials_system.2 = {
 
 }
 
-#Assassination of Character - Retired
+#Character is under investigation
 political_trials_system.3 = {
     type = country_event
 
-    title = {
-		first_valid = {
-			triggered_desc = {
-				desc = character_assassination.YES.t
-				trigger = { has_variable = character_assassinated_YES }
-			}
-			triggered_desc = {
-				desc = character_assassination.NO.t
-				trigger = { NOT = { has_variable = character_assassinated_YES } }
-			}
-		}
-	}
-    desc = {
-		first_valid = {
-			triggered_desc = {
-				desc = character_assassination.YES.d
-				trigger = { has_variable = character_assassinated_YES }
-			}
-			triggered_desc = {
-				desc = character_assassination.NO.d
-				trigger = { NOT = { has_variable = character_assassinated_YES } }
-			}
-		}
-	}
-    flavor = character_assassination.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+    title = investigation_into_character_start.t 					# Title of the event; ADD LOCALISATION
+    desc = investigation_into_character_start.d 					# Description of the event; ADD LOCALISATION
+    flavor = investigation_into_character_start.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
 
-    event_image = { texture = "southamerica_public_figure_assassination" }
+    event_image = { texture = "middleeast_police_breaking_door" }
 
-    icon = "gfx/interface/icons/event_icons/event_skull.dds" 		# Icon that shows on the map or the outliner
+    icon = "gfx/interface/icons/event_icons/event_scales.dds" 		# Icon that shows on the map or the outliner
     on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
 
     duration = 1 # Duration to fire if triggers are met
 	
-	trigger = {											# What triggers the event, if using other events or journal entries leave empty
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
 		
-		#Triggered by JE
+		#No investigation ongoing
+		NOT = { has_journal_entry = je_political_investigations_system }
+		
+		#There is a character which is eligible to be investigated
+		any_scope_character = {
+			
+			#Eligible characters only
+			NAND = {
+				interest_group ?= { is_in_government = yes }
+				owner ?= { has_law_or_variant = law_type:law_politicised_bureaucrats }
+			}
+			character_has_investigation_immunity = no
+			
+			#Eligibility
+			NOT = { has_modifier = accused_of_crimes }
+			NOT = { has_variable = investigation_found_crimes }
+			NOT = { has_variable = acquitted_of_investigation }
+			
+			NOT = { has_modifier = indicted_character }
+			NOT = { has_modifier = convicted_character }
+			NOT = { has_role = character_role_prisoner }
+			NOT = { has_modifier = acquitted_character }
+			
+			#Has cause
+			OR = {
+				
+				#Corruption scandal
+				has_modifier = ignored_corruption
+				has_modifier = corrupt_connections_exposed
+				has_modifier = corrupt_connections_exposed_minor
+				has_modifier = corruption_scandal_character_modifier
+				has_modifier = dealing_with_corruption
+				has_trait = grifter
+				has_modifier = framed_for_crimes
+				
+				#Traitor
+				has_modifier = treasonous_traitor
+				
+				#Abuse of Power
+				has_modifier = seizing_power
+				has_trait = war_criminal
+				
+			}
+			
+		}
 		
     }
 	
 	immediate = {
 		
-		#Reset flags
-		remove_variable = character_assassinated_YES
-		
 		random_scope_character = {
-			limit = { has_variable = state_assassination_target }
-			remove_variable = state_assassination_target
-			
-			save_scope_as = assassination_character_scope
-			interest_group = { save_scope_as = assassination_character_ig_scope }
-		}
-		
-		#Chance for assassination
-		random_list = {
-
-			10 = {
+			limit = {
+				
+				#Government affiliated characters only
+				NAND = { 
+					interest_group ?= { is_in_government = yes }
+					owner ?= { has_law_or_variant = law_type:law_politicised_bureaucrats }
+				}
+				character_has_investigation_immunity = no
+				
+				#Eligibility
+				NOT = { has_modifier = accused_of_crimes }
+				NOT = { has_variable = investigation_found_crimes }
+				NOT = { has_variable = acquitted_of_investigation }
+				
+				NOT = { has_modifier = indicted_character }
+				NOT = { has_modifier = convicted_character }
+				NOT = { has_role = character_role_prisoner }
+				NOT = { has_modifier = acquitted_character }
+				
+				#Has cause
+				OR = {
+					
+					#Corruption scandal
+					has_modifier = ignored_corruption
+					has_modifier = corrupt_connections_exposed
+					has_modifier = corrupt_connections_exposed_minor
+					has_modifier = corruption_scandal_character_modifier
+					has_modifier = dealing_with_corruption
+					has_trait = grifter
+					has_modifier = framed_for_crimes
+					
+					#Traitor
+					has_modifier = treasonous_traitor
+					
+					#Abuse of Power
+					has_modifier = seizing_power
+					has_trait = war_criminal
+					
+				}
 				
 			}
-
-			1 = {
-
-				#Character Assassinated
-				set_variable = character_assassinated_YES
-				
-				#More likely to have a successful assassination if Secret Police is strong
-				modifier = {
-					if = { limit = { institution_investment_level = { institution = institution_home_affairs value >= 1 } } }
-					add = 1
-				}
-				modifier = {
-					if = { limit = { institution_investment_level = { institution = institution_home_affairs value >= 2 } } }
-					add = 2
-				}
-				modifier = {
-					if = { limit = { institution_investment_level = { institution = institution_home_affairs value >= 3 } } }
-					add = 3
-				}
-				modifier = {
-					if = { limit = { institution_investment_level = { institution = institution_home_affairs value >= 4 } } }
-					add = 4
-				}
-				modifier = {
-					if = { limit = { institution_investment_level = { institution = institution_home_affairs value >= 5 } } }
-					add = 5
-				}
-				
-			}
-			
+			save_scope_as = investigated_character_scope
 		}
 		
 	}
 	
 	cancellation_trigger = {
-		NOT = { exists = scope:assassination_character_scope }
+		NOT = { exists = scope:investigated_character_scope }
 	}
     
     option = {
-        name = character_assassination.option
+        name = investigation_into_character_start.option.1			# Oh no
 		default_option = yes
 		
-		#Reset flags
-		remove_variable = character_assassinated_YES
-		
-		#Assassinate Character
-		if = {
-			limit = { has_variable = character_assassinated_YES }
-			scope:assassination_character_scope = {
-				kill_character = yes
+		#Begin investigation
+		scope:investigated_character_scope ?= {
+			add_modifier = {
+				name = accused_of_crimes
+				years = 6
 			}
-			add_radicals = {
-				value = very_large_radicals
-				interest_group = scope:assassination_character_ig_scope
-			}
+			owner ?= { hidden_effect = { add_journal_entry = { type = je_political_investigations_system } } }
 		}
-		else = {
-		
-			#Character has a chance of exile
-			random_list = {
-				1 = {
-					scope:assassination_character_scope = {
-						exile_character_with_martyrdom = yes
-					}
-				}
-				1 = {
-					
-				}
-			}
-			
-			add_radicals = {
-				value = large_radicals
-				interest_group = scope:assassination_character_ig_scope
-			}
-		
-		}
-		
-		#Infamy
-		change_infamy = 5
 		
     }
 
