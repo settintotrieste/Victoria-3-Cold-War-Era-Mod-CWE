@@ -2,19 +2,17 @@ je_political_investigation_drop_investigation_button = {
 	name = "je_political_investigation_drop_investigation_button"
 	desc = "je_political_investigation_drop_investigation_button_desc"
 
-	visible = { 
-		
-		
-		
-	}
-
-	possible = {
+	visible = {
 		
 		#A character is on trial
 		any_scope_character = {
 			has_modifier = accused_of_crimes
 			NOT = { has_role = character_role_prisoner }
 		}
+		
+	}
+
+	possible = {
 		
 		#Cabinet agrees with this
 		custom_tooltip = {
@@ -33,17 +31,91 @@ je_political_investigation_drop_investigation_button = {
 				NOT = { has_role = character_role_prisoner }
 			}
 			remove_modifier = accused_of_crimes
+			interest_group ?= { save_scope_as = investigated_character_scope }
 		}
 		
-		#Government reaction
+		#Domestic reaction
+		if = {
+			limit = { has_law_or_variant = law_type:law_politicised_bureaucrats }
+			every_interest_group = {
+				limit = { 
+					OR = { 
+						is_in_government = no
+						leader = { character_is_democratic = yes }
+					}
+					NOT = { is_same_interest_group_type = scope:investigated_character_scope } 
+				}
+				owner ?= {
+					add_radicals = {
+						value = small_radicals
+						interest_group = prev
+					}
+				}
+			}
+			add_loyalists = {
+				value = small_radicals
+				interest_group = scope:investigated_character_scope
+			}
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_elitist_bureaucrats }
+			every_interest_group = {
+				limit = { 
+					OR = { 
+						is_in_government = no
+						leader = { character_is_democratic = yes }
+					}
+					NOT = { is_same_interest_group_type = scope:investigated_character_scope } 
+				}
+				owner ?= {
+					add_radicals = {
+						value = medium_radicals
+						interest_group = prev
+					}
+				}
+			}
+			add_loyalists = {
+				value = medium_radicals
+				interest_group = scope:investigated_character_scope
+			}
+		}
+		else = {
+			every_interest_group = {
+				limit = { 
+					OR = { 
+						is_in_government = no
+						leader = { character_is_democratic = yes }
+					}
+					NOT = { is_same_interest_group_type = scope:investigated_character_scope } 
+				}
+				owner ?= {
+					add_radicals = {
+						value = large_radicals
+						interest_group = prev
+					}
+				}
+			}
+			add_loyalists = {
+				value = large_radicals
+				interest_group = scope:investigated_character_scope
+			}
+		}
+		
+		#Obstruction of Justice
 		if = {
 			limit = { 
-				is_a_dictatorship = yes 
-				scope:convicted_character_scope ?= { interest_group = { NOT = { is_same_interest_group_type = root.ruler.interest_group } } }
+				NOR = { 
+					has_law_or_variant = law_type:law_politicised_bureaucrats 
+					has_law_or_variant = law_type:law_elitist_bureaucrats 
+				}
 			}
-			add_radicals = {
-				value = medium_radicals
-				interest_group = ruler.interest_group
+			ruler ?= {
+				hidden_effect = { remove_modifier = obstructed_justice_crime }
+				add_modifier = { 
+					name = obstructed_justice_crime 
+					years = 5 
+					is_decaying = yes 
+				}
 			}
 		}
 		
@@ -53,19 +125,17 @@ je_political_investigation_drop_investigation_button = {
 		base = 0
 		
 		if = {
-			limit = { 
-				
-				exists = ruler
+			limit = {
 				ruler ?= {
-					NOR = {
-						has_ideology = ideology:ideology_autocratic
-						has_ideology = ideology:ideology_power_hungry
-						has_ideology = ideology:ideology_elitist
-					}
+					character_is_autocratic = yes
 				}
-				
+				any_scope_character = {
+					has_modifier = accused_of_crimes
+					character_is_key_political_ally = yes
+					interest_group ?= { is_same_interest_group_type = root.ruler.interest_group }
+				}
 			}
-			add = 10 
+			add = 10
 		}
 		
 	}

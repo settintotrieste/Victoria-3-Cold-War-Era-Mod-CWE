@@ -57,7 +57,9 @@ political_trials_system.1 = {
 			}
 		}
 		
-		#Domestic reaction
+		### Domestic reaction ###
+		
+		#Justified prosecution
 		if = {
 			limit = {
 				scope:convicted_character_scope ?= { 
@@ -72,7 +74,7 @@ political_trials_system.1 = {
 						has_modifier = corruption_scandal_character_modifier
 						has_modifier = dealing_with_corruption
 						has_trait = grifter
-						has_modifier = framed_for_crimes
+						has_modifier = obstructed_justice_crime
 						
 						#Traitor
 						has_modifier = treasonous_traitor
@@ -119,10 +121,6 @@ political_trials_system.1 = {
 								has_law_or_variant = law_type:law_no_minority_issues
 							}
 						}
-						AND = {
-							has_trait = homosexual_character
-							owner ?= { has_law_or_variant = law_type:law_no_gender_issues }
-						}
 						
 					}
 				}
@@ -139,13 +137,28 @@ political_trials_system.1 = {
 				country = ROOT
 			}
 		}
+		
+		#Seen to be a witch hunt
 		else = {
-			if = {
-				limit = { exists = scope:convicted_character_ig_scope }
-				add_radicals = {
-					value = large_radicals
-					interest_group = scope:convicted_character_ig_scope
+			every_interest_group = {
+				limit = {
+					OR = {
+						is_in_government = no
+						leader = { character_is_democratic = yes }
+						is_same_interest_group_type = scope:convicted_character_scope
+					}
+					NOT = { is_same_interest_group_type = root.ruler.interest_group }
 				}
+				owner ?= {
+					add_radicals = {
+						value = large_radicals
+						interest_group = prev
+					}
+				}
+			}
+			add_loyalists = {
+				value = large_radicals
+				interest_group = root.ruler.interest_group
 			}
 			create_incident = {
 				value = 3
@@ -178,19 +191,121 @@ political_trials_system.1 = {
 			}
 		}
 		
-		#Domestic reaction
+		### Domestic reaction ###
+		
+		#Justified prosecution
 		if = {
-			limit = { exists = scope:convicted_character_ig_scope }
-			add_radicals = {
-				value = very_large_radicals
-				interest_group = scope:convicted_character_ig_scope
+			limit = {
+				scope:convicted_character_scope ?= { 
+					OR = {
+						
+						## Character has committed a crime ##
+						
+						#Corruption scandal
+						has_modifier = ignored_corruption
+						has_modifier = corrupt_connections_exposed
+						has_modifier = corrupt_connections_exposed_minor
+						has_modifier = corruption_scandal_character_modifier
+						has_modifier = dealing_with_corruption
+						has_trait = grifter
+						has_modifier = obstructed_justice_crime
+						
+						#Traitor
+						has_modifier = treasonous_traitor
+						
+						#Abuse of Power
+						has_modifier = seizing_power
+						has_trait = war_criminal
+						
+					}
+				}
+			}
+			if = {
+				limit = { exists = scope:convicted_character_ig_scope }
+				add_radicals = {
+					value = large_radicals
+					interest_group = scope:convicted_character_ig_scope
+				}
+			}
+			add_loyalists = {
+				value = medium_radicals
+				interest_group = root.ruler.interest_group
+			}
+		}
+		else_if = {
+			limit = {
+				scope:convicted_character_scope ?= { 
+					OR = {
+						
+						# Personal Misconduct
+						AND = {
+							OR = {
+								has_trait = cocaine_addiction
+								has_trait = opium_addiction
+							}
+							owner ?= {
+								OR = {
+									has_law_or_variant = law_type:law_no_minority_issues
+									has_law_or_variant = law_type:law_some_minority_issues
+								}
+							}
+						}
+						AND = {
+							OR = { 
+								has_trait = alcoholic
+								has_trait = hedonist
+							}
+							owner ?= { 
+								has_law_or_variant = law_type:law_no_minority_issues
+							}
+						}
+						
+					}
+				}
+			}
+			if = {
+				limit = { exists = scope:convicted_character_ig_scope }
+				add_radicals = {
+					value = very_large_radicals
+					interest_group = scope:convicted_character_ig_scope
+				}
+			}
+			add_loyalists = {
+				value = large_radicals
+				interest_group = root.ruler.interest_group
+			}
+			create_incident = {
+				value = 5
+				country = ROOT
 			}
 		}
 		
-		#International reaction
-		create_incident = {
-			value = 5
-			country = ROOT
+		#Seen to be a witch hunt
+		else = {
+			every_interest_group = {
+				limit = {
+					OR = {
+						is_in_government = no
+						leader = { character_is_democratic = yes }
+						is_same_interest_group_type = scope:convicted_character_scope
+					}
+					NOT = { is_same_interest_group_type = root.ruler.interest_group }
+				}
+				owner ?= {
+					add_radicals = {
+						value = very_large_radicals
+						interest_group = prev
+					}
+				}
+			}
+			add_loyalists = {
+				value = very_large_radicals
+				interest_group = root.ruler.interest_group
+			}
+			create_incident = {
+				value = 5
+				country = ROOT
+			}
 		}
 		
 		ai_chance = {
@@ -225,15 +340,82 @@ political_trials_system.1 = {
 			}
 		}
 		
-		#Government reaction
+		### Domestic reaction ###
+		
+		#Justified prosecution
 		if = {
-			limit = { 
-				is_a_dictatorship = yes 
-				scope:convicted_character_scope ?= { interest_group = { NOT = { is_same_interest_group_type = root.ruler.interest_group } } }
+			limit = {
+				scope:convicted_character_scope ?= { 
+					OR = {
+						
+						## Character has committed a crime ##
+						
+						#Corruption scandal
+						has_modifier = ignored_corruption
+						has_modifier = corrupt_connections_exposed
+						has_modifier = corrupt_connections_exposed_minor
+						has_modifier = corruption_scandal_character_modifier
+						has_modifier = dealing_with_corruption
+						has_trait = grifter
+						has_modifier = obstructed_justice_crime
+						
+						#Traitor
+						has_modifier = treasonous_traitor
+						
+						#Abuse of Power
+						has_modifier = seizing_power
+						has_trait = war_criminal
+						
+					}
+				}
+			}
+			add_radicals = {
+				value = large_radicals
+				interest_group = root.ruler.interest_group
+			}
+		}
+		else_if = {
+			limit = {
+				scope:convicted_character_scope ?= { 
+					OR = {
+						
+						# Personal Misconduct
+						AND = {
+							OR = {
+								has_trait = cocaine_addiction
+								has_trait = opium_addiction
+							}
+							owner ?= {
+								OR = {
+									has_law_or_variant = law_type:law_no_minority_issues
+									has_law_or_variant = law_type:law_some_minority_issues
+								}
+							}
+						}
+						AND = {
+							OR = { 
+								has_trait = alcoholic
+								has_trait = hedonist
+							}
+							owner ?= { 
+								has_law_or_variant = law_type:law_no_minority_issues
+							}
+						}
+						
+					}
+				}
 			}
 			add_radicals = {
 				value = medium_radicals
-				interest_group = ruler.interest_group
+				interest_group = root.ruler.interest_group
+			}
+		}
+		
+		#Seen to be a witch hunt
+		else = {
+			add_radicals = {
+				value = very_large_radicals
+				interest_group = root.ruler.interest_group
 			}
 		}
 		
@@ -369,6 +551,7 @@ political_trials_system.3 = {
 				has_modifier = dealing_with_corruption
 				has_trait = grifter
 				has_modifier = framed_for_crimes
+				has_modifier = obstructed_justice_crime
 				
 				#Traitor
 				has_modifier = treasonous_traitor
@@ -416,6 +599,7 @@ political_trials_system.3 = {
 					has_modifier = dealing_with_corruption
 					has_trait = grifter
 					has_modifier = framed_for_crimes
+					has_modifier = obstructed_justice_crime
 					
 					#Traitor
 					has_modifier = treasonous_traitor

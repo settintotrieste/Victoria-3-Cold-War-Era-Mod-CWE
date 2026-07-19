@@ -10,9 +10,10 @@ je_political_investigations_system = {
 		#Eligible character exists
 		any_scope_character = {
 			has_modifier = accused_of_crimes
+			NOT = { has_variable = investigation_found_crimes }
+			NOT = { has_variable = acquitted_of_investigation }
 			NOT = { has_modifier = indicted_character }
 			NOT = { has_role = character_role_prisoner }
-			NOT = { has_variable = acquitted_of_investigation }
 		}
 		
 	}
@@ -63,57 +64,84 @@ je_political_investigations_system = {
 	
 	on_complete = {
 	
-		#Indict character
-		if = {
-			limit = {
-				scope:investigated_character_scope ?= {
-					OR = {
-						AND = {
-							is_ruler_of_own_country = yes
-							owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+		random_list = {
+			1 = {
+				custom_tooltip = {
+					text = acquitted_of_investigation.tt
+					scope:investigated_character_scope ?= {
+						if = {
+							limit = { has_modifier = accused_of_crimes }
+							remove_modifier = accused_of_crimes
 						}
-						AND = {
-							has_role = character_role_head_of_state
-							owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
-						}
+						set_variable = { name = acquitted_of_investigation years = 5 }
 					}
 				}
 			}
-			scope:investigated_character_scope ?= { 
-				set_variable = { name = investigation_found_crimes years = 5 }
-				owner ?= { hidden_effect = { add_journal_entry = { type = je_impeachment_system } } }
-			}
-		}
-		else_if = {
-			limit = {
-				scope:investigated_character_scope ?= { 
-					OR = {
-						AND = {
-							is_ruler_of_own_country = yes
-							owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+			4 = {
+				custom_tooltip = {
+					text = charged_of_investigation.tt
+					#Indict character
+					if = {
+						limit = {
+							scope:investigated_character_scope ?= {
+								OR = {
+									AND = {
+										is_ruler_of_own_country = yes
+										owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+									}
+									AND = {
+										has_role = character_role_head_of_state
+										owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+									}
+								}
+							}
 						}
-						AND = {
-							has_role = character_role_head_of_government
-							owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+						scope:investigated_character_scope ?= { 
+							set_variable = { name = investigation_found_crimes years = 5 }
+							owner ?= { hidden_effect = { add_journal_entry = { type = je_impeachment_system } } }
 						}
 					}
+					else_if = {
+						limit = {
+							scope:investigated_character_scope ?= { 
+								OR = {
+									AND = {
+										is_ruler_of_own_country = yes
+										owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+									}
+									AND = {
+										has_role = character_role_head_of_government
+										owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
+									}
+								}
+							}
+						}
+						scope:investigated_character_scope ?= { 
+							set_variable = { name = investigation_found_crimes years = 5 }
+							owner ?= { hidden_effect = { add_journal_entry = { type = je_backbenchers_plot_system } } }
+						}
+					}
+					else = {
+						scope:investigated_character_scope ?= {
+							
+							#Timer
+							set_variable = { name = investigation_found_crimes years = 5 }
+						
+							#Put character on trial
+							add_modifier = { name = indicted_character }
+							owner ?= { hidden_effect = { add_journal_entry = { type = je_political_trials_system } } }
+							
+						}
+					}
+					#Clean up modifiers
+					scope:investigated_character_scope ?= {
+						if = {
+							limit = { has_modifier = accused_of_crimes }
+							remove_modifier = accused_of_crimes
+						}
+						set_variable = { name = acquitted_of_investigation years = 5 }
+					}
 				}
-			}
-			scope:investigated_character_scope ?= { 
-				set_variable = { name = investigation_found_crimes years = 5 }
-				owner ?= { hidden_effect = { add_journal_entry = { type = je_backbenchers_plot_system } } }
-			}
-		}
-		else = {
-			scope:investigated_character_scope ?= {
-				
-				#Timer
-				set_variable = { name = investigation_found_crimes years = 5 }
-			
-				#Put character on trial
-				add_modifier = { name = indicted_character }
-				owner ?= { hidden_effect = { add_journal_entry = { type = je_political_trials_system } } }
-				
 			}
 		}
 		
