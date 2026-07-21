@@ -17,6 +17,7 @@ indict_character = {
 			has_modifier = acquitted_character
 		}
 		NOR = {
+			has_modifier = accused_of_crimes
 			has_modifier = impeached_politician
 			has_modifier = backbenchers_plot_politician
 		}
@@ -58,14 +59,11 @@ indict_character = {
 		#Has cause
 		OR = {
 		
-			#Country can arrest dissidents at will
+			#Country can indict dissidents at will
 			owner ?= {
 				OR = {
+					has_law_or_variant = law_type:law_politicised_bureaucrats
 					has_law_or_variant = law_type:law_outlawed_dissent
-					AND = { 
-						is_a_dictatorship = yes
-						NOT = { has_law_or_variant = law_type:law_full_free_speech }
-					}
 					has_modifier = state_of_emergency_issued
 				}
 			}
@@ -238,6 +236,7 @@ send_to_jail = {
 			has_modifier = acquitted_character
 		}
 		NOR = {
+			has_modifier = accused_of_crimes
 			has_modifier = impeached_politician
 			has_modifier = backbenchers_plot_politician
 		}
@@ -254,6 +253,7 @@ send_to_jail = {
 		
 		#Appropriate Laws
 		owner ?= {
+			has_law_or_variant = law_type:law_politicised_bureaucrats
 			has_law_or_variant = law_type:law_politicised_judiciary
 			has_law_or_variant = law_type:law_kangaroo_law
 			custom_tooltip = {
@@ -294,9 +294,189 @@ send_to_jail = {
 				interest_group = scope:THIS_IG_scope
 			}
 		}
+		
+	}
+
+	cooldown = { months = 6 }
+	show_confirmation_box = yes
+
+	should_ai_evaluate = {
+		country_rank >= rank_value:minor_power # Don't burn performance on tiny AI countries messing around with character interactions
+	}
+
+	ai_chance = {
+		value = -50
 		if = {
 			limit = {
-				
+				interest_group ?= {
+					ig_approval <= -5
+				}		
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group ?= {
+					ig_approval <= -10
+				}		
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					is_a_democracy = yes
+				}			
+			}
+			add = -25
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_outlawed_dissent
+				}			
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_censorship
+				}			
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_limited_free_speech
+				}			
+			}
+			add = -20
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					any_interest_group ?= {
+						is_insurrectionary = yes
+					}
+				}			
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					ruler = {
+						has_trait = cruel
+					}
+				}			
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					ruler = {
+						has_trait = imperious
+					}
+				}			
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				is_historical = yes	
+			}
+			add = -1000
+		}
+	}
+	
+}
+
+issue_summary_execution = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+
+	potential = {
+		
+		#Character is owned by THIS
+		owner ?= scope:actor
+		
+		#Not already a prisoner
+		NOT = { has_role = character_role_prisoner }
+		
+		#Not an excluded character
+		character_has_legal_immunity = no
+		is_in_exile_pool = no
+		is_in_void = no
+		
+		#Not already on trial
+		NOR = {
+			has_modifier = indicted_character
+			has_modifier = convicted_character
+			has_modifier = acquitted_character
+		}
+		NOR = {
+			has_modifier = accused_of_crimes
+			has_modifier = impeached_politician
+			has_modifier = backbenchers_plot_politician
+		}
+		
+	}
+
+	show_requirements = yes
+
+	possible = {
+		
+		#Character is not pre-occupied
+		is_busy = no
+		is_in_battle = no
+		
+		#Appropriate Laws
+		owner ?= {
+			has_law_or_variant = law_type:law_politicised_bureaucrats
+			has_law_or_variant = law_type:law_politicised_judiciary
+			has_law_or_variant = law_type:law_kangaroo_law
+			custom_tooltip = {
+				text = ruler_is_not_democratic.tt
+				ruler ?= { character_is_democratic = no }
+			}
+		}
+		
+		#Coup
+		custom_tooltip = {
+			text = pending_coup_event_tt
+			NOT = {
+				owner = {
+					has_variable = coup_event_active
+				}
+			}
+		}
+		custom_tooltip = {
+			text = doing_coup_for_player_tt
+			NOT = {
+				has_variable = commander_doing_coup_on_player_behalf
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Imprison Character
+		kill_character = yes
+		
+		#Domestic reaction
+		interest_group ?= { save_scope_as = THIS_IG_scope }
+		owner ?= {
+			add_radicals = {
+				value = very_large_radicals
+				interest_group = scope:THIS_IG_scope
+			}
+			create_incident = {
+				country = owner
+				value = 5
 			}
 		}
 		
@@ -306,7 +486,7 @@ send_to_jail = {
 	show_confirmation_box = yes
 
 	should_ai_evaluate = {
-		country_rank >= rank_value:minor_power # Don't burn performance on tiny AI countries messing around with character interactions
+		country_rank >= rank_value:great_power # Don't burn performance on tiny AI countries messing around with character interactions
 	}
 
 	ai_chance = {
