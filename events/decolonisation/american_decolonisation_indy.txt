@@ -18,7 +18,7 @@ american_decolonisation_indy.1 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:USA this = c:USA											# Change TAG of the overlord ****
+		c:USA ?= this
 		game_date >= 1955.5.5									# START DATE: Date colony became self governing ****
 		game_date < 1965.5.5									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -116,7 +116,7 @@ american_decolonisation_indy.1 = {
 
 }
 
-#Japan
+#Japan - Partial independence
 american_decolonisation_indy.2 = {
     type = country_event
 	placement = c:JAP
@@ -135,7 +135,7 @@ american_decolonisation_indy.2 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:USA this = c:USA											# Change TAG of the overlord ****
+		c:USA ?= this
 		game_date >= 1952.4.28									# START DATE: Date colony became self governing ****
 		game_date < 1962.4.28									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -168,16 +168,136 @@ american_decolonisation_indy.2 = {
 		
 		# Overlord create client state pact with colony
 		c:JAP ?= { 												# Change TAG of the colony ****
-			make_independent = yes
+			hidden_effect = { make_independent = yes }
+			activate_law = law_type:law_defensive_war
+			activate_law = law_type:law_national_militia
+		}
+		# Overlord create client state pact with colony
+		create_diplomatic_pact = {
+			country = c:JAP										# Change TAG ****
+			type = protectorate
 		}
 		create_diplomatic_pact = {
 			country = c:JAP										# Change TAG ****
 			type = dominate_politics
 		}
 		if = {
+			limit = { 
+				exists = c:JAP
+				c:JAP ?= { is_in_customs_union_with = ROOT } 
+			}
+			create_diplomatic_pact = {
+				country = c:JAP
+				type = grant_own_market
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = american_decolonisation_indy.option.2			# REFUSE
+		default_option = yes
+		
+		#Domestic unrest
+		c:JAP = {
+		
+			# Natives are angry!
+			every_scope_state = {
+				add_radicals_in_state = {
+					value = large_radicals
+				}
+				add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			}
+			
+			#Colony is angry
+			change_relations = {
+				country = ROOT
+				value = -100
+			}
+		}
+		
+		# Add Infamy because doing this is against international law
+		create_incident = {
+			value = 10
+			country = c:JAP
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+#Japan - Full independence
+american_decolonisation_indy.3 = {
+    type = country_event
+	placement = c:JAP
+
+    title = american_japan.indy_2.t 							# Title of the event; ADD LOCALISATION
+    desc = american_japan.indy_2.d 								# Description of the event; ADD LOCALISATION
+    #flavor = american_japan.indy_2.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_decolonisation" }
+
+    icon = "gfx/interface/icons/event_icons/waving_flag.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this
+		game_date >= 1960.6.23									# START DATE: Date colony became self governing ****
+		game_date < 1970.6.23									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_republican_democracy = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Colony conditions
+		exists = c:JAP
+		c:JAP ?= { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_sufficiently_independent = yes
+		}
+		
+		# Event has not been fired before
+		NOT = { has_variable = american_japan_indy_2 }			# CHANGE ****
+		
+    }
+    
+	immediate = { 
+		
+		# Fire only once
+		set_variable = american_japan_indy_2					# Change variable ****
+		
+	}
+	
+    option = {
+        name = american_decolonisation_indy.option.1			# Grant them independence
+        highlighted_option = yes
+		
+		# Full Independence
+		c:JAP ?= { 												# Change TAG of the colony ****
+			make_independent = yes
+		}
+		if = {
+			limit = { has_diplomatic_pact = { who = c:JAP type = dominate_politics is_initiator = yes } }
+			remove_diplomatic_pact = { country = c:JAP type = dominate_politics }
+		}
+		if = {
 			limit = { is_power_bloc_leader = yes }
 			c:JAP ?= { join_power_bloc = ROOT }
 		}
+		
+		# Revised Security Treaty
 		create_treaty = {
 			name = treaty_name_US_JAP_security_agreement
 			first_country = c:USA
@@ -203,9 +323,6 @@ american_decolonisation_indy.2 = {
 			}
 		}
 		
-		# Fire only once
-		set_variable = american_japan_indy						# Change variable ****
-		
 		ai_chance = { 
 			base = 90 
 		}
@@ -216,7 +333,8 @@ american_decolonisation_indy.2 = {
         name = american_decolonisation_indy.option.2			# REFUSE
 		default_option = yes
 		
-		c:JAP = {
+		#Domestic unrest
+		c:JAP ?= {
 		
 			# Natives are angry!
 			every_scope_state = {
@@ -234,10 +352,10 @@ american_decolonisation_indy.2 = {
 		}
 		
 		# Add Infamy because doing this is against international law
-		change_infamy = 10
-		
-		# Fire only once
-		set_variable = american_japan_indy						# Change variable ****
+		create_incident = {
+			value = 10
+			country = c:JAP
+		}
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
@@ -246,8 +364,6 @@ american_decolonisation_indy.2 = {
     }
 
 }
-
-#Removed american_decolonisation_indy.3
 
 #Micronesia
 american_decolonisation_indy.4 = {
@@ -268,8 +384,7 @@ american_decolonisation_indy.4 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:USA
-		this = c:USA											# Change TAG of the overlord ****
+		c:USA ?= this
 		game_date >= 1986.11.3									# START DATE: Date colony became self governing ****
 		game_date < 1996.11.3									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -472,7 +587,7 @@ american_decolonisation_indy.5 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:USA this = c:USA								# Change TAG of the overlord ****
+		c:USA ?= this
 		game_date >= 2011.12.15									# START DATE: Date colony became self governing ****
 		game_date < 2021.12.15									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -511,10 +626,6 @@ american_decolonisation_indy.5 = {
 			make_independent = yes 
 			save_scope_as = decolonised_country
 			activate_law = law_type:law_defensive_war
-		}
-		create_diplomatic_pact = {
-			country = c:IRQ										# Change TAG ****
-			type = dominate_politics
 		}
 		if = {
 			limit = { is_power_bloc_leader = yes }
