@@ -103,18 +103,119 @@ je_political_investigation_drop_investigation_button = {
 		
 		#Obstruction of Justice
 		if = {
-			limit = { 
-				NOR = { 
-					has_law_or_variant = law_type:law_politicised_bureaucrats 
-					has_law_or_variant = law_type:law_elitist_bureaucrats 
+			limit = {
+				NOR = {
+					has_law_or_variant = law_type:law_politicised_bureaucrats
+					has_law_or_variant = law_type:law_elitist_bureaucrats
 				}
 			}
 			ruler ?= {
 				hidden_effect = { remove_modifier = obstructed_justice_crime }
-				add_modifier = { 
+				add_modifier = {
 					name = obstructed_justice_crime 
 					years = 5 
 					is_decaying = yes 
+				}
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		if = {
+			limit = {
+				ruler ?= {
+					character_is_autocratic = yes
+				}
+				any_scope_character = {
+					has_modifier = accused_of_crimes
+					character_is_key_political_ally = yes
+					interest_group ?= { is_same_interest_group_type = root.ruler.interest_group }
+				}
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+je_political_investigation_bribe_prosecutors_button = {
+	name = "je_political_investigation_bribe_prosecutors_button"
+	desc = "je_political_investigation_bribe_prosecutors_button_desc"
+
+	visible = {
+		
+		#Has not already bribed prosecutors
+		NOT = { has_variable = political_investigation_bribed_prosecutors }
+		
+	}
+
+	possible = {
+	
+		#Cabinet agrees with this
+		custom_tooltip = {
+			text = has_no_low_cabinet_unity.tt
+			NOT = { has_variable = low_cabinet_unity }
+		}
+		
+	}
+
+	effect = {
+		
+		#Timer
+		set_variable = {
+			name = political_investigation_bribed_prosecutors
+			months = 1
+		}
+		
+		#Automatic acquittal
+		random_scope_character = {
+			limit = { 
+				has_modifier = accused_of_crimes
+				NOT = { has_role = character_role_prisoner }
+			}
+			remove_modifier = accused_of_crimes
+			interest_group ?= { save_scope_as = investigated_character_scope }
+		}
+		
+		#Domestic reaction
+		add_loyalists = {
+			value = large_radicals
+			interest_group = scope:investigated_character_scope
+		}
+		
+		#Increase corruption in country
+		if = {
+			limit = { has_law_or_variant = law_type:law_very_high_anti_corruption }
+			activate_law = law_type:law_high_anti_corruption
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_high_anti_corruption }
+			activate_law = law_type:law_medium_anti_corruption
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_medium_anti_corruption }
+			activate_law = law_type:law_low_anti_corruption
+		}
+		else_if = {
+			limit = { has_law_or_variant = law_type:law_low_anti_corruption }
+			activate_law = law_type:law_very_low_anti_corruption
+		}
+		
+		#Ruler can get tainted with corruption
+		random_list = {
+			3 = { }
+			1 = {
+				ruler ?= {
+					hidden_effect = { remove_modifier = corruption_scandal_character_modifier }
+					add_modifier = { 
+						name = corruption_scandal_character_modifier 
+						years = 5
+						is_decaying = yes 
+					}
 				}
 			}
 		}
