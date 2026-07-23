@@ -524,6 +524,75 @@ arrange_accident = {
 	
 }
 
+dismantle_character_political_party = {
+	icon = "gfx/interface/icons/generic_icons/map_list_cross.dds"
+	#clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+
+	potential = {
+		owner ?= scope:actor
+		is_an_IG_leader = yes
+		is_ruler_of_own_country = no
+		interest_group ?= {
+			has_party = yes
+			is_in_government = no
+		}
+	}
+
+	possible = {
+		
+		#Appropriate laws
+		owner ?= {
+			has_law_or_variant = law_type:law_politicised_bureaucrats
+			has_law_or_variant = law_type:law_politicised_judiciary
+			has_law_or_variant = law_type:law_kangaroo_law
+			custom_tooltip = {
+				text = ruler_is_not_democratic.tt
+				ruler ?= { character_is_democratic = no }
+			}
+		}
+		
+	}
+
+	effect = {
+		this.interest_group ?= {
+			save_scope_as = IG_dismantled_party
+		}
+		this.interest_group.party ?= {
+			disband_party = yes
+		}
+		owner ?= {
+			if = {
+				limit = { any_active_party = { count > 1 } }
+				add_electoral_confidence = -0.25
+			}
+			else_if = {
+				limit = { any_active_party = { count > 2 } }
+				add_electoral_confidence = -0.50
+			}
+			else = {
+				add_electoral_confidence = -1.0
+			}
+			antagonise_democratic_and_opposition_IGs_large = yes
+		}
+	}
+
+	cooldown = { years = 1 }
+
+	ai_chance = {
+		value = 0
+		#if = {
+		#	limit = {
+		#		interest_group = {
+		#			ig_counts_as_marginal = no
+		#			ig_approval <= -5
+		#		}
+		#	}
+		#	add = 10
+		#}
+	}
+	
+}
+
 ban_character_political_party = {
 	icon = "gfx/interface/icons/generic_icons/map_list_cross.dds"
 	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
@@ -545,7 +614,10 @@ ban_character_political_party = {
 			NOT = { 
 				has_law_or_variant = law_type:law_parties_allowed 
 			}
-			ruler ?= { character_is_autocratic = yes }
+			custom_tooltip = {
+				text = ruler_is_autocratic.tt
+				ruler ?= { character_is_autocratic = yes }
+			}
 		}
 		
 		interest_group ?= {
@@ -559,34 +631,82 @@ ban_character_political_party = {
 	}
 
 	effect = {
-		this.interest_group = {
+		
+		#Mark as ban
+		this.interest_group ?= {
 			save_scope_as = IG_banned_from_parties
 			custom_tooltip = {
 				text = party_banned.tt
 				set_variable = IG_party_banned
 			}
-			this.party ?= { 
-				save_scope_as = party_affected_by_banned_IG 
+		}
+		this.interest_group.party ?= {
+			save_scope_as = party_affected_by_banned_IG
+		}
+		
+		#If still have other IGs in party
+		if = {
+			limit = {
+				this.interest_group.party ?= {
+					any_member = { count > 1 }
+				}
+			}
+			this.interest_group.party ?= {
 				remove_ig_from_party = scope:IG_banned_from_parties
 			}
-		}
-		owner ?= {
-			every_interest_group = {
-				limit = { 
-					has_party = yes
-					party ?= { is_same_party_type = scope:party_affected_by_banned_IG } 
+			owner ?= {
+				if = {
+					limit = { any_interest_group = { has_party = yes is_in_government = no count > 1 } }
+					add_electoral_confidence = -0.05
 				}
-				save_scope_as = IG_affected_by_banned_IG
-				owner ?= { 
-					add_radicals = {
-						value = very_large_radicals
-						interest_group = scope:IG_affected_by_banned_IG
+				else_if = {
+					limit = { any_interest_group = { has_party = yes is_in_government = no count > 2 } }
+					add_electoral_confidence = -0.10
+				}
+				else = {
+					add_electoral_confidence = -0.20
+				}
+				every_interest_group = {
+					limit = { 
+						has_party = yes
+						party ?= { is_same_party_type = scope:party_affected_by_banned_IG } 
+					}
+					save_scope_as = IG_affected_by_banned_IG
+					owner ?= { 
+						add_radicals = {
+							value = very_large_radicals
+							interest_group = scope:IG_affected_by_banned_IG
+						}
 					}
 				}
+				post_notification = IG_party_ban_notification
+				recalculate_pop_ig_support = yes
 			}
-			post_notification = IG_party_ban_notification
-			recalculate_pop_ig_support = yes
 		}
+		
+		#No other IGs in party - functionally dismantled
+		else = {
+			this.interest_group.party ?= {
+				disband_party = yes
+			}
+			owner ?= {
+				if = {
+					limit = { any_active_party = { count > 1 } }
+					add_electoral_confidence = -0.25
+				}
+				else_if = {
+					limit = { any_active_party = { count > 2 } }
+					add_electoral_confidence = -0.50
+				}
+				else = {
+					add_electoral_confidence = -1.0
+				}
+				antagonise_democratic_and_opposition_IGs_large = yes
+				post_notification = IG_party_ban_notification
+				recalculate_pop_ig_support = yes
+			}
+		}
+		
 	}
 
 	cooldown = { months = 6 }
