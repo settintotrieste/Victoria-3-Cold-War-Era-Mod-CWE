@@ -1,0 +1,192 @@
+conduct_limited_war = {
+	groups = { general }
+	should_notify_third_parties = yes
+
+	potential = {
+		
+		#Parties are not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#Not a civil war country
+		#is_revolutionary = no is_secessionist = no
+		#scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#Not already in a limited war
+		scope:target_country = { NOT = { has_diplomatic_pact = { who = scope:actor type = conduct_limited_war } } }
+
+	}
+
+	possible = {
+		
+		#THIS can and wants to intervene
+		has_strategic_region_interest_tier = {
+			strategic_region = scope:target_country.capital.region
+			value >= interest_tier_effect_can_join_diplomatic_plays_min_tier
+		}
+		
+		#THIS does not have restricted war rights OR the war is too close to home
+		OR = {
+			has_law_or_variant = law_type:law_regionalist_fp
+			has_law_or_variant = law_type:law_globalist_fp
+			scope:target_country = { has_strategic_land_adjacency = scope:actor }
+		}
+		
+		#THIS is not broke
+		in_default = no
+		
+		#THIS has military
+		army_size >= 1
+		navy_size >= 1
+		
+	}
+	
+	pact = {
+		cost = 0
+		forced_duration = 1
+		
+		max_target_involvement = 3000
+		target_involvement_applies_to = target_country
+	
+		is_hostile = yes
+		is_embargo = yes		
+		is_two_sided_pact = no
+		
+		relations_progress_per_day = -10 # At -100, -10 relations
+		
+		first_modifier = {
+			country_infamy_generation_mult = 0.10
+		}
+		
+		actor_can_break = {
+			
+		}
+		
+		target_can_break = {
+			
+			#TARGET is independent
+			scope:target_country = { is_sufficiently_independent = yes }
+			
+		}
+	
+		requirement_to_maintain = {
+			trigger = {
+				
+				#THIS can go to war
+				can_go_to_war = yes
+				
+				#THIS has bad relations with TARGET
+				custom_tooltip = {
+					text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+					#scope:target_country.relations:root <= relations_threshold:poor
+				}
+				
+				#THIS is not at war with TARGET
+				NOT = { has_war_with = scope:target_country }
+				
+				#THIS does not have a truce with TARGET
+				NOT = { has_truce_with = scope:target_country }
+				
+				#THIS is independent
+				is_sufficiently_independent = yes
+				
+				#THIS does not have subject relation with TARGET
+				NOR = {
+					is_direct_subject_of = scope:target_country
+					scope:target_country = { is_direct_subject_of = scope:actor }
+				}
+				
+				#THIS has direct access to the TARGET
+				has_port_country = yes
+				scope:target_country = {
+					has_port_country = yes
+				}
+		
+			}
+		}
+		
+		manual_break_effect = {
+			
+			#End Limited War
+			scope:actor = {
+				disable_temporary_hostilities = {
+					country = scope:target_country
+					type = naval
+				}
+			}
+			
+		}
+		
+		auto_break_effect = { 
+			
+			#End Limited War
+			scope:actor = {
+				disable_temporary_hostilities = {
+					country = scope:target_country
+					type = naval
+				}
+			}
+			
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Lobby
+		add_lobby_appeasement_from_diplomacy_unidirectional = { 
+			FIRST = root
+			SECOND = scope:target_country 
+			PRO_AMOUNT = -10
+			ANTI_AMOUNT = 10
+			FACTOR = appeasement_embargo_declared
+		}
+		
+		#TARGET loses relations with THIS
+		change_relations = { 
+			country = scope:target_country 
+			value = -100 
+		}
+		
+		#THIS gains infamy from starting an Aggressive War
+		create_incident = {
+			value = 5
+			country = scope:target_country
+		}
+		
+		#Start limited war
+		enable_temporary_hostilities = {
+			country = scope:target_country
+			type = naval
+			duration = { years = 999 }
+		}
+		scope:target_country = {
+			if = {
+				limit = { NOT = { has_journal_entry = je_limited_war } }
+				add_journal_entry = { type = je_limited_war }
+			}
+		}
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0.25		
+		}
+	
+		propose_score = {
+			value = 10
+		}
+		
+		will_propose = {
+			always = no
+		}
+		
+		will_break = {
+			always = no
+		}
+		
+	}
+	
+}

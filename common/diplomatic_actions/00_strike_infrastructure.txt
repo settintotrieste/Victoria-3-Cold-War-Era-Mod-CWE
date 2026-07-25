@@ -20,7 +20,10 @@ strike_infrastructure = {
 		is_sufficiently_independent = yes
 		
 		#TARGET is at war with THIS
-		has_war_with = scope:target_country
+		OR = {
+			has_war_with = scope:target_country
+			has_diplomatic_pact = { who = scope:target_country type = conduct_limited_war }
+		}
 		
 		#TARGET satellites have not already been attacked
 		scope:target_country = { 
@@ -45,7 +48,7 @@ strike_infrastructure = {
 		
 		#Only radical leaders think of destroying satellites
 		exists = ruler
-		ruler = {
+		ruler ?= {
 			OR = {
 				has_ideology = ideology:ideology_autocratic
 				has_ideology = ideology:ideology_power_hungry
@@ -53,17 +56,13 @@ strike_infrastructure = {
 		}
 		
 		#THIS has strategic bombardment capability
-		any_scope_building = {
-			is_building_type = building_barrack
-			level >= 1
-			NOT = { has_active_production_method = pm_no_organization }
-		}
 		any_military_formation = {
 			filter = {
 				is_army = yes
 			}
 			any_combat_unit = {
 				OR = {
+					has_unit_type = unit_type:combat_unit_type_airforce_2
 					has_unit_type = unit_type:combat_unit_type_airforce_3
 					has_unit_type = unit_type:combat_unit_type_airforce_4
 					has_unit_type = unit_type:combat_unit_type_airforce_5
@@ -83,12 +82,12 @@ strike_infrastructure = {
 			#THIS has direct access to the TARGET through land
 			has_strategic_land_adjacency = scope:target_country
 			
-			#THIS has direct access to the TARGET through the sea (but only if THIS has a stronger navy than TARGET)
-			AND = {
-				navy_size >= 10
-				has_port_country = yes
-				scope:target_country = { has_port_country = yes }
-				navy_size > scope:target_country.navy_size
+			#THIS has direct access to the TARGET through the sea (via blockade)
+			scope:target_country = { 
+				any_scope_state = {
+					is_blockaded_by = ROOT
+					blockade_level >= 1
+				}
 			}
 			
 			#THIS has access to the TARGET through an ally
@@ -96,15 +95,15 @@ strike_infrastructure = {
 				has_strategic_land_adjacency = scope:target_country
 			}
 			
-			#THIS has access to the TARGET through a subject
+			#THIS has access to the TARGET through a subject OR a country with THIS military bases
 			any_country = {
-				is_subject_of = ROOT
-				has_strategic_land_adjacency = scope:target_country
-			}
-			
-			#THIS has access to the TARGET through an enemy 3P
-			any_country = {
-				has_war_with = ROOT
+				OR = {
+					AND = {
+						is_subject_of = ROOT
+						is_sufficiently_independent = no
+					}
+					has_diplomatic_pact = { who = scope:actor type = military_cooperation_agreement }
+				}
 				has_strategic_land_adjacency = scope:target_country
 			}
 			
@@ -125,25 +124,22 @@ strike_infrastructure = {
 		
 		#THIS destroys the infrastructure buildings of TARGET in order of GDP
 		scope:target_country  = {
-			ordered_scope_state = {
+			random_scope_state = {
 				limit = {
-					OR = { 
+					OR = {
 						has_building = building_railway
 						has_building = building_port
+						has_building = building_trade_center
 						has_building = building_power_plant
 						has_building = building_hydroelectric_power_plant
 						has_building = building_communications_network
 					}
 				}
-				order_by = gdp
-				save_scope_as = strike_infrastructure_state
-			}
-			strike_infrastructure_state ?= {
 				if = { 
 					limit = { has_building = building_railway } 
 					random_list = { 
 						1 = { remove_building = building_railway } 
-						1 = { 
+						2 = { 
 							modifier = { 
 								if = { 
 									limit = { 
@@ -177,7 +173,41 @@ strike_infrastructure = {
 					limit = { has_building = building_port } 
 					random_list = { 
 						1 = { remove_building = building_port } 
-						1 = { 
+						2 = { 
+							modifier = { 
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_weak_civil_defence_law } 
+									}
+									add = 1.25
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_moderate_civil_defence_law } 
+									}
+									add = 1.50
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+								if = { 
+									limit = { 
+										owner = { has_modifier = law_very_strong_civil_defence_law } 
+									}
+									add = 1.75
+								}
+							} 
+						}
+					} 
+				}
+				if = { 
+					limit = { has_building = building_trade_center } 
+					random_list = { 
+						1 = { remove_building = building_trade_center } 
+						2 = { 
 							modifier = { 
 								if = { 
 									limit = { 
@@ -211,7 +241,7 @@ strike_infrastructure = {
 					limit = { has_building = building_power_plant } 
 					random_list = { 
 						1 = { remove_building = building_power_plant } 
-						1 = { 
+						2 = { 
 							modifier = { 
 								if = { 
 									limit = { 
@@ -245,8 +275,8 @@ strike_infrastructure = {
 					limit = { has_building = building_hydroelectric_power_plant } 
 					random_list = { 
 						1 = { remove_building = building_hydroelectric_power_plant } 
-						1 = { 
-							modifier = { 
+						2 = { 
+							modifier = {
 								if = { 
 									limit = { 
 										owner = { has_modifier = law_weak_civil_defence_law } 
@@ -279,7 +309,7 @@ strike_infrastructure = {
 					limit = { has_building = building_communications_network } 
 					random_list = { 
 						1 = { remove_building = building_communications_network } 
-						1 = { 
+						2 = { 
 							modifier = { 
 								if = { 
 									limit = { 
@@ -309,12 +339,15 @@ strike_infrastructure = {
 						}
 					} 
 				}
-				state_region = { add_devastation = 25 }
+				state_region = { add_devastation = 10 }
 			}
 		}
 		
 		#International community does not like THIS
-		change_infamy = 2
+		create_incident = {
+			value = 2.5
+			country = scope:target_country
+		}
 		
 	}
 	
