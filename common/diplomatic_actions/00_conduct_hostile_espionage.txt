@@ -474,6 +474,9 @@ conduct_hostile_espionage_2 = {
 			is_initiator = yes
 		}
 		
+		#Need to have some terrorists in TARGET
+		scope:target_country = { has_journal_entry = je_troubling_events_system }
+		
 	}
 	
 	possible = {
@@ -613,6 +616,9 @@ conduct_hostile_espionage_3 = {
 			type = conduct_hostile_espionage
 			is_initiator = yes
 		}
+		
+		#Need to have some terrorists in TARGET
+		scope:target_country = { has_journal_entry = je_troubling_events_system }
 		
 		#Has secessionist states
 		scope:target_country = {
@@ -921,6 +927,9 @@ conduct_hostile_espionage_5 = {
 			is_initiator = yes
 		}
 		
+		#Need to have some terrorists in TARGET
+		scope:target_country = { has_journal_entry = je_troubling_events_system }
+		
 		#Has the appropriate law
 		scope:target_country = { 
 		
@@ -1211,7 +1220,7 @@ conduct_hostile_espionage_6 = {
 	
 }
 
-#Send agitator to TARGET
+#Send agitator to TARGET - can become a manchurian candidate
 conduct_hostile_espionage_7 = {
 	groups= { general } requires_approval = no
 	should_notify_third_parties = no
@@ -1287,528 +1296,58 @@ conduct_hostile_espionage_7 = {
 		
 		#Send agitator to TARGET
 		if = {
-			limit = { is_a_democracy = yes }
-			if = {
-				limit = { 
-					any_scope_character = { 
-						has_role_of_type = agitator 
-						OR = {
-							has_ideology = ideology:ideology_agitator_pro_human_rights
-							has_ideology = ideology:ideology_agitator_anti_war_rights
-						
-							has_ideology = ideology:ideology_liberal
-							has_ideology = ideology:ideology_democratic
-						}
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					} 
-				}
-				random_scope_character = {
-					limit = {
-						has_role_of_type = agitator 
-						OR = {
-							has_ideology = ideology:ideology_agitator_pro_human_rights
-							has_ideology = ideology:ideology_agitator_anti_war_rights
-						
-							has_ideology = ideology:ideology_liberal
-							has_ideology = ideology:ideology_democratic
-						}
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					}
-					transfer_character = scope:target_country
+			limit = {
+				any_scope_character = { 
+					has_role_of_type = agitator
+					culture = { is_primary_culture_of = scope:target_country }
+					interest_group = { is_same_interest_group_type = root.ruler.interest_group }
+					is_a_special_agitator = no
 				}
 			}
-			else_if = {
-				limit = { 
-					any_character_in_exile_pool = {
-						has_role_of_type = agitator 
-						OR = {
-							has_ideology = ideology:ideology_agitator_pro_human_rights
-							has_ideology = ideology:ideology_agitator_anti_war_rights
-						
-							has_ideology = ideology:ideology_liberal
-							has_ideology = ideology:ideology_democratic
-						}
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
+			random_scope_character = {
+				limit = {
+					has_role_of_type = agitator
+					culture = { is_primary_culture_of = scope:target_country }
+					interest_group = { is_same_interest_group_type = root.ruler.interest_group }
+					is_a_special_agitator = no
 				}
-				random_character_in_exile_pool = {
-					limit = { 
-						has_role_of_type = agitator 
-						OR = {
-							has_ideology = ideology:ideology_agitator_pro_human_rights
-							has_ideology = ideology:ideology_agitator_anti_war_rights
-						
-							has_ideology = ideology:ideology_liberal
-							has_ideology = ideology:ideology_democratic
-						}
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else = {
-				scope:target_country = {
-					create_character = {
-						is_agitator = yes
-						ideology = ideology_agitator_pro_human_rights
-					}
-				}
+				set_home_country = scope:actor
+				add_modifier = { name = manchurian_candidate }
+				transfer_character = scope:target_country
 			}
 		}
-		
-		if = {
-			limit = { NOT = { is_a_democracy = yes } }
-			if = {
-				limit = { 
-					any_scope_character = { 
-						has_role_of_type = agitator 
-						OR = {
-							has_ideology = ideology:ideology_agitator_anti_human_rights
-							has_ideology = ideology:ideology_agitator_pro_war_rights
-						
-							has_ideology = ideology:ideology_autocratic
-							has_ideology = ideology:ideology_power_hungry
-						}
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					} 
+		else = {
+			scope:target_country = {
+				random_primary_culture = {
+					save_scope_as = target_primary_culture_scope
 				}
-				random_scope_character = {
-					limit = {
-						has_role_of_type = agitator 
-						OR = {
-							has_ideology = ideology:ideology_agitator_anti_human_rights
-							has_ideology = ideology:ideology_agitator_pro_war_rights
-						
-							has_ideology = ideology:ideology_autocratic
-							has_ideology = ideology:ideology_power_hungry
-						}
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					}
-					transfer_character = scope:target_country
-				}
+				religion = { save_scope_as = target_religion_scope }
 			}
-			else_if = {
-				limit = { 
-					any_character_in_exile_pool = {
-						has_role_of_type = agitator 
-						OR = {
-							has_ideology = ideology:ideology_agitator_anti_human_rights
-							has_ideology = ideology:ideology_agitator_pro_war_rights
-						
-							has_ideology = ideology:ideology_autocratic
-							has_ideology = ideology:ideology_power_hungry
-						}
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-				}
-				random_character_in_exile_pool = {
-					limit = { 
-						has_role_of_type = agitator 
-						OR = {
-							has_ideology = ideology:ideology_agitator_anti_human_rights
-							has_ideology = ideology:ideology_agitator_pro_war_rights
-						
-							has_ideology = ideology:ideology_autocratic
-							has_ideology = ideology:ideology_power_hungry
-						}
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else = {
-				scope:target_country = {
+			random_list = {
+				#Male
+				5 = {
 					create_character = {
 						is_agitator = yes
-						ideology = ideology_agitator_anti_human_rights
+						interest_group = root.ruler.interest_group
+						culture = scope:target_primary_culture_scope
+						religion = scope:target_religion_scope
+						save_scope_as = migratory_agitator
 					}
 				}
-			}
-		}
-		
-		if = {
-			limit = { 
-				is_a_communist_government = yes 
-				scope:target_country = { 
-					empty_agitator_slots >= 1 
-					NOT = { is_a_communist_government = yes }
-				}
-			}
-			if = {
-				limit = { 
-					any_scope_character = { 
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_communist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					} 
-				}
-				random_scope_character = {
-					limit = {
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_communist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else_if = {
-				limit = { 
-					any_character_in_exile_pool = {
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_communist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-				}
-				random_character_in_exile_pool = {
-					limit = { 
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_communist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else = {
-				scope:target_country = {
+				#Female
+				1 = {
 					create_character = {
-						is_agitator = yes
-						ideology = ideology_agitator_communist
+						is_agitator = yes female = yes
+						interest_group = root.ruler.interest_group
+						culture = scope:target_primary_culture_scope
+						religion = scope:target_religion_scope
+						save_scope_as = migratory_agitator
 					}
 				}
 			}
-		}
-		
-		if = {
-			limit = { 
-				is_a_regime_monarchy = yes 
-				scope:target_country = { 
-					empty_agitator_slots >= 1 
-					NOT = { is_a_regime_monarchy = yes }
-				}
-			}
-			if = {
-				limit = { 
-					any_scope_character = { 
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_monarchist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					} 
-				}
-				random_scope_character = {
-					limit = {
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_monarchist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else_if = {
-				limit = { 
-					any_character_in_exile_pool = {
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_monarchist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-				}
-				random_character_in_exile_pool = {
-					limit = { 
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_monarchist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else = {
-				scope:target_country = {
-					create_character = {
-						is_agitator = yes
-						ideology = ideology_agitator_monarchist
-					}
-				}
-			}
-		}
-		
-		if = {
-			limit = { 
-				is_a_nationalist_government = yes 
-				scope:target_country = { 
-					empty_agitator_slots >= 1 
-					NOT = { is_a_nationalist_government = yes }
-				}
-			}
-			if = {
-				limit = { 
-					any_scope_character = { 
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_nationalist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					} 
-				}
-				random_scope_character = {
-					limit = {
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_nationalist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else_if = {
-				limit = { 
-					any_character_in_exile_pool = {
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_nationalist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-				}
-				random_character_in_exile_pool = {
-					limit = { 
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_nationalist
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else = {
-				scope:target_country = {
-					create_character = {
-						is_agitator = yes
-						ideology = ideology_agitator_nationalist
-					}
-				}
-			}
-		}
-		
-		if = {
-			limit = { 
-				is_a_theocratic_government = yes 
-				scope:target_country = { 
-					empty_agitator_slots >= 1 
-					NOT = { is_a_theocratic_government = yes }
-				}
-			}
-			if = {
-				limit = { 
-					any_scope_character = { 
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_theocrat
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					} 
-				}
-				random_scope_character = {
-					limit = {
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_theocrat
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else_if = {
-				limit = { 
-					any_character_in_exile_pool = {
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_theocrat
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-				}
-				random_character_in_exile_pool = {
-					limit = { 
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_theocrat
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else = {
-				scope:target_country = {
-					create_character = {
-						is_agitator = yes
-						ideology = ideology_agitator_theocrat
-					}
-				}
-			}
-		}
-		
-		if = {
-			limit = { 
-				is_a_democracy = yes 
-				scope:target_country = { 
-					empty_agitator_slots >= 1 
-					NOT = { is_a_democracy = yes }
-				}
-			}
-			if = {
-				limit = { 
-					any_scope_character = { 
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_republican
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					} 
-				}
-				random_scope_character = {
-					limit = {
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_republican
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-						is_historical = no
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else_if = {
-				limit = { 
-					any_character_in_exile_pool = {
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_republican
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-				}
-				random_character_in_exile_pool = {
-					limit = { 
-						has_role_of_type = agitator 
-						has_ideology = ideology:ideology_agitator_republican
-						NOT = {
-							culture = {
-								culture_is_discriminated_in = scope:target_country
-							}
-						}
-					}
-					transfer_character = scope:target_country
-				}
-			}
-			else = {
-				scope:target_country = {
-					create_character = {
-						is_agitator = yes
-						ideology = ideology_agitator_republican
-					}
-				}
+			scope:migratory_agitator ?= {
+				add_modifier = { name = manchurian_candidate }
+				transfer_character = scope:target_country
 			}
 		}
 		

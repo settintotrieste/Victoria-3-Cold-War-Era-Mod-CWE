@@ -23,9 +23,12 @@
 	complete = {
 	
 		#There are no terrorists
-		NOT = {
-			any_scope_character = {
-				has_role = character_role_terrorist
+		custom_tooltip = {
+			text = no_terrorists_in_country.tt
+			NOT = {
+				any_scope_character = {
+					has_role = character_role_terrorist
+				}
 			}
 		}
 		
@@ -38,6 +41,20 @@
 		add_modifier = { 
 			name = national_reconciliation 
 			years = 5
+			is_decaying = yes
+		}
+		
+	}
+	
+	on_fail = {
+		
+		#Mark terrorists
+		every_scope_character = {
+			limit = {
+				has_role = character_role_terrorist
+			}
+			save_scope_as = terrorist_character
+			custom_tooltip = terrorist_character_label.tt
 		}
 		
 	}
@@ -54,6 +71,89 @@
 					loyalty > define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
 				}
 				remove_character_role = character_role_terrorist
+			}
+			
+			#Conduct terrorist attack
+			random_list = {
+				#Yes
+				1 = {
+					random_list = {
+						#Primary culture attack
+						1 = {
+							if = {
+								limit = {
+									any_scope_character = {
+										has_role = character_role_terrorist
+										culture = { is_primary_culture_of = ROOT }
+									}
+								}
+								random_scope_character = {
+									limit = {
+										has_role = character_role_terrorist
+										culture = { is_primary_culture_of = ROOT }
+									}
+									save_scope_as = terror_attack_leader
+								}
+								random_scope_state = {
+									limit = {
+										is_incorporated = yes
+									}
+									add_radicals = {
+										value = large_radicals
+									}
+									save_scope_as = terror_attack_state
+								}
+								state_region = { add_devastation = 5 }
+								post_notification = domestic_terror_attack
+							}
+						}
+						#Discriminated culture attack
+						1 = {
+							if = {
+								limit = {
+									any_scope_character = {
+										has_role = character_role_terrorist
+										culture = { NOT = { is_primary_culture_of = ROOT } }
+									}
+								}
+								random_scope_character = {
+									limit = {
+										has_role = character_role_terrorist
+										culture = { NOT = { is_primary_culture_of = ROOT } }
+									}
+									culture = { save_scope_as = terror_attack_leader_culture }
+									save_scope_as = terror_attack_leader
+								}
+								if = {
+									limit = { 
+										any_scope_state = {
+											state_region = {
+												is_homeland = scope:terror_attack_leader_culture
+											}
+										}
+									}
+									random_scope_state = {
+										limit = {
+											state_region = {
+												is_homeland = scope:terror_attack_leader_culture
+											}
+										}
+										add_radicals = {
+											value = large_radicals
+										}
+										save_scope_as = terror_attack_state
+									}
+									state_region = { add_devastation = 5 }
+									post_notification = domestic_terror_attack
+								}
+							}
+						}
+					}
+				}
+				#No
+				11 = {
+					
+				}
 			}
 			
 		}
