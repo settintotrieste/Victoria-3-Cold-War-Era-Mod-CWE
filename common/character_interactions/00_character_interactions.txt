@@ -137,12 +137,6 @@ grant_leadership_to_agitator = {
 			character_acceptance = { target = scope:actor value >= acceptance_status_5 }
 		}
 		
-		#Religious restrictions
-		trigger_if = {
-			limit = { owner ?= { has_law_or_variant = law_type:law_state_atheism } }
-			religion = rel:atheist
-		}
-		
 		#Gender restrictions
 		trigger_if = {
 			limit = { is_female = yes }
@@ -199,15 +193,33 @@ grant_leadership_to_agitator = {
 			}
 		}
 		
-		#Convert agitator into politician - default
-		replace_character_roles = { add = { character_role_politician } remove_all = yes }
-		
 		#Terrorists do not immediately become interest group leader
 		if = {
-			limit = { NOT = { has_role = character_role_terrorist } }
+			limit = {
+				NOT = { has_role = character_role_terrorist }
+				save_temporary_scope_as = this_character_scope
+				owner ?= {
+					NOT = {
+						any_scope_character = {
+							has_role_of_type = politician
+							interest_group ?= { is_same_interest_group_type = scope:this_character_scope.interest_group }
+							popularity > scope:this_character_scope.popularity
+						}
+					}
+				}
+			}
 			custom_tooltip = {
 				text = make_agitator_ig_leader_tt
 				set_as_interest_group_leader = yes
+			}
+		}
+		else = {
+			custom_tooltip = {
+				text = make_agitator_politician_tt
+				
+				#Convert agitator into politician - default
+				replace_character_roles = { add = { character_role_politician } remove_all = yes }
+				
 			}
 		}
 		
@@ -614,7 +626,10 @@ exile_character = {
 		# Cannot exile pure commanders, we have the retire interaction for that
 		OR = {
 			has_role_of_type = politician
-			has_role_of_type = agitator
+			AND = { 
+				has_role_of_type = agitator
+				NOT = { has_role = character_role_terrorist }
+			}
 			has_role_of_type = magnate
 			has_role_of_type = executive
 		}
