@@ -1641,9 +1641,114 @@ conduct_hostile_espionage_10 = {
 	
 }
 
-#Manipulate Politics
+#Manipulate Politics - Outcome of Manchurian candidate
 conduct_hostile_espionage_11 = {
 	groups= { general } requires_approval = no
+	should_notify_third_parties = no
+	show_effect_in_tooltip = yes
+
+	potential = {
+		always = no
+	}
+	
+	possible = {
+		
+	}
+	
+	pact = {
+		cost = 50
+		
+		max_target_involvement = 3000
+		target_involvement_applies_to = target_country
+		
+		is_two_sided_pact = no
+		
+		first_modifier = {
+			country_infamy_generation_mult = 0.10
+		}
+		
+		second_modifier = {
+			country_pact_leverage_generation_add = 1000
+		}
+		
+		### Validation requirements ###
+		
+		requirement_to_maintain = { 
+		
+			trigger = { 
+			
+				#Ruler of TARGET is compromised
+				scope:target_country = {
+					ruler ?= {
+						has_modifier = manchurian_candidate
+						home_country ?= { THIS = ROOT }
+					}
+				}
+				
+				#TARGET is not at war with THIS
+				scope:target_country = { NOT = { has_war_with = scope:actor } }
+				
+			}
+			
+		}
+		
+		# Break effects
+		manual_break_effect = {
+			scope:target_country = {
+				every_scope_character = {
+					limit = {
+						has_modifier = manchurian_candidate
+						home_country ?= { THIS = ROOT }
+					}
+					remove_modifier = manchurian_candidate
+					set_home_country = scope:target_country
+				}
+			}
+			change_infamy = -5
+		}
+		
+		auto_break_effect = {
+			
+		}
+		
+	}
+	
+	accept_effect = {
+		
+		#Lobby
+		scope:target_country = {
+			add_lobby_appeasement_from_diplomacy_unidirectional = { 
+				FIRST = scope:target_country
+				SECOND = scope:actor
+				PRO_AMOUNT = -5
+				ANTI_AMOUNT = 5
+				FACTOR = appeasement_embargo_declared
+			}
+		}
+		
+	}
+	
+	ai = {
+	
+		evaluation_chance = {
+			value = 0
+		}
+	
+		propose_score = {
+			value = 0
+		}
+		
+		will_break = {
+			always = no
+		}
+		
+	}
+	
+}
+
+#Compromise Politician in TARGET - can become a manchurian candidate
+conduct_hostile_espionage_12 = {
+	groups = { general } requires_approval = no
 	should_notify_third_parties = no
 	show_effect_in_tooltip = yes
 
@@ -1655,21 +1760,11 @@ conduct_hostile_espionage_11 = {
 	
 		hidden_trigger = { has_journal_entry = je_secret_police_system }
 	
-		OR = {
-	
-			#THIS has spies in TARGET
-			has_diplomatic_pact = {
-				who = scope:target_country
-				type = conduct_hostile_espionage
-				is_initiator = yes
-			}
-			
-			#TARGET is a subject of THIS
-			scope:target_country = { 
-				is_direct_subject_of = ROOT
-				is_sufficiently_independent = yes
-			}
-			
+		#THIS has spies in TARGET
+		has_diplomatic_pact = {
+			who = scope:target_country
+			type = conduct_hostile_espionage
+			is_initiator = yes
 		}
 		
 	}
@@ -1687,6 +1782,23 @@ conduct_hostile_espionage_11 = {
 		custom_tooltip = {
 			text = secret_police_action_timer.tt
 			NOT = { has_variable = secret_police_action_timer }
+		}
+		
+		#TARGET has an opposition politician willing to be disloyal (either for money or ideology)
+		scope:target_country = {
+			any_scope_character = {
+				has_role_of_type = politician
+				interest_group = { 
+					is_in_government = no
+					is_same_interest_group_type = scope:actor.ruler.interest_group
+				}
+				OR = {
+					has_trait = grifter
+					has_trait = expensive_tastes
+					loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+				}
+				NOT = { has_modifier = manchurian_candidate }
+			}
 		}
 		
 	}
@@ -1719,119 +1831,35 @@ conduct_hostile_espionage_11 = {
 			}
 		}
 		
+		#Convert a politician into a manchurian candidate
+		scope:target_country = {
+			hidden_effect = {
+				random_scope_character = {
+					limit = {
+						has_role_of_type = politician
+						interest_group ?= { 
+							is_in_government = no
+							is_same_interest_group_type = scope:actor.ruler.interest_group
+						}
+						OR = {
+							has_trait = grifter
+							has_trait = expensive_tastes
+							loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+						}
+						NOT = { has_modifier = manchurian_candidate }
+					}
+					add_modifier = { name = manchurian_candidate }
+					set_home_country = ROOT
+					save_scope_as = traitor_politician
+				}
+			}
+			custom_tooltip = create_traitor_politician.tt
+		}
+		
 		#Gain infamy
-		change_infamy = 5
-		
-		#Reduce Relations
-		save_scope_as = manipulator_country
-		scope:target_country = { save_scope_as = manipulated_country }
-		change_relations = { country = scope:target_country value = -50 }
-		
-	}
-	
-	pact = {	
-		cost = 200
-		is_two_sided_pact = no
-		infamy_affects_maintenance = yes
-		
-		income_transfer = 0.05
-		max_paying_country_income_to_transfer = 0.05
-		second_country_gets_income_transfer = yes
-		income_transfer_based_on_second_country = yes
-		income_transfer_to_pops = {
-			allow_discriminated = yes
-			upper_strata_pops = {
-				value = 0.5
-				
-				if = {
-					limit = {
-						is_a_dictatorship = yes
-						NOT = { is_a_communist_government = yes }		
-					}
-					add = 0.5
-				}
-				
-				max = 1
-				min = 0
-			}
-			middle_strata_pops = {
-				value = 0.25
-				
-				if = {
-					limit = {
-						is_a_democracy = yes					
-					}
-					add = 0.25
-				}	
-
-				max = 1
-				min = 0				
-			}
-			lower_strata_pops = {
-				value = 0.0
-				
-				if = {
-					limit = {
-						is_a_communist_government = yes
-					}
-					add = 0.25
-				}	
-
-				max = 1
-				min = 0				
-			}
-		}
-		
-		### Validation requirements ###
-		
-		requirement_to_maintain = { 
-		
-			trigger = { 
-			
-				hidden_trigger = { has_journal_entry = je_secret_police_system }
-				
-				OR = {
-	
-					#THIS has spies in TARGET
-					has_diplomatic_pact = {
-						who = scope:target_country
-						type = conduct_hostile_espionage
-						is_initiator = yes
-					}
-					
-					#TARGET is subject of THIS
-					scope:target_country = { 
-						is_direct_subject_of = ROOT
-						is_sufficiently_independent = yes
-					}
-					
-				}
-				
-				#TARGET politics is suceptible to manipulation
-				scope:target_country = { 
-					OR = { 
-						is_a_democracy = yes
-						is_direct_subject_of = ROOT
-						has_modifier = power_vacuum_modifier
-						has_modifier = domestic_unrest
-						has_modifier = stirrings_of_revolution
-					}
-				}
-				
-				#TARGET is not at war with THIS
-				scope:target_country = { NOT = { has_war_with = scope:actor } }
-				
-			}
-			
-		}
-		
-		# Break effects
-		manual_break_effect = {
-			change_infamy = -5
-		}
-		
-		auto_break_effect = {
-			change_infamy = -5
+		create_incident = {
+			country = scope:target_country
+			value = 5
 		}
 		
 	}
@@ -1848,10 +1876,11 @@ conduct_hostile_espionage_11 = {
 		
 		will_propose = {
 			infamy < infamy_threshold:reputable
-			OR = { 
+			OR = {
 				has_attitude = { who = scope:target_country attitude = antagonistic }
 				has_attitude = { who = scope:target_country attitude = belligerent }
 				has_attitude = { who = scope:target_country attitude = domineering }
+				has_diplomatic_pact = { who = scope:target_country type = rivalry }
 				scope:target_country.relations:root < relations_threshold:poor
 			}
 		}
