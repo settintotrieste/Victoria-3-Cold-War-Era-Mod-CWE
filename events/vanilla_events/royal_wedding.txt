@@ -17,7 +17,7 @@ wedding.1 = {
 
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 	
-	duration = 3
+	duration = 1
 	
 	trigger = {
 		# triggered by marriage.2
@@ -29,22 +29,12 @@ wedding.1 = {
 		capital = {
 			save_scope_as = capital_scope
 		}
-		random_scope_character = {
-			limit = {
-				OR = {
-					is_heir_of_own_country = yes
-					is_ruler_of_own_country = yes
-				}
-				age > 16
-				NOT = { has_variable = is_married }
-			}
+		scope:royal_marriage_character ?= {
 			save_scope_as = royal_marriage_character
 			set_variable = getting_married # for clothing script
 		}
-		scope:marriage_country = {
-			ruler = {
-				save_scope_as = foreign_ruler
-			}
+		scope:foreign_ruler_1 ?= {
+			save_scope_as = foreign_ruler
 		}
 	}
 
@@ -55,14 +45,16 @@ wedding.1 = {
 			name = royal_marriage
 			days = normal_modifier_time
 		}
-		hidden_effect = {
-			remove_variable = getting_married
+		scope:royal_marriage_character ?= {
+			hidden_effect = {
+				remove_variable = getting_married
+			}
 		}
 	}
 
 	option = { # public wedding for the masses
 		name = wedding.1.b
-		scope:royal_marriage_character = {
+		scope:royal_marriage_character ?= {
 			add_modifier = { # popularity
 				name = marriage_popularity
 				days = very_long_modifier_time
@@ -89,13 +81,15 @@ wedding.2 = {
 
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 	
-	duration = 3
+	duration = 1
 	
 	trigger = {
 		# triggered by marry_ruler_or_heir interaction
 	}
 
 	immediate = {
+	
+		#Mark Royal Bachelor
 		random_scope_character = {
 			limit = {
 				has_variable = spouse_seeker
@@ -104,104 +98,342 @@ wedding.2 = {
 			set_variable = is_married
 			remove_variable = spouse_seeker
 		}
+		
+		#Find some applicable countries
 		random_country = {
 			limit = {
-				NOT = { THIS = ROOT }
+			
+				#Not THIS
+				NOT = { THIS = scope:actor }
+				
+				#Is a monarchy
+				has_law_or_variant = law_type:law_HOS_monarch
+				has_gov_regency = no
 				NOT = { is_subject_type = subject_type_personal_union }
-				has_law_or_variant = law_type:law_HOS_monarch OR = { has_law_or_variant = law_type:law_HOG_none has_law_or_variant = law_type:law_HOG_president_prime_minister }
+				
+				#Has a similar religion as THIS
 				religion = scope:actor.religion
-				ruler = {
-					age > 36
-					NOT = {
-						has_variable = marriage_target
+				
+				#Has a marryable character
+				any_scope_character = {
+					
+					#Is a royal or noble
+					OR = { 
+						has_role = character_role_monarch
+						is_noble = yes
 					}
-				}
-			}
-			save_scope_as = marriage_country_1
-			ruler = {
-				save_scope_as = foreign_ruler_1
-			}
-		}
-		if = {
-			limit = {
-				exists = scope:marriage_country_1
-				any_country = {
-					NOT = { THIS = ROOT }
-					NOT = { is_subject_type = subject_type_personal_union }
-					NOT = { THIS = scope:marriage_country_1 }
-					has_law_or_variant = law_type:law_HOS_monarch OR = { has_law_or_variant = law_type:law_HOG_none has_law_or_variant = law_type:law_HOG_president_prime_minister }
-					religion = scope:actor.religion
-					ruler = {
-						age > 36
-						NOT = { has_variable = marriage_target }
+					
+					#Is of a marryable age
+					is_adult = yes
+					OR = {
+						age < 50
+						AND = {
+							is_female = yes
+							age < 40
+						}
 					}
-				}
-			}
-			random_country = {
-				limit = {
-					NOT = { THIS = ROOT }
-					NOT = { is_subject_type = subject_type_personal_union }
-					NOT = { THIS = scope:marriage_country_1 }
-					has_law_or_variant = law_type:law_HOS_monarch OR = { has_law_or_variant = law_type:law_HOG_none has_law_or_variant = law_type:law_HOG_president_prime_minister }
-					religion = scope:actor.religion
-					ruler = {
-						age > 36
+					
+					#Is of correct gender or gender orientation
+					trigger_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = no } }
+						is_female = yes
+						NOT = { has_trait = homosexual_character }
+					}
+					trigger_else_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = yes } }
+						is_female = no
+						NOT = { has_trait = homosexual_character }
+					}
+					
+					#Not already a target
+					NOT = { has_variable = spouse_seeker }
+					NOT = { has_variable = is_married }
+					hidden_trigger = {
 						NOT = {
 							has_variable = marriage_target
 						}
 					}
+					
 				}
-				save_scope_as = marriage_country_2
-				ruler = {
-					save_scope_as = foreign_ruler_2
-				}
+				
 			}
-			if = { #In order for this to be searched for, marriage country 2 must also exist.
+			save_scope_as = marriage_country_1
+			random_scope_character = {
 				limit = {
-					exists = scope:marriage_country_2
-					any_country = {
-						NOT = { THIS = ROOT }
-						NOT = { is_subject_type = subject_type_personal_union }
-						NOT = { THIS = scope:marriage_country_1 }
-						NOT = { THIS = scope:marriage_country_2 }
-						has_law_or_variant = law_type:law_HOS_monarch OR = { has_law_or_variant = law_type:law_HOG_none has_law_or_variant = law_type:law_HOG_president_prime_minister }
-						religion = scope:actor.religion
-						ruler = {
-							age > 36
-							NOT = { has_variable = marriage_target }
+				
+					#Is a royal or noble
+					OR = { 
+						has_role = character_role_monarch
+						is_noble = yes
+					}
+					
+					#Is of a marryable age
+					is_adult = yes
+					OR = {
+						age < 50
+						AND = {
+							is_female = yes
+							age < 40
 						}
 					}
+					
+					#Is of correct gender or gender orientation
+					trigger_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = no } }
+						is_female = yes
+						NOT = { has_trait = homosexual_character }
+					}
+					trigger_else_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = yes } }
+						is_female = no
+						NOT = { has_trait = homosexual_character }
+					}
+					
+					#Not already a target
+					NOT = { has_variable = spouse_seeker }
+					NOT = { has_variable = is_married }
+					hidden_trigger = {
+						NOT = {
+							has_variable = marriage_target
+						}
+					}
+					
 				}
-				random_country = {
-					limit = {
-						NOT = { THIS = ROOT }
-						NOT = { is_subject_type = subject_type_personal_union }
-						NOT = { THIS = scope:marriage_country_1 }
-						NOT = { THIS = scope:marriage_country_2 }
-						relations:root >= 0
-						has_law_or_variant = law_type:law_HOS_monarch OR = { has_law_or_variant = law_type:law_HOG_none has_law_or_variant = law_type:law_HOG_president_prime_minister }
-						religion = scope:actor.religion
-						ruler = {
-							age > 36
+				save_scope_as = foreign_ruler_1
+			}
+			
+		}
+		if = { #In order for this to be searched for, marriage country 1 must also exist.
+			limit = {
+				exists = scope:marriage_country_2
+			}
+			random_country = {
+				limit = {
+				
+					#Not THIS
+					NOT = { THIS = scope:actor }
+					NOT = { THIS = scope:marriage_country_1 }
+					
+					#Is a monarchy
+					has_law_or_variant = law_type:law_HOS_monarch
+					has_gov_regency = no
+					NOT = { is_subject_type = subject_type_personal_union }
+					
+					#Has a similar religion as THIS
+					religion = scope:actor.religion
+					
+					#Has a marryable character
+					any_scope_character = {
+						
+						#Is a royal or noble
+						OR = { 
+							has_role = character_role_monarch
+							is_noble = yes
+						}
+						
+						#Is of a marryable age
+						is_adult = yes
+						OR = {
+							age < 50
+							AND = {
+								is_female = yes
+								age < 40
+							}
+						}
+						
+						#Is of correct gender or gender orientation
+						trigger_if = {
+							limit = { scope:THIS_character_scope ?= { is_female = no } }
+							is_female = yes
+							NOT = { has_trait = homosexual_character }
+						}
+						trigger_else_if = {
+							limit = { scope:THIS_character_scope ?= { is_female = yes } }
+							is_female = no
+							NOT = { has_trait = homosexual_character }
+						}
+						
+						#Not already a target
+						NOT = { has_variable = spouse_seeker }
+						NOT = { has_variable = is_married }
+						hidden_trigger = {
 							NOT = {
 								has_variable = marriage_target
 							}
 						}
+						
 					}
-					save_scope_as = marriage_country_3
-					ruler = {
-						save_scope_as = foreign_ruler_3
-					}
+					
 				}
+				save_scope_as = marriage_country_2
+				random_scope_character = {
+					limit = {
+					
+						#Is a royal or noble
+						OR = { 
+							has_role = character_role_monarch
+							is_noble = yes
+						}
+						
+						#Is of a marryable age
+						is_adult = yes
+						OR = {
+							age < 50
+							AND = {
+								is_female = yes
+								age < 40
+							}
+						}
+						
+						#Is of correct gender or gender orientation
+						trigger_if = {
+							limit = { scope:THIS_character_scope ?= { is_female = no } }
+							is_female = yes
+							NOT = { has_trait = homosexual_character }
+						}
+						trigger_else_if = {
+							limit = { scope:THIS_character_scope ?= { is_female = yes } }
+							is_female = no
+							NOT = { has_trait = homosexual_character }
+						}
+						
+						#Not already a target
+						NOT = { has_variable = spouse_seeker }
+						NOT = { has_variable = is_married }
+						hidden_trigger = {
+							NOT = {
+								has_variable = marriage_target
+							}
+						}
+						
+					}
+					save_scope_as = foreign_ruler_2
+				}
+				
 			}
 		}
+		if = { #In order for this to be searched for, marriage country 2 must also exist.
+			limit = {
+				exists = scope:marriage_country_2
+			}
+			random_country = {
+				limit = {
+				
+					#Not THIS
+					NOT = { THIS = scope:actor }
+					NOT = { THIS = scope:marriage_country_1 }
+					NOT = { THIS = scope:marriage_country_2 }
+					
+					#Is a monarchy
+					has_law_or_variant = law_type:law_HOS_monarch
+					has_gov_regency = no
+					NOT = { is_subject_type = subject_type_personal_union }
+					
+					#Has a similar religion as THIS
+					religion = scope:actor.religion
+					
+					#Has a marryable character
+					any_scope_character = {
+						
+						#Is a royal or noble
+						OR = { 
+							has_role = character_role_monarch
+							is_noble = yes
+						}
+						
+						#Is of a marryable age
+						is_adult = yes
+						OR = {
+							age < 50
+							AND = {
+								is_female = yes
+								age < 40
+							}
+						}
+						
+						#Is of correct gender or gender orientation
+						trigger_if = {
+							limit = { scope:THIS_character_scope ?= { is_female = no } }
+							is_female = yes
+							NOT = { has_trait = homosexual_character }
+						}
+						trigger_else_if = {
+							limit = { scope:THIS_character_scope ?= { is_female = yes } }
+							is_female = no
+							NOT = { has_trait = homosexual_character }
+						}
+						
+						#Not already a target
+						NOT = { has_variable = spouse_seeker }
+						NOT = { has_variable = is_married }
+						hidden_trigger = {
+							NOT = {
+								has_variable = marriage_target
+							}
+						}
+						
+					}
+					
+				}
+				save_scope_as = marriage_country_3
+				random_scope_character = {
+					limit = {
+					
+						#Is a royal or noble
+						OR = { 
+							has_role = character_role_monarch
+							is_noble = yes
+						}
+						
+						#Is of a marryable age
+						is_adult = yes
+						OR = {
+							age < 50
+							AND = {
+								is_female = yes
+								age < 40
+							}
+						}
+						
+						#Is of correct gender or gender orientation
+						trigger_if = {
+							limit = { scope:THIS_character_scope ?= { is_female = no } }
+							is_female = yes
+							NOT = { has_trait = homosexual_character }
+						}
+						trigger_else_if = {
+							limit = { scope:THIS_character_scope ?= { is_female = yes } }
+							is_female = no
+							NOT = { has_trait = homosexual_character }
+						}
+						
+						#Not already a target
+						NOT = { has_variable = spouse_seeker }
+						NOT = { has_variable = is_married }
+						hidden_trigger = {
+							NOT = {
+								has_variable = marriage_target
+							}
+						}
+						
+					}
+					save_scope_as = foreign_ruler_3
+				}
+				
+			}
+		}
+
+	}
+	
+	cancellation_trigger = {
+		NOT = { exists = scope:royal_marriage_character }
 	}
 
 	option = { # marry noble 1
 		name = wedding.2.a
 		default_option = yes
 		scope:marriage_country_1 = {
-			ruler = {
+			scope:foreign_ruler_1 ?= {
 				set_variable = marriage_target
 			}
 			save_scope_as = marriage_country
@@ -212,8 +444,70 @@ wedding.2 = {
 		}
 		trigger_event = {
 			id = wedding.1
-			#days = 7
+			popup = yes
 		}
+		
+		#Create personal union, if applicable
+		if = {
+			limit = { 
+				scope:marriage_country_1 ?= { country_rank > root.country_rank }
+				scope:royal_marriage_character ?= { has_role = character_role_monarch }
+				scope:foreign_ruler_1 ?= { has_role = character_role_monarch }
+			}
+			scope:marriage_country_1 ?= {
+				hidden_effect = {
+					create_diplomatic_pact = {
+						country = scope:royal_marriage_character.owner
+						type = personal_union
+					}
+				}
+			}
+			custom_tooltip = create_personal_union.tt
+		}
+		else_if = {
+			limit = {
+				scope:marriage_country_1 ?= { country_rank < root.country_rank }
+				scope:royal_marriage_character ?= { has_role = character_role_monarch }
+				scope:foreign_ruler_1 ?= { has_role = character_role_monarch }
+			}
+			hidden_effect = {
+				create_diplomatic_pact = {
+					country = scope:marriage_country_1
+					type = personal_union
+				}
+			}
+			custom_tooltip = create_personal_union.tt
+		}
+		else_if = {
+			limit = {
+				scope:marriage_country_1 ?= { country_rank = root.country_rank }
+				scope:royal_marriage_character ?= { has_role = character_role_monarch }
+				scope:foreign_ruler_1 ?= { has_role = character_role_monarch }
+			}
+			if = {
+				limit = { scope:royal_marriage_character ?= { is_female = no } }
+				hidden_effect = {
+					create_diplomatic_pact = {
+						country = scope:marriage_country_1
+						type = personal_union
+					}
+				}
+				custom_tooltip = create_personal_union.tt
+			}
+			else_if = {
+				limit = { scope:royal_marriage_character ?= { is_female = yes } }
+				scope:marriage_country_1 ?= {
+					hidden_effect = {
+						create_diplomatic_pact = {
+							country = scope:royal_marriage_character.owner
+							type = personal_union
+						}
+					}
+				}
+				custom_tooltip = create_personal_union.tt
+			}
+		}
+		
 	}
 
 	option = { # marry noble 2
@@ -222,9 +516,8 @@ wedding.2 = {
 			exists = scope:marriage_country_2
 		}
 		scope:marriage_country_2 = {
-			ruler = {
+			scope:foreign_ruler_2 ?= {
 				set_variable = marriage_target
-				save_scope_as = marriage_country_ruler
 			}
 			save_scope_as = marriage_country
 			change_relations = {
@@ -236,6 +529,68 @@ wedding.2 = {
 			id = wedding.1
 			popup = yes
 		}
+		
+		#Create personal union, if applicable
+		if = {
+			limit = { 
+				scope:marriage_country_2 ?= { country_rank > root.country_rank }
+				scope:royal_marriage_character ?= { has_role = character_role_monarch }
+				scope:foreign_ruler_2 ?= { has_role = character_role_monarch }
+			}
+			scope:marriage_country_2 ?= {
+				hidden_effect = {
+					create_diplomatic_pact = {
+						country = scope:royal_marriage_character.owner
+						type = personal_union
+					}
+				}
+			}
+			custom_tooltip = create_personal_union.tt
+		}
+		else_if = {
+			limit = {
+				scope:marriage_country_2 ?= { country_rank < root.country_rank }
+				scope:royal_marriage_character ?= { has_role = character_role_monarch }
+				scope:foreign_ruler_2 ?= { has_role = character_role_monarch }
+			}
+			hidden_effect = {
+				create_diplomatic_pact = {
+					country = scope:marriage_country_2
+					type = personal_union
+				}
+			}
+			custom_tooltip = create_personal_union.tt
+		}
+		else_if = {
+			limit = {
+				scope:marriage_country_2 ?= { country_rank = root.country_rank }
+				scope:royal_marriage_character ?= { has_role = character_role_monarch }
+				scope:foreign_ruler_2 ?= { has_role = character_role_monarch }
+			}
+			if = {
+				limit = { scope:royal_marriage_character ?= { is_female = no } }
+				hidden_effect = {
+					create_diplomatic_pact = {
+						country = scope:marriage_country_2
+						type = personal_union
+					}
+				}
+				custom_tooltip = create_personal_union.tt
+			}
+			else_if = {
+				limit = { scope:royal_marriage_character ?= { is_female = yes } }
+				scope:marriage_country_2 ?= {
+					hidden_effect = {
+						create_diplomatic_pact = {
+							country = scope:royal_marriage_character.owner
+							type = personal_union
+						}
+					}
+				}
+				custom_tooltip = create_personal_union.tt
+			}
+		}
+		
 	}
 
 	option = { # marry noble 3
@@ -244,9 +599,8 @@ wedding.2 = {
 			exists = scope:marriage_country_3
 		}
 		scope:marriage_country_3 = {
-			ruler = {
+			scope:foreign_ruler_3 = {
 				set_variable = marriage_target
-				save_scope_as = marriage_country_ruler
 			}
 			save_scope_as = marriage_country
 			change_relations = {
@@ -258,6 +612,68 @@ wedding.2 = {
 			id = wedding.1
 			popup = yes
 		}
+		
+		#Create personal union, if applicable
+		if = {
+			limit = { 
+				scope:marriage_country_3 ?= { country_rank > root.country_rank }
+				scope:royal_marriage_character ?= { has_role = character_role_monarch }
+				scope:foreign_ruler_3 ?= { has_role = character_role_monarch }
+			}
+			scope:marriage_country_3 ?= {
+				hidden_effect = {
+					create_diplomatic_pact = {
+						country = scope:royal_marriage_character.owner
+						type = personal_union
+					}
+				}
+			}
+			custom_tooltip = create_personal_union.tt
+		}
+		else_if = {
+			limit = {
+				scope:marriage_country_3 ?= { country_rank < root.country_rank }
+				scope:royal_marriage_character ?= { has_role = character_role_monarch }
+				scope:foreign_ruler_3 ?= { has_role = character_role_monarch }
+			}
+			hidden_effect = {
+				create_diplomatic_pact = {
+					country = scope:marriage_country_3
+					type = personal_union
+				}
+			}
+			custom_tooltip = create_personal_union.tt
+		}
+		else_if = {
+			limit = {
+				scope:marriage_country_3 ?= { country_rank = root.country_rank }
+				scope:royal_marriage_character ?= { has_role = character_role_monarch }
+				scope:foreign_ruler_3 ?= { has_role = character_role_monarch }
+			}
+			if = {
+				limit = { scope:royal_marriage_character ?= { is_female = no } }
+				hidden_effect = {
+					create_diplomatic_pact = {
+						country = scope:marriage_country_3
+						type = personal_union
+					}
+				}
+				custom_tooltip = create_personal_union.tt
+			}
+			else_if = {
+				limit = { scope:royal_marriage_character ?= { is_female = yes } }
+				scope:marriage_country_3 ?= {
+					hidden_effect = {
+						create_diplomatic_pact = {
+							country = scope:royal_marriage_character.owner
+							type = personal_union
+						}
+					}
+				}
+				custom_tooltip = create_personal_union.tt
+			}
+		}
+		
 	}
 }
 
@@ -312,9 +728,9 @@ wedding.3 = {
 
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 	
-	duration = 3
+	duration = 1
 
-	dlc = dlc004
+	#dlc = dlc004
 	
 	trigger = {
 		# triggered by abdicate_monarch interaction

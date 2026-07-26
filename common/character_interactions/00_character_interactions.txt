@@ -392,42 +392,106 @@ marry_ruler_or_heir = {
 	clicksound = "event:/SFX/UI/Military/command_grant"
 
 	potential = {
+		
+		#Owned by THIS
 		owner ?= scope:actor
-		OR = {
-			is_ruler_of_own_country = yes
-			is_heir_of_own_country = yes
-		}
+		
+		#Is a monarch
+		has_role = character_role_monarch
+		
+		#In a monarchy
 		scope:actor ?= {
-			is_a_regime_monarchy = yes
+			has_law_or_variant = law_type:law_HOS_monarch
 			has_gov_regency = no
-			religion = {
-				has_discrimination_trait = heritage_christian
+		}
+		
+		#Is of a marryable age
+		is_adult = yes
+		OR = {
+			age < 50
+			AND = {
+				is_female = yes
+				age < 40
 			}
 		}
-		age >= 18
+		
+		#Not interested in marrying
 		NOT = { has_variable = spouse_seeker }
 		NOT = { has_variable = is_married }
 		NOT = { has_trait = homosexual_character }
+		
 	}
 
 	possible = {
+		
+		save_temporary_scope_as = THIS_character_scope
+		
+		#There is an available spouse
 		owner ?= {
+		
+			#Independent country
+			is_sufficiently_independent = yes
+			is_at_war = no
+		
+			#Available country
 			any_diplomatically_relevant_country = {
+				
+				#Not THIS
 				NOT = { THIS = scope:actor }
-				NOT = { is_subject_type = subject_type_personal_union }
-				is_a_regime_monarchy = yes
+				
+				#Is a monarchy
+				has_law_or_variant = law_type:law_HOS_monarch
 				has_gov_regency = no
+				NOT = { is_subject_type = subject_type_personal_union }
+				
+				#Has a similar religion as THIS
 				religion = scope:actor.religion
-				ruler = {
-					age > 36
-					hidden_trigger = {
-						NOT = {
-							has_variable = marriage_target
-						}
+				
+				#Has a marryable character
+				any_scope_character = {
+					
+					#Is a royal or noble
+					OR = { 
+						has_role = character_role_monarch
+						is_noble = yes
 					}
+					
+					#Is of a marryable age
+					is_adult = yes
+					trigger_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = no } }
+						age < 50
+					}
+					trigger_else_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = yes } }
+						age < 40
+					}
+					
+					#Is of correct gender or gender orientation
+					trigger_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = no } }
+						is_female = yes
+						NOT = { has_trait = homosexual_character }
+					}
+					trigger_else_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = yes } }
+						is_female = no
+						NOT = { has_trait = homosexual_character }
+					}
+					
+					#Not already a target
+					hidden_trigger = {
+						NOT = { has_variable = spouse_seeker }
+						NOT = { has_variable = is_married }
+						NOT = { has_variable = marriage_target }
+					}
+					
 				}
+
 			}
+			
 		}
+		
 	}
 	effect = {
 		set_variable = spouse_seeker
@@ -435,7 +499,7 @@ marry_ruler_or_heir = {
 			trigger_event = { id = wedding.2 popup = yes } 
 		}
 	}
-	cooldown = { days = normal_modifier_time }
+	#cooldown = { days = normal_modifier_time }
 
 	ai_chance = {
 		value = 25
