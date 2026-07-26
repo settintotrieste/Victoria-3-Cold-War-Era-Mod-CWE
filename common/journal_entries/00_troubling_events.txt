@@ -18,6 +18,12 @@
 
 	immediate = {
 		
+		#Set variable
+		set_variable = {
+			name = terror_attack_chance
+			value = 0
+		}
+		
 	}
 
 	complete = {
@@ -56,12 +62,100 @@
 			save_scope_as = terrorist_character
 			custom_tooltip = terrorist_character_label.tt
 		}
+		if = {
+			limit = { NOT = { has_law_or_variant = law_type:law_closed_borders } }
+			every_country = {
+				limit = {
+					has_journal_entry = je_troubling_events_system
+					NOT = { has_law_or_variant = law_type:law_closed_borders }
+					OR = {
+						AND = {
+							is_subject_of = ROOT
+							liberty_desire >= 80
+						}
+						AND = {
+							is_subject = no
+							relations:root <= relations_threshold:poor
+						}
+						has_diplomatic_pact = { who = ROOT type = support_separatism is_initiator = yes }
+					}
+					any_scope_character = {
+						has_role = character_role_terrorist
+						culture = { NOT = { is_primary_culture_of = ROOT } }
+					}
+				}
+				every_scope_character = {
+					limit = {
+						has_role = character_role_terrorist
+					}
+					save_scope_as = international_terrorist_character
+					custom_tooltip = international_terrorist_character.tt
+				}
+			}
+		}
 		
 	}
 	
 	on_monthly_pulse = {
 	
 		effect = {
+			
+			#Count
+			if = {
+				limit = { has_variable = terror_attack_chance }
+				if = {
+					limit = { institution:institution_home_affairs.investment >= 1 }
+					change_variable = {
+						name = terror_attack_chance
+						add = 10
+					}
+				}
+				else_if = {
+					limit = { institution:institution_home_affairs.investment >= 2 }
+					change_variable = {
+						name = terror_attack_chance
+						add = 8
+					}
+				}
+				else_if = {
+					limit = { institution:institution_home_affairs.investment >= 3 }
+					change_variable = {
+						name = terror_attack_chance
+						add = 6
+					}
+				}
+				else_if = {
+					limit = { institution:institution_home_affairs.investment >= 4 }
+					change_variable = {
+						name = terror_attack_chance
+						add = 4
+					}
+				}
+				else_if = {
+					limit = { institution:institution_home_affairs.investment >= 5 }
+					change_variable = {
+						name = terror_attack_chance
+						add = 2
+					}
+				}
+				else = {
+					change_variable = {
+						name = terror_attack_chance
+						add = 12
+					}
+				}
+				clamp_variable = {
+					name = terror_attack_chance
+					max = 100
+					min = 0
+				}
+			}
+			else = {
+				set_variable = {
+					name = terror_attack_chance
+					value = 0
+				}
+			}
 			
 			#Clean up terrorists
 			every_scope_character = {
@@ -74,88 +168,189 @@
 			}
 			
 			#Conduct terrorist attack
-			random_list = {
-				#Yes
-				1 = {
-					random_list = {
-						#Primary culture attack
-						1 = {
-							if = {
-								limit = {
-									any_scope_character = {
-										has_role = character_role_terrorist
-										culture = { is_primary_culture_of = ROOT }
-									}
-								}
-								random_scope_character = {
-									limit = {
-										has_role = character_role_terrorist
-										culture = { is_primary_culture_of = ROOT }
-									}
-									save_scope_as = terror_attack_leader
-								}
-								random_scope_state = {
-									limit = {
-										is_incorporated = yes
-									}
-									add_radicals = {
-										value = large_radicals
-									}
-									save_scope_as = terror_attack_state
-								}
-								state_region = { add_devastation = 5 }
-								post_notification = domestic_terror_attack
-							}
-						}
-						#Discriminated culture attack
-						1 = {
-							if = {
-								limit = {
-									any_scope_character = {
-										has_role = character_role_terrorist
-										culture = { NOT = { is_primary_culture_of = ROOT } }
-									}
-								}
-								random_scope_character = {
-									limit = {
-										has_role = character_role_terrorist
-										culture = { NOT = { is_primary_culture_of = ROOT } }
-									}
-									culture = { save_scope_as = terror_attack_leader_culture }
-									save_scope_as = terror_attack_leader
-								}
+			if = {
+				limit = {
+					has_variable = terror_attack_chance
+					var:terror_attack_chance >= 100
+				}
+				random_list = {
+					#Yes
+					1 = {
+						random_list = {
+							#Primary culture attack
+							1 = {
 								if = {
-									limit = { 
-										any_scope_state = {
-											state_region = {
-												is_homeland = scope:terror_attack_leader_culture
-											}
+									limit = {
+										any_scope_character = {
+											has_role = character_role_terrorist
+											culture = { is_primary_culture_of = ROOT }
 										}
+									}
+									random_scope_character = {
+										limit = {
+											has_role = character_role_terrorist
+											culture = { is_primary_culture_of = ROOT }
+										}
+										save_scope_as = terror_attack_leader
 									}
 									random_scope_state = {
 										limit = {
-											state_region = {
-												is_homeland = scope:terror_attack_leader_culture
-											}
+											is_incorporated = yes
 										}
 										add_radicals = {
 											value = large_radicals
 										}
+										state_region = { add_devastation = 5 }
 										save_scope_as = terror_attack_state
 									}
-									state_region = { add_devastation = 5 }
 									post_notification = domestic_terror_attack
+								}
+							}
+							#Discriminated culture attack
+							1 = {
+								if = {
+									limit = {
+										any_scope_character = {
+											has_role = character_role_terrorist
+											culture = { NOT = { is_primary_culture_of = ROOT } }
+										}
+									}
+									random_scope_character = {
+										limit = {
+											has_role = character_role_terrorist
+											culture = { NOT = { is_primary_culture_of = ROOT } }
+										}
+										culture = { save_scope_as = terror_attack_leader_culture }
+										save_scope_as = terror_attack_leader
+									}
+									if = {
+										limit = { 
+											any_scope_state = {
+												state_region = {
+													is_homeland = scope:terror_attack_leader_culture
+												}
+											}
+										}
+										random_scope_state = {
+											limit = {
+												state_region = {
+													is_homeland = scope:terror_attack_leader_culture
+												}
+											}
+											add_radicals = {
+												value = large_radicals
+											}
+											state_region = { add_devastation = 5 }
+											save_scope_as = terror_attack_state
+										}
+										post_notification = domestic_terror_attack
+									}
+								}
+							}
+							#International Terror Attack
+							1 = {
+								if = {
+									limit = {
+										NOT = { has_law_or_variant = law_type:law_closed_borders }
+										any_country = {
+											has_journal_entry = je_troubling_events_system
+											NOT = { has_law_or_variant = law_type:law_closed_borders }
+											OR = {
+												AND = {
+													is_subject_of = ROOT
+													liberty_desire >= 80
+												}
+												AND = {
+													is_subject = no
+													relations:root <= relations_threshold:poor
+												}
+												has_diplomatic_pact = { who = ROOT type = support_separatism is_initiator = yes }
+											}
+											any_scope_character = {
+												has_role = character_role_terrorist
+												culture = { NOT = { is_primary_culture_of = ROOT } }
+											}
+										}
+									}
+									random_country = {
+										limit = {
+											has_journal_entry = je_troubling_events_system
+											NOT = { has_law_or_variant = law_type:law_closed_borders }
+											OR = {
+												AND = {
+													is_subject_of = ROOT
+													liberty_desire >= 80
+												}
+												AND = {
+													is_subject = no
+													relations:root <= relations_threshold:poor
+												}
+												has_diplomatic_pact = { who = ROOT type = support_separatism is_initiator = yes }
+											}
+											any_scope_character = {
+												has_role = character_role_terrorist
+												culture = { NOT = { is_primary_culture_of = ROOT } }
+											}
+										}
+										random_scope_character = {
+											limit = {
+												has_role = character_role_terrorist
+												culture = { NOT = { is_primary_culture_of = ROOT } }
+											}
+											culture = { save_scope_as = terror_attack_leader_culture }
+											save_scope_as = terror_attack_leader
+										}
+										ROOT = {
+											if = {
+												limit = {
+													any_scope_state = {
+														OR = {
+															state_region = {
+																is_homeland = scope:terror_attack_leader_culture
+															}
+															is_incorporated = yes
+														}
+													}
+												}
+												random_scope_state = {
+													limit = {
+														OR = {
+															state_region = {
+																is_homeland = scope:terror_attack_leader_culture
+															}
+															is_incorporated = yes
+														}
+													}
+													add_radicals = {
+														value = large_radicals
+													}
+													state_region = { add_devastation = 5 }
+													save_scope_as = terror_attack_state
+												}
+												post_notification = international_terror_attack
+											}
+										}
+									}
 								}
 							}
 						}
 					}
+					#No
+					4 = {
+						random_scope_state = {
+							limit = {
+								is_incorporated = yes
+							}
+							save_scope_as = terror_attack_state
+						}
+						post_notification = terror_attack_foiled
+					}
 				}
-				#No
-				11 = {
-					
+				set_variable = {
+					name = terror_attack_chance
+					value = 0
 				}
 			}
-			
 		}
 		
 	}

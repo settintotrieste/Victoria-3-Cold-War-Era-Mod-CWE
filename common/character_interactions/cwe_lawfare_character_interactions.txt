@@ -965,3 +965,252 @@ frame_character_for_crimes = {
 	}
 	
 }
+
+capture_terrorist = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	potential = {
+	
+		#Terrorist Character
+		has_role = character_role_terrorist
+		
+		#Character is owned by THIS
+		OR = { 
+			owner ?= scope:actor
+			owner ?= {
+				OR = { 
+					is_subject_of = scope:actor
+					has_diplomatic_pact = { who = scope:actor type = military_cooperation_agreement is_initiator = no }
+				}
+			}
+		}
+		
+		#Not already on trial
+		NOR = {
+			has_modifier = indicted_character
+			has_modifier = convicted_character
+		}
+	
+		#Not an excluded character
+		character_has_diplomatic_immunity = no
+		is_in_exile_pool = no
+		is_in_void = no
+		is_ruler_of_own_country = no
+		is_heir_of_own_country = no
+		NOT = { has_role = character_role_head_of_intelligence }
+		
+		#Not already targeted for assassination
+		NOT = { has_variable = state_assassination_target }
+		
+	}
+
+	possible = {
+	
+		#Character is not pre-occupied
+		is_busy = no
+		is_in_battle = no
+	
+		#Legal & Political Restrictions
+		owner ?= {
+			
+			#Country can capacity to capture terrorist
+			OR = {
+				has_law_or_variant = law_type:law_draconian_policing
+				has_law_or_variant = law_type:law_strict_policing
+				has_law_or_variant = law_type:law_secret_police
+			}
+			
+		}
+		
+		#Coup
+		custom_tooltip = {
+			text = pending_coup_event_tt
+			NOT = {
+				owner = {
+					has_variable = coup_event_active
+				}
+			}
+		}
+		custom_tooltip = {
+			text = doing_coup_for_player_tt
+			NOT = {
+				has_variable = commander_doing_coup_on_player_behalf
+			}
+		}
+		
+	}
+
+	effect = {
+	
+		this.interest_group ?= {
+			save_scope_as = relevant_ig
+		}
+		this ?= {
+			save_scope_as = assassinated_scope
+		}
+		if = {
+			limit = {
+				exists = owner.institution:institution_home_affairs
+			}
+			random_list = {
+				40 = {
+					modifier = {
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 2
+							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 3
+							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 4
+							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 5
+							}
+							add = 25
+						}
+					}
+					
+					#Capture dead or alive - successful
+					random_list = {
+						50 = {
+							kill_character = yes
+						}
+						50 = {
+							replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
+							add_modifier = { name = convicted_character years = 10 }
+						}
+					}
+					
+					#Domestic reaction
+					interest_group ?= { save_scope_as = THIS_IG_scope }
+					owner ?= {
+						add_radicals = {
+							value = large_radicals
+							interest_group = scope:THIS_IG_scope
+						}
+					}
+					
+				}
+				40 = {
+					
+					#Capture dead or alive - failed
+					owner ?= {
+						post_notification = capture_terrorist_failed
+					}
+					custom_tooltip = capture_terrorist_failed_tt
+					
+					#Domestic reaction
+					interest_group ?= { save_scope_as = THIS_IG_scope }
+					owner ?= {
+						add_radicals = {
+							value = large_radicals
+							interest_group = scope:THIS_IG_scope
+						}
+					}
+					
+				}
+			}
+		}
+		else = { # Exists purely to generate a tooltip when inactive
+			random_list = {
+				40 = {
+					random_list = {
+						50 = {
+							kill_character = yes
+						}
+						50 = {
+							replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
+							add_modifier = { name = convicted_character years = 10 }
+						}
+					}
+				}
+				40 = {
+					custom_tooltip = capture_terrorist_failed_tt
+				}
+			}
+		}
+	}
+
+	cooldown = { months = 6 }
+	show_confirmation_box = yes
+	
+	should_ai_evaluate = {
+		country_rank >= rank_value:major_power # Don't burn performance on tiny AI countries messing around with character interactions
+	}
+	
+	ai_will_do = {
+		is_historical = no
+	}
+
+	ai_chance = {
+		value = -50
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -5
+				}		
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -10
+				}		
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					any_interest_group = {
+						is_revolutionary = yes
+					}
+				}			
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				has_trait = cruel
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				has_trait = imperious
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				has_trait = wrathful
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				has_trait = pillager
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				has_trait = bandit
+			}
+			add = 15
+		}
+	}
+	
+}

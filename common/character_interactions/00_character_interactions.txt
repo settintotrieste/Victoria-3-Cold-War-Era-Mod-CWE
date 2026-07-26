@@ -110,21 +110,16 @@ grant_leadership_to_agitator = {
 	clicksound = "event:/SFX/DLC/1.3_ip1/UI/agitator_promote"
 
 	potential = {
-		is_a_special_agitator = no
-		has_role_of_type = agitator
-		exists = owner
+		
 		owner ?= scope:actor
+		
+		has_role_of_type = agitator
+		
+		is_a_special_agitator = no
+		
 	}
 
 	possible = {
-	
-		#Age restrictions
-		is_adult = yes
-	
-		#Government restrictions
-		interest_group ?= {
-			is_in_government = yes
-		}
 		
 		#Cultural restrictions
 		trigger_if = {
@@ -160,29 +155,62 @@ grant_leadership_to_agitator = {
 			owner ?= { NOR = { has_law_or_variant = law_type:law_no_gender_issues has_law_or_variant = law_type:law_some_gender_issues } }
 		}
 		
-		#Political restrictions
-		custom_tooltip = {
-			text = grant_leadership_must_be_pressured_ig
-			political_movement ?= {
-				any_influenced_interest_group = {
-					this = root.interest_group
+		#Reason for co-opting agitator
+		OR = {
+		
+			#Government restrictions
+			interest_group ?= {
+				is_in_government = yes
+			}
+		
+			#Political movement restrictions
+			custom_tooltip = {
+				text = grant_leadership_must_be_pressured_ig
+				political_movement ?= {
+					any_influenced_interest_group = {
+						this = root.interest_group
+					}
 				}
 			}
+			
 		}
 		
 	}
 
 	effect = {
 		
+		#Fix agitator ideology
 		convert_agitator_ideology_to_IG_ideology = yes
 		
-		show_as_tooltip = {
-			remove_character_role = agitator
+		#Anger if co-opting a terrorist
+		if = {
+			limit = { has_role = character_role_terrorist }
+			interest_group ?= { save_scope_as = terrorist_IG_scope }
+			owner ?= {
+				every_interest_group = {
+					limit = { NOT = { is_same_interest_group_type = scope:terrorist_IG_scope } }
+					owner = {
+						add_radicals = { 
+							value = large_radicals
+							interest_group = prev
+						}
+					}
+				}
+			}
 		}
-		custom_tooltip = {
-			text = make_agitator_ig_leader_tt
-			set_as_interest_group_leader = yes
+		
+		#Convert agitator into politician - default
+		replace_character_roles = { add = { character_role_politician } remove_all = yes }
+		
+		#Terrorists do not immediately become interest group leader
+		if = {
+			limit = { NOT = { has_role = character_role_terrorist } }
+			custom_tooltip = {
+				text = make_agitator_ig_leader_tt
+				set_as_interest_group_leader = yes
+			}
 		}
+		
 	}
 
 	cooldown = { days = normal_modifier_time }
@@ -230,6 +258,7 @@ grant_leadership_to_agitator = {
 			add = -1000
 		}
 	}
+	
 }
 
 grant_command_to_agitator = {
@@ -237,20 +266,23 @@ grant_command_to_agitator = {
 	clicksound = "event:/SFX/UI/Military/command_grant"
 
 	potential = {
-		is_a_special_agitator = no
-		has_role_of_type = agitator
-		NOT = { has_role_of_type = general }
-		NOT = { has_role_of_type = admiral }
+	
 		owner ?= scope:actor
+		
+		has_role_of_type = agitator
+		NOR = {
+			has_role_of_type = general
+			has_role_of_type = admiral
+			has_role = character_role_terrorist
+		}
+		is_a_special_agitator = no
+		
 	}
 
 	possible = {
 		
 		#HQ exists
 		exists = owner.capital.land_hq
-		
-		#Age restrictions
-		is_adult = yes
 		
 		#Government restrictions
 		interest_group ?= {
@@ -396,6 +428,7 @@ marry_ruler_or_heir = {
 	ai_chance = {
 		value = 25
 	}
+	
 }
 
 abdicate_monarch = {
@@ -404,11 +437,13 @@ abdicate_monarch = {
 
 	potential = {
 		owner ?= scope:actor
+		
 		is_ruler_of_own_country = yes
 		owner ?= {
 			is_a_regime_monarchy = yes
 			has_gov_regency = no
 		}
+		
 		exists = owner.heir
 	}
 
@@ -559,6 +594,7 @@ abdicate_monarch = {
 			add = -1000
 		}
 	}
+	
 }
 
 exile_character = {
@@ -566,7 +602,7 @@ exile_character = {
 
 	should_ai_evaluate = {
 		OR = {
-			is_a_dictatorship = yes
+			has_law_or_variant = law_type:law_parties_not_allowed
 			has_law_or_variant = law_type:law_single_party_state
 			has_law_or_variant = law_type:law_secret_police
 			has_law_or_variant = law_type:law_outlawed_dissent
@@ -575,20 +611,19 @@ exile_character = {
 
 	potential = {
 	
+		# Cannot exile pure commanders, we have the retire interaction for that
+		OR = {
+			has_role_of_type = politician
+			has_role_of_type = agitator
+			has_role_of_type = magnate
+			has_role_of_type = executive
+		}
+		is_ruler_of_own_country = no
+		is_heir_of_own_country = no
 		is_a_special_agitator = no
 	
 		is_in_exile_pool = no
 		is_in_void = no
-		is_ruler_of_own_country = no
-		is_heir_of_own_country = no
-		
-		# Cannot exile pure commanders, we have the retire interaction for that
-		OR = {
-			has_role_of_type = executive
-			has_role_of_type = magnate
-			has_role_of_type = politician
-			has_role_of_type = agitator
-		}
 		
 		interest_group ?= { is_in_government = no }
 		
@@ -598,14 +633,16 @@ exile_character = {
 
 	possible = {
 	
-		custom_tooltip = {
-			text = not_on_trial.tt
-			NOR = {
-				has_modifier = indicted_character
-				has_modifier = convicted_character
-				has_modifier = unjustly_convicted_character
-				has_modifier = acquitted_character
-			}
+		#Not subject to legal proceedings
+		NOR = {
+			has_modifier = indicted_character
+			has_modifier = convicted_character
+			has_modifier = acquitted_character
+		}
+		NOR = {
+			has_modifier = accused_of_crimes
+			has_modifier = impeached_politician
+			has_modifier = backbenchers_plot_politician
 		}
 	
 		owner ?= {
@@ -1184,6 +1221,7 @@ retire_commander = {
 		owner ?= scope:actor
 		is_commander = yes
 		is_ruler_of_own_country = no
+		is_heir_of_own_country = no
 	}
 
 	possible = {
@@ -1365,23 +1403,32 @@ retire_commander = {
 			add = -150
 		}
 	}
+	
 }
 
 return_to_home_country = {
 	
 	potential = {
 	
+		owner ?= scope:actor
+	
+		has_role_of_type = agitator
+		NOR = { 
+			has_role_of_type = general
+			has_role_of_type = admiral
+			has_role_of_type = politician
+			has_role = character_role_terrorist
+		}
+		is_ruler_of_own_country = no
+		is_heir_of_own_country = no
+		
 		is_a_special_agitator = no
 	
 		is_in_exile_pool = no
-		has_role_of_type = agitator
-		NOT = { has_role_of_type = general }
-		NOT = { has_role_of_type = admiral }
-		NOT = { has_role_of_type = politician }
-		is_ruler_of_own_country = no
-		is_heir_of_own_country = no
+		
 		exists = root.home_country
 		NOT = { root.home_country = this.owner }
+		
 	}
 
 	show_requirements = yes
@@ -1421,4 +1468,5 @@ return_to_home_country = {
 	ai_chance = {
 		value = -50
 	}
+	
 }
