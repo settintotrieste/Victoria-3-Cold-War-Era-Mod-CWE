@@ -3191,7 +3191,10 @@ is_an_IG_leader = {
 }
 
 is_royal_character = {
-	has_variable = royal_character
+	custom_tooltip = {
+		text = is_a_royal_character.tt
+		has_variable = royal_character
+	}
 }
 
 has_aristocratic_society = {
@@ -3262,4 +3265,120 @@ no_unholy_party_coalition_check = {
 		}
 	}
 	
+}
+
+eligible_character_for_royal_marriage_creating_PU = {
+	
+	#Is a monarch
+	has_role = character_role_monarch
+	
+	#Is interested in marrying
+	NOT = { has_variable = spouse_seeker }
+	NOT = { has_variable = is_married }
+	NOT = { has_trait = homosexual_character }
+	
+	#Is of appropriate age
+	is_adult = yes
+	OR = {
+		age < 50
+		AND = {
+			is_female = yes
+			age < 40
+		}
+	}
+
+}
+
+eligible_for_royal_marriage_creating_PU = {
+	
+	scope:actor ?= {
+		
+		#Is a Monarchy
+		has_law_or_variant = law_type:law_HOS_monarch
+		hidden_trigger = { has_gov_regency = no }
+		
+		#Has a monarch of eligible age & marriage status
+		any_scope_character = {
+			
+			#Is a monarch
+			has_role = character_role_monarch
+			
+			#Is interested in marrying
+			custom_tooltip = {
+				text = is_not_married.tt
+				NOT = { has_variable = spouse_seeker }
+				NOT = { has_variable = is_married }
+			}
+			NOT = { has_trait = homosexual_character }
+			
+			#Is of appropriate age
+			is_adult = yes
+			OR = {
+				age < 50
+				AND = {
+					is_female = yes
+					age < 40
+				}
+			}
+			
+			save_temporary_scope_as = actor_monarch_scope
+			
+		}
+		
+	}
+	scope:target_country ?= {
+		
+		#Is a Monarchy
+		has_law_or_variant = law_type:law_HOS_monarch
+		hidden_trigger = { has_gov_regency = no }
+		
+		#Has a monarch of eligible age & marriage status
+		any_scope_character = {
+			
+			#Is a monarch
+			has_role = character_role_monarch
+			
+			#Is interested in marrying
+			custom_tooltip = {
+				text = is_not_married.tt
+				NOT = { has_variable = spouse_seeker }
+				NOT = { has_variable = is_married }
+			}
+			
+			#Is of appropriate age
+			is_adult = yes
+			
+			#Is of correct gender or gender orientation AND age
+			trigger_if = {
+				limit = { scope:actor_monarch_scope ?= { is_female = no } }
+				is_female = yes
+				NOT = { has_trait = homosexual_character }
+				age < 40
+			}
+			trigger_else_if = {
+				limit = { scope:actor_monarch_scope ?= { is_female = yes } }
+				is_female = no
+				NOT = { has_trait = homosexual_character }
+				age < 50
+			}
+			
+			#Shares same religion
+			custom_tooltip = {
+				text = character_shares_same_religion_PU.tt
+				scope:actor_monarch_scope.religion ?= { is_state_religion = scope:target_country }
+			}
+			
+			#Shares similar culture
+			culture = { shares_heritage_trait_group_with_any_primary_culture = scope:actor }
+			
+			#Primogeniture
+			trigger_if = {
+				limit = { scope:actor_monarch_scope ?= { is_female = yes } }
+				owner ?= { country_rank < scope:actor.country_rank }
+			}
+			
+		}
+		
+	}
+
 }

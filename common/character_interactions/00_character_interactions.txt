@@ -405,6 +405,11 @@ marry_ruler_or_heir = {
 			has_gov_regency = no
 		}
 		
+		#Not interested in marrying
+		NOT = { has_variable = spouse_seeker }
+		NOT = { has_variable = is_married }
+		NOT = { has_trait = homosexual_character }
+		
 		#Is of a marryable age
 		is_adult = yes
 		OR = {
@@ -414,11 +419,6 @@ marry_ruler_or_heir = {
 				age < 40
 			}
 		}
-		
-		#Not interested in marrying
-		NOT = { has_variable = spouse_seeker }
-		NOT = { has_variable = is_married }
-		NOT = { has_trait = homosexual_character }
 		
 	}
 
@@ -444,17 +444,12 @@ marry_ruler_or_heir = {
 				has_gov_regency = no
 				NOT = { is_subject_type = subject_type_personal_union }
 				
-				#Has a similar religion as THIS
-				religion = scope:actor.religion
-				
 				#Has a marryable character
 				any_scope_character = {
 					
-					#Is a royal or noble
-					OR = { 
-						has_role = character_role_monarch
-						is_noble = yes
-					}
+					#Is a royal (non-monarch) - monarchs use diplo action instead because a subject relation will be created
+					NOT = { has_role = character_role_monarch }
+					is_royal_character = yes
 					
 					#Is of a marryable age
 					is_adult = yes
@@ -479,8 +474,15 @@ marry_ruler_or_heir = {
 						NOT = { has_trait = homosexual_character }
 					}
 					
+					#Shares same religion
+					religion ?= { is_state_religion = scope:actor }
+					
+					#Shares similar culture
+					culture ?= { shares_heritage_trait_group_with_any_primary_culture = scope:actor }
+					
 					#Not already a target
-					hidden_trigger = {
+					custom_tooltip = {
+						text = is_not_married.tt
 						NOT = { has_variable = spouse_seeker }
 						NOT = { has_variable = is_married }
 						NOT = { has_variable = marriage_target }
@@ -499,7 +501,7 @@ marry_ruler_or_heir = {
 			trigger_event = { id = wedding.2 popup = yes } 
 		}
 	}
-	#cooldown = { days = normal_modifier_time }
+	cooldown = { days = normal_modifier_time }
 
 	ai_chance = {
 		value = 25
