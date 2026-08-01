@@ -1,6 +1,6 @@
 namespace = terrorist_system
 
-#Won a War
+#Generate terrorists
 terrorist_system.1 = {
     type = country_event
 
@@ -17,9 +17,9 @@ terrorist_system.1 = {
 				has_role = character_role_terrorist
 			}
 			is_a_special_agitator = no
-			OR = { 
+			OR = {
 				character_is_peaceful = no
-				culture = { NOT = { is_primary_culture_of = scope:target_country } }
+				culture = { NOT = { is_primary_culture_of = owner } }
 				AND = {
 					interest_group ?= { is_interest_group_type = ig_devout }
 					NOT = { religion = owner.religion }
@@ -42,9 +42,9 @@ terrorist_system.1 = {
 					has_role = character_role_terrorist
 				}
 				is_a_special_agitator = no
-				OR = { 
+				OR = {
 					character_is_peaceful = no
-					culture = { NOT = { is_primary_culture_of = scope:target_country } }
+					culture = { NOT = { is_primary_culture_of = owner } }
 					AND = {
 						interest_group ?= { is_interest_group_type = ig_devout }
 						NOT = { religion = owner.religion }
@@ -53,6 +53,134 @@ terrorist_system.1 = {
 				loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
 			}
 			add_character_role = character_role_terrorist
+		}
+		
+	}
+
+}
+
+# Assassination
+terrorist_system.2 = {
+    type = country_event
+
+    title = terrorist_assassination.t 								# Title of the event; ADD LOCALISATION
+    desc = terrorist_assassination.d 								# Description of the event; ADD LOCALISATION
+    #flavor = terrorist_assassination.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "southamerica_public_figure_assassination" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Someone to assassinate
+		any_scope_character = {
+			OR = { 
+				character_is_key_state_officeholder = yes
+				AND = { 
+					has_role_of_type = politician
+					interest_group ?= { is_in_government = yes }
+				}
+			}
+			NAND = {
+				is_historical = yes
+				owner ?= { historical_railroading_active = yes }
+			}
+		}
+		
+    }
+	
+	immediate = {
+	
+		#Mark target
+		random_scope_character = {
+			limit = {
+				OR = { 
+					character_is_key_state_officeholder = yes
+					AND = { 
+						has_role_of_type = politician
+						interest_group ?= { is_in_government = yes }
+					}
+				}
+				NAND = {
+					is_historical = yes
+					owner ?= { historical_railroading_active = yes }
+				}
+			}
+			save_scope_as = assassination_target
+			interest_group ?= { save_scope_as = assassination_target_IG }
+		}
+		
+		#Mark assassin
+		random_scope_character = {
+			limit = {
+				has_role = character_role_terrorist
+			}
+			save_scope_as = terror_attack_leader
+		}
+		
+	}
+	
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = scope:assassination_target }
+			NOT = { exists = scope:terror_attack_leader }
+		}
+	}
+    
+    option = {
+        name = terrorist_assassination.option					# RIP
+		
+		#Kill character
+		scope:assassination_target ?= {
+			kill_character = yes
+		}
+		
+		#Assassin is removed
+		scope:terror_attack_leader ?= {
+			kill_character = yes
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = very_large_radicals
+			interest_group = scope:assassination_target_IG
+		}
+		
+    }
+
+}
+
+#Generate guerrilla
+terrorist_system.3 = {
+    type = country_event
+
+	hidden = yes
+	
+	trigger = {											# What triggers the event, if using other events or journal entries leave empty
+		
+		#Generate guerrilla
+		any_scope_character = {
+			has_role = character_role_terrorist
+			NOT = { has_variable = guerrilla_character }
+			interest_group.ig_clout >= 0.10
+		}
+		
+    }
+	
+	immediate = {
+		
+		#Generate guerrilla
+		every_scope_character = {
+			limit = {
+				has_role = character_role_terrorist
+				NOT = { has_variable = guerrilla_character }
+				interest_group.ig_clout >= 0.10
+			}
+			set_variable = guerrilla_character
 		}
 		
 	}

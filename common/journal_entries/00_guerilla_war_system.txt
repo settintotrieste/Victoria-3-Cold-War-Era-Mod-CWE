@@ -1,0 +1,373 @@
+﻿je_guerrilla_war_system = {
+	icon = "gfx/interface/icons/dlc_icons/dlc008.dds"
+
+	group = je_group_historical_content
+
+	is_shown_when_inactive = {
+		
+		#There are terrorist
+		any_scope_character = {
+			is_a_guerrilla_character = yes
+		}
+		
+	}
+
+	possible = {
+		
+	}
+
+	immediate = {
+		
+		#Set variable
+		set_variable = {
+			name = guerrilla_attack_chance
+			value = 0
+		}
+		
+	}
+
+	complete = {
+	
+		#There are no terrorist
+		custom_tooltip = {
+			text = no_guerrillas_in_country.tt
+			NOT = {
+				any_scope_character = {
+					is_a_guerrilla_character = yes
+				}
+			}
+		}
+		
+	}
+	
+	on_complete = {
+		
+		#Domestic Peace
+		hidden_effect = { has_modifier = national_reconciliation }
+		add_modifier = { 
+			name = national_reconciliation 
+			years = 5
+			is_decaying = yes
+		}
+		
+	}
+	
+	on_fail = {
+		
+		#Mark terrorist
+		every_scope_character = {
+			limit = {
+				is_a_guerrilla_character = yes
+			}
+			save_scope_as = guerrilla_character
+			custom_tooltip = guerrilla_character_label.tt
+		}
+		if = {
+			limit = { NOT = { has_law_or_variant = law_type:law_closed_borders } }
+			every_country = {
+				limit = {
+					has_journal_entry = je_guerrilla_war_system
+					NOT = { has_law_or_variant = law_type:law_closed_borders }
+					OR = {
+						AND = {
+							is_subject_of = ROOT
+							liberty_desire >= 80
+						}
+						AND = {
+							is_subject = no
+							relations:root <= relations_threshold:poor
+						}
+						has_diplomatic_pact = { who = ROOT type = support_separatism is_initiator = yes }
+					}
+					any_scope_character = {
+						is_a_guerrilla_character = yes
+						culture = { NOT = { is_primary_culture_of = ROOT } }
+					}
+				}
+				every_scope_character = {
+					limit = {
+						is_a_guerrilla_character = yes
+					}
+					save_scope_as = international_guerrilla_character
+					custom_tooltip = international_guerrilla_character.tt
+				}
+			}
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			#Count
+			if = {
+				limit = { 
+					has_variable = guerrilla_attack_chance
+				}
+				if = {
+					limit = { has_institution = institution_home_affairs institution:institution_home_affairs.investment >= 1 }
+					change_variable = {
+						name = guerrilla_attack_chance
+						add = 10
+					}
+				}
+				else_if = {
+					limit = { has_institution = institution_home_affairs institution:institution_home_affairs.investment >= 2 }
+					change_variable = {
+						name = guerrilla_attack_chance
+						add = 8
+					}
+				}
+				else_if = {
+					limit = { has_institution = institution_home_affairs institution:institution_home_affairs.investment >= 3 }
+					change_variable = {
+						name = guerrilla_attack_chance
+						add = 6
+					}
+				}
+				else_if = {
+					limit = { has_institution = institution_home_affairs institution:institution_home_affairs.investment >= 4 }
+					change_variable = {
+						name = guerrilla_attack_chance
+						add = 4
+					}
+				}
+				else_if = {
+					limit = { has_institution = institution_home_affairs institution:institution_home_affairs.investment >= 5 }
+					change_variable = {
+						name = guerrilla_attack_chance
+						add = 2
+					}
+				}
+				else = {
+					change_variable = {
+						name = guerrilla_attack_chance
+						add = 12
+					}
+				}
+				clamp_variable = {
+					name = guerrilla_attack_chance
+					max = 100
+					min = 0
+				}
+			}
+			else = {
+				set_variable = {
+					name = guerrilla_attack_chance
+					value = 0
+				}
+			}
+			
+			#Clean up guerrilla
+			every_scope_character = {
+				limit = {
+					is_a_guerrilla_character = yes
+					is_a_special_agitator = no
+					loyalty > define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+				}
+				remove_variable = guerrilla_character
+			}
+			
+			#Conduct guerrilla attack
+			if = {
+				limit = {
+					has_variable = guerrilla_attack_chance
+					var:guerrilla_attack_chance >= 100
+				}
+				random_list = {
+					#Yes
+					2 = {
+						random_list = {
+							#Primary culture attack
+							1 = {
+								if = {
+									limit = {
+										any_scope_character = {
+											is_a_guerrilla_character = yes
+											culture = { is_primary_culture_of = ROOT }
+										}
+									}
+									random_scope_character = {
+										limit = {
+											is_a_guerrilla_character = yes
+											culture = { is_primary_culture_of = ROOT }
+										}
+										save_scope_as = guerrilla_attack_leader
+									}
+									random_scope_state = {
+										limit = {
+											is_incorporated = yes
+										}
+										add_radicals = {
+											value = small_radicals
+										}
+										state_region = { add_devastation = 5 }
+										save_scope_as = guerrilla_attack_state
+									}
+									post_notification = domestic_guerrilla_attack
+								}
+							}
+							#Discriminated culture attack
+							1 = {
+								if = {
+									limit = {
+										any_scope_character = {
+											is_a_guerrilla_character = yes
+											culture = { NOT = { is_primary_culture_of = ROOT } }
+										}
+									}
+									random_scope_character = {
+										limit = {
+											is_a_guerrilla_character = yes
+											culture = { NOT = { is_primary_culture_of = ROOT } }
+										}
+										culture = { save_scope_as = guerrilla_attack_leader_culture }
+										save_scope_as = guerrilla_attack_leader
+									}
+									if = {
+										limit = { 
+											any_scope_state = {
+												state_region = {
+													is_homeland = scope:guerrilla_attack_leader_culture
+												}
+											}
+										}
+										random_scope_state = {
+											limit = {
+												state_region = {
+													is_homeland = scope:guerrilla_attack_leader_culture
+												}
+											}
+											add_radicals = {
+												value = small_radicals
+											}
+											state_region = { add_devastation = 5 }
+											save_scope_as = guerrilla_attack_state
+										}
+										post_notification = domestic_guerrilla_attack
+									}
+								}
+							}
+							#International Terror Attack
+							1 = {
+								if = {
+									limit = {
+										NOT = { has_law_or_variant = law_type:law_closed_borders }
+										any_country = {
+											has_journal_entry = je_guerrilla_war_system
+											NOT = { has_law_or_variant = law_type:law_closed_borders }
+											OR = {
+												AND = {
+													is_subject_of = ROOT
+													liberty_desire >= 80
+												}
+												AND = {
+													is_subject = no
+													relations:root <= relations_threshold:poor
+												}
+												has_diplomatic_pact = { who = ROOT type = support_separatism is_initiator = yes }
+											}
+											any_scope_character = {
+												is_a_guerrilla_character = yes
+												culture = { NOT = { is_primary_culture_of = ROOT } }
+											}
+										}
+									}
+									random_country = {
+										limit = {
+											has_journal_entry = je_guerrilla_war_system
+											NOT = { has_law_or_variant = law_type:law_closed_borders }
+											OR = {
+												AND = {
+													is_subject_of = ROOT
+													liberty_desire >= 80
+												}
+												AND = {
+													is_subject = no
+													relations:root <= relations_threshold:poor
+												}
+												has_diplomatic_pact = { who = ROOT type = support_separatism is_initiator = yes }
+											}
+											any_scope_character = {
+												is_a_guerrilla_character = yes
+												culture = { NOT = { is_primary_culture_of = ROOT } }
+											}
+										}
+										random_scope_character = {
+											limit = {
+												is_a_guerrilla_character = yes
+												culture = { NOT = { is_primary_culture_of = ROOT } }
+											}
+											culture = { save_scope_as = guerrilla_attack_leader_culture }
+											save_scope_as = guerrilla_attack_leader
+										}
+										ROOT = {
+											if = {
+												limit = {
+													any_scope_state = {
+														OR = {
+															state_region = {
+																is_homeland = scope:guerrilla_attack_leader_culture
+															}
+															is_incorporated = yes
+														}
+													}
+												}
+												random_scope_state = {
+													limit = {
+														OR = {
+															state_region = {
+																is_homeland = scope:guerrilla_attack_leader_culture
+															}
+															is_incorporated = yes
+														}
+													}
+													add_radicals = {
+														value = small_radicals
+													}
+													state_region = { add_devastation = 5 }
+													save_scope_as = guerrilla_attack_state
+												}
+												post_notification = international_guerrilla_attack
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					#No
+					4 = {
+						random_scope_state = {
+							limit = {
+								is_incorporated = yes
+							}
+							save_scope_as = guerrilla_attack_state
+						}
+						post_notification = guerrilla_attack_foiled
+					}
+				}
+				set_variable = {
+					name = guerrilla_attack_chance
+					value = 0
+				}
+			}
+		}
+		
+	}
+	
+	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
+	modifiers_while_active = {
+		nationalist_agitation
+	}
+
+	weight = 20
+
+	should_be_pinned_by_default_uninvolved_or_context = yes
+
+	transferable = no
+
+	progressbar = no
+	
+}
