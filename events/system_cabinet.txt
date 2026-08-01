@@ -22,19 +22,24 @@ cabinet_system.1 = {
 	trigger = {
 		
 		#Angry Cabinet Member
-		any_interest_group = {
-			leader ?= { is_ruler_of_own_country = no }
-			OR = { 
-				leader ?= { has_role = character_role_cabinet_minister }
-				has_modifier = cabinet_minister_ig
-			}
+		any_scope_character = {
+			has_role = character_role_cabinet_minister
+			is_ruler_of_own_country = no
 			OR = {
-				ig_approval <= unhappy
-				AND = { 
+				interest_group ?= { ig_approval <= unhappy }
+				AND = {
 					owner = { enacting_any_law = yes }
-					law_enactment_stance = {
-						law = owner.currently_enacting_law.type
-						value < disapprove
+					OR = {
+						law_enactment_stance = {
+							law = owner.currently_enacting_law.type
+							value <= disapprove
+						}
+						interest_group ?= {
+							law_enactment_stance = {
+								law = owner.currently_enacting_law.type
+								value <= disapprove
+							}
+						}
 					}
 				}
 			}
@@ -46,28 +51,36 @@ cabinet_system.1 = {
 
 	immediate = {
 		
-		random_interest_group = {
-			limit = { 
-				leader ?= { is_ruler_of_own_country = no }
-				OR = { 
-					leader ?= { has_role = character_role_cabinet_minister }
-					has_modifier = cabinet_minister_ig
-				}
+		random_scope_character = {
+			limit = {
+				has_role = character_role_cabinet_minister
+				is_ruler_of_own_country = no
 				OR = {
-					ig_approval <= unhappy
-					AND = { 
+					interest_group ?= { ig_approval <= unhappy }
+					AND = {
 						owner = { enacting_any_law = yes }
-						law_enactment_stance = {
-							law = owner.currently_enacting_law.type
-							value < disapprove
+						OR = {
+							law_enactment_stance = {
+								law = owner.currently_enacting_law.type
+								value <= disapprove
+							}
+							interest_group ?= {
+								law_enactment_stance = {
+									law = owner.currently_enacting_law.type
+									value <= disapprove
+								}
+							}
 						}
 					}
 				}
 			}
-			save_scope_as = angry_cabinet_ig
+			save_scope_as = angry_cabinet_member
 		}
 		
-		set_variable = cabinet_system_1_fired
+		set_variable = {
+			name = cabinet_system_1_fired 
+			days = 32
+		}
 		
 	}
 
@@ -77,33 +90,19 @@ cabinet_system.1 = {
 		
 		#Minister resigns
 		if = {
-			limit = { exists = scope:angry_cabinet_ig }
-			scope:angry_cabinet_ig = { 
-				leader ?= { 
-					remove_character_role = character_role_cabinet_minister 
-					set_variable = { name = new_cabinet_minister months = 3 }
+			limit = { exists = scope:angry_cabinet_member }
+			scope:angry_cabinet_member ?= {
+				if = {
+					limit = {
+						has_role = character_role_cabinet_minister
+					}
+					remove_character_role = character_role_cabinet_minister
 				}
-				remove_modifier = cabinet_minister_ig
-				hidden_effect = {
-					remove_modifier = ig_angry_with_government
-					remove_modifier = THIS_is_ruler
-				}
-				add_modifier = { name = ig_angry_with_government years = 2 is_decaying = yes }
+				interest_group ?= { save_scope_as = angry_cabinet_member_ig }
 			}
-		}
-		
-		#Ruler is weakened
-		random_scope_character = {
-			limit = { is_ruler_of_own_country = yes }
-			hidden_effect = {
-				remove_modifier = politically_weakened_character
-			}
-			add_modifier = { name = politically_weakened_character years = 1 is_decaying = yes }
-			interest_group = {
-				hidden_effect = {
-					remove_modifier = politically_weakened_interest_group
-				}
-				add_modifier = { name = politically_weakened_interest_group years = 1 is_decaying = yes }
+			add_radicals = {
+				value = small_radicals
+				interest_group = scope:angry_cabinet_member_ig
 			}
 		}
 		

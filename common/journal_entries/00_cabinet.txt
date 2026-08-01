@@ -26,52 +26,13 @@ je_cabinet = {
 
 	immediate = {
 	
-		custom_tooltip = {
-			text = ruler_is_head_of_government.tt
-			ruler ?= { 
-				if = {
-					limit = { NOT = { has_modifier = THIS_is_ruler } }
-					add_modifier = { name = THIS_is_ruler } 
-				}
-				interest_group ?= {
-					if = {
-						limit = { NOT = { has_modifier = cabinet_minister_ig } }
-						add_modifier = { name = cabinet_minister_ig }
-					}
-				}
-				save_scope_as = ruler_scope
-			}
+		#Mark ruler
+		ruler ?= {
+			save_scope_as = ruler_scope
 		}
 		
+		#Initialise Cabinet Unity
 		calculate_cabinet_unity = yes
-		
-		#Clear convictions
-		every_scope_character = {
-			limit = {
-				OR = { 
-					is_ruler_of_own_country = yes
-					interest_group ?= { is_in_government = yes }
-				}
-				OR = {
-					has_modifier = convicted_character
-					has_modifier = unjustly_convicted_character
-					interest_group = { 
-						OR = {
-							has_modifier = convicted_character_ig
-							has_modifier = unjustly_convicted_character_ig
-							has_modifier = ig_angry_with_witch_hunt
-						}
-					}
-				}
-			}
-			remove_modifier = convicted_character
-			remove_modifier = unjustly_convicted_character
-			interest_group = { 
-				remove_modifier = convicted_character_ig
-				remove_modifier = unjustly_convicted_character_ig
-				remove_modifier = ig_angry_with_witch_hunt
-			}
-		}
 		
 		#Mark IGs
 		ig:ig_armed_forces ?= { save_scope_as = ig_armed_forces_cabinet_scope }
@@ -90,10 +51,7 @@ je_cabinet = {
 	invalid = {
 		
 		OR = {
-			custom_tooltip = {
-				text = ruler_is_not_head_of_government.tt
-				ruler ?= { NOT = { has_modifier = THIS_is_ruler } }
-			}
+			scope:ruler_scope ?= { is_ruler_of_own_country = no }
 			NOT = { exists = scope:ruler_scope }
 		}
 		
@@ -106,14 +64,11 @@ je_cabinet = {
 		
 			#Clear all modifiers
 			every_interest_group = {
-				leader = { 
-					remove_modifier = THIS_is_ruler
-					remove_character_role = character_role_cabinet_minister
-				}
+				limit = { has_modifier = cabinet_minister_ig }
 				remove_modifier = cabinet_minister_ig
 			}
 			every_scope_character = {
-				remove_modifier = THIS_is_ruler
+				limit = { has_role = character_role_cabinet_minister }
 				remove_character_role = character_role_cabinet_minister
 			}
 		
@@ -142,18 +97,6 @@ je_cabinet = {
 		
 	}
 	
-	on_weekly_pulse = {
-	
-		effect = {
-			
-			remove_non_government_characters_from_cabinet = yes
-			
-			calculate_cabinet_unity = yes
-			
-		}
-		
-	}
-	
 	on_monthly_pulse = {
 	
 		random_events = {
@@ -162,6 +105,9 @@ je_cabinet = {
 		}
 		
 		effect = {
+			
+			#Calculate cabinet unity
+			calculate_cabinet_unity = yes
 			
 			#Domestic discontent with unjustified state of emergency
 			if = {
@@ -172,34 +118,6 @@ je_cabinet = {
 				}
 				add_radicals = {
 					value = small_radicals
-				}
-			}
-			
-			#Clear convictions
-			every_scope_character = {
-				limit = {
-					OR = { 
-						is_ruler_of_own_country = yes
-						interest_group ?= { is_in_government = yes }
-					}
-					OR = {
-						has_modifier = convicted_character
-						has_modifier = unjustly_convicted_character
-						interest_group = { 
-							OR = {
-								has_modifier = convicted_character_ig
-								has_modifier = unjustly_convicted_character_ig
-								has_modifier = ig_angry_with_witch_hunt
-							}
-						}
-					}
-				}
-				remove_modifier = convicted_character
-				remove_modifier = unjustly_convicted_character
-				interest_group = { 
-					remove_modifier = convicted_character_ig
-					remove_modifier = unjustly_convicted_character_ig
-					remove_modifier = ig_angry_with_witch_hunt
 				}
 			}
 			
@@ -214,6 +132,7 @@ je_cabinet = {
 						has_role = character_role_monarch
 					}
 					remove_character_role = character_role_monarch
+					set_character_as_royal = yes
 				}
 			}
 			else_if = {
@@ -227,6 +146,7 @@ je_cabinet = {
 						has_role = character_role_monarch
 					}
 					remove_character_role = character_role_monarch
+					set_character_as_royal = yes
 				}
 			}
 			
