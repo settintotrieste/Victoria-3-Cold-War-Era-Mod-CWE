@@ -6,7 +6,7 @@ warlord_state_system.1 = {
 
     title = warlord_state_start.t 									# Title of the event; ADD LOCALISATION
     desc = warlord_state_start.d 									# Description of the event; ADD LOCALISATION
-    #flavor = warlord_state_start.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+    flavor = warlord_state_start.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
 
     event_image = { texture = "europenorthamerica_before_the_battle" }
 
@@ -16,6 +16,8 @@ warlord_state_system.1 = {
     duration = 1 # Duration to fire if triggers are met
 	
 	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		num_states >= 2
 		
     }
 	
@@ -91,6 +93,18 @@ warlord_state_system.1 = {
 									}
 									set_state_owner = scope:new_warlord_state
 								}
+								every_scope_state = {
+									limit = {
+										is_capital = no
+										is_incorporated = yes
+										ig_state_pol_strength_share = {
+											target = scope:warlord_character_IG
+											value >= 0.10
+										}
+										any_neighbouring_state = { owner = scope:new_warlord_state }
+									}
+									set_state_owner = scope:new_warlord_state
+								}
 							}
 						}
 					}
@@ -101,8 +115,45 @@ warlord_state_system.1 = {
 	}
     
     option = {
-        name = warlord_state_start.option						# It begins
+        name = warlord_state_start.option.1						# Start war
 		
+		#Wage war
+		every_country = {
+			limit = {
+				is_direct_subject_of = ROOT
+				is_warlord_state = yes
+			}
+			save_scope_as = THIS_scope
+			create_diplomatic_play = {
+                type = dp_annex_war_historical
+                target_country = ROOT
+
+                add_war_goal = {
+                    holder = ROOT
+                    type = annex_country
+                    target_country = scope:THIS_scope
+                }
+            }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+    }
+	
+	option = {
+        name = warlord_state_start.option.2						# Leave it first
+		
+		#National humiliation
+		add_modifier = { 
+			name = national_humiliation 
+			years = 5
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 
+		}
     }
 
 }

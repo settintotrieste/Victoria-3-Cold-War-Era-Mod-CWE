@@ -1901,3 +1901,99 @@ effect_honour_alliances_defensive_pacts = {
 	}
 
 }
+
+evaluate_warlordism_eligibility = {
+
+	if = {
+		limit = {
+			
+			#No clear successor for dictatorship
+			owner ?= {
+				NOR = {
+					exists = heir
+					has_law_or_variant = law_type:law_yes_term_limit
+					active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_rotating_presidency }
+				}
+			}
+			
+			#Country is fit for warlordism
+			owner ?= {
+				
+				#Enough states
+				num_states >= 2
+				
+				#Not at war
+				is_at_war = no
+				
+				#Country is an absolute dictatorship
+				has_law_or_variant = law_type:law_appointed_legislature
+				
+				#Central Government is weak
+				OR = {
+					
+					#Decentralised State with politicised army + rebellious general
+					AND = {
+						NOT = { has_law_or_variant = law_type:law_unitary_state }
+						has_law_or_variant = law_type:law_politicised_armed_forces
+						any_scope_character = {
+							has_role_of_type = general
+							commander_rank >= 4
+							loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+							is_ruler_of_own_country = no
+						}
+					}
+					
+					#High turmoil + rebellious general or guerrilla
+					AND = {
+						country_turmoil >= 0.25
+						any_scope_character = {
+							OR = {
+								AND = {
+									has_role_of_type = general
+									commander_rank >= 4
+								}
+								is_a_guerrilla_character = yes
+							}
+							loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+							is_ruler_of_own_country = no
+						}
+					}
+					
+					#Government is fractured
+					AND = {
+						has_variable = low_cabinet_unity
+						any_scope_character = {
+							character_has_legal_immunity = no
+							character_is_key_state_officeholder = yes
+							loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+						}
+					}
+					
+				}
+				
+			}
+			
+			#Conditions for warlord event
+			owner ?= {
+				any_scope_character = {
+					character_has_legal_immunity = no
+					OR = {
+						character_is_key_state_officeholder = yes
+						is_a_guerrilla_character = yes
+						AND = {
+							has_role_of_type = general
+							commander_rank >= 4
+						}
+					}
+					loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+				}
+			}
+			
+		}
+		
+		#Trigger warlordism
+		trigger_event = { id = warlord_state_system.1 }
+		
+	}
+
+}

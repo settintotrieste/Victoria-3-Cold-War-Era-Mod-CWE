@@ -52,135 +52,144 @@
 
 	infamy = {
 		value = 0
-
-		add = {
-			desc = "INFAMY_BASE_VALUE"
-			value = 5
-		}
-
-		scope:target_country = {
-			multiply = {
-				desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
-				add = {
-					every_scope_state = {
-						add = {
-							value = state_population
-							divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
-							multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
-							multiply = {
-								value = 1
-								if = {
-									limit = {
-										is_incorporated = no
-									}
-									add = define:NDiplomacy|WAR_GOAL_INFAMY_UNINCORPORATED_FACTOR
-								}
-							}
-							max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_PER_STATE
-						}
-					}
-				}
-				add = 1
-				max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
-			}
-		}
-
-		multiply = {
-			desc = "country_infamy_generation_against_unrecognized_mult"
-			value = 1
-			if = {
-				limit = {
-					scope:target_country = {
-						is_country_type = unrecognized
-					}
-				}
-				add = modifier:country_infamy_generation_against_unrecognized_mult
-			}
-		}
-
-		multiply = {
-			desc = "INFAMY_FROM_LOYAL_SUBJECT"
-			value = 1
-
-			if = {
-				limit = {
-					scope:target_country = {
-						is_subject_of = root
-						liberty_desire < define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_THRESHOLD
-					}
-				}
-				multiply = define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_SUBJECT_MULT
-			}
-		}
-
-		multiply = {
-			desc = "INFAMY_FROM_REBELLIOUS_SUBJECT" # Rebellious as in they are the aggressor in the play
-			value = 1
-
-			if = {
-				limit = {
-					scope:target_country = {
-						is_subject_of = root
-						is_diplomatic_play_enemy_of = root
-						scope:diplomatic_play ?= {
-							initiator_is = scope:target_country
-						}
-					}
-				}
-				multiply = define:NDiplomacy|WAR_GOAL_INFAMY_REBELLING_SUBJECT_MULT
-			}
-		}
 		
-		multiply = {
-			desc = "concept_interest_tier"
-			value = 1
+		if = {
+			limit = {
+				is_warlord_state = no
+				scope:target_country = { is_warlord_state = no } 
+			}
+			
+			add = {
+				desc = "INFAMY_BASE_VALUE"
+				value = 5
+			}
 
-			# Tier 0-1 (none, observant): high infamy increase
-			if = {
-				limit = {
-					NOT = {
+			scope:target_country = {
+				multiply = {
+					desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
+					add = {
+						every_scope_state = {
+							add = {
+								value = state_population
+								divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
+								multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
+								multiply = {
+									value = 1
+									if = {
+										limit = {
+											is_incorporated = no
+										}
+										add = define:NDiplomacy|WAR_GOAL_INFAMY_UNINCORPORATED_FACTOR
+									}
+								}
+								max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_PER_STATE
+							}
+						}
+					}
+					add = 1
+					max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+				}
+			}
+
+			multiply = {
+				desc = "country_infamy_generation_against_unrecognized_mult"
+				value = 1
+				if = {
+					limit = {
+						scope:target_country = {
+							is_country_type = unrecognized
+						}
+					}
+					add = modifier:country_infamy_generation_against_unrecognized_mult
+				}
+			}
+
+			multiply = {
+				desc = "INFAMY_FROM_LOYAL_SUBJECT"
+				value = 1
+
+				if = {
+					limit = {
+						scope:target_country = {
+							is_subject_of = root
+							liberty_desire < define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_THRESHOLD
+						}
+					}
+					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_SUBJECT_MULT
+				}
+			}
+
+			multiply = {
+				desc = "INFAMY_FROM_REBELLIOUS_SUBJECT" # Rebellious as in they are the aggressor in the play
+				value = 1
+
+				if = {
+					limit = {
+						scope:target_country = {
+							is_subject_of = root
+							is_diplomatic_play_enemy_of = root
+							scope:diplomatic_play ?= {
+								initiator_is = scope:target_country
+							}
+						}
+					}
+					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_REBELLING_SUBJECT_MULT
+				}
+			}
+			
+			multiply = {
+				desc = "concept_interest_tier"
+				value = 1
+
+				# Tier 0-1 (none, observant): high infamy increase
+				if = {
+					limit = {
+						NOT = {
+							has_strategic_region_interest_tier = {
+								strategic_region = scope:target_region
+								value >= 2
+							}
+						}
+					}
+					add = interest_tier_effect_infamy_cost_increase_high_value
+				}
+
+				# Tier 2 (engaged): medium infamy increase
+				if = {
+					limit = {
 						has_strategic_region_interest_tier = {
 							strategic_region = scope:target_region
 							value >= 2
 						}
-					}
-				}
-				add = interest_tier_effect_infamy_cost_increase_high_value
-			}
-
-			# Tier 2 (engaged): medium infamy increase
-			if = {
-				limit = {
-					has_strategic_region_interest_tier = {
-						strategic_region = scope:target_region
-						value >= 2
-					}
-					NOT = {
-						has_strategic_region_interest_tier = {
-							strategic_region = scope:target_region
-							value >= 3
+						NOT = {
+							has_strategic_region_interest_tier = {
+								strategic_region = scope:target_region
+								value >= 3
+							}
 						}
 					}
+					add = interest_tier_effect_infamy_cost_increase_medium_value
 				}
-				add = interest_tier_effect_infamy_cost_increase_medium_value
-			}
 
-			# Tier 5 (hegemonic): medium infamy decrease
-			if = {
-				limit = {
-					has_strategic_region_interest_tier = {
-						strategic_region = scope:target_region
-						value >= 5
+				# Tier 5 (hegemonic): medium infamy decrease
+				if = {
+					limit = {
+						has_strategic_region_interest_tier = {
+							strategic_region = scope:target_region
+							value >= 5
+						}
 					}
+					add = interest_tier_effect_infamy_cost_decrease_medium_value
 				}
-				add = interest_tier_effect_infamy_cost_decrease_medium_value
 			}
-		}
 
-		min = {
-			desc = "INFAMY_MINIMUM_VALUE"
-			value = 5
+			min = {
+				desc = "INFAMY_MINIMUM_VALUE"
+				value = 5
+			}
+			
 		}
+		
 	}
 
 	on_enforced = {
@@ -240,13 +249,31 @@
 				}
 			}
 		}
-		every_country = {
-			limit = { 
-				is_subject_of = scope:target_country 
-				is_sufficiently_independent = yes
-				NOT = { has_variable = exempt_from_subject_loss }
+		if = {
+			limit = { is_warlord_state = yes }
+			every_country = {
+				limit = {
+					is_subject_of = scope:target_country 
+					is_warlord_state = yes
+				}
+				save_scope_as = new_warlord_state
+				ROOT = {
+					create_diplomatic_pact = {
+						country = scope:new_warlord_state
+						type = warlord_state
+					}
+				}
 			}
-			make_independent = yes
+		}
+		else = {
+			every_country = {
+				limit = { 
+					is_subject_of = scope:target_country 
+					is_sufficiently_independent = yes
+					NOT = { has_variable = exempt_from_subject_loss }
+				}
+				make_independent = yes
+			}
 		}
 		
 	}
