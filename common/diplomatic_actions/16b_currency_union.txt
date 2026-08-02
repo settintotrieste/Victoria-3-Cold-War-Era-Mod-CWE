@@ -9,53 +9,52 @@
 
 	potential = {
 	
-		#THIS and TARGET are not decentralized
-		NOR = {
-			is_country_type = decentralized 
-			has_law_or_variant = law_type:law_isolationism
-		}
-		scope:target_country = {
-			NOR = { 
-				is_country_type = decentralized 
-				has_law_or_variant = law_type:law_isolationism
-			}
-		}
-		
-		#Can only invite TARGET into THIS CU if THIS has a higher rank than TARGET (this is to prevent invitation harassment by AI)
-		scope:target_country = { country_rank < root.country_rank }
-		
-		#TARGET is either independent or is a subject of THIS
-		scope:target_country = {
-			OR = {
-				is_sufficiently_independent = yes
-				is_subject_of = ROOT
-			}
-		}
-		
-		#TARGET is not already in a currency union
-		scope:target_country = {
-			NOT = { any_scope_diplomatic_pact = { is_diplomatic_action_type = currency_union } }
-		}
-		
-	}
-
-	possible = {
-	
-		#THIS is not at war with the TARGET
-		NOT = { has_war_with = scope:target_country }
-		
-		#THIS is interested in the TARGET and vice-versa
-		has_diplomatic_relevance = scope:target_country
-		
-		#THIS has good relations with the TARGET
-		custom_tooltip = {
-			text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
-			scope:target_country.relations:root >= relations_threshold:cordial
-		}
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
 		
 		#THIS & TARGET are not revolutionary countries
 		is_revolutionary = no is_secessionist = no is_warlord_state = no
 		scope:target_country = { is_revolutionary = no is_secessionist = no is_warlord_state = no }
+		
+		#THIS and Target are not subjects
+		is_sufficiently_independent = yes
+		scope:target_country = {
+			OR = {
+				AND = {
+					is_sufficiently_independent = yes
+					country_rank < root.country_rank
+				}
+				is_direct_subject_of = ROOT
+			}
+		}
+		
+		#TARGET is not already in a currency union
+		NOT = { any_scope_diplomatic_pact = { is_diplomatic_action_type = currency_union second_country = scope:target_country } }
+		
+	}
+
+	possible = {
+		
+		#THIS is interested in the TARGET and vice-versa
+		has_diplomatic_relevance = scope:target_country
+		
+		#Good relations
+		OR = { 
+		
+			# THIS has good relations with TARGET
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
+				scope:target_country.relations:root >= relations_threshold:cordial
+			}
+			
+			#TARGET is a subject of THIS
+			scope:target_country = { 
+				is_subject_of = scope:actor 
+				is_not_sufficiently_independent = yes
+			}
+			
+		}
 		
 		#THIS & TARGET are not isolationists
 		NOT = { has_law_or_variant = law_type:law_isolationism }
@@ -160,26 +159,23 @@
 		target_can_break = {
 			
 			#Subjects cannot freely leave Currency Union
-			NOT = { scope:target_country = { is_direct_subject_of = scope:actor } }
+			NOT = {
+				scope:target_country = { 
+					is_direct_subject_of = scope:actor 
+					is_sufficiently_independent = no 
+				} 
+			}
 			
 			NOT_in_superstate_currency_union = yes
+			
 		}
 
 		requirement_to_maintain = {
 		
 			trigger = {
-			
-				#THIS and TARGET are not decentralized
-				NOT = {
-					is_country_type = decentralized 
-				}
-				scope:target_country = {
-					NOT = {
-						is_country_type = decentralized 
-					}
-				}
 				
 				#TARGET is either independent or is a subject of THIS
+				is_sufficiently_independent = yes
 				scope:target_country = {
 					OR = {
 						is_sufficiently_independent = yes
@@ -187,24 +183,16 @@
 					}
 				}
 				
-				#THIS has good relations with the TARGET
-				#custom_tooltip = {
-				#	text = DIPLO_ACTION_RELATIONS_CORDIAL_OR_GREATER
-				#	scope:target_country.relations:root >= relations_threshold:cordial
-				#}
-				
-				#THIS & TARGET are not revolutionary countries
-				is_revolutionary = no is_secessionist = no is_warlord_state = no
-				scope:target_country = { is_revolutionary = no is_secessionist = no is_warlord_state = no }
+				#TARGET and THIS are not at war
+				NOT = { has_war_with = scope:target_country }
 				
 				#More than 2 currency union leaders
 				NOT = {
-					
-					any_country = { 
-						has_diplomatic_pact = { who = scope:target_country type = currency_union is_initiator = yes } 
+					any_scope_diplomatic_pact = { 
+						is_diplomatic_action_type = currency_union 
+						second_country = ROOT
 						count > 1
 					}
-					
 				}
 				
 			}
@@ -331,19 +319,6 @@
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_ECONOMIC_IMPERIALISM"
 					add = 50
-				}
-			}	
-
-			#Colonies love to enter into currency unions with its overlord
-			if = {
-				limit = { 
-					scope:target_country = { 
-						is_subject_of = scope:actor
-					}
-				}
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_SENIOR_PART"
-					value = 200
 				}
 			}
 
@@ -506,11 +481,16 @@
 				limit = { 
 					scope:target_country = { 
 						is_subject_of = scope:actor
+						OR = {
+							is_a_devolved_gov = yes
+							is_subject_type = subject_type_confederal_state
+						}
 					}
 				}
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_SENIOR_PART"
-					value = 200
+					value = 100
+					subtract = scope:target_country.liberty_desire
 				}
 			}
 
