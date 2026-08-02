@@ -255,15 +255,146 @@ dp_conquer_state = {
 	texture = "gfx/interface/icons/war_goals/conquer_state.dds"
 	
 	possible = {
+		
+		#THIS is not decentralized
 		NOT = { is_country_type = decentralized }
-		is_sufficiently_independent = yes
-		NOT = { is_subject_of = scope:target_country }
-		scope:target_country = {
-			NOT = { is_country_type = decentralized }
-			NOT = { is_subject_of = root }
-		}	
-
-		diplo_play_war_check_cwe = yes
+		
+		#THIS and Target are not revolutionary
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#THIS does not have a subject relationship with TARGET
+		OR = { 
+			AND = { 
+				NOT = { is_subject_of = scope:target_country }
+				scope:target_country = { NOT = { is_subject_of = root } }
+			}
+			AND = {
+				is_warlord_state = yes
+				OR = {
+					is_subject_of = scope:target_country
+					scope:target_country = { is_subject_of = root }
+					scope:target_country.overlord ?= { THIS = ROOT.overlord }
+				}
+			}
+		}
+		
+		#THIS can launch aggressive wars
+		OR = { 
+			is_sufficiently_independent = yes
+			AND = {
+				is_warlord_state = yes
+				OR = {
+					is_subject_of = scope:target_country
+					scope:target_country = { is_subject_of = root }
+					scope:target_country.overlord ?= { THIS = ROOT.overlord }
+				}
+			}
+		}
+		
+		#Bad relations with TARGET
+		OR = {
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+				scope:target_country.relations:root <= relations_threshold:poor
+			}
+			AND = {
+				is_warlord_state = yes
+				OR = {
+					is_subject_of = scope:target_country
+					scope:target_country = { is_subject_of = root }
+					scope:target_country.overlord ?= { THIS = ROOT.overlord }
+				}
+			}
+		}
+		
+		#THIS does not have restricted war rights
+		OR = {
+			NOR = { 
+				has_law_or_variant = law_type:law_no_war
+				has_law_or_variant = law_type:law_defensive_war
+			}
+			AND = {
+				has_game_rule = yes_chaos_mode_rule
+				NOT = { has_law_or_variant = law_type:law_no_war }
+			}
+			AND = {
+				is_warlord_state = yes
+				OR = {
+					is_subject_of = scope:target_country
+					scope:target_country = { is_subject_of = root }
+					scope:target_country.overlord ?= { THIS = ROOT.overlord }
+				}
+			}
+		}
+		
+		#THIS has some army
+		NOT = { has_law_or_variant = law_type:law_peasant_levies }
+		
+		#Ruler is jingoistic OR is a dictatorship and has a war mongering IG OR have ideological differences
+		OR = { 
+		
+			AND = { 
+				exists = ruler
+				ruler ?= {
+					OR = {
+						has_ideology = ideology:ideology_autocratic
+						has_ideology = ideology:ideology_power_hungry
+					}
+				}
+			}
+			
+			AND = {
+				any_interest_group = {
+					is_in_government = yes
+					OR = { 
+						is_powerful = yes
+						leader ?= { has_role = character_role_cabinet_minister }
+					}
+					leader ?= { 
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+			}
+			
+			custom_tooltip = {
+				text = DIPLO_ACTION_DIFFERENT_HOS_LAW
+				OR = {
+					AND = {
+						has_law_or_variant = law_type:law_HOS_monarch
+						scope:target_country ?= { NOT = { has_law_or_variant = law_type:law_HOS_monarch } }
+					}
+					AND = {
+						has_law_or_variant = law_type:law_HOS_president
+						scope:target_country ?= { NOT = { has_law_or_variant = law_type:law_HOS_president } }
+					}
+					AND = {
+						has_law_or_variant = law_type:law_HOS_religious_leader
+						scope:target_country ?= { NOT = { has_law_or_variant = law_type:law_HOS_religious_leader } }
+					}
+					AND = {
+						has_law_or_variant = law_type:law_HOS_nationalist_leader
+						scope:target_country ?= { NOT = { has_law_or_variant = law_type:law_HOS_nationalist_leader } }
+					}
+					AND = {
+						has_law_or_variant = law_type:law_HOS_communist_leader
+						scope:target_country ?= { NOT = { has_law_or_variant = law_type:law_HOS_communist_leader } }
+					}
+				}
+			}
+			
+			has_game_rule = yes_chaos_mode_rule
+		
+		}
+		
+		#No non-aggression_pact with TARGET
+		has_no_non_aggression_pact_with_target = yes
+		
+		#Parliament and Cabinet approves
+		government_has_legislative_simple_majority = yes
 		
 	}
 	
@@ -367,14 +498,146 @@ dp_return_state = {
 	texture = "gfx/interface/icons/war_goals/return_state.dds"
 	
 	possible = {
+		
+		#THIS is not decentralized
 		NOT = { is_country_type = decentralized }
-		is_sufficiently_independent = yes
-		NOT = { is_subject_of = scope:target_country }	
-		scope:target_country = {
-			NOT = { is_country_type = decentralized }
+		
+		#THIS and Target are not revolutionary
+		is_revolutionary = no is_secessionist = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no }
+		
+		#THIS does not have a subject relationship with TARGET
+		OR = { 
+			AND = { 
+				NOT = { is_subject_of = scope:target_country }
+				scope:target_country = { NOT = { is_subject_of = root } }
+			}
+			AND = {
+				is_warlord_state = yes
+				OR = {
+					is_subject_of = scope:target_country
+					scope:target_country = { is_subject_of = root }
+					scope:target_country.overlord ?= { THIS = ROOT.overlord }
+				}
+			}
 		}
-
-		diplo_play_war_check_cwe = yes
+		
+		#THIS can launch aggressive wars
+		OR = { 
+			is_sufficiently_independent = yes
+			AND = {
+				is_warlord_state = yes
+				OR = {
+					is_subject_of = scope:target_country
+					scope:target_country = { is_subject_of = root }
+					scope:target_country.overlord ?= { THIS = ROOT.overlord }
+				}
+			}
+		}
+		
+		#Bad relations with TARGET
+		OR = {
+			custom_tooltip = {
+				text = DIPLO_ACTION_RELATIONS_POOR_OR_LESS
+				scope:target_country.relations:root <= relations_threshold:poor
+			}
+			AND = {
+				is_warlord_state = yes
+				OR = {
+					is_subject_of = scope:target_country
+					scope:target_country = { is_subject_of = root }
+					scope:target_country.overlord ?= { THIS = ROOT.overlord }
+				}
+			}
+		}
+		
+		#THIS does not have restricted war rights
+		OR = {
+			NOR = { 
+				has_law_or_variant = law_type:law_no_war
+				has_law_or_variant = law_type:law_defensive_war
+			}
+			AND = {
+				has_game_rule = yes_chaos_mode_rule
+				NOT = { has_law_or_variant = law_type:law_no_war }
+			}
+			AND = {
+				is_warlord_state = yes
+				OR = {
+					is_subject_of = scope:target_country
+					scope:target_country = { is_subject_of = root }
+					scope:target_country.overlord ?= { THIS = ROOT.overlord }
+				}
+			}
+		}
+		
+		#THIS has some army
+		NOT = { has_law_or_variant = law_type:law_peasant_levies }
+		
+		#Ruler is jingoistic OR is a dictatorship and has a war mongering IG OR have ideological differences
+		OR = { 
+		
+			AND = { 
+				exists = ruler
+				ruler ?= {
+					OR = {
+						has_ideology = ideology:ideology_autocratic
+						has_ideology = ideology:ideology_power_hungry
+					}
+				}
+			}
+			
+			AND = {
+				any_interest_group = {
+					is_in_government = yes
+					OR = { 
+						is_powerful = yes
+						leader ?= { has_role = character_role_cabinet_minister }
+					}
+					leader ?= { 
+						OR = {
+							has_ideology = ideology:ideology_autocratic
+							has_ideology = ideology:ideology_power_hungry
+						}
+					}
+				}
+			}
+			
+			custom_tooltip = {
+				text = DIPLO_ACTION_DIFFERENT_HOS_LAW
+				OR = {
+					AND = {
+						has_law_or_variant = law_type:law_HOS_monarch
+						scope:target_country ?= { NOT = { has_law_or_variant = law_type:law_HOS_monarch } }
+					}
+					AND = {
+						has_law_or_variant = law_type:law_HOS_president
+						scope:target_country ?= { NOT = { has_law_or_variant = law_type:law_HOS_president } }
+					}
+					AND = {
+						has_law_or_variant = law_type:law_HOS_religious_leader
+						scope:target_country ?= { NOT = { has_law_or_variant = law_type:law_HOS_religious_leader } }
+					}
+					AND = {
+						has_law_or_variant = law_type:law_HOS_nationalist_leader
+						scope:target_country ?= { NOT = { has_law_or_variant = law_type:law_HOS_nationalist_leader } }
+					}
+					AND = {
+						has_law_or_variant = law_type:law_HOS_communist_leader
+						scope:target_country ?= { NOT = { has_law_or_variant = law_type:law_HOS_communist_leader } }
+					}
+				}
+			}
+			
+			has_game_rule = yes_chaos_mode_rule
+		
+		}
+		
+		#No non-aggression_pact with TARGET
+		has_no_non_aggression_pact_with_target = yes
+		
+		#Parliament and Cabinet approves
+		government_has_legislative_simple_majority = yes
 		
 	}
 	
