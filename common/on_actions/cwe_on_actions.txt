@@ -169,7 +169,7 @@ on_monthly_pulse_country = {
 		#Failsafe for monarchy system
 		if = {
 			limit = { 
-				is_a_regime_monarchy = yes 
+				is_a_regime_monarchy = yes
 				ruler ?= { NOT = { has_role = character_role_monarch } }
 			}
 			ruler ?= {
@@ -180,13 +180,39 @@ on_monthly_pulse_country = {
 			}
 		}
 		if = {
-			limit = { 
-				NOT = { has_law_or_variant = law_type:law_HOS_monarch }
-				any_scope_character = { has_role = character_role_monarch } 
+			limit = {
+				is_a_regime_monarchy = no
+				ruler ?= { has_role = character_role_monarch }
+			}
+			ruler ?= { 
+				remove_character_role = character_role_monarch
+				set_character_as_royal = yes
+			}
+		}
+		if = {
+			limit = {
+				is_a_regime_monarchy = no
+				NAND = {
+					has_law_or_variant = law_type:law_HOS_monarch
+					is_a_constitutional_monarchy = yes
+					ruler_is_governor_general = no
+				}
+				any_scope_character = {
+					OR = {
+						has_role = character_role_monarch 
+						has_role = character_role_monarch_elective 
+					}
+				}
 			}
 			every_scope_character = {
 				limit = { has_role = character_role_monarch }
 				remove_character_role = character_role_monarch
+				set_character_as_royal = yes
+			}
+			every_scope_character = {
+				limit = { has_role = character_role_monarch_elective }
+				remove_character_role = character_role_monarch_elective
+				set_character_as_royal = yes
 			}
 		}
 		if = {
@@ -237,6 +263,32 @@ on_monthly_pulse_country = {
 				}
 			}
 		}
+		if = {
+			limit = {
+				ruler ?= {
+					has_role = character_role_monarch
+					has_role = character_role_monarch_elective
+				}
+			}
+			ruler ?= { 
+				remove_character_role = character_role_monarch_elective
+				set_character_as_royal = yes
+			}
+		}
+		if = {
+			limit = {
+				any_scope_character = { has_role = character_role_monarch_elective }
+				OR = {
+					NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+					NOT = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy } }
+				}
+			}
+			every_scope_character = {
+				limit = { has_role = character_role_monarch_elective }
+				remove_character_role = character_role_monarch_elective
+				set_character_as_royal = yes
+			}
+		}
 		
 		#Failsafe for Regency System
 		if = {
@@ -256,6 +308,7 @@ on_monthly_pulse_country = {
 				if = {
 					limit = { has_role = character_role_monarch }
 					remove_character_role = character_role_monarch
+					set_character_as_royal = yes
 				}
 			}
 		}
