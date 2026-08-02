@@ -525,7 +525,7 @@ arrange_accident = {
 
 dismantle_character_political_party = {
 	icon = "gfx/interface/icons/generic_icons/map_list_cross.dds"
-	#clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
 
 	potential = {
 		owner ?= scope:actor
@@ -1344,4 +1344,142 @@ bribe_character_to_retire = {
 		}
 		
 	}
+}
+
+intimidate_character = {
+	icon = "gfx/interface/icons/invention_icons/mandatory_service.dds"
+
+	potential = {
+	
+		#Character is owned by THIS
+		owner ?= scope:actor
+		
+		#Has paramilitary to intimidate characters
+		owner ?= {
+			has_journal_entry = je_paramilitary_groups
+		}
+		
+		#Eligible character to intimidate
+		OR = {
+			has_role_of_type = politician
+			AND = {
+				has_role_of_type = agitator
+				NOT = { has_role = character_role_terrorist }
+			}
+			has_role_of_type = general
+			has_role_of_type = admiral
+		}
+		NOT = { has_modifier = head_of_paramilitary }
+		
+		#Not on trial
+		NOR = {
+			has_modifier = indicted_character
+			has_modifier = convicted_character
+			has_modifier = acquitted_character
+		}
+		NOR = {
+			has_modifier = accused_of_crimes
+			has_modifier = impeached_politician
+			has_modifier = backbenchers_plot_politician
+		}
+		
+		#Not an excluded character
+		is_in_exile_pool = no
+		is_in_void = no
+		
+	}
+
+	possible = {
+	
+		#Character is not already intimidated
+		NOT = { has_modifier = intimidated_character_modifier }
+		
+		#Character has low loyalty
+		loyalty < 50
+	
+		#Character is not pre-occupied
+		is_busy = no
+		is_in_battle = no
+		
+		#Country requirements
+		owner ?= {
+		
+			#Ruler is willing to sabotage IG
+			custom_tooltip = {
+				text = ruler_is_autocratic.tt
+				ruler ?= { character_is_autocratic = yes }
+			}
+			
+		}
+		
+		#Coup
+		custom_tooltip = {
+			text = pending_coup_event_tt
+			NOT = {
+				owner = {
+					has_variable = coup_event_active
+				}
+			}
+		}
+		custom_tooltip = {
+			text = doing_coup_for_player_tt
+			NOT = {
+				has_variable = commander_doing_coup_on_player_behalf
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Intimidate character
+		add_modifier = { 
+			name = intimidated_character_modifier 
+			years = 5
+			is_decaying = yes 
+		}
+		
+		#Domestic effect
+		owner ?= {
+			add_radicals = {
+				value = medium_radicals
+				interest_group = prev.interest_group
+			}
+		}
+		
+	}
+
+	cooldown = { months = 1 }
+	show_confirmation_box = yes
+	
+	should_ai_evaluate = {
+		always = no
+	}
+
+	ai_chance = {
+		value = -20
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -5
+				}		
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -10
+				}		
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				owner ?= { country_turmoil < 0.25 }
+			}
+			add = -1000
+		}
+	}
+	
 }
