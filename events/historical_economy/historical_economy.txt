@@ -6308,3 +6308,205 @@ historical_economy.67 = {
     }
 
 }
+
+# Plaza Accord
+historical_economy.68 = {
+    type = country_event
+
+    title = plaza_accords_USA.t 									# Title of the event; ADD LOCALISATION
+    desc = plaza_accords_USA.d 										# Description of the event; ADD LOCALISATION
+    #flavor = plaza_accords_USA.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:USA ?= this
+		game_date >= 1985.9.22										# START DATE: Date colony became self governing ****
+		game_date < 1995.9.22										# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes
+		is_sufficiently_independent = yes	
+		is_at_war = no												# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = plaza_accords_USA_hee }				# CHANGE ****
+		
+		#Powerful
+		country_rank = rank_value:super_power
+		
+		#Candidates
+		OR = {
+			c:JAP ?= {
+				is_a_democracy = yes
+				is_sufficiently_independent = yes						# is_vassal = no		
+				is_at_war = no											# war = no
+				NOT = { has_diplomatic_pact = { who = ROOT type = currency_union } }
+			}
+			c:WGR ?= {
+				is_a_democracy = yes
+				is_sufficiently_independent = yes						# is_vassal = no		
+				is_at_war = no											# war = no
+				NOT = { has_diplomatic_pact = { who = ROOT type = currency_union } }
+			}
+			c:GER ?= {
+				is_a_democracy = yes
+				is_sufficiently_independent = yes						# is_vassal = no		
+				is_at_war = no											# war = no
+				NOT = { has_diplomatic_pact = { who = ROOT type = currency_union } }
+			}
+			c:FRA ?= {
+				is_a_democracy = yes
+				is_sufficiently_independent = yes						# is_vassal = no		
+				is_at_war = no											# war = no
+				NOT = { has_diplomatic_pact = { who = ROOT type = currency_union } }
+			}
+			c:GBR ?= {
+				is_a_democracy = yes
+				is_sufficiently_independent = yes						# is_vassal = no		
+				is_at_war = no											# war = no
+				NOT = { has_diplomatic_pact = { who = ROOT type = currency_union } }
+			}
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = plaza_accords_USA_hee						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Offer
+		every_country = {
+			limit = {
+				OR = {
+					c:JAP ?= this
+					c:WGR ?= this
+					c:GER ?= this
+					c:FRA ?= this
+					c:GBR ?= this
+				}
+				is_a_democracy = yes
+				is_sufficiently_independent = yes
+				is_at_war = no
+				NOT = { has_diplomatic_pact = { who = ROOT type = currency_union } }
+			}
+			trigger_event = { id = historical_economy.69 } 
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		#Minor discontent
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_armed_forces
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_radicals = {
+			value = large_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# Plaza Accord
+historical_economy.69 = {
+    type = country_event
+
+    title = plaza_accords_USA.t 									# Title of the event; ADD LOCALISATION
+    desc = plaza_accords_USA.d 										# Description of the event; ADD LOCALISATION
+    #flavor = plaza_accords_USA.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/invention_icons/macroeconomics.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Plaza Accord
+		c:USA ?= {
+			create_treaty = {
+				name = treaty_name_plaza_accord
+				first_country = c:USA
+				second_country = ROOT
+
+				is_draft = no
+				binding_period = { years = 10 }
+
+				articles_to_create = {
+					{
+						article = trade_privilege
+						source_country = ROOT
+						target_country = c:USA
+					}
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2					# Reject
+		default_option = yes
+		
+		change_relations = { country = c:USA value = -50 }
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
