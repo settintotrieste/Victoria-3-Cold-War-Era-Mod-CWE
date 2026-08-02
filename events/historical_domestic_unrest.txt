@@ -10024,3 +10024,99 @@ historical_domestic_unrest.103 = {
     }
 
 }
+
+# The Buddhist Crisis in Vietnam
+historical_domestic_unrest.104 = {
+    type = country_event
+
+    title = SVM_buddhist_crisis_1963.t 							# Title of the event; ADD LOCALISATION
+    desc = SVM_buddhist_crisis_1963.d 							# Description of the event; ADD LOCALISATION
+    #flavor = SVM_buddhist_crisis_1963.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "europenorthamerica_political_extremism" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:SVM ?= this											# Change TAG of the overlord ****
+		game_date >= 1963.5.8									# START DATE: Date colony became self governing ****
+		game_date < 1973.5.8									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_republican_regime = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Cause of unrest
+		has_law_or_variant = law_type:law_state_religion
+		religion ?= rel:catholic
+		
+		# Event has not been fired before
+		NOT = { has_variable = SVM_buddhist_crisis_1963_hdu }	# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = SVM_buddhist_crisis_1963_hdu				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1					# Yes
+        highlighted_option = yes
+		default_option = yes
+		
+		#Domestic reaction
+		add_radicals = {
+			value = large_radicals
+			religion = rel:mahayana
+		}
+		add_modifier = {
+			name = domestic_unrest
+			years = 5
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2					# No
+		
+		#Enact new regime
+		effect_starting_politics_democratic = yes
+		activate_law = law_type:law_multicultural
+		activate_law = law_type:law_freedom_of_conscience
+		set_state_religion = rel:mahayana
+		
+		#Leader steps down
+		random_scope_character = {
+			limit = { 
+				has_role_of_type = politician
+				interest_group ?= { is_interest_group_type = ig_petty_bourgeoisie }
+			}
+			set_character_as_ruler = yes
+		}
+		
+		#Major discontent
+		add_radicals = {
+			value = very_large_radicals
+			religion = rel:catholic
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
