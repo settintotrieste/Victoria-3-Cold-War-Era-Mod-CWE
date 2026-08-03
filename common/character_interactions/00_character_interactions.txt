@@ -522,29 +522,59 @@ abdicate_monarch = {
 	}
 
 	potential = {
+		
+		#Owned by THIS
 		owner ?= scope:actor
 		
-		is_ruler_of_own_country = yes
+		#Is Monarch
+		has_role = character_role_monarch
+		
+		#Monarchy
 		owner ?= {
-			is_a_regime_monarchy = yes
+			has_law_or_variant = law_type:law_HOS_monarch
 			has_gov_regency = no
+			shares_same_monarch = no
 		}
 		
-		exists = owner.heir
+		#Has heir to abdicate to
+		#exists = owner.heir
+		
 	}
 
 	possible = {
+	
 		OR = {
-			interest_group ?= {
-				ig_approval <= angry
+		
+			#Government can force monarch to abdicate
+			AND = {
+				is_ruler_of_own_country = no
+				owner ?= {
+					custom_tooltip = {
+						text = government_has_legislative_super_majority.tt
+						government_has_legislative_super_majority = yes
+					}
+				}
 			}
-			interest_group ?= {
-				ig_counts_as_marginal = yes
+			
+			#Monarch is willing to abdicate - Internal
+			AND = {
+				OR = {
+					has_trait = psychological_affliction
+					popularity <= -50
+				}
+				OR = {
+					age >= 75
+					interest_group ?= {
+						ig_approval <= angry
+					}
+					interest_group ?= {
+						ig_counts_as_marginal = yes
+					}
+				}
 			}
-			popularity <= -50
-			has_trait = psychological_affliction
-			age >= 75
-			owner ?= { # Our thanks to UHM for reporting this
+			
+			#Monarch is willing to abdicate - External
+			owner ?= {
 				trigger_if = {
 					limit = {
 						any_political_movement = {
@@ -589,27 +619,20 @@ abdicate_monarch = {
 					}
 				}
 			}
+			
 		}
-		trigger_if = {
-			limit = {
-				NOT = {
-					owner ?= {
-						any_political_movement = {
-							is_revolutionary = yes
-						}
-					}
-				}
-			}
-			owner.heir ?= {
-				age >= 18
-			}
-		}
+		
 	}
 
 	effect = {
 		custom_tooltip = leader_abdicates_the_throne_display_tt
+		
+		#Absolute Monarch - Abdication in face of revolution
+		save_scope_as = abdicating_monarch
+		interest_group ?= { save_scope_as = monarch_ig }
 		if = {
 			limit = {
+				is_ruler_of_own_country = yes
 				owner ?= {
 					any_political_movement = {
 						exists = most_desired_law
@@ -626,9 +649,10 @@ abdicate_monarch = {
 				trigger_event = { id = wedding.3 popup = yes }
 			}
 		}
+		
 	}
 
-	cooldown = { years = 30 }
+	cooldown = { years = 10 }
 	show_confirmation_box = yes
 
 	ai_chance = {

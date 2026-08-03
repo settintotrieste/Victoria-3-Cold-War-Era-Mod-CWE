@@ -911,9 +911,9 @@ resignation.3 = {
 	}
 
 	immediate = {
-		ruler = {
-			save_scope_as = abdicating_monarch
-		}
+		#ruler = {
+		#	save_scope_as = abdicating_monarch
+		#}
 		ROOT = {
 			save_scope_as = country_scope
 		}
@@ -938,25 +938,26 @@ resignation.3 = {
 		trigger = {
 			exists = heir
 		}
+		
 		heir ?= {
 			set_character_as_ruler = yes
 		}
 		custom_tooltip = {
 			text = leader_abdicates_the_throne_tt
-			scope:abdicating_monarch = {
+			scope:abdicating_monarch ?= {
 				exile_character_with_martyrdom = yes
 			}
 		}
-		scope:ongoing_revolution = {
+		scope:ongoing_revolution ?= {
 			add_civil_war_progress = revolution_retreat_large
 		}
 		if = {
 			limit = {
-				scope:abdicating_monarch = {
+				scope:abdicating_monarch ?= {
 					popularity >= 0
 				}
 			}
-			scope:ongoing_revolution_movement = {
+			scope:ongoing_revolution_movement ?= {
 				add_modifier = {
 					name = modifier_ruler_abdicated
 					days = long_modifier_time
@@ -965,7 +966,7 @@ resignation.3 = {
 			}
 		}
 		else = {
-			scope:ongoing_revolution_movement = {
+			scope:ongoing_revolution_movement ?= {
 				add_modifier = {
 					name = modifier_ruler_abdicated
 					days = long_modifier_time
@@ -974,54 +975,72 @@ resignation.3 = {
 				}
 			}
 		}
+		
 	}
 
 	option = {
 		name = resignation.3.b
 		default_option = yes
+		
+		#Royal Family flees - Create regency
 		custom_tooltip = {
 			text = leader_abdicates_the_throne_tt
 			if = {
 				limit = {
-					NOT = {
-						exists = scope:heir_scope
+					any_scope_character = {
+						is_a_prince_character = yes
 					}
 				}
-				if = {
+				random_scope_character = {
 					limit = {
-						any_scope_character = {
-							OR = {
-								has_role_of_type = general
-								has_role_of_type = admiral
-							}
-						}
+						is_a_prince_character = yes
 					}
-					random_scope_character = {
-						limit = {
-							OR = {
-								has_role_of_type = general
-								has_role_of_type = admiral
-							}
+					set_character_as_ruler = yes
+				}
+			}
+			else_if = {
+				limit = {
+					any_scope_character = {
+						OR = {
+							has_role_of_type = general
+							has_role_of_type = admiral
 						}
-						set_character_as_ruler = yes
 					}
 				}
-				else = {
-					create_character = {
-						ruler = yes
+				random_scope_character = {
+					limit = {
+						OR = {
+							has_role_of_type = general
+							has_role_of_type = admiral
+						}
 					}
+					set_character_as_ruler = yes
 				}
 			}
 			else = {
-				heir ?= {
-					set_character_as_ruler = yes
+				create_character = {
+					ruler = yes
 				}
+			}
+			heir ?= {
+				disinherit_character = yes
 			}
 			scope:abdicating_monarch ?= {
 				exile_character_with_martyrdom = yes
 			}
+			if = {
+				limit = { is_a_regime_monarchy = yes }
+				add_regency_modifier = yes
+				set_variable = { name = hide_ruler_change_notification days = 3 }
+				ruler ?= {
+					designate_character_as_regent = {
+						YEARS = 0
+					}
+					add_modifier = { name = regent_character }
+				}
+			}
 		}
-		scope:ongoing_revolution = {
+		scope:ongoing_revolution ?= {
 			add_civil_war_progress = revolution_retreat_large
 		}
 		capitulate_to_revolution = yes
@@ -1029,19 +1048,35 @@ resignation.3 = {
 			value = large_radicals
 			interest_group = scope:abdicating_monarch.interest_group
 		}
+		
 	}
 
 	option = {
 		name = resignation.3.c
 		trigger = {
 			country_has_voting_franchise = yes
-			NOT = {
-				has_law_or_variant = law_type:law_dominant_party_state
-			}
+			government_has_legislative_super_majority = yes
 		}
+		
 		custom_tooltip = {
 			text = leader_abdicates_the_throne_tt
 			if = {
+				limit = {
+					NOT = {
+						exists = scope:heir_scope
+					}
+					any_scope_character = {
+						is_a_prince_character = yes
+					}
+				}
+				random_scope_character = {
+					limit = {
+						is_a_prince_character = yes
+					}
+					set_character_as_ruler = yes
+				}
+			}
+			else_if = {
 				limit = {
 					NOT = {
 						exists = scope:heir_scope
@@ -1081,19 +1116,31 @@ resignation.3 = {
 				exile_character_with_martyrdom = yes
 			}
 		}
-		if = {
-			limit = {
-				NOT = {
-					is_a_dictatorship = yes
-				}
-			}
-			effect_starting_politics_dictatorship = yes
-		}
-		scope:ongoing_revolution = {
+		scope:ongoing_revolution ?= {
 			add_civil_war_progress = revolution_retreat_large
 		}
-		add_radicals = {
-			value = medium_radicals
+		
+		#Enact dictatorship
+		custom_tooltip = {
+			text = self_coup_effects.tt
+			effect_starting_politics_dictatorship = yes
 		}
+	
+		#Massive domestic unrest
+		effect_increase_opposition_radicals = yes
+		hidden_effect = {
+			remove_modifier = self_coup_recently
+		}
+		add_modifier = { 
+			name = self_coup_recently 
+			years = 5 
+			is_decaying = yes
+		}
+		effect_increase_government_loyalists = yes
+		
+		#Gain infamy
+		change_infamy = 20
+		
 	}
+	
 }
