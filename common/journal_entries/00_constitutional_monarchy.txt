@@ -17,6 +17,12 @@ je_constitutional_monarchy = {
 		
 		NOT = { has_variable = block_constitutional_monarchy_generation }
 		
+		#Not has regency
+		NOR = {
+			has_journal_entry = je_regency_system
+			any_scope_character = { has_role = character_role_regent }
+		}
+		
 	}
 
 	possible = {
@@ -283,6 +289,11 @@ je_constitutional_monarchy = {
 				}
 			}
 			
+			#Regency
+			scope:constitutional_monarch_scope ?= {
+				is_adult = no
+			}
+			
 		}
 		
 	}
@@ -331,6 +342,62 @@ je_constitutional_monarchy = {
 				set_character_as_royal = yes
 				set_variable = former_elective_monarch
 				remove_character_role = character_role_monarch_elective
+			}
+		}
+		
+		#Clear monarch
+		if = {
+			limit = {
+				NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+				scope:constitutional_monarch_scope ?= {
+					has_role = character_role_monarch
+				}
+			}
+			scope:constitutional_monarch_scope ?= {
+				remove_character_role = character_role_monarch
+			}
+		}
+		
+		#Create Regency if applicable
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOS_monarch
+				scope:constitutional_monarch_scope ?= {
+					owner ?= ROOT
+					has_role = character_role_monarch
+					is_adult = no
+				}
+			}
+			if = {
+				limit = {
+					any_scope_character = {
+						is_a_prince_character = yes
+					}
+				}
+				random_scope_character = {
+					limit = {
+						is_a_prince_character = yes
+					}
+					add_character_role = character_role_regent
+				}
+			}
+			else_if = {
+				limit = {
+					any_scope_character = {
+						has_role_of_type = magnate
+					}
+				}
+				random_scope_character = {
+					limit = {
+						has_role_of_type = magnate
+					}
+					add_character_role = character_role_regent
+				}
+			}
+			else = {
+				create_character = {
+					role = character_role_regent noble = yes
+				}
 			}
 		}
 		

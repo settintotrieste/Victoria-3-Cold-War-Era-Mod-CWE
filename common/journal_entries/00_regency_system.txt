@@ -1,0 +1,169 @@
+je_regency_system = {
+	icon = "gfx/interface/icons/law_icons/monarchy.dds"
+
+	group = je_group_political_organs
+
+	is_shown_when_inactive = {
+		OR = {
+			has_gov_regency = yes
+			AND = {
+				has_law_or_variant = law_type:law_HOS_monarch
+				any_scope_character = { has_role = character_role_regent }
+			}
+		}
+	}
+
+	possible = {
+		
+	}
+
+	immediate = {
+		if = {
+			limit = { has_gov_regency = yes }
+			ruler ?= { add_character_role = character_role_regent }
+		}
+		random_scope_character = {
+			limit = { has_role = character_role_regent }
+			save_scope_as = regent_character
+		}
+	}
+	
+	invalid = {
+		OR = {
+			NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+			scope:regent_character ?= { NOT = { has_role = character_role_regent } }
+			NOT = { exists = scope:regent_character }
+		}
+	}
+	
+	on_invalid = {
+		
+		#Clean up
+		every_scope_character = {
+			limit = { has_role = character_role_regent }
+			remove_character_role = character_role_regent
+		}
+		every_scope_character = {
+			limit = { 
+				has_modifier = regent_character
+			}
+			remove_modifier = regent_character
+		}
+		
+		#Detect monarch
+		random_scope_character = {
+			limit = { has_role = character_role_monarch }
+			save_scope_as = monarch_character_label
+		}
+		
+		#Create Regency if applicable
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOS_monarch
+				scope:monarch_character_label ?= {
+					has_role = character_role_monarch
+					is_adult = no
+				}
+			}
+			if = {
+				limit = {
+					any_scope_character = {
+						is_a_prince_character = yes
+					}
+				}
+				random_scope_character = {
+					limit = {
+						is_a_prince_character = yes
+					}
+					add_character_role = character_role_regent
+				}
+			}
+			else = {
+				if = {
+					limit = {
+						any_scope_character = {
+							has_role_of_type = magnate
+						}
+					}
+					random_scope_character = {
+						limit = {
+							has_role_of_type = magnate
+						}
+						add_character_role = character_role_regent
+					}
+				}
+				else = {
+					create_character = {
+						role = character_role_regent noble = yes
+					}
+				}
+			}
+		}
+		
+	}
+	
+	complete = {
+		any_scope_character = { has_role = character_role_monarch is_adult = yes }
+	}
+	
+	on_complete = {
+		
+		#Clean up
+		every_scope_character = {
+			limit = { has_role = character_role_regent }
+			remove_character_role = character_role_regent
+		}
+		every_scope_character = {
+			limit = { 
+				has_modifier = regent_character
+			}
+			remove_modifier = regent_character
+		}
+		
+		#Mark monarchs
+		if = {
+			limit = { has_gov_regency = yes }
+			heir ?= {
+				save_scope_as = monarch_character_label
+				custom_tooltip = {
+					text = character_role_monarch.tt
+				}
+			}
+		}
+		else = {
+			every_scope_character = {
+				limit = { has_role = character_role_monarch }
+				save_scope_as = monarch_character_label
+				custom_tooltip = {
+					text = character_role_monarch.tt
+				}
+			}
+		}
+		
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = regency_IG
+				trigger = {
+					scope:regent_character ?= { has_role = character_role_regent }
+				}
+			}
+			triggered_desc = {
+				desc = regency_vacant
+				trigger = {
+					
+				}
+			}
+		}
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default_uninvolved_or_context = no
+
+	transferable = no
+
+	progressbar = no
+}
