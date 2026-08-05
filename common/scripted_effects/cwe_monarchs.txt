@@ -2098,8 +2098,11 @@ generate_monarch_for_country = {
 	
 	#Generic monarch
 	else = {
+		
+		#Find existing monarchs
 		if = {
 			limit = {
+				is_a_regime_monarchy = yes
 				any_scope_character = {
 					has_role = character_role_monarch
 					is_ruler_of_own_country = no
@@ -2113,22 +2116,6 @@ generate_monarch_for_country = {
 				set_character_as_monarch = yes
 			}
 		}
-		else_if = {
-			limit = { 
-				active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy } 
-				any_scope_character = {
-					has_role = character_role_monarch
-					is_ruler_of_own_country = no
-				}
-			}
-			random_scope_character = {
-				limit = { 
-					has_role = character_role_monarch
-					is_ruler_of_own_country = no
-				}
-				retire_monarch_character_scripted_effect = yes
-			}
-		}
 		else = {
 			if = {
 				limit = {
@@ -2138,30 +2125,93 @@ generate_monarch_for_country = {
 						}
 					}
 				}
-				random_list = {
-					#Male
-					5 = {
-						create_character = {
-							save_scope_as = ruler_to_be
-							role = character_role_monarch noble = yes
-							on_created = { 
-								set_character_as_monarch = yes
-							}
+				if = {
+					limit = {
+						any_scope_character = {
+							has_role = character_role_prince
 						}
 					}
-					#Female
-					1 = {
-						create_character = {
-							save_scope_as = ruler_to_be
-							role = character_role_monarch noble = yes female = yes
-							on_created = {
-								set_character_as_monarch = yes
+					random_scope_character = {
+						limit = { has_role = character_role_prince }
+						set_character_as_monarch = yes
+					}
+				}
+				else = {
+					random_list = {
+						#Male
+						5 = {
+							create_character = {
+								save_scope_as = ruler_to_be
+								role = character_role_monarch noble = yes
+								age = { 0 60 }
+								on_created = { 
+									set_character_as_monarch = yes
+								}
+							}
+						}
+						#Female
+						1 = {
+							create_character = {
+								save_scope_as = ruler_to_be
+								role = character_role_monarch noble = yes female = yes
+								age = { 0 60 }
+								on_created = {
+									set_character_as_monarch = yes
+								}
+							}
+						}
+						#Regency
+						1 = {
+							if = {
+								limit = {
+									any_scope_character = {
+										has_role_of_type = magnate
+										is_noble = yes
+										is_adult = yes
+									}
+								}
+								random_scope_character = {
+									limit = {
+										has_role_of_type = magnate
+										is_noble = yes
+										is_adult = yes
+									}
+									set_character_as_regent = yes
+								}
+							}
+							else_if = {
+								limit = {
+									any_scope_character = {
+										OR = { 
+											has_role_of_type = general
+											has_role_of_type = admiral
+										}
+									}
+								}
+								ordered_scope_character = {
+									limit = {
+										OR = { 
+											has_role_of_type = general
+											has_role_of_type = admiral
+										}
+									}
+									order_by = commander_rank
+									position = 0
+									set_character_as_regent = yes
+								}
+							}
+							else = {
+								create_character = {
+									role = character_role_regent noble = yes
+									on_created = { set_character_as_regent = yes }
+								}
 							}
 						}
 					}
 				}
 			}
 		}
+		
 	}
 	
 	#Set Monarch home state
@@ -2174,60 +2224,25 @@ generate_monarch_for_country = {
 
 set_character_as_monarch = {
 	
-	if = { 
-		limit = { 
-			owner ?= { is_a_regime_monarchy = yes } 
+	#Set as ruler if applicable
+	if = {
+		limit = {
+			owner ?= { is_a_regime_monarchy = yes }
 			is_ruler_of_own_country = no
 		}
 		set_character_as_ruler = yes
-		if = {
-			limit = { has_role_of_type = agitator }
-			remove_character_role = agitator
-		}
-	}
-	if = {
-		limit = { 
-			owner ?= { is_a_regency_government = yes } 
-			NOT = { has_variable = regency_complete }
-		}
-		#Ruler is a regent
-		if = {
-			limit = { 
-				NOT = { has_modifier = regent_character } 
-				is_adult = yes
-			}
-			set_variable = { name = regency_years value = 0 }
-			hidden_effect = {
-				if = {
-					limit = {
-						is_immortal = no
-					}
-					set_character_immortal = yes
-				}
-			}
-			add_modifier = { name = regent_character }
-		}
-		#Heir is the monarch
-		heir ?= {
-			if = {
-				limit = { NOT = { has_role = character_role_monarch } }
-				remove_modifier = regent_character
-				add_character_role = character_role_monarch
-			}
-		}
-	}
-	else = {
-		if = {
-			limit = { NOT = { has_role = character_role_monarch } }
-			remove_modifier = regent_character
-			add_character_role = character_role_monarch
-		}
 	}
 	
-	#Remove Elective status
+	#Clear irrelevant roles
+	replace_character_roles = { add = { character_role_monarch } remove_all = yes }
 	if = {
-		limit = { has_role = character_role_monarch_elective }
-		remove_character_role = character_role_monarch_elective
+		limit = { has_modifier = regent_character }
+		remove_modifier = regent_character
+	}
+	
+	#Remove regency
+	hidden_effect = {
+		owner ?= { remove_regency_modifier = yes }
 	}
 	
 	#Clothes
@@ -2240,38 +2255,89 @@ set_character_as_monarch = {
 
 set_character_as_regent = {
 	
-	#Ruler is a regent
 	if = {
-		limit = { 
-			NOT = { has_modifier = regent_character } 
-			is_adult = yes
-		}
-		set_variable = { name = regency_years value = 0 }
-		hidden_effect = {
-			if = {
-				limit = {
-					is_immortal = no
+		limit = { is_adult = yes }
+		
+		#Set as regent
+		add_character_role = character_role_regent
+		if = {
+			limit = {
+				NOT = { has_modifier = regent_character }
+			}
+			owner ?= {
+				add_regency_modifier = yes
+				set_variable = { name = hide_ruler_change_notification days = 3 }
+			}
+			designate_character_as_regent = {
+				YEARS = 0
+			}
+			add_modifier = { name = regent_character }
+			save_scope_as = THIS_character_scope
+			owner ?= {
+				every_scope_character = {
+					limit = { 
+						NOT = { THIS = scope:THIS_character_scope }
+						has_role = character_role_regent
+					}
+					remove_character_role = character_role_regent
 				}
-				set_character_immortal = yes
 			}
 		}
-		add_modifier = { name = regent_character }
-	}
-	#Heir is the monarch
-	heir ?= {
+		
+		#Heir is the monarch
 		if = {
-			limit = { NOT = { has_role = character_role_monarch } }
-			remove_modifier = regent_character
-			add_character_role = character_role_monarch
+			limit = {
+				owner ?= { 
+					NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+					has_law_or_variant = law_type:law_HOS_monarch
+				}
+			}
+			set_character_as_ruler = yes
+			owner ?= {
+				random_scope_character = {
+					limit = { 
+						has_role = character_role_monarch
+						is_heir_of_own_country = no
+					}
+					save_scope_as = THIS_scope
+					owner ?= { set_heir = scope:THIS_scope }
+				}
+				heir ?= {
+					replace_character_roles = { add = { character_role_monarch } remove_all = yes }
+					if = {
+						limit = { has_modifier = regent_character }
+						remove_modifier = regent_character
+					}
+				}
+			}
 		}
+		
 	}
 
 }
 
 set_character_as_monarch_simpliciter = {
 
-	remove_modifier = regent_character
+	#Set as ruler if applicable
+	if = {
+		limit = {
+			owner ?= { is_a_regime_monarchy = yes }
+			is_ruler_of_own_country = no
+		}
+		set_character_as_ruler = yes
+	}
+
+	#Add role
 	add_character_role = character_role_monarch
+	if = {
+		limit = { has_modifier = regent_character }
+		remove_modifier = regent_character
+	}
+	
+	#Remove regency
+	hidden_effect = {
+		owner ?= { remove_regency_modifier = yes }
+	}
 	
 	#Clothes
 	if = {
@@ -2368,6 +2434,15 @@ clean_up_any_monarchs = {
 	set_variable = { 
 		name = monarchy_deposed_recently
 		months = 1
+	}
+	
+}
+
+clean_up_any_princes = {
+	
+	every_scope_character = {
+		limit = { is_a_prince_character = yes }
+		replace_character_roles = { add = { character_role_magnate } remove_all = yes }
 	}
 	
 }
@@ -2715,8 +2790,8 @@ set_character_as_viceroy = {
 }
 
 set_character_as_royal = {
-	set_variable = royal_character
-	add_character_role = magnate
+	#set_variable = royal_character
+	add_character_role = character_role_prince
 }
 
 generate_elective_monarchs_for_country = {

@@ -4,12 +4,10 @@ je_regency_system = {
 	group = je_group_political_organs
 
 	is_shown_when_inactive = {
+		has_law_or_variant = law_type:law_HOS_monarch
 		OR = {
-			has_gov_regency = yes
-			AND = {
-				has_law_or_variant = law_type:law_HOS_monarch
-				any_scope_character = { has_role = character_role_regent }
-			}
+			is_a_regency_government = yes
+			any_scope_character = { has_role = character_role_regent }
 		}
 	}
 
@@ -19,7 +17,10 @@ je_regency_system = {
 
 	immediate = {
 		if = {
-			limit = { has_gov_regency = yes }
+			limit = {
+				is_a_regency_government = yes
+				NOT = { any_scope_character = { has_role = character_role_regent } }
+			}
 			ruler ?= { add_character_role = character_role_regent }
 		}
 		random_scope_character = {
@@ -49,18 +50,20 @@ je_regency_system = {
 			}
 			remove_modifier = regent_character
 		}
+		remove_regency_modifier = yes
 		
 		#Detect monarch
 		random_scope_character = {
 			limit = { has_role = character_role_monarch }
-			save_scope_as = monarch_character_label
+			save_scope_as = constitutional_monarch_scope
 		}
 		
 		#Create Regency if applicable
 		if = {
 			limit = {
 				has_law_or_variant = law_type:law_HOS_monarch
-				scope:monarch_character_label ?= {
+				scope:constitutional_monarch_scope ?= {
+					owner ?= ROOT
 					has_role = character_role_monarch
 					is_adult = no
 				}
@@ -68,34 +71,61 @@ je_regency_system = {
 			if = {
 				limit = {
 					any_scope_character = {
-						is_a_prince_character = yes
+						has_role = character_role_prince
+						is_adult = yes
+						count > 1
 					}
 				}
 				random_scope_character = {
 					limit = {
-						is_a_prince_character = yes
+						has_role = character_role_prince
+						is_adult = yes
+						count > 1
 					}
-					add_character_role = character_role_regent
+					set_character_as_regent = yes
+				}
+			}
+			else_if = {
+				limit = {
+					any_scope_character = {
+						has_role_of_type = magnate
+						is_noble = yes
+						is_adult = yes
+					}
+				}
+				random_scope_character = {
+					limit = {
+						has_role_of_type = magnate
+						is_noble = yes
+						is_adult = yes
+					}
+					set_character_as_regent = yes
+				}
+			}
+			else_if = {
+				limit = {
+					any_scope_character = {
+						OR = { 
+							has_role_of_type = general
+							has_role_of_type = admiral
+						}
+					}
+				}
+				ordered_scope_character = {
+					limit = {
+						OR = { 
+							has_role_of_type = general
+							has_role_of_type = admiral
+						}
+					}
+					order_by = commander_rank
+					position = 0
+					set_character_as_regent = yes
 				}
 			}
 			else = {
-				if = {
-					limit = {
-						any_scope_character = {
-							has_role_of_type = magnate
-						}
-					}
-					random_scope_character = {
-						limit = {
-							has_role_of_type = magnate
-						}
-						add_character_role = character_role_regent
-					}
-				}
-				else = {
-					create_character = {
-						role = character_role_regent noble = yes
-					}
+				create_character = {
+					role = character_role_regent noble = yes
 				}
 			}
 		}
@@ -113,30 +143,22 @@ je_regency_system = {
 			limit = { has_role = character_role_regent }
 			remove_character_role = character_role_regent
 		}
-		every_scope_character = {
-			limit = { 
-				has_modifier = regent_character
+		hidden_effect = {
+			every_scope_character = {
+				limit = { 
+					has_modifier = regent_character
+				}
+				remove_modifier = regent_character
 			}
-			remove_modifier = regent_character
+			remove_regency_modifier = yes
 		}
 		
 		#Mark monarchs
-		if = {
-			limit = { has_gov_regency = yes }
-			heir ?= {
-				save_scope_as = monarch_character_label
-				custom_tooltip = {
-					text = character_role_monarch.tt
-				}
-			}
-		}
-		else = {
-			every_scope_character = {
-				limit = { has_role = character_role_monarch }
-				save_scope_as = monarch_character_label
-				custom_tooltip = {
-					text = character_role_monarch.tt
-				}
+		every_scope_character = {
+			limit = { has_role = character_role_monarch }
+			save_scope_as = monarch_character_label
+			custom_tooltip = {
+				text = character_role_monarch.tt
 			}
 		}
 		
