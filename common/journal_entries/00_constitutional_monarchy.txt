@@ -411,6 +411,82 @@ je_constitutional_monarchy = {
 			}
 		}
 		
+		#Create Regency if applicable
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOS_monarch
+				scope:constitutional_monarch_scope ?= {
+					owner ?= ROOT
+					has_role = character_role_monarch
+					is_adult = no
+				}
+				NOT = {
+					any_scope_character = {
+						has_role = character_role_regent
+					}
+				}
+			}
+			if = {
+				limit = {
+					any_scope_character = {
+						has_role = character_role_prince
+					}
+				}
+				random_scope_character = {
+					limit = { has_role = character_role_prince }
+					set_character_as_monarch = yes
+				}
+			}
+			else = {
+				if = {
+					limit = {
+						any_scope_character = {
+							has_role_of_type = magnate
+							is_noble = yes
+							is_adult = yes
+						}
+					}
+					ordered_scope_character = {
+						limit = {
+							has_role_of_type = magnate
+							is_noble = yes
+							is_adult = yes
+						}
+						order_by = popularity
+						position = 0
+						set_character_as_regent = yes
+					}
+				}
+				else_if = {
+					limit = {
+						any_scope_character = {
+							OR = { 
+								has_role_of_type = general
+								has_role_of_type = admiral
+							}
+						}
+					}
+					ordered_scope_character = {
+						limit = {
+							OR = { 
+								has_role_of_type = general
+								has_role_of_type = admiral
+							}
+						}
+						order_by = commander_rank
+						position = 0
+						set_character_as_regent = yes
+					}
+				}
+				else = {
+					create_character = {
+						role = character_role_regent noble = yes
+						on_created = { set_character_as_regent = yes }
+					}
+				}
+			}
+		}
+		
 	}
 	
 	on_complete = {
