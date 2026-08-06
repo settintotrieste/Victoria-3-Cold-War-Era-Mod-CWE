@@ -472,28 +472,37 @@ regency.3 = {
 		OR = {
 			#Heirs comes of age while regent is still alive
 			AND = {
-				ruler ?= { has_modifier = regent_character }
+				ruler ?= { has_role = character_role_regent }
 				heir ?= { is_adult = yes }
 			}
 			#Regent died but heir is of age
-			ruler ?= { 
-				NOT = { has_modifier = regent_character }
-				is_adult = yes
+			AND = {
+				ruler ?= {
+					NOT = { has_role = character_role_regent }
+					is_adult = yes
+				}
+				heir ?= { is_adult = yes }
 			}
-			ruler ?= { is_adult = no }
 		}
 	}
 
 	cancellation_trigger = {
-		is_a_regency_government = no
 		NAND = {
-			ruler ?= { has_modifier = regent_character }
-			heir ?= { is_adult = yes }
-		}
-		NOT = {
-			ruler ?= { 
-				NOT = { has_modifier = regent_character } 
-				is_adult = yes
+			is_a_regency_government = yes
+			OR = {
+				#Heirs comes of age while regent is still alive
+				AND = {
+					ruler ?= { has_role = character_role_regent }
+					heir ?= { is_adult = yes }
+				}
+				#Regent died but heir is of age
+				AND = {
+					ruler ?= {
+						NOT = { has_role = character_role_regent }
+						is_adult = yes
+					}
+					heir ?= { is_adult = yes }
+				}
 			}
 		}
 	}
@@ -518,15 +527,8 @@ regency.3 = {
 		default_option = yes
 		remove_regency_modifier = yes
 		scope:regent_scope ?= {
-			hidden_effect = {
-				if = {
-					limit = {
-						is_immortal = yes
-					}
-					set_character_immortal = no
-				}
-			}
-			remove_modifier = regent_character
+			remove_character_role = character_role_regent
+			clean_up_regent_character = yes
 		}
 		scope:monarch_scope ?= {
 			set_character_as_ruler = yes
