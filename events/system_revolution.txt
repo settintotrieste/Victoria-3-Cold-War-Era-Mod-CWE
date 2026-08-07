@@ -1654,58 +1654,42 @@ revolution_system.20 = {
 	immediate = {
 		
 		if = {
-			limit = { exists = overlord }
-			overlord ?= {
-				random_primary_culture = { save_scope_as = culture_to_add }
-				save_scope_as = religion_to_add
-			}
-		}
-		else_if = {
-			limit = { has_modifier = condominium_modifier }
-			random_country = {
-				limit = { has_diplomatic_pact = { who = ROOT type = condominium is_initiator = yes } }
-				random_primary_culture = { save_scope_as = culture_to_add }
-				save_scope_as = religion_to_add
-			}
-		}
-		if = {
-			limit = {
-				is_subject = yes
-				overlord ?= { save_temporary_scope_as = viceroy_overlord }
-				any_scope_character = {
-					has_role_of_type = politician
-					culture = { is_primary_culture_of = scope:viceroy_overlord }
-					is_ruler_of_own_country = no
+			limit = { ruler ?= { NOT = { has_role = character_role_viceroy } } }
+		
+			if = {
+				limit = { exists = overlord }
+				overlord ?= {
+					random_primary_culture = { save_scope_as = culture_to_add }
+					save_scope_as = religion_to_add
 				}
 			}
-			overlord ?= { save_scope_as = viceroy_overlord }
-			random_scope_character = {
+			else_if = {
+				limit = { has_modifier = condominium_modifier }
+				random_country = {
+					limit = { has_diplomatic_pact = { who = ROOT type = condominium is_initiator = yes } }
+					random_primary_culture = { save_scope_as = culture_to_add }
+					save_scope_as = religion_to_add
+				}
+			}
+			if = {
 				limit = {
-					has_role_of_type = politician
-					culture = { is_primary_culture_of = scope:viceroy_overlord }
-					is_ruler_of_own_country = no
+					is_subject = yes
+					overlord ?= { save_temporary_scope_as = viceroy_overlord }
+					any_scope_character = {
+						has_role_of_type = politician
+						culture = { is_primary_culture_of = scope:viceroy_overlord }
+						is_ruler_of_own_country = no
+					}
 				}
-				set_character_as_viceroy = yes
-				
-				add_trait = political_appointee
-				save_scope_as = new_ruler_scope
-				owner = { 
-					save_scope_as = new_ruler_country_scope 
-					overlord ?= { save_scope_as = new_ruler_overlord_scope } 
-				}
-				post_notification = new_ruler_colonial
-			}
-		}
-		else_if = {
-			limit = { 
-				exists = scope:culture_to_add
-				exists = scope:religion_to_add
-			}
-			create_character = {
-				ruler = yes
-				culture = scope:culture_to_add
-				religion = scope:religion_to_add.religion
-				on_created = { 
+				overlord ?= { save_scope_as = viceroy_overlord }
+				random_scope_character = {
+					limit = {
+						has_role_of_type = politician
+						culture = { is_primary_culture_of = scope:viceroy_overlord }
+						is_ruler_of_own_country = no
+					}
+					set_character_as_viceroy = yes
+					
 					add_trait = political_appointee
 					save_scope_as = new_ruler_scope
 					owner = { 
@@ -1715,8 +1699,29 @@ revolution_system.20 = {
 					post_notification = new_ruler_colonial
 				}
 			}
+			else_if = {
+				limit = { 
+					exists = scope:culture_to_add
+					exists = scope:religion_to_add
+				}
+				create_character = {
+					ruler = yes
+					culture = scope:culture_to_add
+					religion = scope:religion_to_add.religion
+					on_created = { 
+						add_trait = political_appointee
+						save_scope_as = new_ruler_scope
+						owner = { 
+							save_scope_as = new_ruler_country_scope 
+							overlord ?= { save_scope_as = new_ruler_overlord_scope } 
+						}
+						post_notification = new_ruler_colonial
+					}
+				}
+			}
+			effect_apply_ruler_acceptance_modifiers = yes
+			
 		}
-		effect_apply_ruler_acceptance_modifiers = yes
 		
 	}
 	

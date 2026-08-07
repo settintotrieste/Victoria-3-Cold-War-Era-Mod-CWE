@@ -1019,7 +1019,6 @@ resignation.3 = {
 							has_role_of_type = admiral
 						}
 					}
-					set_character_as_ruler = yes
 					set_character_as_regent = yes
 				}
 			}
@@ -1040,63 +1039,13 @@ resignation.3 = {
 		trigger = {
 			country_has_voting_franchise = yes
 			government_has_legislative_super_majority = yes
+			exists = heir
 		}
 		
 		custom_tooltip = {
 			text = leader_abdicates_the_throne_tt
-			if = {
-				limit = {
-					NOT = {
-						exists = scope:heir_scope
-					}
-					any_scope_character = {
-						is_a_prince_character = yes
-						is_adult = yes
-					}
-				}
-				random_scope_character = {
-					limit = {
-						is_a_prince_character = yes
-						is_adult = yes
-					}
-					set_character_as_ruler = yes
-				}
-			}
-			else_if = {
-				limit = {
-					NOT = {
-						exists = scope:heir_scope
-					}
-				}
-				if = {
-					limit = {
-						any_scope_character = {
-							OR = {
-								has_role_of_type = general
-								has_role_of_type = admiral
-							}
-						}
-					}
-					random_scope_character = {
-						limit = {
-							OR = {
-								has_role_of_type = general
-								has_role_of_type = admiral
-							}
-						}
-						set_character_as_ruler = yes
-					}
-				}
-				else = {
-					create_character = {
-						ruler = yes
-					}
-				}
-			}
-			else = {
-				heir ?= {
-					set_character_as_ruler = yes
-				}
+			heir ?= {
+				set_character_as_ruler = yes
 			}
 			scope:abdicating_monarch ?= {
 				exile_character_with_martyrdom = yes
@@ -1104,6 +1053,62 @@ resignation.3 = {
 		}
 		scope:ongoing_revolution ?= {
 			add_civil_war_progress = revolution_retreat_large
+		}
+		
+		if = {
+			limit = {
+				scope:abdicating_monarch ?= {
+					popularity >= 0
+				}
+			}
+			scope:ongoing_revolution_movement ?= {
+				add_modifier = {
+					name = modifier_ruler_abdicated
+					days = long_modifier_time
+					is_decaying = yes
+				}
+			}
+		}
+		else = {
+			scope:ongoing_revolution_movement ?= {
+				add_modifier = {
+					name = modifier_ruler_abdicated
+					days = long_modifier_time
+					multiplier = 3
+					is_decaying = yes
+				}
+			}
+		}
+		
+		if = {
+			limit = { ruler ?= { is_adult = no } }
+			if = {
+				limit = {
+					any_scope_character = {
+						OR = {
+							has_role_of_type = general
+							has_role_of_type = admiral
+						}
+					}
+				}
+				random_scope_character = {
+					limit = {
+						OR = {
+							has_role_of_type = general
+							has_role_of_type = admiral
+						}
+					}
+					set_character_as_regent = yes
+				}
+			}
+			else = {
+				create_character = {
+					ruler = yes noble = yes
+					on_created = {
+						set_character_as_regent = yes
+					}
+				}
+			}
 		}
 		
 		#Enact dictatorship
