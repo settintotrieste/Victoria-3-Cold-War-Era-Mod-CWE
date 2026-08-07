@@ -2238,15 +2238,14 @@ set_character_as_monarch = {
 			remove_character_role = character_role_monarch
 		}
 	}
-	replace_character_roles = { add = { character_role_monarch } remove_all = yes }
+	add_character_role = character_role_monarch
 	if = {
-		limit = { has_modifier = regent_character }
-		remove_modifier = regent_character
+		limit = { has_role = character_role_monarch_elective }
+		remove_character_role = character_role_monarch_elective
 	}
-	
-	#Remove regency
-	hidden_effect = {
-		owner ?= { remove_regency_modifier = yes }
+	if = {
+		limit = { has_role = character_role_prince }
+		remove_character_role = character_role_prince
 	}
 	
 	#Clothes
@@ -2258,15 +2257,37 @@ set_character_as_monarch = {
 	#Set as ruler if applicable
 	if = {
 		limit = {
-			owner ?= { is_a_regime_monarchy = yes }
+			owner ?= { 
+				is_a_regime_monarchy = yes
+				is_a_regency_government = no
+			}
 			is_ruler_of_own_country = no
 		}
 		set_character_as_ruler = yes
+	}
+	
+	#Clean up regency
+	if = {
+		limit = { has_role = character_role_regent }
+		remove_character_role = character_role_regent
+	}
+	if = {
+		limit = { has_modifier = regent_character }
+		remove_modifier = regent_character
+	}
+	if = {
+		limit = { is_adult = yes }
+		owner ?= { remove_regency_modifier = yes }
 	}
 
 }
 
 set_character_as_regent = {
+	
+	#Mark owner as having a regency
+	owner ?= {
+		add_regency_modifier = yes
+	}
 	
 	if = {
 		limit = { is_adult = yes }
@@ -2282,18 +2303,11 @@ set_character_as_regent = {
 			}
 		}
 		add_character_role = character_role_regent
-		if = {
-			limit = {
-				NOT = { has_modifier = regent_character }
-			}
-			owner ?= {
-				add_regency_modifier = yes
-				set_variable = { name = hide_ruler_change_notification days = 3 }
-			}
-			designate_character_as_regent = {
-				YEARS = 0
-			}
-			add_modifier = { name = regent_character }
+		owner ?= {
+			set_variable = { name = hide_ruler_change_notification days = 3 }
+		}
+		designate_character_as_regent = {
+			YEARS = 0
 		}
 		
 		#Heir is the monarch
@@ -2302,19 +2316,22 @@ set_character_as_regent = {
 				owner ?= {
 					NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
 					has_law_or_variant = law_type:law_HOS_monarch
+					has_gov_regency = yes
 				}
 			}
 			owner ?= {
 				heir ?= {
-					replace_character_roles = { add = { character_role_monarch } remove_all = yes }
-					if = {
-						limit = { has_modifier = regent_character }
-						remove_modifier = regent_character
-					}
+					add_character_role = character_role_monarch
 				}
 				random_scope_character = {
-					limit = { 
-						has_role = character_role_monarch
+					limit = {
+						OR = { 
+							AND = { 
+								is_ruler_of_own_country = yes
+								NOT = { has_role = character_role_regent }
+							}
+							has_role = character_role_monarch
+						}
 						is_heir_of_own_country = no
 					}
 					save_scope_as = THIS_scope
@@ -2347,88 +2364,28 @@ clean_up_regent_character = {
 
 clean_up_any_monarchs = {
 	
+	#Clean up deposed monarchy
 	if = {
-		limit = { ruler ?= { has_role = character_role_monarch } }
-		
-		#Constitutional Monarchy
+		limit = {
+			NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+		}
+		clean_up_all_royal_titles = yes
 		if = {
-			limit = { is_a_monarchy = yes }
-			ruler ?= { 
-				remove_character_role = ruler
-				remove_character_role = politician
-				add_character_role = agitator
-				interest_group ?= { save_scope_as = deposed_monarch_IG }
-			}
-			if = {
-				limit = { exists = scope:deposed_monarch_IG }
-				create_character = {
-					ruler = yes
-					ig_leader = yes
-					noble = yes
-					interest_group = scope:deposed_monarch_IG
-				}
-			}
-			else = {
-				get_ruler_for:parliamentary_elective = {
-					set_character_as_ruler = yes
-				}
-			}
-		}
-		
-		#Republics depose their monarch
-		else = {
-			ruler ?= { 
-				if = {
-					limit = { has_role = character_role_monarch }
-					remove_character_role = character_role_monarch
-				}
-				exile_character_with_martyrdom = yes 
-			}
-		}
-		
-	}
-	
-	if = {
-		limit = { 
-			has_journal_entry = je_constitutional_monarchy
-			any_scope_character = { 
-				has_role = character_role_monarch 
-				has_role_of_type = politician
-				is_ruler_of_own_country = no
-			}
-		}
-		random_scope_character = {
 			limit = {
-				has_role = character_role_monarch 
-				has_role_of_type = politician
-				is_ruler_of_own_country = no
+				government_transfer_of_power = parliamentary_elective
 			}
-			remove_character_role = politician
-			add_character_role = agitator
-			interest_group ?= { save_scope_as = deposed_monarch_IG }
+			get_ruler_for:parliamentary_elective = {
+				set_character_as_ruler = yes
+			}
 		}
-		if = {
-			limit = { exists = scope:deposed_monarch_IG }
-			create_character = {
-				ig_leader = yes
-				noble = yes
-				interest_group = scope:deposed_monarch_IG
+		else = {
+			get_ruler_for:presidential_elective = {
+				set_character_as_ruler = yes
 			}
 		}
 	}
 	
-	if = {
-		limit = { 
-			OR = { 
-				is_a_monarchy = yes
-				NOT = { ruler ?= { has_variable = dynastic_ruler_enabled } } 
-			}
-		}
-		heir ?= {
-			disinherit_character = yes
-		}
-	}
-	
+	#Mark
 	set_variable = { 
 		name = monarchy_deposed_recently
 		months = 1
@@ -2867,34 +2824,42 @@ generate_elective_monarchs_for_country = {
 clean_up_all_royal_titles = {
 	
 	#Remove all monarch titles
-	every_scope_character = {
-		limit = { has_role = character_role_monarch }
-		remove_character_role = character_role_monarch
-		set_character_as_royal = yes
-	}
-	every_scope_character = {
-		limit = { has_role = character_role_monarch_elective }
-		remove_character_role = character_role_monarch_elective
-		set_character_as_royal = yes
-	}
-	every_scope_character = {
-		limit = { has_role = character_role_regent }
-		remove_character_role = character_role_regent
-		clean_up_regent_character = yes
-	}
-	every_scope_character = {
-		limit = { has_role = character_role_prince }
-		remove_character_role = character_role_prince
-	}
+	if = {
+		limit = {
+			NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+		}
+		every_scope_character = {
+			limit = { has_role = character_role_monarch }
+			remove_character_role = character_role_monarch
+			set_character_as_royal = yes
+		}
+		every_scope_character = {
+			limit = { has_role = character_role_monarch_elective }
+			remove_character_role = character_role_monarch_elective
+			set_character_as_royal = yes
+		}
+		every_scope_character = {
+			limit = { has_role = character_role_regent }
+			remove_character_role = character_role_regent
+			clean_up_regent_character = yes
+		}
+		every_scope_character = {
+			limit = { has_role = character_role_prince }
+			remove_character_role = character_role_prince
+		}
+		heir ?= {
+			disinherit_character = yes
+		}
+		
+		#Remove all viceroys
+		every_scope_character = {
+			limit = { has_role = character_role_viceroy }
+			remove_character_role = character_role_viceroy
+		}
 	
-	#Remove all viceroys
-	every_scope_character = {
-		limit = { has_role = character_role_viceroy }
-		remove_character_role = character_role_viceroy
+		#Remove Regency
+		remove_regency_modifier = yes
 	}
-	
-	#Remove Regency
-	remove_regency_modifier = yes
 
 }
 

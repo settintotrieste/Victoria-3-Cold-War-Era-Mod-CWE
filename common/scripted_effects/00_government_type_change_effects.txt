@@ -86,36 +86,46 @@ post_change_to_hereditary = {
 
 change_to_regency = {
 
-	#Clean up
-	ruler ?= {
-		if = {
-			limit = { has_role = character_role_monarch }
-			remove_character_role = character_role_monarch
+	#Failsafe
+	if = {
+		limit = {
+			exists = heir
+			ruler ?= { NOT = { has_role = character_role_monarch } }
+		}
+		ruler ?= {
+			if = {
+				limit = { NOT = { has_role = character_role_regent } }
+				set_character_as_regent = yes
+			}
 		}
 	}
-	heir ?= {
-		if = {
-			limit = { NOT = { has_role = character_role_monarch } }
-			add_character_role = character_role_monarch
+	else = {
+		ruler ?= {
+			if = {
+				limit = { has_role = character_role_monarch }
+				remove_character_role = character_role_monarch
+			}
+			if = {
+				limit = { NOT = { has_role = character_role_regent } }
+				set_character_as_regent = yes
+			}
+		}
+		heir ?= {
+			if = {
+				limit = { NOT = { has_role = character_role_monarch } }
+				set_character_as_monarch = yes
+			}
 		}
 	}
+	random_scope_character = {
+		limit = { has_role = character_role_regent }
+		set_character_as_ruler = yes
+	}
+	
+	debug_log = "Regency Created in [THIS.GetCountry.GetNameNoFormatting]"
 
 }
 
 post_change_to_regency = {
-	
-	#Clean up
-	ruler ?= {
-		if = {
-			limit = { has_role = character_role_monarch }
-			remove_character_role = character_role_monarch
-		}
-	}
-	heir ?= {
-		if = {
-			limit = { NOT = { has_role = character_role_monarch } }
-			add_character_role = character_role_monarch
-		}
-	}
 
 }
