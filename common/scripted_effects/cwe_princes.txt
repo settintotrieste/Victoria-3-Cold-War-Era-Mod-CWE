@@ -1513,7 +1513,7 @@ generate_prince_for_country = {
 		set_variable = Umberto_II_generated
 	}
 	
-	if = {
+	else_if = {
 		limit = {
 			AND = { OR = { c:BUL ?= this was_formed_from = BUL } } # game_date >= 1943.8.28 game_date < 2010.9.15 }   # Simeon II
 			NOT = { has_variable = simeon_ii_generated }
@@ -2121,62 +2121,98 @@ generate_prince_for_country = {
 	
 	#Generic monarch
 	else = {
-		
-		random_list = {
-			1 = {
-				if = {
-					limit = { 
-						any_scope_character = { 
-							has_role = character_role_monarch
-							age >= 50
-						}
-					}
-					create_character = {
-						role = character_role_prince noble = yes
-						age = { 15 25 }
-						on_created = {
-							set_character_as_royal = yes
-						}
-					}
-				}
-				else = {
-					create_character = {
-						role = character_role_prince noble = yes
-						age = { 0 10 }
-						on_created = {
-							set_character_as_royal = yes
-						}
-					}
-				}
+	
+		#Find existing princes
+		if = {
+			limit = {
+				NOT = { exists = heir }
+				ruler ?= { has_role = character_role_monarch }
+				any_scope_character = { has_role = character_role_prince }
 			}
-			1 = {
-				if = {
-					limit = { 
-						any_scope_character = { 
-							has_role = character_role_monarch
-							age >= 50
+			random_scope_character = {
+				limit = {
+					has_role = character_role_prince
+				}
+				save_scope_as = THIS_scope
+				owner ?= { set_heir = scope:THIS_scope }
+			}
+		}
+		else = {
+			random_list = {
+				1 = {
+					if = {
+						limit = { 
+							any_scope_character = { 
+								has_role = character_role_monarch
+								age >= 50
+							}
+						}
+						create_character = {
+							role = character_role_prince noble = yes
+							age = { 15 25 }
+							on_created = {
+								set_character_as_royal = yes
+							}
 						}
 					}
-					create_character = {
-						role = character_role_prince noble = yes female = yes
-						age = { 15 25 }
-						on_created = {
-							set_character_as_royal = yes
+					else = {
+						create_character = {
+							role = character_role_prince noble = yes
+							age = { 0 10 }
+							on_created = {
+								set_character_as_royal = yes
+							}
 						}
 					}
 				}
-				else = {
-					create_character = {
-						role = character_role_prince noble = yes female = yes
-						age = { 0 10 }
-						on_created = {
-							set_character_as_royal = yes
+				1 = {
+					if = {
+						limit = { 
+							any_scope_character = { 
+								has_role = character_role_monarch
+								age >= 50
+							}
+						}
+						create_character = {
+							role = character_role_prince noble = yes female = yes
+							age = { 15 25 }
+							on_created = {
+								set_character_as_royal = yes
+							}
+						}
+					}
+					else = {
+						create_character = {
+							role = character_role_prince noble = yes female = yes
+							age = { 0 10 }
+							on_created = {
+								set_character_as_royal = yes
+							}
 						}
 					}
 				}
 			}
 		}
 		
+	}
+	
+	#Set heir
+	if = {
+		limit = {
+			ruler ?= { has_role = character_role_monarch }
+			OR = {
+				NOT = { exists = heir }
+				heir ?= { NOT = { has_role = character_role_prince } }
+			}
+		}
+		random_scope_character = {
+			limit = {
+				has_role = character_role_prince
+				is_heir_of_own_country = no
+			}
+			save_scope_as = THIS_scope
+			owner ?= { set_heir = scope:THIS_scope }
+		}
 	}
 
 }

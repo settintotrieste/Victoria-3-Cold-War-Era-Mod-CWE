@@ -32,56 +32,41 @@ post_change_to_dictatorial = {
 }
 
 change_to_hereditary = {
-
-	#Presidents make themselves King
+	
+	#Set Monarch
 	if = {
-		limit = { 
-			OR = { 
-				government_transfer_of_power = dictatorial 
-				government_transfer_of_power = presidential_elective
-			}
+		limit = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
 			is_a_colonial_subject_gov = no
 			is_a_colonial_government = no
 			shares_same_monarch = no
 		}
-		ruler ?= {
-			set_character_as_monarch = yes
+		set_variable = { name = hide_ruler_change_notification days = 3 }
+		generate_monarch_for_country = yes
+		if = {
+			limit = {
+				ruler ?= { has_role = character_role_monarch }
+				OR = {
+					NOT = { exists = heir }
+					heir ?= { NOT = { has_role = character_role_prince } }
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_role = character_role_prince
+				}
+				save_scope_as = THIS_scope
+				owner ?= { set_heir = scope:THIS_scope }
+			}
 		}
 	}
-	
-	#Prime ministers find a king
-	else = {
-		generate_monarch_for_country = yes
-	}
+	set_variable = { name = recently_became_monarchy days = 1 }
 	
 }
 
 post_change_to_hereditary = {
-	if = {
-		limit = {
-			NOT = {
-				any_scope_character = {
-					has_role = character_role_monarch
-				}
-			}
-		}
-		generate_monarch_for_country = yes
-	}
-	else_if = {
-		limit = {
-			any_scope_character = {
-				has_role = character_role_monarch
-				is_ruler_of_own_country = no
-			}
-		}
-		random_scope_character = {
-			limit = {
-				has_role = character_role_monarch
-				is_ruler_of_own_country = no
-			}
-			set_character_as_monarch = yes
-		}
-	}
+	
 }
 
 change_to_regency = {

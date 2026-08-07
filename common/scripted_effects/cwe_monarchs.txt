@@ -1494,7 +1494,7 @@ generate_monarch_for_country = {
 	}
 	
 	#Bulgaria
-	if = {
+	else_if = {
 		limit = {
 			AND = { OR = { c:BUL ?= this was_formed_from = BUL } game_date >= 1943.8.28 game_date < 2010.9.15 }   # Simeon II
 			NOT = { has_variable = simeon_ii_generated }
@@ -2160,19 +2160,6 @@ generate_monarch_for_country = {
 				set_character_as_monarch = yes
 			}
 		}
-		else_if = {
-			limit = {
-				any_scope_character = {
-					has_role = character_role_monarch
-				}
-			}
-			random_scope_character = {
-				limit = {
-					has_role = character_role_monarch
-				}
-				set_character_as_monarch = yes
-			}
-		}
 		else = {
 			if = {
 				limit = {
@@ -2259,9 +2246,10 @@ generate_monarch_for_country = {
 			is_a_colonial_government = no
 			shares_same_monarch = no
 			is_a_regency_government = no
-			any_scope_character = {
-				is_royal_character = yes
-				count = 0
+			NOT = { 
+				any_scope_character = {
+					has_role = character_role_prince
+				}
 			}
 			any_scope_character = {
 				has_role = character_role_monarch
@@ -2277,9 +2265,11 @@ generate_monarch_for_country = {
 set_character_as_monarch = {
 	
 	#Clear irrelevant roles
+	save_scope_as = THIS_scope
 	owner ?= {
 		every_scope_character = {
 			limit = {
+				NOT = { this = scope:THIS_scope }
 				has_role = character_role_monarch
 			}
 			remove_character_role = character_role_monarch
@@ -2305,7 +2295,8 @@ set_character_as_monarch = {
 	if = {
 		limit = {
 			owner ?= { 
-				is_a_regime_monarchy = yes
+				has_law_or_variant = law_type:law_HOS_monarch
+				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
 				is_a_regency_government = no
 			}
 			is_ruler_of_own_country = no
@@ -2340,9 +2331,11 @@ set_character_as_regent = {
 		limit = { is_adult = yes }
 		
 		#Set as regent
+		save_scope_as = THIS_scope
 		owner ?= {
 			every_scope_character = {
 				limit = {
+					NOT = { this = scope:THIS_scope }
 					has_role = character_role_regent
 				}
 				remove_character_role = character_role_regent
