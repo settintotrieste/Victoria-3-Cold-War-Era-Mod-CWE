@@ -11,6 +11,7 @@ je_regency_system = {
 			is_a_regency_government = yes
 			any_scope_character = { has_role = character_role_regent }
 		}
+		any_scope_character = { has_role = character_role_monarch }
 	}
 
 	possible = {
@@ -32,6 +33,10 @@ je_regency_system = {
 		random_scope_character = {
 			limit = { has_role = character_role_regent }
 			save_scope_as = regent_character
+		}
+		random_scope_character = {
+			limit = { has_role = character_role_monarch }
+			save_scope_as = monarch_character
 		}
 	}
 	
@@ -68,10 +73,18 @@ je_regency_system = {
 		if = {
 			limit = {
 				has_law_or_variant = law_type:law_HOS_monarch
-				scope:constitutional_monarch_scope ?= {
+				is_a_regency_government = yes
+				any_scope_character = {
 					owner ?= ROOT
+					is_ruler_of_own_country = yes
 					has_role = character_role_monarch
-					is_adult = no
+					OR = {
+						is_adult = no
+						AND = {
+							owner ?= { has_variable = primogeniture_system }
+							is_female = yes
+						}
+					}
 				}
 			}
 			trigger_event = { id = regency.2 }
@@ -80,25 +93,64 @@ je_regency_system = {
 	}
 	
 	complete = {
-		any_scope_character = {
-			OR = {
-				has_role = character_role_monarch
-				AND = {
-					has_role = character_role_prince
-					custom_tooltip = {
-						text = prince_consort_character.tt
-						NOT = { has_variable = prince_consort_character }
-					}
-					NAND = {
+		trigger_if = {
+			limit = { exists = scope:monarch_character }
+			scope:monarch_character ?= {
+				OR = {
+					has_role = character_role_monarch
+					AND = {
+						has_role = character_role_prince
 						custom_tooltip = {
-							text = primogeniture_system.tt
-							owner ?= { has_variable = primogeniture_system }
+							text = prince_consort_character.tt
+							NOT = { has_variable = prince_consort_character }
 						}
-						is_female = yes
+						NAND = {
+							custom_tooltip = {
+								text = primogeniture_system.tt
+								owner ?= { has_variable = primogeniture_system }
+							}
+							is_female = yes
+						}
 					}
 				}
+				is_adult = yes
+				NAND = {
+					custom_tooltip = {
+						text = primogeniture_system.tt
+						owner ?= { has_variable = primogeniture_system }
+					}
+					is_female = yes
+				}
 			}
-			is_adult = yes 
+		}
+		trigger_else = {
+			any_scope_character ?= {
+				OR = {
+					has_role = character_role_monarch
+					AND = {
+						has_role = character_role_prince
+						custom_tooltip = {
+							text = prince_consort_character.tt
+							NOT = { has_variable = prince_consort_character }
+						}
+						NAND = {
+							custom_tooltip = {
+								text = primogeniture_system.tt
+								owner ?= { has_variable = primogeniture_system }
+							}
+							is_female = yes
+						}
+					}
+				}
+				is_adult = yes
+				NAND = {
+					custom_tooltip = {
+						text = primogeniture_system.tt
+						owner ?= { has_variable = primogeniture_system }
+					}
+					is_female = yes
+				}
+			}
 		}
 	}
 	

@@ -182,7 +182,7 @@ regency.2 = {
 	type = country_event
 	placement = root
 
-	duration = 3
+	duration = 1
 
 	title = regency.2.t
 	desc = regency.2.d
@@ -190,7 +190,7 @@ regency.2 = {
 
 	gui_window = event_window_1char_tabloid
 
-	left_icon = scope:regent_scope
+	left_icon = scope:monarch_scope
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 	on_opened_soundeffect = "event:/SFX/Events/misc/2Characters"
@@ -213,22 +213,82 @@ regency.2 = {
 				}
 				#Regent has already died
 				NOT = { has_role = character_role_regent }
+				#Child King returns
+				AND = {
+					has_role = character_role_monarch
+					OR = {
+						is_adult = no
+						AND = {
+							owner ?= { has_variable = primogeniture_system }
+							is_female = yes
+						}
+					}
+				}
 			}
-			#Heir can only take over to abolish the regency if of age
-			NOT = { has_role = character_role_monarch }
-			is_adult = yes
+			NAND = {
+				has_role = character_role_monarch
+				is_adult = yes
+				NAND = {
+					owner ?= { has_variable = primogeniture_system }
+					is_female = yes
+				}
+			}
 		}
 	}
 
-	cooldown = { months = short_modifier_time }
+	#cooldown = { months = short_modifier_time }
 
 	cancellation_trigger = {
-		is_a_regency_government = no
+		NOT = {
+			ruler ?= {
+				OR = {
+					#Regent is too old
+					AND = {
+						has_role = character_role_regent
+						OR = {
+							age >= 75
+							has_trait = psychological_affliction
+							has_trait = cancer
+							has_trait = senile
+						}
+					}
+					#Regent has already died
+					NOT = { has_role = character_role_regent }
+					#Child King returns
+					AND = {
+						has_role = character_role_monarch
+						OR = {
+							is_adult = no
+							AND = {
+								owner ?= { has_variable = primogeniture_system }
+								is_female = yes
+							}
+						}
+					}
+				}
+				NAND = {
+					has_role = character_role_monarch
+					is_adult = yes
+					NAND = {
+						owner ?= { has_variable = primogeniture_system }
+						is_female = yes
+					}
+				}
+			}
+		}
 	}
 
 	immediate = {
-		ruler ?= {
+		random_scope_character = {
+			limit = {
+				OR = {
+					has_role = character_role_regent
+					AND = { has_role = character_role_monarch is_ruler_of_own_country = no }
+				}
+			}
 			save_scope_as = regent_scope
+		}
+		ruler ?= {
 			interest_group ?= {
 				save_scope_as = ig_candidate_1
 				if = {
@@ -302,10 +362,28 @@ regency.2 = {
 		heir ?= {
 			save_scope_as = monarch_scope
 		}
+		if = {
+			limit = { 
+				ruler ?= { 
+					has_role = character_role_monarch
+					OR = {
+						is_adult = no
+						AND = {
+							owner ?= { has_variable = primogeniture_system }
+							is_female = yes
+						}
+					}
+				} 
+			}
+			ruler ?= { save_scope_as = monarch_scope }
+		}
 	}
 
 	option = {
 		name = regency.2.a
+		trigger = {
+			exists = scope:ig_candidate_1
+		}
 		default_option = yes
 		if = {
 			limit = {
@@ -351,6 +429,10 @@ regency.2 = {
 				retire_character = yes
 			}
 		}
+		if = {
+			limit = { exists = scope:monarch_scope }
+			set_heir = scope:monarch_scope
+		}
 	}
 
 	option = {
@@ -372,6 +454,10 @@ regency.2 = {
 				}
 				retire_character = yes
 			}
+		}
+		if = {
+			limit = { exists = scope:monarch_scope }
+			set_heir = scope:monarch_scope
 		}
 	}
 
@@ -395,6 +481,10 @@ regency.2 = {
 				retire_character = yes
 			}
 		}
+		if = {
+			limit = { exists = scope:monarch_scope }
+			set_heir = scope:monarch_scope
+		}
 	}
 
 	option = {
@@ -415,6 +505,10 @@ regency.2 = {
 				}
 				retire_character = yes
 			}
+		}
+		if = {
+			limit = { exists = scope:monarch_scope }
+			set_heir = scope:monarch_scope
 		}
 	}
 	
