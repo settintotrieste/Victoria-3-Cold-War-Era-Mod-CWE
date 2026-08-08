@@ -50,6 +50,65 @@ wedding.1 = {
 				remove_variable = getting_married
 			}
 		}
+		
+		#Transfer character
+		if = {
+			limit = {
+				is_subject_of = scope:foreign_ruler_1.owner
+				scope:foreign_ruler_1.owner = { NOT = { THIS = ROOT } }
+			}
+			scope:royal_marriage_character ?= {
+				set_variable = prince_consort_character
+				set_variable = is_married
+				transfer_character = scope:foreign_ruler_1.owner
+			}
+		}
+		else_if = {
+			limit = { 
+				country_rank > scope:foreign_ruler_1.owner.country_rank
+				scope:foreign_ruler_1.owner = { NOT = { THIS = ROOT } }
+			}
+			scope:foreign_ruler_1 ?= { 
+				transfer_character = ROOT
+				set_variable = prince_consort_character
+				set_variable = is_married
+				add_character_role = character_role_prince
+				set_character_as_royal = yes
+			}
+		}
+		else_if = {
+			limit = { 
+				scope:foreign_ruler_1 ?= { is_female = yes }
+				scope:foreign_ruler_1.owner = { NOT = { THIS = ROOT } }
+			}
+			scope:foreign_ruler_1 ?= { 
+				transfer_character = ROOT
+				set_variable = prince_consort_character
+				set_variable = is_married
+				add_character_role = character_role_prince
+				set_character_as_royal = yes
+			}
+		}
+		else_if = {
+			limit = { 
+				scope:foreign_ruler_1 ?= { is_female = no }
+				scope:foreign_ruler_1.owner = { NOT = { THIS = ROOT } }
+			}
+			scope:royal_marriage_character ?= {
+				set_variable = prince_consort_character
+				set_variable = is_married
+				transfer_character = scope:foreign_ruler_1.owner 
+			}
+		}
+		else = {
+			scope:foreign_ruler_1 ?= {
+				set_variable = prince_consort_character
+				set_variable = is_married
+				add_character_role = character_role_prince
+				set_character_as_royal = yes
+			}
+		}
+		
 	}
 
 	option = { # public wedding for the masses
@@ -60,6 +119,65 @@ wedding.1 = {
 				days = very_long_modifier_time
 			}
 		}
+		
+		#Transfer character
+		if = {
+			limit = {
+				is_subject_of = scope:foreign_ruler_1.owner
+				scope:foreign_ruler_1.owner = { NOT = { THIS = ROOT } }
+			}
+			scope:royal_marriage_character ?= {
+				set_variable = prince_consort_character
+				set_variable = is_married
+				transfer_character = scope:foreign_ruler_1.owner
+			}
+		}
+		else_if = {
+			limit = { 
+				country_rank > scope:foreign_ruler_1.owner.country_rank
+				scope:foreign_ruler_1.owner = { NOT = { THIS = ROOT } }
+			}
+			scope:foreign_ruler_1 ?= { 
+				transfer_character = ROOT
+				set_variable = prince_consort_character
+				set_variable = is_married
+				add_character_role = character_role_prince
+				set_character_as_royal = yes
+			}
+		}
+		else_if = {
+			limit = { 
+				scope:foreign_ruler_1 ?= { is_female = yes }
+				scope:foreign_ruler_1.owner = { NOT = { THIS = ROOT } }
+			}
+			scope:foreign_ruler_1 ?= { 
+				transfer_character = ROOT
+				set_variable = prince_consort_character
+				set_variable = is_married
+				add_character_role = character_role_prince
+				set_character_as_royal = yes
+			}
+		}
+		else_if = {
+			limit = { 
+				scope:foreign_ruler_1 ?= { is_female = no }
+				scope:foreign_ruler_1.owner = { NOT = { THIS = ROOT } }
+			}
+			scope:royal_marriage_character ?= {
+				set_variable = prince_consort_character
+				set_variable = is_married
+				transfer_character = scope:foreign_ruler_1.owner 
+			}
+		}
+		else = {
+			scope:foreign_ruler_1 ?= {
+				set_variable = prince_consort_character
+				set_variable = is_married
+				add_character_role = character_role_prince
+				set_character_as_royal = yes
+			}
+		}
+		
 	}
 }
 
@@ -470,7 +588,9 @@ wedding.2 = {
 
 	option = { # marry noble 1
 		name = wedding.2.a
-		default_option = yes
+		trigger = {
+			exists = scope:marriage_country_1
+		}
 		scope:marriage_country_1 = {
 			scope:foreign_ruler_1 ?= {
 				set_variable = marriage_target
@@ -531,6 +651,112 @@ wedding.2 = {
 		}
 		
 	}
+	
+	option = { # marry noble 3
+		name = wedding.2.d
+		default_option = yes
+		trigger = {
+			any_scope_character = {
+				
+				has_role_of_type = magnate
+				is_noble = yes
+				
+				#Is of a marryable age
+				is_adult = yes
+				trigger_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = no } }
+					age < 50
+				}
+				trigger_else_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = yes } }
+					age < 40
+				}
+				
+				#Is of correct gender or gender orientation
+				trigger_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = no } }
+					is_female = yes
+					NOT = { has_trait = homosexual_character }
+				}
+				trigger_else_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = yes } }
+					is_female = no
+					NOT = { has_trait = homosexual_character }
+				}
+				
+				#Shares same religion
+				religion ?= { is_state_religion = scope:actor }
+				
+				#Shares similar culture
+				culture ?= { shares_heritage_trait_group_with_any_primary_culture = scope:actor }
+				
+				#Not already a target
+				custom_tooltip = {
+					text = is_not_married.tt
+					NOT = { has_variable = spouse_seeker }
+					NOT = { has_variable = is_married }
+					NOT = { has_variable = marriage_target }
+				}
+				
+			}
+		}
+		random_scope_character = {
+			limit = {
+			
+				has_role_of_type = magnate
+				is_noble = yes
+				
+				#Is of a marryable age
+				is_adult = yes
+				trigger_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = no } }
+					age < 50
+				}
+				trigger_else_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = yes } }
+					age < 40
+				}
+				
+				#Is of correct gender or gender orientation
+				trigger_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = no } }
+					is_female = yes
+					NOT = { has_trait = homosexual_character }
+				}
+				trigger_else_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = yes } }
+					is_female = no
+					NOT = { has_trait = homosexual_character }
+				}
+				
+				#Shares same religion
+				religion ?= { is_state_religion = scope:actor }
+				
+				#Shares similar culture
+				culture ?= { shares_heritage_trait_group_with_any_primary_culture = scope:actor }
+				
+				#Not already a target
+				custom_tooltip = {
+					text = is_not_married.tt
+					NOT = { has_variable = spouse_seeker }
+					NOT = { has_variable = is_married }
+					NOT = { has_variable = marriage_target }
+				}
+				
+			}
+			set_variable = marriage_target
+			save_scope_as = foreign_ruler_1
+			owner ?= {
+				save_scope_as = marriage_country 
+			}
+		}
+		trigger_event = {
+			id = wedding.1
+			popup = yes
+		}
+		
+	}
+	
 }
 
 wedding.3 = {

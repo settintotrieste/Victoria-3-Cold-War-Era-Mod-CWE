@@ -2173,10 +2173,22 @@ generate_monarch_for_country = {
 					limit = {
 						any_scope_character = {
 							has_role = character_role_prince
+							NOT = { has_variable = prince_consort_character }
+							NAND = {
+								has_variable = primogeniture_system
+								is_female = yes
+							}
 						}
 					}
 					random_scope_character = {
-						limit = { has_role = character_role_prince }
+						limit = { 
+							has_role = character_role_prince
+							NOT = { has_variable = prince_consort_character }
+							NAND = {
+								has_variable = primogeniture_system
+								is_female = yes
+							}
+						}
 						set_character_as_monarch = yes
 					}
 				}
@@ -2252,16 +2264,17 @@ generate_monarch_for_country = {
 	if = {
 		limit = {
 			has_law_or_variant = law_type:law_HOS_monarch
-			is_a_colonial_government = no
+			ruler_is_governor_general = no
 			shares_same_monarch = no
-			is_a_regency_government = no
-			NOT = { 
-				any_scope_character = {
-					has_role = character_role_prince
-				}
-			}
 			any_scope_character = {
-				has_role = character_role_monarch
+				OR = {
+					has_role = character_role_monarch
+					AND = {
+						has_role = character_role_regent
+						has_role = character_role_prince
+						has_variable = prince_consort_character
+					}
+				}
 				age >= 35
 				NOT = { has_trait = homosexual_character }
 			}
@@ -2338,6 +2351,20 @@ set_character_as_regent = {
 	
 	if = {
 		limit = { is_adult = yes }
+		
+		#Clean up roles
+		if = {
+			limit = { has_role = character_role_monarch }
+			remove_character_role = character_role_monarch
+		}
+		if = {
+			limit = { has_role = character_role_monarch_elective }
+			remove_character_role = character_role_monarch_elective
+		}
+		if = {
+			limit = { has_role = character_role_viceroy }
+			remove_character_role = character_role_viceroy
+		}
 		
 		#Set as regent
 		save_scope_as = THIS_scope
@@ -2760,15 +2787,24 @@ generate_viceroy_for_country = {
 
 set_character_as_viceroy = {
 	
-	if = { 
-		limit = { 
-			owner ?= { ruler_is_governor_general = yes } 
+	if = {
+		limit = {
+			owner ?= { ruler_is_governor_general = yes }
 			is_ruler_of_own_country = no
 		}
 		set_character_as_ruler = yes
 		if = {
 			limit = { has_role_of_type = agitator }
 			remove_character_role = agitator
+		}
+	}
+	owner ?= {
+		every_scope_character = {
+			limit = {
+				has_role = character_role_viceroy
+				}
+				remove_character_role = character_role_viceroy
+			}
 		}
 	}
 	if = {
@@ -2794,6 +2830,7 @@ set_character_as_royal = {
 				has_role = character_role_monarch
 				has_role = character_role_monarch_elective
 			}
+			has_role = character_role_prince
 		}
 		add_character_role = character_role_prince
 	}
