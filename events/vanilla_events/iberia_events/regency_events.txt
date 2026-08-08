@@ -25,20 +25,35 @@ regency.1 = {
 		is_a_regime_monarchy = yes
 		is_a_regency_government = no
 		ruler ?= {
-			is_adult = no
+			has_role = character_role_monarch
+			OR = {
+				is_adult = no
+				AND = {
+					owner ?= { has_variable = primogeniture_system }
+					is_female = yes
+				}
+			}
 			NOT = { has_variable = regency_complete }
 		}
+		
+		NOT = { has_variable = replacing_regency }
 		
 	}
 
 	cancellation_trigger = {
-		OR = {
-			is_a_regime_monarchy = no
-			scope:monarch_scope ?= {
-				is_adult = yes
+		NAND = {
+			is_a_regime_monarchy = yes
+			is_a_regency_government = no
+			ruler ?= {
+				has_role = character_role_monarch
+				OR = {
+					is_adult = no
+					AND = {
+						owner ?= { has_variable = primogeniture_system }
+						is_female = yes
+					}
+				}
 			}
-			ruler ?= { is_adult = yes }
-			is_a_regency_government = yes
 		}
 	}
 
@@ -198,24 +213,74 @@ regency.2 = {
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 
 	trigger = {
+		
+		#Regency
 		is_a_regency_government = yes
-		ruler ?= {
+		
+		#Regent conditions
+		OR = {
+			
+			#Regent has been removed
+			NOT = { any_scope_character = { has_role = character_role_regent } }
+		
+			#Regent is incapacitated
+			any_scope_character = {
+				has_role = character_role_regent
+				age >= 75
+				OR = {
+					has_trait = psychological_affliction
+					has_trait = cancer
+					has_trait = senile
+				}
+			}
+			
+			#Child Monarch is ruler - need regent
+			any_scope_character = {
+				has_role = character_role_monarch
+				is_ruler_of_own_country = yes
+				OR = {
+					is_adult = no
+					AND = {
+						owner ?= { has_variable = primogeniture_system }
+						is_female = yes
+					}
+				}
+			}
+			
+		}
+		
+	}
+
+	#cooldown = { months = short_modifier_time }
+
+	cancellation_trigger = {
+		NAND = {
+			
+			has_law_or_variant = law_type:law_HOS_monarch
+			shares_same_monarch = no
+			ruler_is_governor_general = no
+			
+			#Regent conditions
 			OR = {
-				#Regent is too old
-				AND = {
+				
+				#Regent has been removed
+				NOT = { any_scope_character = { has_role = character_role_regent } }
+			
+				#Regent is incapacitated
+				any_scope_character = {
 					has_role = character_role_regent
+					age >= 75
 					OR = {
-						age >= 75
 						has_trait = psychological_affliction
 						has_trait = cancer
 						has_trait = senile
 					}
 				}
-				#Regent has already died
-				NOT = { has_role = character_role_regent }
-				#Child King returns
-				AND = {
+				
+				#Child Monarch is ruler - need regent
+				any_scope_character = {
 					has_role = character_role_monarch
+					is_ruler_of_own_country = yes
 					OR = {
 						is_adult = no
 						AND = {
@@ -224,71 +289,26 @@ regency.2 = {
 						}
 					}
 				}
+				
 			}
-			NAND = {
-				has_role = character_role_monarch
-				is_adult = yes
-				NAND = {
-					owner ?= { has_variable = primogeniture_system }
-					is_female = yes
-				}
-			}
-		}
-	}
-
-	#cooldown = { months = short_modifier_time }
-
-	cancellation_trigger = {
-		NOT = {
-			ruler ?= {
-				OR = {
-					#Regent is too old
-					AND = {
-						has_role = character_role_regent
-						OR = {
-							age >= 75
-							has_trait = psychological_affliction
-							has_trait = cancer
-							has_trait = senile
-						}
-					}
-					#Regent has already died
-					NOT = { has_role = character_role_regent }
-					#Child King returns
-					AND = {
-						has_role = character_role_monarch
-						OR = {
-							is_adult = no
-							AND = {
-								owner ?= { has_variable = primogeniture_system }
-								is_female = yes
-							}
-						}
-					}
-				}
-				NAND = {
-					has_role = character_role_monarch
-					is_adult = yes
-					NAND = {
-						owner ?= { has_variable = primogeniture_system }
-						is_female = yes
-					}
-				}
-			}
+			
 		}
 	}
 
 	immediate = {
 		random_scope_character = {
-			limit = {
-				OR = {
-					has_role = character_role_regent
-					AND = { has_role = character_role_monarch is_ruler_of_own_country = no }
-				}
-			}
+			limit = { has_role = character_role_regent }
 			save_scope_as = regent_scope
 		}
-		ruler ?= {
+		random_scope_character = {
+			limit = { has_role = character_role_monarch }
+			save_scope_as = monarch_scope
+		}
+		random_scope_character = {
+			limit = { 
+				is_ruler_of_own_country = yes
+				NOT = { has_role = character_role_monarch }
+			}
 			interest_group ?= {
 				save_scope_as = ig_candidate_1
 				if = {
@@ -359,24 +379,7 @@ regency.2 = {
 			check_range_bounds = no
 			save_scope_as = ig_candidate_4
 		}
-		heir ?= {
-			save_scope_as = monarch_scope
-		}
-		if = {
-			limit = { 
-				ruler ?= { 
-					has_role = character_role_monarch
-					OR = {
-						is_adult = no
-						AND = {
-							owner ?= { has_variable = primogeniture_system }
-							is_female = yes
-						}
-					}
-				} 
-			}
-			ruler ?= { save_scope_as = monarch_scope }
-		}
+		set_variable = { name = replacing_regency months = 2 }
 	}
 
 	option = {
@@ -430,7 +433,10 @@ regency.2 = {
 			}
 		}
 		if = {
-			limit = { exists = scope:monarch_scope }
+			limit = {
+				exists = scope:monarch_scope
+				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+			}
 			set_heir = scope:monarch_scope
 		}
 	}
@@ -456,7 +462,10 @@ regency.2 = {
 			}
 		}
 		if = {
-			limit = { exists = scope:monarch_scope }
+			limit = {
+				exists = scope:monarch_scope
+				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+			}
 			set_heir = scope:monarch_scope
 		}
 	}
@@ -482,7 +491,10 @@ regency.2 = {
 			}
 		}
 		if = {
-			limit = { exists = scope:monarch_scope }
+			limit = {
+				exists = scope:monarch_scope
+				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+			}
 			set_heir = scope:monarch_scope
 		}
 	}
@@ -507,7 +519,10 @@ regency.2 = {
 			}
 		}
 		if = {
-			limit = { exists = scope:monarch_scope }
+			limit = {
+				exists = scope:monarch_scope
+				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+			}
 			set_heir = scope:monarch_scope
 		}
 	}
@@ -534,19 +549,34 @@ regency.3 = {
 
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 
-	cooldown = { days = 100 }
+	#cooldown = { days = 100 }
 
 	trigger = {
+		
+		#Monarchy
 		is_a_regency_government = yes
-		OR = {
-			#Heirs comes of age while regent is still alive
-			AND = {
-				ruler ?= { has_role = character_role_regent }
-				heir ?= { is_adult = yes }
+		
+		#Heirs comes of age while regent is still alive
+		any_scope_character = {
+			NOT = { has_role = character_role_regent }
+			has_role = character_role_monarch
+			is_adult = yes
+			NAND = {
+				owner ?= { has_variable = primogeniture_system }
+				is_female = yes
 			}
-			#Regent died but heir is of age
-			any_scope_character ?= {
-				NOT = { has_role = character_role_regent }
+		}
+		
+	}
+
+	cancellation_trigger = {
+		NAND = {
+		
+			#Monarchy
+			is_a_regency_government = yes
+			
+			#Heirs comes of age while regent is still alive
+			any_scope_character = {
 				has_role = character_role_monarch
 				is_adult = yes
 				NAND = {
@@ -554,29 +584,7 @@ regency.3 = {
 					is_female = yes
 				}
 			}
-		}
-	}
-
-	cancellation_trigger = {
-		NAND = {
-			is_a_regency_government = yes
-			OR = {
-				#Heirs comes of age while regent is still alive
-				AND = {
-					ruler ?= { has_role = character_role_regent }
-					heir ?= { is_adult = yes }
-				}
-				#Regent died but heir is of age
-				any_scope_character ?= {
-					NOT = { has_role = character_role_regent }
-					has_role = character_role_monarch
-					is_adult = yes
-					NAND = {
-						owner ?= { has_variable = primogeniture_system }
-						is_female = yes
-					}
-				}
-			}
+			
 		}
 	}
 
@@ -604,11 +612,15 @@ regency.3 = {
 	option = {
 		name = regency.3.a
 		default_option = yes
+		
+		#End Regency
 		remove_regency_modifier = yes
 		scope:regent_scope ?= {
 			remove_character_role = character_role_regent
 			clean_up_regent_character = yes
 		}
+		
+		#Crown monarch
 		scope:monarch_scope ?= {
 			set_variable = regency_complete
 			set_character_as_monarch = yes
@@ -622,6 +634,7 @@ regency.3 = {
 			}
 			scope:monarch_scope ?= { remove_variable = regency_complete }
 		}
+		
 	}
 	
 }
