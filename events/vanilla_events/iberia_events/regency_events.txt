@@ -22,18 +22,30 @@ regency.1 = {
 	trigger = {
 	
 		# Is a monarchy, ruler is under age of majority
-		is_a_regime_monarchy = yes
-		is_a_regency_government = no
-		ruler ?= {
-			has_role = character_role_monarch
-			OR = {
-				is_adult = no
-				AND = {
+		has_law_or_variant = law_type:law_HOS_monarch
+		ruler_is_governor_general = no
+		shares_same_monarch = no
+		OR = {
+			is_a_regency_government = no
+			ruler ?= {
+				OR = {
+					is_adult = no
+					AND = {
+						owner ?= { has_variable = primogeniture_system }
+						is_female = yes
+					}
+				}
+			}
+		}
+		NOT = {
+			any_scope_character = {
+				has_role = character_role_monarch
+				is_adult = yes
+				NAND = {
 					owner ?= { has_variable = primogeniture_system }
 					is_female = yes
 				}
 			}
-			NOT = { has_variable = regency_complete }
 		}
 		
 		NOT = { has_variable = replacing_regency }
@@ -42,13 +54,26 @@ regency.1 = {
 
 	cancellation_trigger = {
 		NAND = {
-			is_a_regime_monarchy = yes
-			is_a_regency_government = no
-			ruler ?= {
-				has_role = character_role_monarch
-				OR = {
-					is_adult = no
-					AND = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			ruler_is_governor_general = no
+			shares_same_monarch = no
+			OR = {
+				is_a_regency_government = no
+				ruler ?= {
+					OR = {
+						is_adult = no
+						AND = {
+							owner ?= { has_variable = primogeniture_system }
+							is_female = yes
+						}
+					}
+				}
+			}
+			NOT = {
+				any_scope_character = {
+					has_role = character_role_monarch
+					is_adult = yes
+					NAND = {
 						owner ?= { has_variable = primogeniture_system }
 						is_female = yes
 					}
@@ -120,24 +145,52 @@ regency.1 = {
 			check_range_bounds = no
 			save_scope_as = ig_candidate_4
 		}
-		ruler ?= {
-			save_scope_as = monarch_scope
+		if = {
+			limit = {
+				NOT = {
+					any_scope_character = {
+						has_role = character_role_monarch
+					}
+				}
+			}
+			ordered_scope_character = {
+				limit = {
+					has_role = character_role_prince
+					NOT = { has_variable = prince_consort_character }
+					NAND = {
+						owner ?= { has_variable = primogeniture_system }
+						is_female = yes
+					}
+				}
+				order_by = age
+				position = 0
+				check_range_bounds = no
+				save_scope_as = monarch_scope
+			}
+		}
+		else = {
+			random_scope_character = {
+				limit = { has_role = character_role_monarch }
+				save_scope_as = monarch_scope
+			}
 		}
 	}
 
 	option = {
 		name = regency.1.a
 		default_option = yes
-		add_regency_modifier = yes
 		set_variable = { name = hide_ruler_change_notification days = 3 }
 		scope:ig_candidate_1.leader = {
-			set_character_as_ruler = yes
-			designate_character_as_regent = {
-				YEARS = 0
-			}
-			hidden_effect = { set_character_as_regent = yes }
+			set_character_as_regent = yes
 		}
-		set_heir = scope:monarch_scope
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOS_monarch
+				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+				exists = scope:monarch_scope
+			}
+			set_heir = scope:monarch_scope
+		}
 	}
 
 	option = {
@@ -145,16 +198,18 @@ regency.1 = {
 		trigger = {
 			exists = scope:ig_candidate_2
 		}
-		add_regency_modifier = yes
 		set_variable = { name = hide_ruler_change_notification days = 3 }
 		scope:ig_candidate_2.leader = {
-			set_character_as_ruler = yes
-			designate_character_as_regent = {
-				YEARS = 0
-			}
-			hidden_effect = { set_character_as_regent = yes }
+			set_character_as_regent = yes
 		}
-		set_heir = scope:monarch_scope
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOS_monarch
+				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+				exists = scope:monarch_scope
+			}
+			set_heir = scope:monarch_scope
+		}
 	}
 
 	option = {
@@ -162,16 +217,18 @@ regency.1 = {
 		trigger = {
 			exists = scope:ig_candidate_3
 		}
-		add_regency_modifier = yes
 		set_variable = { name = hide_ruler_change_notification days = 3 }
 		scope:ig_candidate_3.leader = {
-			set_character_as_ruler = yes
-			designate_character_as_regent = {
-				YEARS = 0
-			}
-			hidden_effect = { set_character_as_regent = yes }
+			set_character_as_regent = yes
 		}
-		set_heir = scope:monarch_scope
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOS_monarch
+				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+				exists = scope:monarch_scope
+			}
+			set_heir = scope:monarch_scope
+		}
 	}
 
 	option = {
@@ -179,16 +236,18 @@ regency.1 = {
 		trigger = {
 			exists = scope:ig_candidate_4
 		}
-		add_regency_modifier = yes
 		set_variable = { name = hide_ruler_change_notification days = 3 }
 		scope:ig_candidate_4.leader = {
-			set_character_as_ruler = yes
-			designate_character_as_regent = {
-				YEARS = 0
-			}
-			hidden_effect = { set_character_as_regent = yes }
+			set_character_as_regent = yes
 		}
-		set_heir = scope:monarch_scope
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOS_monarch
+				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+				exists = scope:monarch_scope
+			}
+			set_heir = scope:monarch_scope
+		}
 	}
 }
 
@@ -256,7 +315,7 @@ regency.2 = {
 	cancellation_trigger = {
 		NAND = {
 			
-			has_law_or_variant = law_type:law_HOS_monarch
+			is_a_regency_government = yes
 			
 			#Regent conditions
 			OR = {
