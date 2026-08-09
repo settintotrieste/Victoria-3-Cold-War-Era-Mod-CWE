@@ -1486,3 +1486,104 @@ intimidate_character = {
 	}
 	
 }
+
+strip_prince_titles_character = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_republican.dds"
+	clicksound = "event:/SFX/UI/Military/command_remove"
+
+	potential = {
+	
+		#Character is owned by THIS
+		owner ?= scope:actor
+		
+		#Character is a Prince
+		has_role = character_role_prince
+		NOR = {
+			has_role = character_role_monarch
+			has_role = character_role_regent
+		}
+		owner ?= { has_law_or_variant = law_type:law_HOS_monarch }
+		
+		#Not an excluded character
+		is_in_exile_pool = no
+		is_in_void = no
+		
+	}
+
+	possible = {
+		
+		#Character is not too powerful
+		is_ruler_of_own_country = no
+		
+		#Character has a weakness
+		OR = {
+		
+			#Character has low loyalty
+			AND = {
+				loyalty < 25
+				owner ?= {
+					ruler ?= { has_role = character_role_monarch }
+					custom_tooltip = {
+						text = government_has_legislative_super_majority.tt
+						government_has_legislative_super_majority = yes
+					}
+				}
+			}
+			
+			#Character has committed a crime
+			has_trait = grifter
+			has_modifier = framed_for_crimes
+			has_modifier = obstructed_justice_crime
+			has_modifier = corruption_scandal_character_modifier
+			has_modifier = accused_of_crimes
+			has_modifier = indicted_character
+			
+		}
+		
+		#Character is not pre-occupied
+		is_busy = no
+		is_in_battle = no
+		
+	}
+
+	effect = {
+		
+		#Strip royal title
+		clean_up_prince_character = yes
+		
+		#Domestic effect
+		owner ?= {
+			add_radicals = {
+				value = medium_radicals
+				interest_group = prev.interest_group
+			}
+		}
+		
+	}
+
+	cooldown = { months = 1 }
+	show_confirmation_box = yes
+	
+	should_ai_evaluate = {
+		always = no
+	}
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = {
+				interest_group ?= {
+					ig_approval <= -10
+				}
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				is_historical = yes
+			}
+			add = -1000
+		}
+	}
+	
+}

@@ -3532,3 +3532,154 @@ historical_alliances_system.37 = {
     }
 
 }
+
+# Indo-Sikkimese Treaty - HND
+historical_alliances_system.38 = {
+    type = country_event
+	placement = c:SIK
+
+    title = HND_Indo_Sikkimese_Treaty.t 						# Title of the event; ADD LOCALISATION
+    desc = HND_Indo_Sikkimese_Treaty.d 							# Description of the event; ADD LOCALISATION
+    #flavor = HND_Indo_Sikkimese_Treaty.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_military_parade" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:HND ?= this
+		game_date >= 1950.12.5									# START DATE: Date colony became self governing ****
+		game_date < 1960.12.5									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_democracy = yes									# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_not_neutral = yes
+		
+		# Event has not been fired before
+		NOT = { has_variable = HND_Indo_Sikkimese_Treaty_hae }	# CHANGE ****
+		
+		#Recipient conditions
+		exists = c:SIK
+		c:SIK ?= {
+			is_a_monarchy = yes									# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no		
+			is_at_war = no										# war = no
+			
+			is_not_neutral = yes
+			
+			is_subject_of = ROOT
+		}
+		NOT = { has_truce_with = c:SIK }
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = HND_Indo_Sikkimese_Treaty_hae			# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1				# Accept
+        highlighted_option = yes
+		
+		#Option to accept
+		c:SIK ?= {
+			trigger_event = { id = historical_alliances_system.39 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# Indo-Sikkimese Treaty - SIK
+historical_alliances_system.39 = {
+    type = country_event
+	placement = c:HND
+
+    title = HND_Indo_Sikkimese_Treaty.t 						# Title of the event; ADD LOCALISATION
+    desc = HND_Indo_Sikkimese_Treaty.d 							# Description of the event; ADD LOCALISATION
+    #flavor = HND_Indo_Sikkimese_Treaty.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_military_parade" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		
+    }
+	
+	immediate = {
+		
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1					# Accept
+        highlighted_option = yes
+		
+		#Become puppet of India
+		hidden_effect = { make_independent = yes }
+		c:HND ?= {
+			create_diplomatic_pact = {
+				country = ROOT
+				type = puppet
+			}
+		}
+		
+		#Gain relations
+		change_relations = { 
+			country = c:HND 
+			value = 100 
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		#Lose relations
+		change_relations = { 
+			country = c:HND 
+			value = -100 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
