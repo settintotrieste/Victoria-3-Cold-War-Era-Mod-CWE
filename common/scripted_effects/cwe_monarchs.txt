@@ -2316,19 +2316,6 @@ set_character_as_monarch = {
 		set_variable = once_a_monarch
 	}
 	
-	#Set as ruler if applicable
-	if = {
-		limit = {
-			owner ?= { 
-				has_law_or_variant = law_type:law_HOS_monarch
-				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
-				is_a_regency_government = no
-			}
-			is_ruler_of_own_country = no
-		}
-		set_character_as_ruler = yes
-	}
-	
 	#Clean up regency
 	if = {
 		limit = { has_role = character_role_regent }
@@ -2339,8 +2326,30 @@ set_character_as_monarch = {
 		remove_modifier = regent_character
 	}
 	if = {
-		limit = { is_adult = yes }
+		limit = { 
+			is_adult = yes
+			NAND = {
+				owner ?= { has_variable = primogeniture_system }
+				is_female = yes
+			}
+		}
 		owner ?= { remove_regency_modifier = yes }
+	}
+	
+	#Set as ruler if applicable
+	if = {
+		limit = {
+			owner ?= { 
+				has_law_or_variant = law_type:law_HOS_monarch
+				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+				OR = {
+					is_a_regency_government = no
+					ruler ?= { has_role = character_role_regent }
+				}
+			}
+			is_ruler_of_own_country = no
+		}
+		set_character_as_ruler = yes
 	}
 
 }
