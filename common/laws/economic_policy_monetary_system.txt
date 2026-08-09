@@ -1,6 +1,6 @@
 #### Represents Financial & Industrial Regulations ####
 
-law_gold_standard = {
+law_independent_central_bank = {
 	group = lawgroup_monetary_system
 	
 	icon = "gfx/interface/icons/law_icons/consumption_based_taxation.dds"
@@ -10,98 +10,47 @@ law_gold_standard = {
 		#Not part of a Currency Union
 		custom_tooltip = {
 			text = je_bretton_woods_system_member.4.tt
-			NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = currency_union is_initiator = yes } } }
-		}
-		
-	}
-	
-	modifier = {
-		building_group_bg_gold_mining_tax_mult = 0.20
-	}
-	
-	possible_political_movements = {
-		#law_gold_standard
-		law_semi_gold_standard
-		law_fiat_standard
-	}
-	
-	#This law is not worth revolting over
-	pop_support = { value = 0 }
-	
-	ai_enact_weight_modifier = { #Petitions
-		value = 0
-		
-		if = {
-			limit = { 
-				has_journal_entry = je_government_petition
-				has_variable = desired_law_var
-                scope:law = var:desired_law_var
-			}
-			add = 750
-		}
-	}
-	
-}
-
-law_semi_gold_standard = {
-	group = lawgroup_monetary_system
-	
-	icon = "gfx/interface/icons/law_icons/consumption_based_taxation.dds"
-	
-	can_enact = {
-		
-		#Not part of a Currency Union
-		custom_tooltip = {
-			text = je_bretton_woods_system_member.4.tt
-			NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = currency_union is_initiator = yes } } }
-		}
-		
-	}
-	
-	modifier = {
-		building_group_bg_gold_mining_tax_mult = 0.10
-	
-		country_minting_mult = 0.10
-		country_loan_interest_rate_add = 0.05
-	}
-	
-	possible_political_movements = {
-		law_gold_standard
-		#law_semi_gold_standard
-		law_fiat_standard
-	}
-	
-	#This law is not worth revolting over
-	pop_support = { value = 0 }
-	
-	ai_enact_weight_modifier = { #Petitions
-		value = 0
-		
-		if = {
-			limit = { 
-				has_journal_entry = je_government_petition
-				has_variable = desired_law_var
-                scope:law = var:desired_law_var
-			}
-			add = 750
-		}
-		if = {
-			limit = { 
-				#There is no longer a bretton woods leader
-				NOT = { 
-					any_country = {
-						has_modifier = gold_standard_leader
-					}
+			NOT = {
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = currency_union
+					second_country = ROOT
 				}
 			}
-			add = -500
+		}
+		
+	}
+	
+	on_activate = {
+		custom_tooltip = je_central_bank_effect.tt
+	}
+	
+	modifier = {
+		
+	}
+	
+	possible_political_movements = {
+		#law_independent_central_bank
+		law_semi_independent_central_bank
+		law_non_independent_central_bank
+	}
+	
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+		
+		if = {
+			limit = { 
+				has_journal_entry = je_government_petition
+				has_variable = desired_law_var
+                scope:law = var:desired_law_var
+			}
+			add = 750
 		}
 		
 	}
 	
 }
 
-law_fiat_standard = {
+law_non_independent_central_bank = {
 	group = lawgroup_monetary_system
 	
 	icon = "gfx/interface/icons/law_icons/consumption_based_taxation.dds"
@@ -111,24 +60,29 @@ law_fiat_standard = {
 		#Not part of a Currency Union
 		custom_tooltip = {
 			text = je_bretton_woods_system_member.4.tt
-			NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = currency_union is_initiator = yes } } }
+			NOT = {
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = currency_union
+					second_country = ROOT
+				}
+			}
 		}
 		
 	}
 	
+	on_activate = {
+		custom_tooltip = je_central_bank_effect.tt
+	}
+	
 	modifier = {
-		country_minting_mult = 0.20
-		country_loan_interest_rate_add = 0.10
+		
 	}
 	
 	possible_political_movements = {
-		law_gold_standard
-		law_semi_gold_standard
-		#law_fiat_standard
+		law_independent_central_bank
+		law_semi_independent_central_bank
+		#law_non_independent_central_bank
 	}
-	
-	#This law is not worth revolting over
-	pop_support = { value = 0 }
 	
 	ai_enact_weight_modifier = { #Petitions
 		value = 0
@@ -140,43 +94,6 @@ law_fiat_standard = {
                 scope:law = var:desired_law_var
 			}
 			add = 750
-		}
-		if = {
-			limit = { 
-			
-				OR = {
-				
-					#There is no longer a bretton woods leader
-					NOT = { 
-						any_country = {
-							has_modifier = gold_standard_leader
-						}
-					}
-					
-					#Economy is bad
-					in_default = yes
-					has_healthy_economy = no
-					
-					#Nixon Shock, 1971
-					AND = {
-						has_modifier = gold_standard_leader
-						game_date >= 1971.8.15
-						historical_railroading_active = yes
-					}
-					
-					#Scripted
-					AND = {
-						game_date >= 1971.8.15
-						any_country = {
-							has_modifier = gold_standard_leader
-							has_global_highest_gdp = no
-						}
-					}
-				
-				}
-				
-			}
-			add = 1000
 		}
 		
 	}

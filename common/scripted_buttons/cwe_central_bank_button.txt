@@ -5,7 +5,7 @@ je_central_bank_give_independence_button = {
 	visible = { 
 		
 		#Country does not already has an independent central bank
-		NOT = { has_variable = independent_central_bank }
+		NOT = { has_law_or_variant = law_type:law_independent_central_bank }
 		
 		#Not in a superstate currency union
 		#NOT = { has_variable = superstate_currency_union }
@@ -86,7 +86,7 @@ je_central_bank_remove_independence_button = {
 	visible = { 
 		
 		#Country already has an independent central bank
-		has_variable = independent_central_bank
+		has_law_or_variant = law_type:law_independent_central_bank
 		
 	}
 
@@ -121,7 +121,7 @@ je_central_bank_remove_independence_button = {
 	effect = {
 		
 		#Make Central Bank not independent
-		remove_variable = independent_central_bank
+		activate_law = law_type:law_non_independent_central_bank
 		
 		#Only 1 time per year
 		set_variable = { name = central_bank_timer years = 1 }
@@ -173,18 +173,16 @@ je_central_bank_increase_CBIR_button = {
 	name = "je_central_bank_increase_CBIR_button"
 	desc = "je_central_bank_increase_CBIR_button_desc"
 
-	visible = { 
-		
-		#Country does not already have an independent central bank
-		NOT = { has_variable = independent_central_bank }
-		
-		#Not in a superstate currency union
-		#NOT = { has_variable = superstate_currency_union }
+	visible = {
 		
 	}
 
 	possible = {
 	
+		#Country does not already have an independent central bank
+		NOT = { has_law_or_variant = law_type:law_independent_central_bank }
+	
+		#Max
 		NOT = { has_modifier = very_high_cb_interest_rate }
 	
 		#Cabinet agrees with this
@@ -280,18 +278,16 @@ je_central_bank_decrease_CBIR_button = {
 	name = "je_central_bank_decrease_CBIR_button"
 	desc = "je_central_bank_decrease_CBIR_button_desc"
 
-	visible = { 
-		
-		#Country does not already has an independent central bank
-		NOT = { has_variable = independent_central_bank }
-		
-		#Not in a superstate currency union
-		#NOT = { has_variable = superstate_currency_union }
+	visible = {
 		
 	}
 
 	possible = {
 	
+		#Country does not already has an independent central bank
+		NOT = { has_law_or_variant = law_type:law_independent_central_bank }
+	
+		#Max
 		NOT = { has_modifier = very_low_cb_interest_rate }
 	
 		#Cabinet agrees with this
@@ -387,9 +383,7 @@ je_central_bank_quantitative_easing_button = {
 	name = "je_central_bank_quantitative_easing_button"
 	desc = "je_central_bank_quantitative_easing_button_desc"
 
-	visible = { 
-		
-		
+	visible = {
 		
 	}
 
@@ -437,14 +431,14 @@ je_central_bank_increase_monetary_policy_button = {
 	name = "je_central_bank_increase_monetary_policy_button"
 	desc = "je_central_bank_increase_monetary_policy_button_desc"
 
-	visible = { 
-		
-		#Country does not already have an independent central bank
-		NOT = { has_variable = independent_central_bank }
+	visible = {
 		
 	}
 
 	possible = {
+	
+		#Country does not already have an independent central bank
+		NOT = { has_law_or_variant = law_type:law_independent_central_bank }
 	
 		#Cabinet agrees with this
 		custom_tooltip = {
@@ -454,6 +448,9 @@ je_central_bank_increase_monetary_policy_button = {
 		
 		#Not already max
 		NOT = { has_modifier = law_very_expansionary_monetary_policy }
+		
+		#Not part of Bretton Woods System
+		NOT = { has_journal_entry = je_bretton_woods_system_member }
 		
 	}
 
@@ -491,14 +488,14 @@ je_central_bank_decrease_monetary_policy_button = {
 	name = "je_central_bank_decrease_monetary_policy_button"
 	desc = "je_central_bank_decrease_monetary_policy_button_desc"
 
-	visible = { 
-		
-		#Country does not already have an independent central bank
-		NOT = { has_variable = independent_central_bank }
+	visible = {
 		
 	}
 
 	possible = {
+	
+		#Country does not already have an independent central bank
+		NOT = { has_law_or_variant = law_type:law_independent_central_bank }
 	
 		#Cabinet agrees with this
 		custom_tooltip = {
@@ -508,6 +505,9 @@ je_central_bank_decrease_monetary_policy_button = {
 		
 		#Not already max
 		NOT = { has_modifier = law_very_deflationary_monetary_policy }
+		
+		#Not part of Bretton Woods System
+		NOT = { has_journal_entry = je_bretton_woods_system_member }
 		
 	}
 
@@ -532,6 +532,133 @@ je_central_bank_decrease_monetary_policy_button = {
 		else = {
 			activate_law_law_neutral_monetary_policy = yes
 		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+	}
+	
+}
+
+je_central_bank_devalue_currency_system_button = {
+	name = "je_central_bank_devalue_currency_system_button"
+	desc = "je_central_bank_devalue_currency_system_button_desc"
+
+	visible = {
+		
+	}
+
+	possible = {
+	
+		#Cabinet agrees with this
+		custom_tooltip = {
+			text = has_no_low_cabinet_unity.tt
+			NOT = { has_variable = low_cabinet_unity }
+		}
+		
+		#Not already max
+		NOT = { has_modifier = law_fiat_standard }
+		
+		#Timer
+		custom_tooltip = {
+			text = currency_system_timer.tt
+			NOT = { has_variable = currency_system_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		if = {
+			limit = { has_modifier = law_semi_gold_standard }
+			activate_law_law_fiat_standard = yes
+		}
+		else_if = {
+			limit = { has_modifier = law_gold_standard }
+			activate_law_law_semi_gold_standard = yes
+		}
+		else = {
+			activate_law_law_fiat_standard = yes
+		}
+		
+		set_variable = { name = currency_system_timer years = 5 }
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		if = {
+			limit = {
+				NOT = { has_modifier = law_gold_standard }
+				OR = {
+					AND = { 
+						OR = {
+							has_technology_researched = tech_economy_2
+							has_technology_researched = tech_economy_3
+						}
+						NOR = {
+							has_modifier = law_semi_gold_standard
+							has_modifier = law_fiat_standard
+						}
+					}
+				}
+			}
+			add = 10 
+		}
+		if = {
+			limit = { 
+				has_technology_researched = tech_economy_4
+				has_modifier = law_fiat_standard
+			}
+			add = 10 
+		}
+	}
+	
+}
+
+je_central_bank_revalue_currency_system_button = {
+	name = "je_central_bank_revalue_currency_system_button"
+	desc = "je_central_bank_revalue_currency_system_button_desc"
+
+	visible = {
+		
+	}
+
+	possible = {
+	
+		#Cabinet agrees with this
+		custom_tooltip = {
+			text = has_no_low_cabinet_unity.tt
+			NOT = { has_variable = low_cabinet_unity }
+		}
+		
+		#Not already max
+		NOT = { has_modifier = law_gold_standard }
+		
+		#Timer
+		custom_tooltip = {
+			text = currency_system_timer.tt
+			NOT = { has_variable = currency_system_timer }
+		}
+		
+	}
+
+	effect = {
+		
+		if = {
+			limit = { has_modifier = law_fiat_standard }
+			activate_law_law_semi_gold_standard = yes
+		}
+		else_if = {
+			limit = { has_modifier = law_semi_gold_standard }
+			activate_law_law_gold_standard = yes
+		}
+		else = {
+			activate_law_law_gold_standard = yes
+		}
+		
+		set_variable = { name = currency_system_timer years = 5 }
 		
 	}
 	

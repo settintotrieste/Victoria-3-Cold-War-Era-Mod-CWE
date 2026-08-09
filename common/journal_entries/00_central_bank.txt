@@ -3,23 +3,31 @@
 
 	group = je_group_political_organs
 
-	scripted_button = je_central_bank_give_independence_button
-	scripted_button = je_central_bank_remove_independence_button
+	#scripted_button = je_central_bank_give_independence_button
+	#scripted_button = je_central_bank_remove_independence_button
 	
-	scripted_button = je_central_bank_quantitative_easing_button
+	#scripted_button = je_central_bank_quantitative_easing_button
 	
 	scripted_button = je_central_bank_increase_CBIR_button
 	scripted_button = je_central_bank_decrease_CBIR_button
 	
 	scripted_button = je_central_bank_increase_monetary_policy_button
 	scripted_button = je_central_bank_decrease_monetary_policy_button
+	
+	scripted_button = je_central_bank_revalue_currency_system_button
+	scripted_button = je_central_bank_devalue_currency_system_button
 
 	possible = {
 		
 		#Not part of a Currency Union
 		custom_tooltip = {
 			text = je_bretton_woods_system_member.4.tt
-			NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = currency_union is_initiator = yes } } }
+			NOT = {
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = currency_union
+					second_country = ROOT
+				}
+			}
 		}
 		
 	}
@@ -36,6 +44,28 @@
 		if = { limit = { has_modifier = low_cb_interest_rate } remove_modifier = low_cb_interest_rate }
 		if = { limit = { has_modifier = very_low_cb_interest_rate } remove_modifier = very_low_cb_interest_rate }
 		
+		#Default is gold standard
+		if = {
+			limit = {
+				NOR = {
+					has_modifier = law_gold_standard
+					has_modifier = law_semi_gold_standard
+					has_modifier = law_fiat_standard
+				}
+			}
+			if = {
+				limit = { NOT = { has_technology_researched = tech_economy_3 } }
+				activate_law_law_gold_standard = yes
+			}
+			else_if = {
+				limit = { NOT = { has_technology_researched = tech_economy_4 } }
+				activate_law_law_semi_gold_standard = yes
+			}
+			else = {
+				activate_law_law_fiat_standard  = yes
+			}
+		}
+		
 	}
 	
 	invalid = {
@@ -43,7 +73,10 @@
 		#THIS is part of a Currency Union
 		custom_tooltip = {
 			text = je_central_bank_system_1.tt
-			any_country = { has_diplomatic_pact = { who = ROOT type = currency_union is_initiator = yes } }
+			any_scope_diplomatic_pact = {
+				is_diplomatic_action_type = currency_union
+				second_country = ROOT
+			}
 		}
 		
 	}
@@ -54,8 +87,6 @@
 			remove_variable = core_interest_rate_raw
 			remove_variable = core_interest_rate_total_factors
 			remove_variable = core_interest_rate
-			
-			remove_variable = independent_central_bank
 			
 			remove_variable = very_high_core_inflation
 			remove_variable = high_core_inflation
@@ -83,7 +114,7 @@
 				5 = { }
 			}
 			
-			set_domestic_reaction_to_interest_rate = yes
+			#set_domestic_reaction_to_interest_rate = yes
 			
 			if = {
 				limit = {
@@ -102,7 +133,7 @@
 			if = {
 				limit = {
 					OR = {
-						has_variable = independent_central_bank
+						has_law_or_variant = law_type:law_independent_central_bank
 						is_player = no
 					}
 					NOR = {
@@ -211,7 +242,10 @@ je_foreign_central_bank = {
 		#THIS is part of a Currency Union
 		custom_tooltip = {
 			text = je_central_bank_system_1.tt
-			any_country = { has_diplomatic_pact = { who = ROOT type = currency_union is_initiator = yes } }
+			any_scope_diplomatic_pact = {
+				is_diplomatic_action_type = currency_union
+				second_country = ROOT
+			}
 		}
 		
 	}
@@ -227,13 +261,6 @@ je_foreign_central_bank = {
 		#Calculate Core interest Rate
 		determine_core_interest_rate = yes
 		
-		#Default is medium CBIR
-		if = { limit = { has_modifier = very_high_cb_interest_rate } remove_modifier = very_high_cb_interest_rate }
-		if = { limit = { has_modifier = high_cb_interest_rate } remove_modifier = high_cb_interest_rate }
-		if = { limit = { NOT = { has_modifier = medium_cb_interest_rate } } add_modifier = { name = medium_cb_interest_rate } }
-		if = { limit = { has_modifier = low_cb_interest_rate } remove_modifier = low_cb_interest_rate }
-		if = { limit = { has_modifier = very_low_cb_interest_rate } remove_modifier = very_low_cb_interest_rate }
-		
 	}
 	
 	invalid = {
@@ -241,7 +268,12 @@ je_foreign_central_bank = {
 		#Not part of a Currency Union
 		custom_tooltip = {
 			text = je_bretton_woods_system_member.4.tt
-			NOT = { any_country = { has_diplomatic_pact = { who = ROOT type = currency_union is_initiator = yes } } }
+			NOT = { 
+				any_scope_diplomatic_pact = {
+					is_diplomatic_action_type = currency_union
+					second_country = ROOT
+				}
+			}
 		}
 		
 	}
@@ -252,8 +284,6 @@ je_foreign_central_bank = {
 			remove_variable = core_interest_rate_raw
 			remove_variable = core_interest_rate_total_factors
 			remove_variable = core_interest_rate
-			
-			remove_variable = independent_central_bank
 			
 			remove_variable = very_high_core_inflation
 			remove_variable = high_core_inflation
@@ -276,9 +306,9 @@ je_foreign_central_bank = {
 			
 			determine_core_interest_rate = yes
 			
-			set_foreign_central_bank_interest_rate = yes
+			#set_foreign_central_bank_interest_rate = yes
 			
-			set_domestic_reaction_to_interest_rate = yes
+			#set_domestic_reaction_to_interest_rate = yes
 			
 		}
 		
@@ -307,7 +337,7 @@ je_foreign_central_bank = {
 			triggered_desc = {
 				desc = law_deflationary_monetary_policy_status
 				trigger = {
-					 has_modifier = law_deflationary_monetary_policy
+					has_modifier = law_deflationary_monetary_policy
 				}
 			}
 			triggered_desc = {
