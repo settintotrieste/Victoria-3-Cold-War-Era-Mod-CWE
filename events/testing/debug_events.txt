@@ -437,53 +437,47 @@ debug.13 = {
 		
 		#ruler ?= { add_character_role = character_role_prince }
 		
-		#random_scope_character = {
-		#	limit = { has_role = character_role_monarch }
-		#	kill_character = yes
-		#}
+		if = {
+			limit = {
+				OR = {
+					country_is_in_middle_east = yes
+					country_is_in_africa = yes 
+					NOR = {
+						religion ?= rel:catholic
+						religion ?= rel:protestant
+					}
+				}
+			}
+			set_variable = primogeniture_system
+		}
+		
+		create_character = {
+			role = character_role_prince noble = yes
+		}
+		
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOS_monarch
+				has_variable = primogeniture_system
+				heir ?= {
+					has_role = character_role_prince
+					is_female = yes
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_role = character_role_prince
+					is_female = no
+					NOT = { has_role = character_role_monarch }
+				}
+				save_scope_as = prince_scope
+				owner ?= { set_heir = scope:prince_scope }
+			}
+		}
 		
 		#effect_starting_politics_constitutional_monarchy = yes
 		
-		set_variable = female_princess_lose_title_upon_marriage
-		
-		create_character = {
-			role = character_role_prince female = yes noble = yes
-			on_created = { set_character_as_royal = yes }
-			save_scope_as = princess_scope
-		}
-		scope:princess_scope ?= {
-			#Marry commoner - always a magnate
-			set_variable = spouse_seeker
-			save_scope_as = royal_marriage_character
-			owner ?= { save_scope_as = marriage_country }
-			if = {
-				limit = { is_female = no }
-				owner ?= {
-					create_character = {
-						role = magnate female = yes
-						age = { 21 40 }
-						save_scope_as = foreign_ruler_1
-					}
-					custom_tooltip = {
-						text = arrange_royal_wedding.tt
-						trigger_event = { id = wedding.1 popup = yes }
-					}
-				}
-			}
-			else = {
-				owner ?= {
-					create_character = {
-						role = magnate
-						age = { 25 50 }
-						save_scope_as = foreign_ruler_1
-					}
-					custom_tooltip = {
-						text = arrange_royal_wedding.tt
-						trigger_event = { id = wedding.1 popup = yes }
-					}
-				}
-			}
-		}
+		#set_variable = female_princess_lose_title_upon_marriage
 		
 	}
 }
