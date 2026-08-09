@@ -72,7 +72,6 @@ wedding.1 = {
 				transfer_character = ROOT
 				set_variable = prince_consort_character
 				set_variable = is_married
-				add_character_role = character_role_prince
 				if = { limit = { has_role = character_role_monarch } remove_character_role = character_role_monarch }
 				set_character_as_royal = yes
 			}
@@ -86,7 +85,6 @@ wedding.1 = {
 				transfer_character = ROOT
 				set_variable = prince_consort_character
 				set_variable = is_married
-				add_character_role = character_role_prince
 				if = { limit = { has_role = character_role_monarch } remove_character_role = character_role_monarch }
 				set_character_as_royal = yes
 			}
@@ -99,7 +97,6 @@ wedding.1 = {
 			scope:royal_marriage_character ?= {
 				set_variable = prince_consort_character
 				set_variable = is_married
-				add_character_role = character_role_prince
 				if = { limit = { has_role = character_role_monarch } remove_character_role = character_role_monarch }
 				set_character_as_royal = yes
 				transfer_character = scope:foreign_ruler_1.owner 
@@ -109,7 +106,6 @@ wedding.1 = {
 			scope:foreign_ruler_1 ?= {
 				set_variable = prince_consort_character
 				set_variable = is_married
-				add_character_role = character_role_prince
 				set_character_as_royal = yes
 			}
 		}
@@ -146,7 +142,6 @@ wedding.1 = {
 				transfer_character = ROOT
 				set_variable = prince_consort_character
 				set_variable = is_married
-				add_character_role = character_role_prince
 				if = { limit = { has_role = character_role_monarch } remove_character_role = character_role_monarch }
 				set_character_as_royal = yes
 			}
@@ -160,7 +155,6 @@ wedding.1 = {
 				transfer_character = ROOT
 				set_variable = prince_consort_character
 				set_variable = is_married
-				add_character_role = character_role_prince
 				if = { limit = { has_role = character_role_monarch } remove_character_role = character_role_monarch }
 				set_character_as_royal = yes
 			}
@@ -173,7 +167,6 @@ wedding.1 = {
 			scope:royal_marriage_character ?= {
 				set_variable = prince_consort_character
 				set_variable = is_married
-				add_character_role = character_role_prince
 				if = { limit = { has_role = character_role_monarch } remove_character_role = character_role_monarch }
 				set_character_as_royal = yes
 				transfer_character = scope:foreign_ruler_1.owner 
@@ -183,7 +176,6 @@ wedding.1 = {
 			scope:foreign_ruler_1 ?= {
 				set_variable = prince_consort_character
 				set_variable = is_married
-				add_character_role = character_role_prince
 				set_character_as_royal = yes
 			}
 		}
@@ -779,10 +771,13 @@ wedding.3 = {
 			triggered_desc = {
 				desc = wedding.3.d1
 				trigger = {
-					ruler.interest_group ?= {
-						OR = {
-							ig_approval <= angry
-							ig_counts_as_marginal = yes
+					any_scope_character = {
+						has_role = character_role_monarch
+						interest_group ?= {
+							OR = {
+								ig_approval <= angry
+								ig_counts_as_marginal = yes
+							}
 						}
 					}
 				}
@@ -790,7 +785,8 @@ wedding.3 = {
 			triggered_desc = {
 				desc = wedding.3.d2
 				trigger = {
-					ruler ?= {
+					any_scope_character = {
+						has_role = character_role_monarch
 						popularity <= -50
 					}
 				}
@@ -798,7 +794,8 @@ wedding.3 = {
 			triggered_desc = {
 				desc = wedding.3.d3
 				trigger = {
-					ruler ?= {
+					any_scope_character = {
+						has_role = character_role_monarch
 						OR = {
 							has_trait = psychological_affliction
 							age >= 75
@@ -835,13 +832,25 @@ wedding.3 = {
 	}
 
 	immediate = {
-		#ruler ?= {
-		#	save_scope_as = abdicating_monarch
-		#	interest_group = {
-		#		save_scope_as = monarch_ig
-		#	}
-		#}
-		heir ?= {
+		random_scope_character = {
+			limit = { has_role = character_role_monarch }
+			save_scope_as = abdicating_monarch
+			interest_group ?= {
+				save_scope_as = monarch_ig
+			}
+		}
+		ordered_scope_character = {
+			limit = {
+				has_role = character_role_prince
+				NOT = { has_variable = prince_consort_character }
+				NAND = {
+					owner ?= { has_variable = primogeniture_system }
+					is_female = yes
+				}
+			}
+			order_by = age
+			position = 0
+			check_range_bounds = no
 			save_scope_as = heir_scope
 		}
 		law_type:law_HOS_monarch ?= {
@@ -852,9 +861,7 @@ wedding.3 = {
 	option = { # reassure the aristocracy
 		name = wedding.3.a
 		trigger = {
-			any_scope_character = {
-				has_role = character_role_prince
-			}
+			exists = scope:heir_scope
 		}
 		default_option = yes
 		add_loyalists = {
@@ -862,7 +869,7 @@ wedding.3 = {
 			pop_type = aristocrats
 		}
 		scope:heir_scope ?= {
-			set_character_as_ruler = yes
+			set_character_as_monarch = yes
 		}
 		scope:abdicating_monarch ?= {
 			resign_and_retire = yes
@@ -872,15 +879,13 @@ wedding.3 = {
 	option = { # reassure the people
 		name = wedding.3.b
 		trigger = {
-			any_scope_character = {
-				has_role = character_role_prince
-			}
+			exists = scope:heir_scope
 		}
 		add_loyalists = {
 			value = 0.01
 		}
 		scope:heir_scope ?= {
-			set_character_as_ruler = yes
+			set_character_as_monarch = yes
 		}
 		scope:abdicating_monarch ?= {
 			resign_and_retire = yes
@@ -890,10 +895,8 @@ wedding.3 = {
 	option = { # No heir
 		name = wedding.3.c
 		trigger = {
-			NOT = { 
-				any_scope_character = {
-					has_role = character_role_prince
-				}
+			NOT = {
+				exists = scope:heir_scope
 			}
 		}
 		scope:abdicating_monarch ?= {

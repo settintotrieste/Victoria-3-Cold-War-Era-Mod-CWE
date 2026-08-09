@@ -3035,35 +3035,35 @@ on_company_disbanded = {
 on_heir_born = {
 	effect = {
 		
-		#Regency
-		if = {
-			limit = {
-				owner ?= {
-					has_gov_regency = no
-				}
-			}
-			post_notification = heir_born_notification
-		}
-		else = { # Regents should not produce heirs, TODO remove this hack once we have code support
-			this = { kill_character = { hidden = yes } }
-		}
-		
 		#Dynastic Republic
 		if = {
 			limit = {
 				owner = {
-					OR = { 
+					OR = {
 						ruler ?= { has_variable = dynastic_ruler_enabled }
 						is_a_dynastic_government = yes
 					}
 				}
 			}
-			owner = {
-				heir ?= {
-					set_variable = dynastic_ruler_enabled
+			set_variable = dynastic_ruler_enabled
+			post_notification = heir_born_notification
+		}
+		
+		#Regency - Regents should not produce heirs, TODO remove this hack once we have code support
+		else_if = {
+			limit = {
+				owner ?= {
+					OR = {
+						is_a_regency_government = yes
+						AND = {
+							ruler ?= { has_role = character_role_regent }
+							has_law_or_variant = law_type:law_HOS_monarch
+							NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+						}
+					}
 				}
 			}
-			post_notification = heir_born_notification
+			this = { kill_character = { hidden = yes } }
 		}
 		
 		#Princes

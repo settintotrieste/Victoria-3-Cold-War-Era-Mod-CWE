@@ -2420,6 +2420,7 @@ set_character_as_regent = {
 
 clean_up_regent_character = {
 	
+	remove_character_role = character_role_regent
 	remove_variable = regency_years
 	remove_variable = regent_immortality_var
 	if = {
@@ -2927,6 +2928,73 @@ clean_up_all_royal_titles = {
 	
 		#Remove Regency
 		remove_regency_modifier = yes
+	}
+
+}
+
+randomly_marry_prince_effect = {
+
+	random_scope_character = {
+		limit = {
+			
+			#Is a prince
+			has_role = character_role_prince
+			
+			#Is interested in marrying
+			NOT = { has_variable = spouse_seeker }
+			NOT = { has_variable = is_married }
+			NOT = { has_trait = homosexual_character }
+			
+			#Is of a marryable age
+			is_adult = yes
+			age >= 25
+			OR = {
+				age < 50
+				AND = {
+					is_female = yes
+					age < 40
+				}
+			}
+			
+		}
+		random_list = {
+			9 = {
+				#No marriage
+			}
+			1 = {
+				#Marry commoner - always a magnate
+				set_variable = spouse_seeker
+				save_scope_as = royal_marriage_character
+				owner ?= { save_scope_as = marriage_country }
+				if = {
+					limit = { is_female = no }
+					owner ?= {
+						create_character = {
+							role = magnate female = yes
+							age = { 21 40 }
+							save_scope_as = foreign_ruler_1
+						}
+						custom_tooltip = {
+							text = arrange_royal_wedding.tt
+							trigger_event = { id = wedding.1 popup = yes }
+						}
+					}
+				}
+				else = {
+					owner ?= {
+						create_character = {
+							role = magnate
+							age = { 25 50 }
+							save_scope_as = foreign_ruler_1
+						}
+						custom_tooltip = {
+							text = arrange_royal_wedding.tt
+							trigger_event = { id = wedding.1 popup = yes }
+						}
+					}
+				}
+			}
+		}
 	}
 
 }

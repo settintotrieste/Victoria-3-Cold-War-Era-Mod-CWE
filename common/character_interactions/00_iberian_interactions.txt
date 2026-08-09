@@ -6,51 +6,74 @@
 	}
 
 	possible = {
-        custom_tooltip = {
+       
+	   #No Monarchs
+	   custom_tooltip = {
             text = no_heir_tt
-            NOT = {
-                exists = owner.heir
-            }
+			OR = {
+				NOT = { exists = owner.heir }
+				owner.heir ?= { NOT = { has_role = character_role_monarch } }
+			}
         }
-        custom_tooltip = {
-            text = eterna_regency_tt
-            has_variable = regency_years
-            var:regency_years > 10
-        }
+		
+		#Nobles need less time
+		trigger_if = {
+			limit = {
+				OR = {
+					AND = { 
+						is_noble = yes
+						has_role_of_type = magnate
+					}
+					has_role = character_role_prince
+				}
+			}
+			custom_tooltip = {
+				text = eterna_regency_5_tt
+				has_variable = regency_years
+				var:regency_years > 5
+			}
+		}
+		
+		#Commoners need time to gain legitimacy
+		trigger_else = {
+			custom_tooltip = {
+				text = eterna_regency_tt
+				has_variable = regency_years
+				var:regency_years > 10
+			}
+		}
+		
+		#Parliament support
 		owner ?= {
 			custom_tooltip = {
 				text = government_has_legislative_super_majority.tt
 				government_has_legislative_super_majority = yes
 			}
 		}
+		
 	}
 
 	effect = {
-        hidden_effect = {
-            if = {
-                limit = {
-                    is_immortal = yes
-                }
-                set_character_immortal = no
-            }
+		
+		#No longer becomes a regent
+		hidden_effect = {
+           clean_up_regent_character = yes
         }
+		
+		#Becomes a monarch
+		if = {
+			limit = {
+				is_female = yes
+			}
+			custom_tooltip = {
+				text = remove_primogeniture_system.tt
+				remove_variable = primogeniture_system
+			}
+		}
+		set_character_as_monarch = yes
+		
+		#Set popularity
         owner ?= {
-            if = {
-                limit = {
-                    ruler ?= {
-                        is_female = yes
-                    }
-                }
-                custom_tooltip = female_regent_becomes_monarch_tt
-            }
-            if = {
-                limit = {
-                    ruler ?= {
-                        is_female = no
-                    }
-                }
-                custom_tooltip = male_regent_becomes_monarch_tt
-            }
             if = { # Sorts an edge case
                 limit = {
                     NAND = {
@@ -74,7 +97,7 @@
             }
             remove_regency_modifier = yes
         }
-		set_character_as_monarch = yes
+		
 	}
 
 	cooldown = { days = long_modifier_time }
@@ -83,4 +106,5 @@
 	ai_chance = {
 		value = 1
 	}
+	
 }

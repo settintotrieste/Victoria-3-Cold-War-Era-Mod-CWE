@@ -13,8 +13,24 @@
 
 	possible = {
 		
-		### Personal Union by Marriage ###
-		eligible_for_royal_marriage_creating_PU = yes
+		#Personal Union by Regency
+		trigger_if = {
+			limit = {
+				scope:target_country = {
+					is_a_regency_government = yes
+				}
+				is_a_regency_government = no
+			}
+			any_primary_culture = {
+				shares_heritage_trait_group_with_any_primary_culture = scope:target_country
+			}
+			religion ?= { is_state_religion = scope:target_country }
+		}
+		
+		#Personal Union by Marriage
+		trigger_else = {
+			eligible_for_royal_marriage_creating_PU = yes
+		}
 		
 	}	
 	
@@ -149,8 +165,21 @@
 			}
 		}
 		
-		#Marriage if applicable
+		#Regency
 		if = {
+			limit = {
+				scope:target_country = { is_a_regency_government = yes }
+			}
+			every_scope_character = {
+				limit = {
+					has_role = character_role_regent
+				}
+				scope:target_country = { clean_up_regent_character = yes }
+			}
+		}
+		
+		#Marriage if applicable
+		else_if = {
 			limit = {
 				eligible_for_royal_marriage_creating_PU = yes
 			}
@@ -240,10 +269,19 @@
 		junior_accept_score = {
 			value = 0
 	
-			add = {
-				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
-				value = -100
-			}	
+			if = {
+				limit = { scope:target_country = { is_a_regency_government = yes } }
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -50
+				}
+			}
+			else = {
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+					value = -100
+				}
+			}
 	
 			if = {
 				limit = { has_truce_with = scope:actor }
