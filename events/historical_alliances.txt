@@ -3683,3 +3683,91 @@ historical_alliances_system.39 = {
     }
 
 }
+
+# Peaceful Liberation of Xinjiang - PRC
+historical_alliances_system.40 = {
+    type = country_event
+	placement = c:ETS
+
+    title = PRC_annexation_of_ETS_1949.t 						# Title of the event; ADD LOCALISATION
+    desc = PRC_annexation_of_ETS_1949.d 						# Description of the event; ADD LOCALISATION
+    #flavor = PRC_annexation_of_ETS_1949.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_military_parade" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		has_global_variable = 1946_start_date
+		
+		#Overlord conditions
+		OR = { c:PRC ?= this c:CHI ?= this }
+		#game_date >= 1949.10.12								# START DATE: Date colony became self governing ****
+		game_date < 1959.10.12									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		# Event has not been fired before
+		NOT = { has_variable = PRC_annexation_of_ETS_1949_hae }	# CHANGE ****
+		
+		is_a_communist_government = yes							# Correct gov types
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		is_not_neutral = yes
+		
+		#Recipient conditions
+		exists = c:ETS
+		c:ETS ?= {
+			is_a_communist_government = yes						# Correct gov types
+			is_sufficiently_independent = yes					# is_vassal = no		
+			is_at_war = no										# war = no
+			
+			is_not_neutral = yes
+			
+			is_adjacent_to_country = ROOT
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = PRC_annexation_of_ETS_1949_hae			# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_alliances_system.option.1				# Accept
+        highlighted_option = yes
+		
+		#Option to accept
+		set_variable = { name = PRC_ETS_marker days = 2 }
+		c:ETS ?= {
+			trigger_event = { id = historical_diplomatic_incidents.53 }
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_alliances_system.option.2					# Reject
+		default_option = yes
+		
+		#Domestic
+		add_radicals = {
+			value = small_radicals
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}

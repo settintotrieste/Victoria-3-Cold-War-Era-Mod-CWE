@@ -3403,7 +3403,10 @@ historical_territorial_transfers.29 = {
 		#Overlord conditions
 		c:ROC ?= this
 		game_date >= 1947.1.1									# START DATE: Date colony became self governing ****
-		game_date < 1950.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		game_date < 1957.1.1									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		# Event has not been fired before
+		NOT = { has_variable = KMT_PRC_htt }					# CHANGE ****
 		
 		OR = { 
 			is_a_nationalist_government = yes
@@ -3421,14 +3424,41 @@ historical_territorial_transfers.29 = {
 		
 		#Losing the war
 		OR = { 
-			enemy_occupation > 0.75
+			enemy_occupation > 0.80
+			AND = {
+				game_date >= 1948.1.1
+				enemy_occupation > 0.60
+				NOT = { capital.state_region ?= s:STATE_NANJING }
+			}
+			AND = {
+				game_date >= 1949.1.1
+				enemy_occupation > 0.50
+				NOT = { capital.state_region ?= s:STATE_NANJING }
+			}
+			AND = {
+				game_date >= 1949.6.1
+				enemy_occupation > 0.45
+				NOT = { capital.state_region ?= s:STATE_NANJING }
+			}
+			AND = {
+				game_date >= 1950.1.1
+				enemy_occupation > 0.40
+				NOT = { capital.state_region ?= s:STATE_NANJING }
+			}
+			AND = {
+				game_date >= 1950.6.1
+				enemy_occupation > 0.35
+				NOT = { capital.state_region ?= s:STATE_NANJING }
+			}
+			AND = {
+				game_date >= 1951.1.1
+				enemy_occupation > 0.30
+				NOT = { capital.state_region ?= s:STATE_NANJING }
+			}
 			any_scope_war = {
 				has_war_support = { target = ROOT value < -50 }
 			}
 		}
-		
-		# Event has not been fired before
-		NOT = { has_variable = KMT_PRC_htt }					# CHANGE ****
 		
     }
     
@@ -3444,13 +3474,26 @@ historical_territorial_transfers.29 = {
         highlighted_option = yes
 		
 		#Flee to Taiwan
-		every_scope_state = {
-			limit = {
-				NOT = {
-					state_region = s:STATE_FORMOSA
+		if = {
+			limit = { 
+				exists = c:TAI
+				c:TAI ?= {
+					is_direct_subject_of = ROOT
+					is_sufficiently_independent = no
 				}
 			}
-			set_state_owner = c:PRC
+			annex_with_incorporation = c:TAI
+		}
+		hidden_effect = {
+			every_scope_state = {
+				limit = {
+					NOT = {
+						state_region = s:STATE_FORMOSA
+					}
+				}
+				set_state_owner = c:PRC
+				set_state_type = incorporated
+			}
 		}
 		if = {
 			limit = { 
@@ -3471,36 +3514,44 @@ historical_territorial_transfers.29 = {
 			}
 			end_play = yes
 		}
-		every_scope_state = {
-			limit = {
-				is_direct_subject_of = c:ROC
-				is_subject_type = subject_type_warlord_state
-			}
-			hidden_effect = { make_independent = yes }
-			save_scope_as = THIS_scope
-			ROOT = {
-				create_diplomatic_pact = {
-					country = scope:THIS_scope
-					type = warlord_state
+		hidden_effect = {
+			c:PRC ?= {
+				every_country = {
+					limit = {
+						is_direct_subject_of = c:ROC
+						is_subject_type = subject_type_warlord_state
+					}
+					hidden_effect = { make_independent = yes }
+					save_scope_as = THIS_scope
+					c:PRC = {
+						create_diplomatic_pact = {
+							country = scope:THIS_scope
+							type = warlord_state
+						}
+					}
+				}
+				every_country = {
+					limit = {
+						is_direct_subject_of = c:PRC
+						is_warlord_state = yes
+					}
+					save_scope_as = THIS_scope
+					c:PRC = {
+						create_diplomatic_play = {
+							type = dp_annex_war_historical
+							target_country = scope:THIS_scope
+							
+							war = yes
+
+							add_war_goal = {
+								holder = scope:THIS_scope
+								type = annex_country
+								target_country = c:PRC
+							}
+						}
+					}
 				}
 			}
-		}
-		every_country = {
-			limit = {
-				is_direct_subject_of = ROOT
-				is_warlord_state = yes
-			}
-			save_scope_as = THIS_scope
-			create_diplomatic_play = {
-                type = dp_annex_war_historical
-                target_country = ROOT
-
-                add_war_goal = {
-                    holder = ROOT
-                    type = annex_country
-                    target_country = scope:THIS_scope
-                }
-            }
 		}
 		
 		#Fix Treaty Ports
@@ -3573,7 +3624,15 @@ historical_territorial_transfers.29 = {
         name = historical_territorial_transfers.option.2		# Refuse land transfer request by FROM
 		default_option = yes
 		
-		
+		#Exhaustion
+		add_radicals = {
+			value = very_large_radicals
+		}
+		add_modifier = {
+			name = domestic_unrest
+			years = 10
+			is_decaying = yes
+		}
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
