@@ -287,6 +287,14 @@ change_to_hereditary = {
 		}
 		activate_law = law_type:law_yes_term_limit
 	}
+	else_if = {
+		limit = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+			NOT = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy } }
+		}
+		activate_law = law_type:law_no_term_limit
+	}
 	
 }
 
@@ -330,6 +338,90 @@ post_change_to_regency = {
 }
 
 change_to_elective_monarchy = {
+
+	#Set Monarch
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+			ruler_is_governor_general = no
+			is_a_colonial_government = no
+			shares_same_monarch = no
+		}
+		set_variable = { name = hide_ruler_change_notification days = 3 }
+		if = {
+			limit = {
+				any_scope_character = {
+					has_role = character_role_monarch
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_role = character_role_monarch
+				}
+				set_character_as_ruler = yes
+			}
+		}
+		else = {
+			ruler ?= { set_character_as_monarch = yes }
+		}
+		if = {
+			limit = {
+				ruler ?= { has_role = character_role_monarch }
+				OR = {
+					NOT = { exists = heir }
+					heir ?= { NOT = { has_role = character_role_prince } }
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_role = character_role_prince
+					is_ruler_of_own_country = no
+				}
+				save_scope_as = THIS_scope
+				owner ?= { set_heir = scope:THIS_scope }
+			}
+		}
+	}
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_HOS_monarch
+		}
+		set_variable = { name = recently_became_monarchy days = 1 }
+		if = {
+			limit = {
+				OR = {
+					any_scope_character = {
+						has_role = character_role_monarch
+						is_female = yes
+					}
+					AND = {
+						shares_same_monarch = yes
+						overlord ?= {
+							any_scope_character = {
+								has_role = character_role_monarch
+								is_female = yes
+							}
+						}
+					}
+				}
+			}
+			remove_variable = primogeniture_system
+		}
+	}
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			ruler_is_governor_general = no
+			shares_same_monarch = no
+			any_scope_character = {
+				NOT = { has_role = character_role_regent }
+				has_role = character_role_monarch
+				is_eligible_to_become_monarch = yes
+			}
+		}
+		trigger_event = { id = regency.3 popup = yes }
+	}
 
 	#Set term limits
 	if = {
