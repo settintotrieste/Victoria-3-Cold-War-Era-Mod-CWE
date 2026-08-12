@@ -23,6 +23,15 @@
 		}
 	}
 	
+	#Reset term limits for constitutional monarchies
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			has_law_or_variant = law_type:law_HOG_prime_minister
+		}
+		activate_law = law_type:law_no_term_limit
+	}
+	
 }
 
 post_change_to_parliamentary_elective = {
@@ -69,6 +78,15 @@ change_to_presidential_elective = {
 		}
 	}
 	
+	#Reset term limits for constitutional monarchies
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			has_law_or_variant = law_type:law_HOG_prime_minister
+		}
+		activate_law = law_type:law_no_term_limit
+	}
+	
 }
 
 post_change_to_presidential_elective = {
@@ -82,12 +100,7 @@ change_to_dictatorial = {
 	
 	clean_up_any_monarchs = yes
 	
-	if = {
-		limit = {
-			ruler ?= { NOT = { has_role = character_role_monarch } }
-		}
-		ruler ?= { set_variable = { name = previous_ruler_scope days = 3 } }
-	}
+	ruler ?= { set_variable = { name = previous_ruler_scope days = 3 } }
 	if = {
 		limit = {
 			ruler ?= { has_role = character_role_monarch }
@@ -141,6 +154,15 @@ change_to_dictatorial = {
 		}
 	}
 	
+	#Reset term limits for constitutional monarchies
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			has_law_or_variant = law_type:law_HOG_prime_minister
+		}
+		activate_law = law_type:law_no_term_limit
+	}
+	
 }
 
 post_change_to_dictatorial = {
@@ -149,9 +171,13 @@ post_change_to_dictatorial = {
 			has_law_or_variant = law_type:law_HOG_prime_minister
 		}
 		random_scope_character = {
-			limit = { has_variable = previous_ruler_scope }
+			limit = { 
+				has_variable = previous_ruler_scope 
+				NOT = { has_role = character_role_monarch } 
+			}
 			set_character_as_ruler = yes
 		}
+		#trigger_event = { id = revolution_system.23 days = 5 }
 	}
 	if = {
 		limit = { is_foreign_governor_only_country = yes }
@@ -245,6 +271,23 @@ change_to_hereditary = {
 		trigger_event = { id = regency.3 popup = yes }
 	}
 	
+	#Reset term limits for constitutional monarchies
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			has_law_or_variant = law_type:law_HOG_prime_minister
+		}
+		activate_law = law_type:law_no_term_limit
+	}
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+			active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy }
+		}
+		activate_law = law_type:law_yes_term_limit
+	}
+	
 }
 
 post_change_to_hereditary = {
@@ -254,9 +297,6 @@ post_change_to_hereditary = {
 change_to_regency = {
 
 	#Failsafe
-	trigger_event = {
-		id = regency.1
-	}
 	random_scope_character = {
 		limit = { has_role = character_role_regent }
 		set_character_as_ruler = yes
@@ -286,5 +326,41 @@ change_to_regency = {
 }
 
 post_change_to_regency = {
+
+}
+
+change_to_elective_monarchy = {
+
+	#Set term limits
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+			ruler_is_governor_general = no
+			shares_same_monarch = no
+		}
+		activate_law = law_type:law_yes_term_limit
+		if = {
+			limit = { NOT = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy } } }
+			active_law:lawgroup_governance_principles ?= {
+				add_amendment = {
+					type = amendment_elective_monarchy
+					sponsor = PREV.ig:ig_petty_bourgeoisie 
+				}
+			}
+		}
+		heir ?= {
+			if = {
+				limit = { NOT = { has_role = character_role_monarch_elective } }
+				add_character_role = character_role_monarch_elective
+			}
+			disinherit_character = yes
+		}
+		generate_elective_monarchs_for_country = yes
+	}
+
+}
+
+post_change_to_elective_monarchy = {
 
 }

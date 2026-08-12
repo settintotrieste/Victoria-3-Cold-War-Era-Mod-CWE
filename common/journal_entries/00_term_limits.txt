@@ -14,7 +14,10 @@
 		}
 		
 		#Not for monarchs
-		is_a_regime_monarchy = no
+		OR = {
+			is_a_regime_monarchy = no
+			has_gov_regency = yes
+		}
 		
 		#Ruler exists
 		exists = ruler
@@ -75,7 +78,10 @@
 				has_amendment = amendment_type:amendment_rotating_presidency
 			}
 			
-			is_a_regime_monarchy = yes
+			NOR = {
+				is_a_regime_monarchy = no
+				has_gov_regency = yes
+			}
 			
 			NOT = { has_law_or_variant = law_type:law_yes_term_limit }
 			
@@ -141,7 +147,34 @@
 		#President's term has ended so he shall retire
 		custom_tooltip = {
 			text = je_term_limits.tt
-			scope:the_current_president_scope ?= { retire_character = yes }
+			
+			if = {
+				limit = {
+					has_gov_regency = yes
+					is_a_regime_monarchy = yes
+				}
+				random_scope_character = {
+					limit = {
+						OR = {
+							AND = { 
+								has_role_of_type = magnate
+								is_noble = yes
+							}
+							has_role_of_type = general
+							has_role_of_type = admiral
+							AND = {
+								has_role = character_role_prince
+								is_eligible_to_become_monarch = no
+							}
+						}
+						is_adult = yes
+					}
+					set_character_as_regent = yes
+				}
+			}
+			else = {
+				scope:the_current_president_scope ?= { retire_character = yes }
+			}
 		
 			#Reset Term Limits
 			remove_variable = term_limit_var
