@@ -1,0 +1,129 @@
+﻿namespace = treaty_port_inheritance_events
+
+# Fired when a country inherits the treaty ports a defeated host had ceded to a foreign power (won revolution, annexation, conquest)
+# Root = New host country
+# scope:target_country = Foreign power holding the inherited treaty port(s)
+treaty_port_inheritance_events.1 = {
+	type = country_event
+	event_image = {
+		video = "asia_westerners_arriving"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	title = treaty_port_inheritance_events.1.t
+	desc = treaty_port_inheritance_events.1.d
+	flavor = treaty_port_inheritance_events.1.f
+
+	duration = 3
+
+	immediate = {
+		save_scope_as = new_host
+	}
+
+	# Honor the inherited treaty
+	option = {
+		name = treaty_port_inheritance_events.1.a
+		default_option = yes
+		hidden_effect = {
+			scope:target_country = {
+				trigger_event = { id = treaty_port_inheritance_events.2 }
+			}
+		}
+		ai_chance = {
+			base = 55
+			modifier = {
+				trigger = {
+					"relations(scope:target_country)" >= relations_threshold:cordial
+				}
+				add = 50
+			}
+			modifier = {
+				trigger = {
+					"relations(scope:target_country)" < relations_threshold:hostile
+				}
+				add = -40
+			}
+		}
+	}
+
+	# Renege: void the treaty and reclaim the ports
+	option = {
+		name = treaty_port_inheritance_events.1.b
+		renege_treaty_ports_with = scope:target_country
+		hidden_effect = {
+			scope:target_country = {
+				# Remember who reneged on us so our colonial AI is keen to retake the ports by force
+				set_variable = { name = wants_treaty_port_revenge_against value = root days = 3650 }
+				trigger_event = { id = treaty_port_inheritance_events.3 }
+			}
+		}
+		ai_chance = {
+			base = 45
+			modifier = {
+				trigger = {
+					"relations(scope:target_country)" >= relations_threshold:cordial
+				}
+				add = -40
+			}
+			modifier = {
+				trigger = {
+					"relations(scope:target_country)" < relations_threshold:hostile
+				}
+				add = 50
+			}
+		}
+	}
+}
+
+# Sent to the foreign power when the new host honors the inherited treaty ports
+# Root = Foreign power holding the treaty port(s)
+# scope:new_host = Country that inherited the host position
+treaty_port_inheritance_events.2 = {
+	type = country_event
+	event_image = {
+		video = "asia_westerners_arriving"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	title = treaty_port_inheritance_events.2.t
+	desc = treaty_port_inheritance_events.2.d
+	flavor = treaty_port_inheritance_events.2.f
+
+	duration = 3
+
+	option = {
+		name = treaty_port_inheritance_events.2.a
+		default_option = yes
+	}
+}
+
+# Sent to the foreign power when the new host reneges and reclaims the treaty ports
+# Root = Foreign power that lost the treaty port(s)
+# scope:new_host = Country that reclaimed the ports
+treaty_port_inheritance_events.3 = {
+	type = country_event
+	event_image = {
+		video = "asia_westerners_arriving"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	title = treaty_port_inheritance_events.3.t
+	desc = treaty_port_inheritance_events.3.d
+	flavor = treaty_port_inheritance_events.3.f
+
+	duration = 3
+
+	option = {
+		name = treaty_port_inheritance_events.3.a
+		default_option = yes
+	}
+}

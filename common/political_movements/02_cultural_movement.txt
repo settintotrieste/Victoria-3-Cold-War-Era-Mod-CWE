@@ -359,7 +359,42 @@
 			max = 0.5
 			min = 0
 			desc = "STANDARD_OF_LIVING_FOR_PRIMARY_CULTURES"
-		}		
+		}
+		
+		if = {
+			limit = {
+				owner ?= {
+					any_scope_homeland_state = {
+						NOT = {
+							this.owner ?= {
+								any_primary_culture = {
+									is_primary_culture_of = root.owner
+								}
+							}
+						}
+					}
+				}
+			}
+			add = {
+				owner ?= {
+					every_scope_homeland_state = {
+						limit = {
+							NOT = {
+								this.owner ?= {
+									any_primary_culture = {
+										is_primary_culture_of = root.owner
+									}
+								}
+							}
+						}
+						add = 0.025
+					}
+				}
+				max = 0.25
+				desc = "MOVEMENT_RADICALISM_UNOWNED_HOMELAND_STATES_FACTOR"
+			}
+		}
+
 		if = {
 			limit = {
 				owner = {
@@ -367,7 +402,20 @@
 						owner = {
 							NOT = { THIS = ROOT.owner }
 							any_political_movement = {
-								culture ?= ROOT.culture
+								OR = {
+									AND = {
+										is_political_movement_type = movement_cultural_majority
+										prev = {
+											any_primary_culture = {
+												is_primary_culture_of = root.owner
+											}
+										}
+									}
+									AND = {
+										is_political_movement_type = movement_cultural_minority
+										culture ?= { is_primary_culture_of = root.owner }
+									}
+								}
 								is_insurrectionary = yes
 							}
 						}
@@ -379,6 +427,7 @@
 				value = 0.15
 			}
 		}
+		
 		if = {
 			limit = {
 				this.days_since_movement_defeated <= very_long_modifier_time
