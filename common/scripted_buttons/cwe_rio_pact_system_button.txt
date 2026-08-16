@@ -1,98 +1,3 @@
-je_request_rio_pact_intervention_button = {
-	name = "je_request_rio_pact_intervention_button"
-	desc = "je_request_rio_pact_intervention_button_desc"
-
-	visible = { 
-		
-		is_at_war = yes
-		
-	}
-
-	possible = {
-	
-		hidden_trigger = {
-			NOT = {
-				any_country = {
-					has_variable = requested_rio_pact_intervention
-				}
-			}
-		}
-	
-		#THIS is involved in a defensive war with a non-Rio Pact country
-		custom_tooltip = {
-			text = in_a_defensive_war.tt
-			any_diplomatic_play = {
-				is_war = yes
-				any_scope_play_involved = {
-					this = root
-				}
-				initiator = {
-					NOT = { this = root }
-					NOR = { 
-						has_modifier = rio_pact_member
-						has_modifier = rio_pact_leader
-					}
-					is_sufficiently_independent = yes
-					save_temporary_scope_as = WP_attacker_scope
-				}
-				target = {
-					this = root
-					OR = { 
-						has_modifier = rio_pact_member
-						has_modifier = rio_pact_leader
-					}
-				}
-				has_an_aggressive_war_goal = yes
-			}
-		}
-		
-		#There are uninvolved rio_pact countries
-		hidden_trigger = {
-			any_country = {
-				NOT = { this = root }
-				OR = { 
-					has_modifier = rio_pact_member
-					has_modifier = rio_pact_leader
-				}
-				is_at_war = no
-				NOT = { has_truce_with = scope:WP_attacker_scope }
-			}
-		}
-		
-	}
-
-	effect = {
-		
-		#Request Rio Pact intervention
-		set_variable = { 
-			name = requested_rio_pact_intervention 
-			months = 1 
-		}
-		
-		#Call in all Rio Pact members to join war
-		every_country = {
-			limit = { 
-				NOT = { this = root } 
-				OR = { 
-					has_modifier = rio_pact_member
-					has_modifier = rio_pact_leader
-				}
-				NOR = { 
-					any_cobelligerent_in_war = { this = root } 
-					any_enemy_in_diplo_play = { this = root }
-				}
-			}
-			trigger_event = { id = rio_pact_system.8 } 
-		}
-		
-	}
-	
-	ai_chance = {
-		base = 100
-	}
-	
-}
-
 je_fund_rio_pact_button = {
 	name = "je_fund_rio_pact_button"
 	desc = "je_fund_rio_pact_button_desc"
@@ -228,7 +133,10 @@ je_hold_rio_pact_exercise_button = {
 
 	visible = { 
 		
-		has_modifier = rio_pact_leader
+		OR = {
+			has_modifier = rio_pact_leader
+			has_modifier = rio_pact_member
+		}
 		
 	}
 
@@ -289,6 +197,8 @@ je_hold_rio_pact_exercise_button = {
 					has_diplomatic_pact = { who = ROOT type = rivalry }
 					has_modifier = warsaw_pact_leader
 					has_modifier = warsaw_pact_member
+					has_modifier = csto_leader
+					has_modifier = csto_member
 				}
 				is_sufficiently_independent = yes
 				relations:root < relations_threshold:neutral
@@ -312,6 +222,132 @@ je_hold_rio_pact_exercise_button = {
 			add = 10 
 		}
 		
+	}
+	
+}
+
+je_leave_rio_pact_button = {
+	name = "je_leave_rio_pact_button"
+	desc = "je_leave_rio_pact_button_desc"
+
+	visible = {
+		
+		OR = {
+			has_modifier = rio_pact_leader
+			has_modifier = rio_pact_member
+		}
+		
+	}
+
+	possible = {
+		
+		#Conditions to leave rio_pact
+		OR = {
+		
+			is_a_communist_government = yes
+		
+			NOT = { is_sufficiently_independent = yes }
+			
+			is_neutral = yes
+			
+			any_country = {
+				has_modifier = rio_pact_leader
+				NOT = { THIS = ROOT }
+			
+				NOT = { has_subject_relation_with = ROOT }
+				has_attitude = {
+					who = ROOT
+					attitude <= antagonistic
+				}
+			}
+			
+			is_player = yes
+			
+		}
+		
+		#Parliament support
+		government_has_legislative_super_majority = yes
+		
+	}
+
+	effect = {
+		
+		#THIS leaves Rio Pact
+		if = {
+			limit = { has_modifier = rio_pact_member }
+			remove_modifier = rio_pact_member
+		}
+		if = {
+			limit = { has_modifier = rio_pact_leader }
+			remove_modifier = rio_pact_leader
+		}
+		
+		#Block reapplication for 1 years
+		set_variable = {
+			name = rio_pact_application_cooldown
+			years = 1
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}
+
+je_become_rio_pact_leader_button = {
+	name = "je_become_rio_pact_leader_button"
+	desc = "je_become_rio_pact_leader_button_desc"
+
+	visible = {
+		
+		NOT = { has_modifier = rio_pact_leader }
+		has_modifier = rio_pact_member
+		
+	}
+
+	possible = {
+		
+		#Eligible to be leader
+		is_subject = no
+		is_sufficiently_independent = yes
+		infamy < infamy_threshold:infamous
+		
+		#Stronger rank than leader
+		any_country = {
+			NOT = { THIS = ROOT }
+			has_modifier = rio_pact_leader
+			country_rank < root.country_rank
+		}
+		
+	}
+
+	effect = {
+		
+		#THIS becomes new Rio Pact leader
+		every_country = {
+			limit = { has_modifier = rio_pact_leader }
+			remove_modifier = rio_pact_leader
+			if = {
+				limit = { has_modifier = rio_pact_member }
+				add_modifier = { name = rio_pact_member }
+			}
+			change_relations = { country = ROOT value = -50 }
+		}
+		if = {
+			limit = { has_modifier = rio_pact_leader }
+			add_modifier = { name = rio_pact_leader }
+		}
+		if = {
+			limit = { has_modifier = rio_pact_member }
+			remove_modifier = rio_pact_member
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
 	}
 	
 }
