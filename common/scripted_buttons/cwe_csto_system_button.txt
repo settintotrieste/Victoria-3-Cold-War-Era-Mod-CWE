@@ -1,98 +1,3 @@
-je_request_csto_intervention_button = {
-	name = "je_request_csto_intervention_button"
-	desc = "je_request_csto_intervention_button_desc"
-
-	visible = { 
-		
-		is_at_war = yes
-		
-	}
-
-	possible = {
-	
-		hidden_trigger = {
-			NOT = {
-				any_country = {
-					has_variable = requested_csto_intervention
-				}
-			}
-		}
-	
-		#THIS is involved in a defensive war with a non-Rio Pact country
-		custom_tooltip = {
-			text = in_a_defensive_war.tt
-			any_diplomatic_play = {
-				is_war = yes
-				any_scope_play_involved = {
-					this = root
-				}
-				initiator = {
-					NOT = { this = root }
-					NOR = { 
-						has_modifier = csto_member
-						has_modifier = csto_leader
-					}
-					is_sufficiently_independent = yes
-					save_temporary_scope_as = WP_attacker_scope
-				}
-				target = {
-					this = root
-					OR = { 
-						has_modifier = csto_member
-						has_modifier = csto_leader
-					}
-				}
-				has_an_aggressive_war_goal = yes
-			}
-		}
-		
-		#There are uninvolved csto countries
-		hidden_trigger = {
-			any_country = {
-				NOT = { this = root }
-				OR = { 
-					has_modifier = csto_member
-					has_modifier = csto_leader
-				}
-				is_at_war = no
-				NOT = { has_truce_with = scope:WP_attacker_scope }
-			}
-		}
-		
-	}
-
-	effect = {
-		
-		#Request Rio Pact intervention
-		set_variable = { 
-			name = requested_csto_intervention 
-			months = 1 
-		}
-		
-		#Call in all Rio Pact members to join war
-		every_country = {
-			limit = { 
-				NOT = { this = root } 
-				OR = { 
-					has_modifier = csto_member
-					has_modifier = csto_leader
-				}
-				NOR = { 
-					any_cobelligerent_in_war = { this = root } 
-					any_enemy_in_diplo_play = { this = root }
-				}
-			}
-			trigger_event = { id = csto_system.8 } 
-		}
-		
-	}
-	
-	ai_chance = {
-		base = 100
-	}
-	
-}
-
 je_fund_csto_button = {
 	name = "je_fund_csto_button"
 	desc = "je_fund_csto_button_desc"
@@ -126,7 +31,7 @@ je_fund_csto_button = {
 		
 		set_global_variable = fund_csto
 		
-		#Rio Pact leader will station troops in Rio Pact countries
+		#CSTO leader will station troops in CSTO countries
 		custom_tooltip = {
 			text = fund_csto.tt
 			every_country = {
@@ -187,7 +92,7 @@ je_defund_csto_button = {
 		
 		remove_global_variable = fund_csto
 		
-		#Rio Pact leader will un-station troops in Rio Pact countries
+		#CSTO leader will un-station troops in CSTO countries
 		custom_tooltip = {
 			text = defund_csto.tt
 			every_country = {
@@ -228,7 +133,10 @@ je_hold_csto_exercise_button = {
 
 	visible = { 
 		
-		has_modifier = csto_leader
+		OR = {
+			has_modifier = csto_leader
+			has_modifier = csto_member
+		}
 		
 	}
 
@@ -287,8 +195,10 @@ je_hold_csto_exercise_button = {
 				NOT = { has_modifier = csto_member }
 				OR = {
 					has_diplomatic_pact = { who = ROOT type = rivalry }
-					has_modifier = nato_leader
-					has_modifier = nato_member
+					has_modifier = warsaw_pact_leader
+					has_modifier = warsaw_pact_member
+					has_modifier = csto_leader
+					has_modifier = csto_member
 				}
 				is_sufficiently_independent = yes
 				relations:root < relations_threshold:neutral
@@ -312,6 +222,132 @@ je_hold_csto_exercise_button = {
 			add = 10 
 		}
 		
+	}
+	
+}
+
+je_leave_csto_button = {
+	name = "je_leave_csto_button"
+	desc = "je_leave_csto_button_desc"
+
+	visible = {
+		
+		OR = {
+			has_modifier = csto_leader
+			has_modifier = csto_member
+		}
+		
+	}
+
+	possible = {
+		
+		#Conditions to leave csto
+		OR = {
+		
+			is_a_communist_government = yes
+		
+			NOT = { is_sufficiently_independent = yes }
+			
+			is_neutral = yes
+			
+			any_country = {
+				has_modifier = csto_leader
+				NOT = { THIS = ROOT }
+			
+				NOT = { has_subject_relation_with = ROOT }
+				has_attitude = {
+					who = ROOT
+					attitude <= antagonistic
+				}
+			}
+			
+			is_player = yes
+			
+		}
+		
+		#Parliament support
+		government_has_legislative_super_majority = yes
+		
+	}
+
+	effect = {
+		
+		#THIS leaves CSTO
+		if = {
+			limit = { has_modifier = csto_member }
+			remove_modifier = csto_member
+		}
+		if = {
+			limit = { has_modifier = csto_leader }
+			remove_modifier = csto_leader
+		}
+		
+		#Block reapplication for 1 years
+		set_variable = {
+			name = csto_application_cooldown
+			years = 1
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}
+
+je_become_csto_leader_button = {
+	name = "je_become_csto_leader_button"
+	desc = "je_become_csto_leader_button_desc"
+
+	visible = {
+		
+		NOT = { has_modifier = csto_leader }
+		has_modifier = csto_member
+		
+	}
+
+	possible = {
+		
+		#Eligible to be leader
+		is_subject = no
+		is_sufficiently_independent = yes
+		infamy < infamy_threshold:infamous
+		
+		#Stronger rank than leader
+		any_country = {
+			NOT = { THIS = ROOT }
+			has_modifier = csto_leader
+			country_rank < root.country_rank
+		}
+		
+	}
+
+	effect = {
+		
+		#THIS becomes new CSTO leader
+		every_country = {
+			limit = { has_modifier = csto_leader }
+			remove_modifier = csto_leader
+			if = {
+				limit = { has_modifier = csto_member }
+				add_modifier = { name = csto_member }
+			}
+			change_relations = { country = ROOT value = -50 }
+		}
+		if = {
+			limit = { has_modifier = csto_leader }
+			add_modifier = { name = csto_leader }
+		}
+		if = {
+			limit = { has_modifier = csto_member }
+			remove_modifier = csto_member
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
 	}
 	
 }

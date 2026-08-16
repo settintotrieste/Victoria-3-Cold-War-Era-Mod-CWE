@@ -14,24 +14,18 @@ eligible_war_for_international_alliance = {
 eligible_war_goal_for_international_alliance = {
 
 	OR = {
-		war_participant_has_war_goal_of_type_against = {
-			type = annex_country
-			target = ROOT
-		}
-		war_participant_has_war_goal_of_type_against = {
-			type = regime_change
-			target = ROOT
-		}
+		
+		#Country annexation
+		war_participant_has_war_goal_of_type_against = { type = annex_country target = ROOT }
+		war_participant_has_war_goal_of_type_against = { type = unification target = ROOT }
+		war_participant_has_war_goal_of_type_against = { type = assisted_unification target = ROOT }
+		
+		#State annexations
 		AND = {
 			OR = { 
-				war_participant_has_war_goal_of_type_against = {
-					type = conquer_state
-					target = ROOT
-				}
-				war_participant_has_war_goal_of_type_against = {
-					type = return_state
-					target = ROOT
-				}
+				war_participant_has_war_goal_of_type_against = { type = conquer_state target = ROOT }
+				war_participant_has_war_goal_of_type_against = { type = return_state target = ROOT }
+				war_participant_has_war_goal_of_type_against = { type = take_treaty_port target = ROOT }
 			}
 			ROOT = {
 				custom_tooltip = {
@@ -77,11 +71,36 @@ eligible_war_goal_for_international_alliance = {
 								state_is_in_south_america = yes
 							}
 						}
+						trigger_if = {
+							limit = {
+								ROOT = {
+									OR = {
+										has_modifier = csto_member
+										has_modifier = csto_leader
+									}
+								}
+							}
+							state_region = { is_homeland = cu:soviet }
+						}
 						is_target_of_wargoal = scope:enemy_country
 					}
 				}
 			}
 		}
+		
+		#Country autonomy
+		war_participant_has_war_goal_of_type_against = { type = make_dominion target = ROOT }
+		war_participant_has_war_goal_of_type_against = { type = make_semi_autonomous_colony target = ROOT }
+		war_participant_has_war_goal_of_type_against = { type = make_protectorate target = ROOT }
+		war_participant_has_war_goal_of_type_against = { type = make_satellite target = ROOT }
+		war_participant_has_war_goal_of_type_against = { type = make_puppet target = ROOT }
+		war_participant_has_war_goal_of_type_against = { type = make_mandate target = ROOT }
+		war_participant_has_war_goal_of_type_against = { type = make_condominium target = ROOT }
+		
+		#Country politics
+		war_participant_has_war_goal_of_type_against = { type = regime_change target = ROOT }
+		war_participant_has_war_goal_of_type_against = { type = dominate_politics target = ROOT }
+		
 	}
 	
 }
@@ -141,6 +160,18 @@ shares_same_international_alliance = {
 				has_modifier = rio_pact_leader
 			}
 		}
+		AND = {
+			ROOT = {
+				OR = { 
+					has_modifier = csto_member
+					has_modifier = csto_leader
+				}
+			}
+			OR = { 
+				has_modifier = csto_member
+				has_modifier = csto_leader
+			}
+		}
 	}
 
 }
@@ -189,6 +220,20 @@ does_not_share_same_international_alliance = {
 			has_modifier = rio_pact_leader
 		}
 	}
+	trigger_if = {
+		limit = {
+			ROOT = {
+				OR = { 
+					has_modifier = csto_member
+					has_modifier = csto_leader
+				}
+			}
+		}
+		NOR = { 
+			has_modifier = csto_member
+			has_modifier = csto_leader
+		}
+	}
 
 }
 
@@ -198,6 +243,7 @@ diplo_action_international_alliance_leader_check = {
 		diplo_action_nato_leader_check = yes
 		diplo_action_warsaw_pact_leader_check = yes
 		diplo_action_rio_pact_leader_check = yes
+		diplo_action_csto_leader_check = yes
 	}
 
 }
@@ -255,6 +301,28 @@ diplo_action_rio_pact_leader_check = {
 		OR = {
 			country_is_in_south_america = yes
 			country_is_in_north_america = yes
+		}
+	}
+	
+}
+
+diplo_action_csto_leader_check = {
+	
+	#Leader
+	scope:target_country = {
+		has_modifier = csto_leader
+	}
+	NOT = { has_modifier = csto_member }
+	
+	#Conditions
+	OR = { 
+		is_some_kind_of_democracy = yes
+		is_a_republican_regime = yes
+	}
+	custom_tooltip = {
+		text = eligible_geography_for_csto.tt
+		capital ?= {
+			state_region = { is_homeland = cu:soviet }	
 		}
 	}
 	
