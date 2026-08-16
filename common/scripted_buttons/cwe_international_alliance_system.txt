@@ -1,0 +1,82 @@
+je_request_international_alliance_intervention_button = {
+	name = "je_request_international_alliance_intervention_button"
+	desc = "je_request_international_alliance_intervention_button_desc"
+
+	visible = { 
+		
+	}
+
+	possible = {
+		
+		#THIS is at war
+		is_at_war = yes
+		
+		#Not already triggered
+		hidden_trigger = {
+			NOT = {
+				any_country = {
+					has_variable = requested_international_alliance_intervention
+				}
+			}
+		}
+		
+		#THIS is war leader
+		any_scope_war = {
+			is_warleader = scope:actor
+		}
+		
+		#Enemy is targeting a state belonging to THIS in the correct region
+		any_scope_war = {
+			eligible_war_for_international_alliance = yes
+		}
+		
+	}
+
+	effect = {
+		
+		#Request NATO intervention
+		set_variable = {
+			name = requested_international_alliance_intervention 
+			months = 1 
+		}
+		
+		#Call in all NATO members to join war
+		every_country = {
+			limit = {
+				NOT = { THIS = ROOT }
+				has_war_with = ROOT
+				does_not_share_same_international_alliance = yes
+				save_temporary_scope_as = enemy_country
+				eligible_war_goal_for_international_alliance = yes
+			}
+			every_country = {
+				limit = {
+					NOT = { THIS = ROOT }
+					shares_same_international_alliance = yes
+					NOR = {
+						any_cobelligerent_in_war = { this = root } 
+						any_enemy_in_diplo_play = { this = root }
+					}
+				}
+				save_scope_as = target_country
+				ROOT = {
+					every_scope_war = {
+						limit = {
+							eligible_war_for_international_alliance = yes
+						}
+						join_war = {
+							target = scope:target_country
+							side = ROOT
+						}
+					}
+				}
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}

@@ -1,0 +1,216 @@
+eligible_war_for_international_alliance = {
+
+	any_war_participant = {
+		NOT = { THIS = ROOT }
+		has_war_with = ROOT
+		does_not_share_same_international_alliance = yes
+		save_temporary_scope_as = enemy_country
+		eligible_war_goal_for_international_alliance = yes
+		no_country_has_truce_with_international_alliance_member = yes
+	}
+
+}
+
+eligible_war_goal_for_international_alliance = {
+
+	OR = {
+		war_participant_has_war_goal_of_type_against = {
+			type = annex_country
+			target = ROOT
+		}
+		war_participant_has_war_goal_of_type_against = {
+			type = regime_change
+			target = ROOT
+		}
+		AND = {
+			OR = { 
+				war_participant_has_war_goal_of_type_against = {
+					type = conquer_state
+					target = ROOT
+				}
+				war_participant_has_war_goal_of_type_against = {
+					type = return_state
+					target = ROOT
+				}
+			}
+			ROOT = {
+				custom_tooltip = {
+					text = war_goal_target_state_in_alliance_geographical_limits.tt
+					any_scope_state = {
+						trigger_if = {
+							limit = {
+								ROOT = {
+									OR = {
+										has_modifier = nato_member
+										has_modifier = nato_leader
+									}
+								}
+							}
+							OR = {
+								state_is_in_europe = yes
+								state_is_in_north_america = yes
+								region = sr:region_near_east
+							}
+						}
+						trigger_if = {
+							limit = {
+								ROOT = {
+									OR = {
+										has_modifier = warsaw_pact_member
+										has_modifier = warsaw_pact_leader
+									}
+								}
+							}
+							state_is_in_europe = yes
+						}
+						trigger_if = {
+							limit = {
+								ROOT = {
+									OR = {
+										has_modifier = rio_pact_member
+										has_modifier = rio_pact_leader
+									}
+								}
+							}
+							OR = {
+								state_is_in_north_america = yes
+								state_is_in_south_america = yes
+							}
+						}
+						is_target_of_wargoal = scope:enemy_country
+					}
+				}
+			}
+		}
+	}
+	
+}
+
+no_country_has_truce_with_international_alliance_member = {
+
+	custom_tooltip = {
+		text = country_has_truce_with_international_alliance_member.tt
+		any_country = {
+			NOT = { THIS = ROOT }
+			NOR = {
+				has_truce_with = scope:enemy_country
+				has_war_with = scope:enemy_country
+			}
+			shares_same_international_alliance = yes
+		}
+	}
+
+}
+
+shares_same_international_alliance = {
+
+	trigger_if = {
+		limit = {
+			ROOT = {
+				OR = { 
+					has_modifier = nato_member
+					has_modifier = nato_leader
+				}
+			}
+		}
+		OR = { 
+			has_modifier = nato_member
+			has_modifier = nato_leader
+		}
+	}
+	trigger_if = {
+		limit = {
+			ROOT = {
+				OR = { 
+					has_modifier = warsaw_pact_member
+					has_modifier = warsaw_pact_leader
+				}
+			}
+		}
+		OR = { 
+			has_modifier = warsaw_pact_member
+			has_modifier = warsaw_pact_leader
+		}
+	}
+
+}
+
+does_not_share_same_international_alliance = {
+
+	trigger_if = {
+		limit = {
+			ROOT = {
+				OR = { 
+					has_modifier = nato_member
+					has_modifier = nato_leader
+				}
+			}
+		}
+		NOR = { 
+			has_modifier = nato_member
+			has_modifier = nato_leader
+		}
+	}
+	trigger_if = {
+		limit = {
+			ROOT = {
+				OR = { 
+					has_modifier = warsaw_pact_member
+					has_modifier = warsaw_pact_leader
+				}
+			}
+		}
+		NOR = { 
+			has_modifier = warsaw_pact_member
+			has_modifier = warsaw_pact_leader
+		}
+	}
+
+}
+
+diplo_action_international_alliance_leader_check = {
+
+	OR = {
+		diplo_action_nato_leader_check = yes
+		diplo_action_warsaw_pact_leader_check = yes
+	}
+
+}
+
+diplo_action_nato_leader_check = {
+	
+	#Leader
+	scope:target_country = {
+		has_modifier = nato_leader
+	}
+	NOT = { has_modifier = nato_member }
+	
+	#Conditions
+	is_a_democracy = yes
+	custom_tooltip = {
+		text = eligible_geography_for_nato.tt
+		OR = {
+			country_is_in_europe = yes
+			country_is_in_north_america = yes
+			c:TUR ?= this
+		}
+	}
+	
+}
+
+diplo_action_warsaw_pact_leader_check = {
+	
+	#Leader
+	scope:target_country = { 
+		has_modifier = warsaw_pact_leader
+	}
+	NOT = { has_modifier = warsaw_pact_member }
+	
+	#Conditions
+	is_a_communist_government = yes
+	custom_tooltip = {
+		text = eligible_geography_for_warsaw_pact.tt
+		country_is_in_europe = yes
+	}
+	
+}

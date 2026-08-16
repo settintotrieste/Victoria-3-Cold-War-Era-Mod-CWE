@@ -2,14 +2,15 @@ form_warsaw_pact_decision = {
 
 	is_shown = {
 		
-		game_date >= 1955.5.14
-		
-		#NATO exists
-		any_country = { has_modifier = nato_leader }
+		#Date of establishment
+		#game_date >= 1955.5.14
 		
 		#Warsaw Pact does not already exist
 		NOR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader }
 		NOT = { any_country = { has_modifier = warsaw_pact_leader } }
+		
+		#NATO exists
+		any_country = { has_modifier = nato_leader }
 		
 		#Cold War
 		cold_war_ongoing = yes
@@ -26,6 +27,7 @@ form_warsaw_pact_decision = {
 			c:SOV ?= this
 			c:RUS ?= this
 		}
+		
 	}
 
 	possible = {
@@ -58,28 +60,21 @@ form_warsaw_pact_decision = {
 	
 		#THIS forms Warsaw Pact by being the first member & leader
 		add_modifier = { name = warsaw_pact_leader }
-		
-		#Timer
-		set_global_variable = {
-			name = warsaw_pact_formation_var
-			months = 12
-		}
+		add_journal_entry = { type = je_warsaw_pact_system }
 		
 	}
 
 	ai_chance = {
-		value = 0	
+		value = 100
 		
 		if = {
 			limit = {
 				#There is a non communist hostile superpower
 				any_country = {
+					NOT = { THIS = ROOT }
 					country_rank = rank_value:super_power
 					NOT = { is_a_communist_government = yes }
-					has_attitude = {
-						who = ROOT
-						attitude <= antagonistic
-					}
+					relations:root < relations_threshold:neutral
 				}
 				
 			}
@@ -88,234 +83,6 @@ form_warsaw_pact_decision = {
 		
 		if = { limit = { historical_railroading_active = yes } add = 100 }
 		
-	}
-	
-}
-
-join_warsaw_pact_decision = {
-
-	is_shown = {
-	
-		#Is not currently applying for warsaw_pact membership
-		NOT = { has_variable = warsaw_pact_application_var }
-		NOT = { has_global_variable = warsaw_pact_application_quota_reached }
-		
-		#Not already in Warsaw Pact
-		NOT = { has_modifier = warsaw_pact_leader }
-		NOT = { has_modifier = warsaw_pact_member }
-		
-		#Warsaw Pact does already exists
-		any_country = { has_modifier = warsaw_pact_leader }
-		
-		#Cold War
-		cold_war_ongoing = yes
-		
-		#THIS is communist
-		is_a_communist_government = yes
-		
-		#THIS must not be a revolutionary
-		is_revolutionary = no is_secessionist = no
-		
-		#European countries only
-		country_is_in_europe = yes
-		
-	}
-
-	possible = {
-	
-		#Did not leave Warsaw Pact recently
-		NOT = { has_variable = left_warsaw_pact_var }
-	
-		#Country is independent
-		is_sufficiently_independent = yes
-	
-		#Country is not at war
-		is_at_war = no
-		
-		#Country is not neutral
-		is_not_neutral = yes
-		
-		#Friendly with Warsaw Pact leader
-		any_country = {
-			has_modifier = warsaw_pact_leader
-			trigger_if = {
-				limit = { is_power_bloc_leader = yes }
-				is_in_same_power_bloc = ROOT
-			}
-			OR = {
-				has_subject_relation_with = ROOT
-				relations:root >= relations_threshold:friendly
-			}
-		}
-		
-		#Not hostile with any Warsaw Pact member
-		NOT = { 
-			any_country = {
-				has_modifier = warsaw_pact_member
-			
-				has_attitude = {
-					who = ROOT
-					attitude <= antagonistic
-				}
-			}
-		}
-		
-		#Timer
-		custom_tooltip = {
-			text = international_organisation_application_cooldown.tt
-			NOT = { 
-				has_variable = warsaw_pact_application_cooldown
-			}
-		}
-		
-	}
-	
-	when_taken = {
-	
-		#THIS applies for Warsaw Pact
-		set_variable = {
-			name = warsaw_pact_application_var
-			months = 12
-		}
-		
-		#Choice for Warsaw Pact leader to accpet or decline
-		random_country = { 
-			limit = { has_modifier = warsaw_pact_leader }
-			trigger_event = { id = warsaw_pact_system.5 }
-		}
-		
-		#Timer
-		set_variable = {
-			name = warsaw_pact_application_cooldown
-			years = 10
-		}
-		set_global_variable = {
-			name = warsaw_pact_application_quota_reached
-			months = 1
-		}
-		
-	}
-
-	ai_chance = {
-		value = 0
-		
-		if = {
-		
-			limit = {
-			
-				OR = {
-				
-					#Subjects will join
-					any_country = {
-						limit = { c:SOV ?= this }
-						has_subject_relation_with = ROOT
-					}
-				
-					#There is a hostile country with rank greater than THIS
-					any_country = {
-						country_rank > root.country_rank
-						can_go_to_war = yes
-			
-						OR = { 
-							has_attitude = {
-								who = ROOT
-								attitude <= antagonistic
-							}
-							relations:root < relations_threshold:poor
-						}
-					}
-				
-					#There is a neigbouring country that is hostile against THIS
-					any_neighbouring_state = {
-						owner = {
-							can_go_to_war = yes
-			
-							OR = { 
-								has_attitude = {
-									who = ROOT
-									attitude <= antagonistic
-								}
-								relations:root < relations_threshold:poor
-							}
-						}
-					}
-				
-				}
-				
-			}
-			
-			add = 100
-			
-		}
-		
-		if = { limit = { historical_railroading_active = yes } add = 100 }
-
-	}
-	
-}
-
-leave_warsaw_pact_decision = {
-
-	is_shown = {
-		
-		#THIS is in Warsaw Pact
-		OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader }
-		
-	}
-
-	possible = {
-	
-		#Conditions to leave warsaw_pact
-		OR = {
-		
-			NOT = { is_a_communist_government = yes }
-		
-			NOT = { is_sufficiently_independent = yes }
-			
-			is_neutral = yes
-			
-			any_country = {
-				has_modifier = warsaw_pact_leader
-				NOT = { THIS = ROOT }
-			
-				NOT = { has_subject_relation_with = ROOT }
-				has_attitude = {
-					who = ROOT
-					attitude <= antagonistic
-				}
-			}
-			
-			is_player = yes
-			
-		}
-		
-	}
-	
-	when_taken = {
-	
-		#THIS joins Warsaw Pact
-		remove_modifier = warsaw_pact_member
-		remove_modifier = warsaw_pact_leader
-		
-		#Remove defensive alliance with Warsaw Pact members
-		every_country = {
-			limit = { OR = { has_modifier = warsaw_pact_member has_modifier = warsaw_pact_leader } has_diplomatic_pact = { who = ROOT type = defensive_pact } }
-			remove_diplomatic_pact = {
-				country = ROOT
-				type = defensive_pact
-			}
-		}
-		
-		#Block reapplication for 5 years
-		set_variable = {
-			name = left_warsaw_pact_var
-			months = 60
-		}
-		
-	}
-
-	ai_chance = {
-		value = 100		
 	}
 	
 }

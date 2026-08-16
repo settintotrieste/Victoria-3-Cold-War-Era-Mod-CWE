@@ -7,19 +7,13 @@ form_nato_decision = {
 		
 		#NATO does not already exist
 		NOR = { has_modifier = nato_member has_modifier = nato_leader }
-		NOT = { any_country = { OR = { has_modifier = nato_member has_modifier = nato_leader } } }
+		NOT = { any_country = { has_modifier = nato_leader } }
 		
 		#Cold War
 		cold_war_ongoing = yes
 		
 		#THIS is a democracy
 		is_a_democracy = yes
-		
-		#There is a hostile superpower
-		any_country = {
-			country_rank = rank_value:super_power
-			is_a_communist_government = yes
-		}
 		
 		#THIS must not be a revolutionary
 		is_revolutionary = no is_secessionist = no
@@ -29,6 +23,7 @@ form_nato_decision = {
 			country_is_in_europe = yes
 			country_is_in_north_america = yes
 		}
+		
 	}
 
 	possible = {
@@ -64,251 +59,30 @@ form_nato_decision = {
 	
 		#THIS forms NATO by being the first member & leader
 		add_modifier = { name = nato_leader }
+		add_journal_entry = { type = je_nato_system }
 		
 	}
 
 	ai_chance = {
-		value = 100		
-	}
-	
-}
-
-join_nato_decision = {
-
-	is_shown = {
-	
-		#Is not currently applying for nato membership
-		NOT = { has_variable = nato_application_var }
-		NOT = { has_global_variable = nato_application_quota_reached }
-		
-		#Not already in NATO
-		NOT = { has_modifier = nato_leader }
-		NOT = { has_modifier = nato_member }
-		
-		#NATO does already exists
-		any_country = { has_modifier = nato_leader }
-		
-		#Cold War
-		cold_war_ongoing = yes
-		
-		#THIS is a democracy OR is not communist
-		OR = { 
-			is_a_democracy = yes
-			NOT = { is_a_communist_government = yes }
-		}
-		
-		#THIS must not be a revolutionary
-		is_revolutionary = no is_secessionist = no
-		
-		#European and North American countries only
-		OR = { 
-			country_is_in_europe = yes
-			country_is_in_north_america = yes
-			c:TUR ?= this
-		}
-	}
-
-	possible = {
-	
-		#Did not leave NATO recently
-		NOT = { has_variable = left_nato_var }
-	
-		#Country is independent
-		is_sufficiently_independent = yes
-	
-		#Country is not at war
-		is_at_war = no
-		
-		#Country is not broke
-		in_default = no
-		
-		#Country is not neutral
-		is_not_neutral = yes
-		
-		#Friendly with NATO leader
-		any_country = {
-			has_modifier = nato_leader
-			
-			OR = {
-				has_subject_relation_with = ROOT
-				relations:root >= relations_threshold:friendly
-			}
-		}
-		
-		#Not hostile with any NATO member
-		NOT = { 
-			any_country = {
-				has_modifier = nato_member
-			
-				has_attitude = {
-					who = ROOT
-					attitude <= antagonistic
-				}
-			}
-		}
-		
-		#Timer
-		custom_tooltip = {
-			text = international_organisation_application_cooldown.tt
-			NOT = { 
-				has_variable = nato_application_cooldown
-			}
-		}
-		
-	}
-	
-	when_taken = {
-	
-		#THIS applies for NATO
-		set_variable = {
-			name = nato_application_var
-			months = 12
-		}
-		
-		#Choice for NATO leader to accpet or decline
-		random_country = { 
-			limit = { has_modifier = nato_leader }
-			trigger_event = { id = nato_system.5 }
-		}
-		
-		#Timer
-		set_variable = {
-			name = nato_application_cooldown
-			years = 10
-		}
-		set_global_variable = {
-			name = nato_application_quota_reached
-			months = 1
-		}
-		
-	}
-
-	ai_chance = {
-		value = 0
+		value = 100
 		
 		if = {
-		
 			limit = {
-			
-				OR = { 
-				
-					#There is a hostile country with rank greater than THIS
-					any_country = {
-						country_rank > root.country_rank
-						can_go_to_war = yes
-			
-						OR = { 
-							has_attitude = {
-								who = ROOT
-								attitude <= antagonistic
-							}
-							relations:root < relations_threshold:poor
-						}
-					}
-				
-					#There is a neigbouring country that is hostile against THIS
-					any_neighbouring_state = {
-						owner = {
-							can_go_to_war = yes
-			
-							OR = { 
-								has_attitude = {
-									who = ROOT
-									attitude <= antagonistic
-								}
-								relations:root < relations_threshold:poor
-							}
-						}
-					}
-					
-					#Allied with the leader of supra-national alliance
-					any_country = {
-						has_modifier = nato_leader
-						any_scope_treaty = {
-							binds = ROOT
-							any_scope_article = {
-								OR = { 
-									has_type = defensive_pact
-									has_type = alliance
-								}
-							}
-						}
-					}
-				
+				#There is a communist hostile superpower
+				any_country = {
+					NOT = { THIS = ROOT }
+					country_rank = rank_value:super_power
+					is_a_communist_government = yes
+					relations:root < relations_threshold:neutral
 				}
 				
 			}
-			
 			add = 100
-			
-		}
-
-	}
-	
-}
-
-leave_nato_decision = {
-
-	is_shown = {
-		
-		#THIS is in NATO
-		OR = { has_modifier = nato_member has_modifier = nato_leader }
-		
-	}
-
-	possible = {
-	
-		#Conditions to leave nato
-		OR = {
-		
-			is_a_communist_government = yes
-		
-			NOT = { is_sufficiently_independent = yes }
-			
-			is_neutral = yes
-			
-			any_country = {
-				has_modifier = nato_leader
-				NOT = { THIS = ROOT }
-			
-				NOT = { has_subject_relation_with = ROOT }
-				has_attitude = {
-					who = ROOT
-					attitude <= antagonistic
-				}
-			}
-			
-			is_player = yes
-			
 		}
 		
-	}
-	
-	when_taken = {
-	
-		#THIS joins NATO
-		remove_modifier = nato_member
-		remove_modifier = nato_leader
+		if = { limit = { historical_railroading_active = yes } add = 100 }
 		
-		#Remove defensive alliance with NATO members
-		every_country = {
-			limit = { OR = { has_modifier = nato_member has_modifier = nato_leader } has_diplomatic_pact = { who = ROOT type = defensive_pact } }
-			remove_diplomatic_pact = {
-				country = ROOT
-				type = defensive_pact
-			}
-		}
 		
-		#Block reapplication for 5 years
-		set_variable = {
-			name = left_nato_var
-			months = 60
-		}
-		
-	}
-
-	ai_chance = {
-		value = 100		
 	}
 	
 }
