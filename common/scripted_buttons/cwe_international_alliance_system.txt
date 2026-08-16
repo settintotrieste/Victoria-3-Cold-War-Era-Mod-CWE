@@ -22,7 +22,7 @@ je_request_international_alliance_intervention_button = {
 		
 		#Enemy is targeting a state belonging to THIS in the correct region
 		any_scope_war = {
-			is_warleader = scope:actor
+			is_warleader = ROOT
 			eligible_war_for_international_alliance = yes
 		}
 		
@@ -37,35 +37,48 @@ je_request_international_alliance_intervention_button = {
 		}
 		
 		#Call in all NATO members to join war
-		every_country = {
-			limit = {
-				NOT = { THIS = ROOT }
-				has_war_with = ROOT
-				does_not_share_same_international_alliance = yes
-				save_temporary_scope_as = enemy_country
-				eligible_war_goal_for_international_alliance = yes
-			}
+		custom_tooltip = {
+			text = invoke_collective_security.tt
+			save_scope_as = war_starter_scope
 			every_country = {
 				limit = {
 					NOT = { THIS = ROOT }
-					shares_same_international_alliance = yes
-					NOR = {
-						any_cobelligerent_in_war = { this = root } 
-						any_enemy_in_diplo_play = { this = root }
-					}
+					has_war_with = ROOT
+					does_not_share_same_international_alliance = yes
+					save_temporary_scope_as = enemy_country
+					eligible_war_goal_for_international_alliance = yes
 				}
-				save_scope_as = target_country
-				ROOT = {
-					every_scope_war = {
-						limit = {
-							eligible_war_for_international_alliance = yes
-						}
-						join_war = {
-							target = scope:target_country
-							side = ROOT
+				every_country = {
+					limit = {
+						NOT = { THIS = ROOT }
+						shares_same_international_alliance = yes
+						NOR = {
+							any_cobelligerent_in_war = { this = root } 
+							any_enemy_in_diplo_play = { this = root }
 						}
 					}
+					save_scope_as = target_country
+					ROOT = {
+						every_scope_war = {
+							limit = {
+								eligible_war_for_international_alliance = yes
+							}
+							join_war = {
+								target = scope:target_country
+								side = ROOT
+							}
+						}
+					}
+					save_scope_as = war_joiner_scope
+					post_notification = auto_war_join_notification
 				}
+			}
+		}
+		
+		#Notify world
+		hidden_effect = {
+			every_country = {
+				post_notification = collective_security_invoked_notification
 			}
 		}
 		
