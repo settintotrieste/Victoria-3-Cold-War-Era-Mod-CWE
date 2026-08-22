@@ -26,6 +26,31 @@ je_cabinet = {
 
 	immediate = {
 	
+		#Ruler correction
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOG_prime_minister
+				ruler ?= {
+					NOT = { has_role = character_role_head_of_government }
+				}
+			}
+			if = {
+				limit = {
+					any_scope_character = {
+						has_role = character_role_head_of_government
+						is_ruler_of_own_country = no
+					}
+				}
+				random_scope_character = {
+					limit = { has_role = character_role_head_of_government }
+					set_character_as_ruler = yes
+				}
+			}
+			else = {
+				ruler ?= { set_character_as_head_of_government = yes }
+			}
+		}
+	
 		#Mark ruler
 		ruler ?= {
 			save_scope_as = ruler_scope
@@ -56,6 +81,12 @@ je_cabinet = {
 		OR = {
 			scope:ruler_scope ?= { is_ruler_of_own_country = no }
 			NOT = { exists = scope:ruler_scope }
+			AND = {
+				has_law_or_variant = law_type:law_HOG_prime_minister
+				scope:ruler_scope ?= {
+					NOT = { has_role = character_role_head_of_government }
+				}
+			}
 		}
 		
 	}
@@ -103,6 +134,17 @@ je_cabinet = {
 		remove_variable = has_bipartisan_plan
 		every_interest_group = {
 			remove_variable = bipartisan_participant
+		}
+		
+		#Clean up heads of government
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOG_none
+			}
+			every_scope_character = {
+				limit = { has_role = character_role_head_of_government }
+				remove_character_role = character_role_head_of_government
+			}
 		}
 		
 	}
