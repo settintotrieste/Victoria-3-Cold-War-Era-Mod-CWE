@@ -1,0 +1,413 @@
+je_foreign_monarchy = {
+	icon = "gfx/interface/icons/law_icons/monarchy.dds"
+
+	group = je_group_political_organs
+
+	is_shown_when_inactive = {
+		
+		has_law_or_variant = law_type:law_HOS_monarch
+		is_subject = yes
+		ruler_is_governor_general = yes
+		
+	}
+
+	possible = {
+		
+		OR = { 
+			is_a_colonial_government = yes
+			shares_same_monarch = yes
+		}
+		overlord ?= {
+			any_scope_character = {
+				OR = {
+					has_role = character_role_monarch
+					has_role = character_role_regent
+				}
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		#Set Viceroy
+		if = {
+			limit = { ruler ?= { NOT = { has_role = character_role_viceroy } } }
+			ruler ?= { set_character_as_viceroy = yes }
+		}
+		
+		#Mark foreign monarch
+		if = {
+			limit = { 
+				OR = { 
+					is_a_colonial_government = yes
+					shares_same_monarch = yes
+				}
+				is_subject = yes
+			}
+			if = {
+				limit = { 
+					overlord ?= {
+						any_scope_character = {
+							OR = {
+								has_role = character_role_monarch
+								has_role = character_role_regent
+							}
+						}
+					}
+				}
+				overlord ?= {
+					if = {
+						limit = {
+							any_scope_character = {
+								has_role = character_role_monarch
+							}
+						}
+						random_scope_character = {
+							limit = { 
+								has_role = character_role_monarch
+							}
+							save_scope_as = constitutional_monarch_scope
+						}
+					}
+					else_if = {
+						limit = {
+							any_scope_character = {
+								has_role = character_role_regent
+							}
+						}
+						random_scope_character = {
+							limit = { 
+								has_role = character_role_regent
+							}
+							save_scope_as = constitutional_monarch_scope
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = { 
+					top_overlord ?= {
+						any_scope_character = {
+							OR = {
+								has_role = character_role_monarch
+								has_role = character_role_regent
+							}
+						}
+					}
+				}
+				top_overlord ?= {
+					if = {
+						limit = {
+							any_scope_character = {
+								has_role = character_role_monarch
+							}
+						}
+						random_scope_character = {
+							limit = { 
+								has_role = character_role_monarch
+							}
+							save_scope_as = constitutional_monarch_scope
+						}
+					}
+					else_if = {
+						limit = {
+							any_scope_character = {
+								has_role = character_role_regent
+							}
+						}
+						random_scope_character = {
+							limit = { 
+								has_role = character_role_regent
+							}
+							save_scope_as = constitutional_monarch_scope
+						}
+					}
+				}
+			}
+			else = {
+				#No existing monarch
+				if = {
+					limit = {
+						NOT = {
+							any_scope_character = {
+								has_role = character_role_monarch
+							}
+						}
+					}
+					generate_monarch_for_country = yes
+				}
+				#Mark Monarch
+				random_scope_character = {
+					limit = { 
+						has_role = character_role_monarch
+					}
+					save_scope_as = constitutional_monarch_scope
+				}
+			}
+			
+		}
+		else_if = {
+			limit = { 
+				any_scope_character = {
+					has_role = character_role_monarch
+				}
+			}
+			#Mark Monarch
+			random_scope_character = {
+				limit = { 
+					has_role = character_role_monarch
+				}
+				save_scope_as = constitutional_monarch_scope
+			}
+		}
+		else = {
+			
+			#Mark Monarch
+			random_scope_character = {
+				limit = { 
+					has_role = character_role_monarch
+				}
+				save_scope_as = constitutional_monarch_scope
+			}
+			
+			#There is local monarchy when monarchy should be foreign
+			if = {
+				limit = {
+					OR = { 
+						ruler_is_governor_general = yes
+						shares_same_monarch = yes
+					}
+					any_scope_character = {
+						OR = {
+							has_role = character_role_monarch 
+							has_role = character_role_monarch_elective
+							has_role = character_role_regent
+							has_role = character_role_prince
+						}
+					}
+				}
+				every_scope_character = {
+					limit = { has_role = character_role_monarch }
+					remove_character_role = character_role_monarch
+				}
+				every_scope_character = {
+					limit = { has_role = character_role_monarch_elective }
+					remove_character_role = character_role_monarch_elective
+				}
+				every_scope_character = {
+					limit = { has_role = character_role_regent }
+					remove_character_role = character_role_regent
+				}
+				every_scope_character = {
+					limit = { has_role = character_role_prince }
+					remove_character_role = character_role_prince
+				}
+			}
+			
+		}
+		
+		#Notification of coronations
+		if = {
+			limit = { 
+				active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy }
+			}
+			save_scope_as = constitutional_monarch_country_scope
+			post_notification = new_elective_monarch
+		}
+		else_if = {
+			limit = {
+				scope:constitutional_monarch_scope ?= {
+					is_adult = yes
+					NAND = {
+						owner ?= { has_variable = primogeniture_system }
+						is_female = yes
+					}
+				}
+			}
+			save_scope_as = constitutional_monarch_country_scope
+			post_notification = new_monarch
+		}
+		
+	}
+
+	invalid = {
+		
+		OR = {
+		
+			#No longer a constitutional monarchy
+			NAND = {
+				has_law_or_variant = law_type:law_HOS_monarch
+				ruler_is_governor_general = yes
+			}
+			
+			#Monarch no longer exists
+			NOT = { exists = scope:constitutional_monarch_scope }
+			
+			#Monarch no longer a monarch
+			scope:constitutional_monarch_scope ?= {
+				NOR = {
+					has_role = character_role_monarch
+					has_role = character_role_regent
+				}
+			}
+			
+			#Foreign Monarch is no longer monarch of THIS
+			AND = {
+				scope:constitutional_monarch_scope ?= {
+					NOT = { owner ?= ROOT }
+				}
+				OR = {
+					is_subject = no
+					shares_same_monarch = no
+				}
+			}
+			
+			#Regency
+			scope:constitutional_monarch_scope ?= {
+				owner ?= ROOT
+				has_role = character_role_monarch
+				OR = {
+					is_adult = no
+					AND = {
+						is_female = yes
+						owner ?= { has_variable = primogeniture_system }
+					}
+					AND = {
+						has_role = character_role_regent
+						has_role = character_role_monarch
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	on_invalid = {
+		
+		#Remove monarch law if foreign connection is removed
+		if = {
+			limit = {
+				shares_same_monarch = no
+			}
+			#There is no local monarchy
+			if = {
+				limit = {
+					has_law_or_variant = law_type:law_HOS_monarch
+				}
+				if = {
+					limit = {
+						active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy }
+					}
+					#Generate Elective Monarchs
+					heir ?= {
+						if = {
+							limit = { NOT = { has_role = character_role_monarch_elective } }
+							add_character_role = character_role_monarch_elective
+						}
+						disinherit_character = yes
+					}
+					generate_elective_monarchs_for_country = yes
+					#Ruler correction
+					if = {
+						limit = { 
+							ruler ?= { 
+								NOR = {
+									has_role = character_role_monarch
+									has_role = character_role_monarch_elective
+								}
+							}
+						}
+						random_scope_character = {
+							limit = { 
+								OR = { 
+									has_role = character_role_monarch_elective 
+									has_role = character_role_prince 
+								} 
+							}
+							set_character_as_monarch = yes
+						}
+					}
+				}
+				else = {
+					activate_law = law_type:law_HOS_president
+				}
+			}
+			#Remove all viceroys
+			every_scope_character = {
+				limit = {
+					OR = {
+						has_role = character_role_viceroy
+						AND = {
+							is_ruler_of_own_country = yes
+							NOT = { has_role = character_role_monarch }
+							culture ?= { NOT = { is_primary_culture_of = owner } }
+						}
+					}
+				}
+				retire_character = yes
+			}
+		}
+		
+	}
+	
+	on_complete = {
+		
+		#Mark Monarch under Regency
+		if = {
+			limit = {
+				scope:constitutional_monarch_scope ?= {
+					has_role = character_role_monarch
+					owner ?= {
+						is_a_regency_government = yes
+					}
+				}
+			}
+			scope:constitutional_monarch_scope ?= {
+				owner ?= {
+					random_scope_character = {
+						limit = { 
+							has_role = character_role_regent
+						}
+						save_scope_as = regent_character_label
+						custom_tooltip = {
+							text = regent_character_label.tt
+						}
+					}
+				}
+			}
+		}
+	
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = monarch_ig_label
+				trigger = {
+					scope:constitutional_monarch_scope ?= {
+						OR = { 
+							has_role = character_role_monarch
+							has_role = character_role_regent
+						}
+					}
+				}
+			}
+			triggered_desc = {
+				desc = monarch_vacated
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+	weight = 50
+
+	should_be_pinned_by_default_uninvolved_or_context = no
+
+	transferable = no
+
+	progressbar = no
+}
