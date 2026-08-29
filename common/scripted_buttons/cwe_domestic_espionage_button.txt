@@ -919,3 +919,69 @@ je_assassinate_ruler_button = {
 	}
 	
 }
+
+je_secret_police_system_dismiss_spymaster_button = {
+	name = "je_secret_police_system_dismiss_spymaster_button"
+	desc = "je_secret_police_system_dismiss_spymaster_button_desc"
+
+	visible = {
+		
+		#Head of Intelligence is not the Ruler
+		ruler ?= { NOT = { has_role = character_role_head_of_intelligence } }
+		
+	}
+
+	possible = {
+	
+		#Government can dismiss civil servants at will
+		has_law_or_variant = law_type:law_politicised_armed_forces
+		
+		#Timer
+		custom_tooltip = {
+			text = changed_secret_police_timer.tt
+			NOT = { has_variable = changed_secret_police_timer }
+		}
+		
+		#Legal requirements
+		government_has_legislative_simple_majority = yes
+		
+	}
+
+	effect = {
+	
+		#Dismiss Head of the Armed Forces
+		random_scope_character = {
+			limit = { 
+				has_role = character_role_head_of_intelligence
+			}
+			remove_character_role = character_role_head_of_intelligence
+		}
+		
+		#Add timer
+		set_variable = {
+			name = changed_secret_police_timer
+			years = 1
+		}
+		
+		#Anger Intelligence Head
+		random_scope_character = {
+			limit = { 
+				has_role = character_role_head_of_intelligence
+			}
+			interest_group ?= { save_scope_as = scope_opposition_target }
+		}
+		if = {
+			limit = { exists = scope:scope_opposition_target }
+			add_radicals = {
+				value = medium_radicals
+				interest_group = scope:scope_opposition_target
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+	}
+	
+}
