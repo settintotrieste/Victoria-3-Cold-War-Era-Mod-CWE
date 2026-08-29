@@ -275,6 +275,7 @@ send_to_jail = {
 		#Imprison Character
 		replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
 		add_modifier = { name = convicted_character years = 10 }
+		set_variable = character_ineligible_as_office_holder
 		
 		#Domestic reaction
 		interest_group ?= { save_scope_as = THIS_IG_scope }
@@ -580,9 +581,11 @@ grant_amnesty = {
 		#Character is owned by THIS
 		owner ?= scope:actor
 		
-		#Is in prison
-		has_role = character_role_prisoner
-		has_modifier = convicted_character
+		#Is in prison OR has a criminal record
+		OR = {
+			has_role = character_role_prisoner
+			has_variable = character_ineligible_as_office_holder
+		}
 		
 	}
 
@@ -601,13 +604,39 @@ grant_amnesty = {
 			
 		}
 		
+		#Special limitation
+		trigger_if = {
+			limit = {
+				has_variable = character_ineligible_as_office_holder
+			}
+			OR = {
+				is_ruler_of_own_country = no
+				owner ?= { has_law_or_variant = law_type:law_appointed_legislature }
+				AND = {
+					popularity >= 50
+					owner ?= {
+						custom_tooltip = {
+							text = government_has_legislative_super_majority.tt
+							government_has_legislative_super_majority = yes
+						}
+					}
+				}
+			}
+		}
+		
 	}
 
 	effect = {
 		
 		#Release Character
 		replace_character_roles = { add = { character_role_politician } remove_all = yes }
-		remove_modifier = convicted_character
+		if = {
+			limit = { has_modifier = convicted_character }
+			remove_modifier = convicted_character
+		}
+		remove_variable = character_ineligible_as_office_holder
+		
+		#Notification
 		save_scope_as = released_prisoner
 		post_notification = political_prisoner_released
 		
@@ -615,8 +644,27 @@ grant_amnesty = {
 		interest_group ?= { save_scope_as = THIS_IG_scope }
 		owner ?= {
 			add_loyalists = {
-				value = small_radicals
+				value = very_large_radicals
 				interest_group = scope:THIS_IG_scope
+			}
+		}
+		if = {
+			limit = {
+				has_variable = character_ineligible_as_office_holder
+			}
+			owner ?= {
+				every_interest_group = {
+					limit = {
+						NOT = { this ?= root.interest_group }
+					}
+					save_scope_as = ig_scope
+					owner ?= {
+						add_radicals = {
+							value = medium_radicals
+							interest_group = scope:ig_scope
+						}
+					}
+				}
 			}
 		}
 		
@@ -653,6 +701,12 @@ grant_amnesty = {
 				}
 			}
 			add = 51
+		}
+		if = {
+			limit = {
+				is_ruler_of_own_country = yes
+			}
+			add = 100
 		}
 	}
 	
@@ -1087,6 +1141,7 @@ capture_terrorist = {
 								text = capture_terrorist_successful_tt
 								replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
 								add_modifier = { name = convicted_character years = 10 }
+								set_variable = character_ineligible_as_office_holder
 							}
 							post_notification = capture_terrorist_successful
 						}
@@ -1123,6 +1178,7 @@ capture_terrorist = {
 						50 = {
 							replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
 							add_modifier = { name = convicted_character years = 10 }
+							set_variable = character_ineligible_as_office_holder
 						}
 					}
 				}
