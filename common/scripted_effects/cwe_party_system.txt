@@ -1,0 +1,149 @@
+calculate_party_radicalism = {
+
+	#Set Party Lean
+	set_variable = { 
+		name = party_radicalism
+		value = 0
+	}
+	set_variable = { 
+		name = party_character_count
+		value = 0
+	}
+	
+	#Calculate radicalism
+	every_scope_character = {
+		limit = { 
+			interest_group ?= { is_in_government = yes }
+			character_is_public_servant = yes
+		}
+		if = {
+			limit = { has_ideology = ideology:ideology_autocratic }
+			owner ?= { 
+				change_variable = {
+					name = party_radicalism
+					add = 100
+				}
+			}
+		}
+		else_if = {
+			limit = { has_ideology = ideology:ideology_power_hungry }
+			owner ?= { 
+				change_variable = {
+					name = party_radicalism
+					add = 75
+				}
+			}
+		}
+		else_if = {
+			limit = { has_ideology = ideology:ideology_elitist }
+			owner ?= { 
+				change_variable = {
+					name = party_radicalism
+					add = 50
+				}
+			}
+		}
+		else_if = {
+			limit = { has_ideology = ideology:ideology_democratic }
+			owner ?= { 
+				change_variable = {
+					name = party_radicalism
+					add = 25
+				}
+			}
+		}
+		else_if = {
+			limit = { has_ideology = ideology:ideology_liberal }
+			owner ?= { 
+				change_variable = {
+					name = party_radicalism
+					add = 0
+				}
+			}
+		}
+		owner ?= { 
+			change_variable = {
+				name = party_character_count
+				add = 1
+			}
+		}
+	}
+	
+	#Apply min max values
+	if = {
+		limit = {
+			has_variable = party_character_count
+			root.var:party_character_count > 0
+		}
+		change_variable = {
+			name = party_radicalism
+			divide = root.var:party_character_count
+		}
+	}
+	clamp_variable = {
+		name = party_radicalism
+		max = 100
+		min = 0
+	}
+	
+	#Determine Party Lean
+	if = {
+		limit = { 
+			has_variable = party_radicalism 
+			root.var:party_radicalism >= 80
+		}
+		remove_variable = very_reformist_party
+		remove_variable = reformist_party
+		remove_variable = moderate_party
+		remove_variable = radical_party
+		set_variable = very_radical_party
+	}
+	else_if = {
+		limit = { 
+			has_variable = party_radicalism 
+			root.var:party_radicalism < 80
+			root.var:party_radicalism >= 60
+		}
+		remove_variable = very_reformist_party
+		remove_variable = reformist_party
+		remove_variable = moderate_party
+		set_variable = radical_party
+		remove_variable = very_radical_party
+	}
+	else_if = {
+		limit = { 
+			has_variable = party_radicalism 
+			root.var:party_radicalism < 60
+			root.var:party_radicalism >= 40
+		}
+		remove_variable = very_reformist_party
+		remove_variable = reformist_party
+		set_variable = moderate_party
+		remove_variable = radical_party
+		remove_variable = very_radical_party
+	}
+	else_if = {
+		limit = { 
+			has_variable = party_radicalism 
+			root.var:party_radicalism < 40
+			root.var:party_radicalism >= 20
+		}
+		remove_variable = very_reformist_party
+		set_variable = reformist_party
+		remove_variable = moderate_party
+		remove_variable = radical_party
+		remove_variable = very_radical_party
+	}
+	else_if = {
+		limit = { 
+			has_variable = party_radicalism 
+			root.var:party_radicalism < 20
+		}
+		set_variable = very_reformist_party
+		remove_variable = reformist_party
+		remove_variable = moderate_party
+		remove_variable = radical_party
+		remove_variable = very_radical_party
+	}
+
+}
