@@ -10,157 +10,42 @@ politicians_system.1 = {
 		#Not at war
 		is_at_war = no
 		
-		#Has an elderly ruler, politician or agitator
-		OR = {
-			
-			#Ruler (dictators retire by dying)
-			AND = {
-				NOT = { is_a_dictatorship = yes }
-				ruler ?= {
-					NOT = { has_variable = is_ruler_for_life }
-					NOT = { has_role = character_role_monarch }
-					OR = { 
-						AND = { 
-							is_historical = yes
-							age >= 90
-						}
-						AND = { 
-							is_historical = no
-							age >= 80
-						}
-						AND = {
-							age >= 70
-							OR = {
-								has_trait = psychological_affliction
-								has_trait = cancer
-								has_trait = senile
-								has_trait = wounded
-							}
-							is_historical = no
-						}
-					}
-				}
-			}
-			
-			#IG Leaders & Agitators
-			any_scope_character = {
-				is_ruler_of_own_country = no
-				NOT = { has_role = character_role_monarch }
-				OR = { 
-					is_an_IG_leader = yes
-					has_role_of_type = agitator
-				}
-				OR = { 
-					AND = { 
-						is_historical = yes
-						age >= 90
-					}
-					AND = { 
-						is_historical = no
-						age >= 80
-					}
-					AND = {
-						age >= 70
-						OR = {
-							has_trait = psychological_affliction
-							has_trait = cancer
-							has_trait = senile
-							has_trait = wounded
-						}
-						is_historical = no
-					}
-				}
-			}
-		
-		}
-		
 	}
 
 	immediate = {
 		
 		#Retire the elderly
 		random_scope_character = {
-		
 			limit = {
-			
 				OR = {
-					
-					#Rulers
 					AND = {
-						is_ruler_of_own_country = yes
-						NOT = { has_variable = is_ruler_for_life }
-						NOT = { has_role = character_role_monarch }
-						owner = { NOT = { is_a_dictatorship = yes } }
-						OR = { 
-							AND = { 
-								is_historical = yes
-								age >= 90
-							}
-							AND = { 
-								is_historical = no
-								age >= 80
-							}
-							AND = {
-								age >= 70
-								OR = {
-									has_trait = psychological_affliction
-									has_trait = cancer
-									has_trait = senile
-									has_trait = wounded
-								}
-								is_historical = no
-							}
-						}
+						age >= 100
+						is_historical = yes
 					}
-					
-					#Politicians & Agitators
-					AND = { 
-						is_ruler_of_own_country = no
-						NOT = { has_role = character_role_monarch }
-						OR = { 
-							is_an_IG_leader = yes
-							has_role_of_type = agitator
-						}
-						OR = { 
-							AND = { 
-								is_historical = yes
-								age >= 90
-							}
-							AND = { 
-								is_historical = no
-								age >= 80
-							}
-							AND = {
-								age >= 70
-								OR = {
-									has_trait = psychological_affliction
-									has_trait = cancer
-									has_trait = senile
-									has_trait = wounded
-								}
-								is_historical = no
-							}
-						}
+					AND = {
+						age >= 90
+						is_historical = no
 					}
-					
+					AND = {
+						age >= 80
+						OR = {
+							has_trait = psychological_affliction
+							has_trait = cancer
+							has_trait = senile
+							has_trait = wounded
+							has_trait = sickly
+							has_trait = alcoholic
+							has_trait = opium_addiction
+							has_trait = cocaine_addiction
+							has_trait = tuberculosis
+							has_trait = syphilis
+							has_trait = kidney_stones
+						}
+						is_historical = no
+					}
 				}
-				
 			}
-			
-			save_scope_as = retiring_politician_scope
-			
-		}
-		
-		if = {
-			limit = { exists = scope:retiring_politician_scope }
-			
-			#Notify player of retirement
-			#post_notification = ig_leader_has_retired
-			
-			#Retire character
-			scope:retiring_politician_scope ?= {
-				retire_character = yes
-			}
+			retire_character = yes
 		}
 		
 	}
@@ -1520,6 +1405,82 @@ politicians_system.4 = {
 					}
 				}
 				add = 1000
+			}
+		}
+		
+    }
+
+}
+
+# Ineligible ruler becomes ruler
+politicians_system.5 = {
+    type = country_event
+
+    title = ineligible_ruler_character.t 							# Title of the event; ADD LOCALISATION
+    desc = ineligible_ruler_character.d 							# Description of the event; ADD LOCALISATION
+    flavor = ineligible_ruler_character.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    gui_window = event_window_1char_tabloid
+
+	left_icon = scope:ineligible_ruler_character
+	
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Triggered by event
+		ruler ?= { has_trait = character_ineligible_as_office_holder }
+		
+    }
+	
+	immediate = {
+		
+		random_scope_character = {
+			limit = { 
+				is_ruler_of_own_country = yes
+				has_trait = character_ineligible_as_office_holder
+			}
+			save_scope_as = ineligible_ruler_character
+		}
+		
+	}
+    
+	cancellation_trigger = {
+		OR = { 
+			NOT = { exists = scope:ineligible_ruler_character }
+			scope:ineligible_ruler_character ?= { is_ruler_of_own_country = no }
+		}
+	}
+	
+	option = {
+        name = ineligible_ruler_character.option.1					# Let them be free
+		highlighted_option = yes
+		
+		#Anger every other interest group
+		scope:ineligible_ruler_character.interest_group ?= { 
+			save_scope_as = THIS_IG_scope 
+			owner ?= {
+				add_loyalists = {
+					value = very_large_radicals
+					interest_group = scope:THIS_IG_scope
+				}
+				every_interest_group = {
+					limit = {
+						NOT = { this ?= scope:THIS_IG_scope }
+					}
+					save_scope_as = ig_scope
+					owner ?= {
+						add_radicals = {
+							value = medium_radicals
+							interest_group = scope:ig_scope
+						}
+					}
+				}
 			}
 		}
 		
