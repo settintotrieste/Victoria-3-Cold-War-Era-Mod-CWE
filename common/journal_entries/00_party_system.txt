@@ -3,10 +3,7 @@
 
 	group = je_group_political_organs
 	
-	#scripted_button = je_party_system_favour_radicals_button
-	#scripted_button = je_party_system_favour_moderates_button
-	#scripted_button = je_party_system_favour_reformists_button
-	#scripted_button = je_party_system_favour_noone_button
+	scripted_button = je_party_system_recruit_politician_button
 	
 	is_shown_when_inactive = {
 		
@@ -16,23 +13,13 @@
 	
 	possible = {
 		
-		any_interest_group = {
-			is_in_government = yes
-			has_party = yes
-		}
-		
-		ruler ?= { interest_group ?= { is_in_government = yes } }
+		ruler.interest_group ?= { is_in_government = yes has_party = yes }
 		
 	}
 
 	immediate = {
 		
-		random_interest_group = {
-			limit = {
-				is_in_government = yes
-				has_party = yes 
-				is_strongest_ig_in_government = yes
-			}
+		ruler.interest_group ?= {
 			party ?= { save_scope_as = ruling_party_scope }
 		}
 		
@@ -50,35 +37,30 @@
 		
 	}
 
-	fail = {
+	invalid = {
 		
 		OR = {
 		
 			has_law_or_variant = law_type:law_parties_not_allowed
 			has_law_or_variant = law_type:law_single_party_state
 			
-			NOT = {
-				any_interest_group = {
-					is_in_government = yes
-					has_party = yes 
-				}
-			}
+			ruler.interest_group ?= { NAND = { is_in_government = yes has_party = yes } }
 			
 			NOT = { exists = scope:ruling_party_scope }
 			
 			scope:ruling_party_scope ?= {
-				any_member = { 
-					is_in_government = no
+				NOT = {
+					any_member = {
+						is_in_government = yes
+					}
 				}
 			}
-			
-			ruler ?= { interest_group ?= { is_in_government = no } }
 			
 		}
 		
 	}
 	
-	on_fail = {
+	on_invalid = {
 		
 		#Clear variables
 		remove_variable = party_radicalism
