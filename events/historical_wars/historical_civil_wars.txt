@@ -6722,3 +6722,219 @@ historical_civil_wars.38 = {
     }
 
 }
+
+### Myanmar Civil War 2021 ###
+
+historical_civil_wars.39 = {
+    type = country_event
+
+    title = myanmar_civil_war_2021.t 									# Title of the event; ADD LOCALISATION
+    desc = myanmar_civil_war_2021.d 									# Description of the event; ADD LOCALISATION
+    #flavor = myanmar_civil_war_2021.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "asia_sepoy_mutiny" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 			# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {															# What triggers the event, if using other events or journal entries leave empty
+		
+		#Historical
+		has_variable = BUR_civil_war_2021
+		
+		# Event has not been fired before
+		NOT = { has_variable = myanmar_civil_war_2021_hccw }			# CHANGE ****
+		
+		#Overlord conditions
+		c:BUR ?= this
+		game_date >= 2021.3.25											# START DATE: Date colony became self governing ****
+		game_date < 2031.3.25											# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		OR = {
+			is_a_republican_regime = yes
+			is_a_nationalist_government = yes
+		}
+		is_sufficiently_independent = yes								# is_vassal = no
+		is_at_war = no													# war = no
+		
+		#Owns relevant states
+		OR = { 
+			has_state_in_state_region = STATE_ARAKAN
+			has_state_in_state_region = STATE_KACHIN
+			has_state_in_state_region = STATE_SHAN_STATES
+		}
+		capital ?= { 
+			NOR = { 
+				state_region = s:STATE_ARAKAN
+				state_region = s:STATE_KACHIN
+				state_region = s:STATE_SHAN_STATES
+			} 
+		}
+		
+    }
+	
+	immediate = {
+	
+		#Mark states to release
+		random_scope_state = {
+			limit = { 
+				state_region = s:STATE_ARAKAN
+			}
+			save_scope_as = STATE_ARAKAN_scope
+		}
+		random_scope_state = {
+			limit = { 
+				state_region = s:STATE_KACHIN
+			}
+			save_scope_as = STATE_KACHIN_scope
+		}
+		random_scope_state = {
+			limit = { 
+				state_region = s:STATE_SHAN_STATES
+			}
+			save_scope_as = STATE_SHAN_STATES_scope
+		}
+	
+		# Fire only once
+		set_variable = myanmar_civil_war_2021_hccw						# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1							# Declare war!
+        highlighted_option = yes
+		
+		#Release Rebels
+		create_dynamic_country = {
+			origin = ROOT
+			country_type = unrecognized
+			tier = city_state
+			capital = scope:STATE_ARAKAN_scope
+			on_created = {
+				
+				set_variable = dynamic_decolonisation_country
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_jingoism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+				
+				effect_starting_politics_semi_gold_system = yes
+				
+				set_variable = myanmar_civil_war_2021_warlord
+				
+			}
+		}
+		create_dynamic_country = {
+			origin = ROOT
+			country_type = unrecognized
+			tier = city_state
+			capital = scope:STATE_KACHIN_scope
+			on_created = {
+				
+				set_variable = dynamic_decolonisation_country
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_jingoism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+				
+				effect_starting_politics_semi_gold_system = yes
+				
+				set_variable = myanmar_civil_war_2021_warlord
+				
+			}
+		}
+		create_dynamic_country = {
+			origin = ROOT
+			country_type = unrecognized
+			tier = city_state
+			capital = scope:STATE_SHAN_STATES_scope
+			on_created = {
+				
+				set_variable = dynamic_decolonisation_country
+				
+				# Laws
+				effect_starting_politics_presidential_republic = yes
+				effect_starting_politics_dictatorship = yes
+				effect_starting_politics_constitutional_unitary_state = yes
+				effect_starting_politics_war_policy_jingoism = yes
+				effect_starting_politics_economic_policy_interventionism = yes
+				effect_starting_politics_trade_policy_free_trade = yes
+				effect_starting_politics_anti_nuclear_policy = yes
+				
+				effect_starting_politics_specialisation_natural_resource = yes
+				
+				effect_starting_politics_semi_gold_system = yes
+				
+				set_variable = myanmar_civil_war_2021_warlord
+				
+			}
+		}
+		every_country = {
+			limit = { has_variable = myanmar_civil_war_2021_warlord }
+			save_scope_as = THIS_scope
+			ROOT = {
+				create_diplomatic_pact = {
+					country = scope:THIS_scope
+					type = warlord_state
+				}
+			}
+		}
+		
+		#Start war
+		every_country = {
+			limit = { 
+				is_warlord_state = yes
+				is_subject_of = ROOT
+			}
+			save_scope_as = THIS_scope
+			create_diplomatic_play = {
+				type = dp_annex_war_historical
+				target_country = ROOT
+				
+				#war = yes
+				
+				add_war_goal = {
+					holder = ROOT
+					type = annex_country
+					target_country = THIS
+				}
+			}
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2						# Peace option
+		default_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_presidential_republic = yes
+		effect_starting_politics_democratic = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
