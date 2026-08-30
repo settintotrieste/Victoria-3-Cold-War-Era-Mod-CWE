@@ -181,3 +181,88 @@ terrorist_system.3 = {
 	}
 
 }
+
+# Break out Prisoners
+terrorist_system.4 = {
+    type = country_event
+
+    title = terrorist_prison_breakout.t 							# Title of the event; ADD LOCALISATION
+    desc = terrorist_prison_breakout.d 								# Description of the event; ADD LOCALISATION
+    flavor = terrorist_prison_breakout.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "europenorthamerica_political_extremism" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		#Has a prisoner to break out
+		any_scope_character = {
+			has_role = character_role_terrorist
+			has_variable = guerrilla_character
+			interest_group ?= { save_temporary_scope_as = terrorist_IG }
+			owner ?= {
+				any_scope_character = {
+					has_role = character_role_prisoner
+					interest_group ?= { is_same_interest_group_type = scope:terrorist_IG }
+				}
+			}
+		}
+		
+    }
+	
+	immediate = {
+	
+		#Mark Guerilla
+		random_scope_character = {
+			limit = {
+				has_role = character_role_terrorist
+				has_variable = guerrilla_character
+			}
+			save_scope_as = terrorist_scope
+			interest_group ?= { save_scope_as = terrorist_IG_scope }
+		}
+		
+		#Mark Prisoner
+		random_scope_character = {
+			limit = {
+				has_role = character_role_prisoner
+				interest_group ?= { is_same_interest_group_type = scope:terrorist_IG_scope }
+			}
+			save_scope_as = prisoner_scope
+		}
+		
+	}
+	
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = scope:terrorist_scope }
+			NOT = { exists = scope:prisoner_scope }
+		}
+	}
+    
+    option = {
+        name = terrorist_prison_breakout.option					# Oh no
+		
+		#Free Prisoner
+		scope:prisoner_scope ?= {
+			replace_character_roles = { add = { character_role_agitator character_role_terrorist } remove_all = yes }
+			if = {
+				limit = { has_modifier = convicted_character }
+				remove_modifier = convicted_character
+			}
+			set_variable = guerrilla_character
+		}
+		
+		#Domestic reaction
+		add_radicals = {
+			value = small_radicals
+			interest_group = scope:terrorist_IG_scope
+		}
+		
+    }
+
+}
