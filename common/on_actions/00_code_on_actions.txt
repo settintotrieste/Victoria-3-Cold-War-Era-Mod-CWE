@@ -2066,6 +2066,14 @@ on_diplo_play_declare_neutrality = {
 	}
 }
 
+# Root = Diplomatic Play
+# actor = Subject leaving the play/war
+# overlord = The overlord they are rebelling against
+on_diplo_play_subject_backstab_overlord = {
+	effect = {
+		post_notification = diplo_play_subject_backstab_overlord_notification
+	}
+}
 
 # Root = Diplomatic Play
 on_sway_offer = {
@@ -2900,8 +2908,22 @@ on_political_movement_supported_law_cancelled = {
 }
 
 # Root = Country
+# scope:actor = the country that enforced the wargoal
+# scope:target = the country the wargoal was enforced against
+# scope:diplomatic_play = the relevant diplomatic play
+# scope:wargoal_impact = the impact of the wargoal enforced
+# scope:enforced_by_timer = only set when this was won by holding the objective mid-war rather than settled in a peace
+# scope:war_goal_enforced = the wargoal that was enforced
 on_wargoal_enforced = {
 	effect = {
+		# Enforcement mid-war changes the world with no peace summary to explain it, so the whole play is told
+		if = {
+			limit = { exists = scope:enforced_by_timer }
+			scope:diplomatic_play ?= {
+				post_notification = wargoal_enforced
+			}
+		}
+		
 		# Any war victory over the country that reneged on our inherited treaty ports settles the grudge
 		if = {
 			limit = {

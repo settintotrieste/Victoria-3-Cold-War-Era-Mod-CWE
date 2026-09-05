@@ -9,6 +9,26 @@ ai_strategy_default = {
 	will_form_power_bloc = {
 		generic_power_bloc_will_do_conditions = yes
 	}
+	
+	# If this trigger evaluates to true for any active strategy, the AI will incorporate scope:target_state if it can afford it and if it's the highest value valid candidate
+	# Empty trigger counts as evaluating false in this specific case
+	# Capitals bypass this and start incorporating immediately if possible
+	# Using this in a different strategy is inclusive, only one needs to return true
+	# root = country, scope:target_state = the state being considered
+	will_incorporate_state = {
+		trigger_if = { # Colonies have a different behaviour
+			limit = {
+				country_is_colonial_or_company = yes
+			}
+			scope:target_state = { ai_colony_will_incorporate_state = yes }
+		}
+		trigger_else_if = { # Default behaviour
+			limit = {
+				scope:target_state = { ai_will_incorporate_state = yes }
+			}
+			always = yes
+		}
+	}
 
 	# These are the tax levels the AI will try to stay within, though it can go above max tax level if in a financial emergency
 	# Using a different value in a strategy will override these values
@@ -378,47 +398,54 @@ ai_strategy_default = {
 	# root = country
 	# scope:target_state = state
 	# scope:target_country = state owner
+	# NOTE: You need to include a description when adding values here so there are correct tooltips, this is different from most of ai strategy data!
 	state_value = {
-		value = 0		
+		value = 0
 
 		if = { # PUT STATE SCORES INSIDE THE BELOW IF STATEMENT TO PREVENT AI FROM TAKING UNREACHABLE STATES
-		
-			limit = {	
+
+			limit = {
 				OR = {
 					scope:target_state = { owner = root }
 					can_reach_target_state = yes
-				}				
-			}	
+				}
+			}
 
 			if = {
 				limit = {
 					OR = {
-						scope:target_state = { owner = root }				
+						scope:target_state = { owner = root }
 						ai_desires_target_state = yes
 					}
 				}
-				
+
 				add = {
 					value = 20
-				
-					add = {
-						value = scope:target_state.state_population
-						divide = 100000
-						max = 20						
-					}
-					
-					add = {
-						value = scope:target_state.gdp
-						divide = 100000
-						max = 20
-					}						
-				}	
+					desc = "STATE_VALUE_BASE_DESIRE"
+				}
+
+				add = {
+					value = scope:target_state.state_population
+					divide = 100000
+					max = 20
+					desc = "STATE_VALUE_POPULATION"
+				}
+
+				add = {
+					value = scope:target_state.gdp
+					divide = 100000
+					max = 20
+					desc = "STATE_VALUE_GDP"
+				}
 
 				if = {
 					limit = { scope:target_state = { is_treaty_port = yes } }
-					add = 20
+					add = {
+						value = 20
+						desc = "STATE_VALUE_TREATY_PORT"
+					}
 				}
-				
+
 				if = { # High-fervour AI really wants to take its homelands
 					limit = {
 						country_fervor_primary_culture > 10
@@ -436,22 +463,26 @@ ai_strategy_default = {
 					add = {
 						value = country_fervor_primary_culture
 						divide = 2
+						desc = "STATE_VALUE_HOMELAND_FERVOR"
 					}
 				}
 			}
-			
+
 			if = {
 				limit = {
 					scope:target_state = { owner = root }
-				}		
-				
+				}
+
 				if = {
 					limit = {
 						scope:target_state = { ai_can_incorporate_state = yes }
 					}
-					add = 50
+					add = {
+						value = 50
+						desc = "STATE_VALUE_CAN_INCORPORATE"
+					}
 				}
-				
+
 				if = {
 					limit = {
 						scope:target_state = {
@@ -462,6 +493,7 @@ ai_strategy_default = {
 					}
 					add = {
 						value = 200
+						desc = "STATE_VALUE_CONTROLS_STRAIT"
 					}
 				}
 
@@ -479,10 +511,16 @@ ai_strategy_default = {
 						limit = {
 							scope:target_state = { is_homeland_of_country_cultures = root }
 						}
-						multiply = 8.0
+						multiply = {
+							value = 8.0
+							desc = "STATE_VALUE_INCORPORATED_HOMELAND_RELUCTANCE"
+						}
 					}
 					else = {
-						multiply = 6.0
+						multiply = {
+							value = 6.0
+							desc = "STATE_VALUE_INCORPORATED_RELUCTANCE"
+						}
 					}
 				}
 				else_if = { # Reluctant to cede states adjacent or sea adjacent to incorporate states
@@ -505,10 +543,16 @@ ai_strategy_default = {
 						limit = {
 							scope:target_state = { is_homeland_of_country_cultures = root }
 						}
-						multiply = 6.0
+						multiply = {
+							value = 6.0
+							desc = "STATE_VALUE_NEXT_TO_INCORPORATED_HOMELAND"
+						}
 					}
 					else = {
-						multiply = 4.0
+						multiply = {
+							value = 4.0
+							desc = "STATE_VALUE_NEXT_TO_INCORPORATED"
+						}
 					}
 				}
 				else = { # Value owned states higher than foreign states by default
@@ -516,57 +560,75 @@ ai_strategy_default = {
 						limit = {
 							scope:target_state = { is_homeland_of_country_cultures = root }
 						}
-						multiply = 3.0
+						multiply = {
+							value = 3.0
+							desc = "STATE_VALUE_OWN_HOMELAND"
+						}
 					}
 					else = {
-						multiply = 2.0 
-					}							
+						multiply = {
+							value = 2.0
+							desc = "STATE_VALUE_OWN_STATE"
+						}
+					}
 				}
-		
+
 				# Isolated states are worth less
 				# Check that this isn't caused by convoy raiding through the is_at_war trigger
 				if = {
 					limit = {
-						is_at_war = no 
-						scope:target_state = { is_isolated_from_market = yes }					
+						is_at_war = no
+						scope:target_state = { is_isolated_from_market = yes }
 					}
-					multiply = 0.5
-					
+					multiply = {
+						value = 0.5
+						desc = "STATE_VALUE_ISOLATED_FROM_MARKET"
+					}
+
 					if = {
-						limit = { 					
+						limit = {
 							NOT = {
 								any_neighbouring_state = { owner = root }
 							}
 						}
-						multiply = 0.5
+						multiply = {
+							value = 0.5
+							desc = "STATE_VALUE_ISOLATED_NO_NEIGHBOUR"
+						}
 					}
-				}		
+				}
 			}
 			else = {
 				if = {
-					limit = { 
+					limit = {
 						OR = {
-							scope:target_state = { 
-								is_split_state = yes 
-								state_region = { 
-									any_scope_state = { 
-										owner = ROOT 
+							scope:target_state = {
+								is_split_state = yes
+								state_region = {
+									any_scope_state = {
+										owner = ROOT
 										is_treaty_port = no
 									}
 								}
 							}
-							scope:target_state = { has_claim_by = root } 
-						}					
+							scope:target_state = { has_claim_by = root }
+						}
 					}
-					multiply = 2.0
+					multiply = {
+						value = 2.0
+						desc = "STATE_VALUE_SPLIT_STATE_OR_CLAIM"
+					}
 				}
 
 				if = {
-					limit = { 
-						NOT = { has_strategic_land_adjacency = scope:target_state } 
+					limit = {
+						NOT = { has_strategic_land_adjacency = scope:target_state }
 						scope:target_state = { has_port_state = no }
 					}
-					multiply = 0.5
+					multiply = {
+						value = 0.5
+						desc = "STATE_VALUE_UNREACHABLE_INLAND"
+					}
 				}
 
 				if = {
@@ -574,84 +636,91 @@ ai_strategy_default = {
 						has_strategic_land_adjacency = scope:target_country
 						NOT = { has_strategic_land_adjacency = scope:target_state }
 					}
-					multiply = 0.5
+					multiply = {
+						value = 0.5
+						desc = "STATE_VALUE_NOT_STRATEGICALLY_ADJACENT"
+					}
 				}
 				else_if = {
 					limit = {
 						is_adjacent_to_country = scope:target_country
 						NOT = { is_adjacent_to_state = scope:target_state }
 					}
-					multiply = 0.75
-				}		
+					multiply = {
+						value = 0.75
+						desc = "STATE_VALUE_NOT_ADJACENT_TO_STATE"
+					}
+				}
 
 				# More reluctant to get involved in plays for states that AI doesn't strongly desire
 				if = {
 					limit = {
 						is_diplomatic_play_involved_with = scope:target_country
-						ai_strongly_desires_target_state = no					
+						ai_strongly_desires_target_state = no
 					}
-					multiply = 0.5
+					multiply = {
+						value = 0.5
+						desc = "STATE_VALUE_ALREADY_IN_PLAY_WEAK_DESIRE"
+					}
 				}
-			
+
 				if = {
 					limit = {
 						scope:target_state = { is_homeland_of_country_cultures = root }
 					}
-					multiply = 1.5
-				}				
+					multiply = {
+						value = 1.5
+						desc = "STATE_VALUE_FOREIGN_HOMELAND"
+					}
+				}
 			}
-			
+
 			if = {
 				limit = {
 					lenient_ai_behavior_trigger = yes
 					scope:target_state = { is_homeland_of_country_cultures = scope:target_country }
 				}
-				multiply = 0.0
+				multiply = {
+					value = 0.0
+					desc = "STATE_VALUE_LENIENT_BEHAVIOR"
+				}
 			}
-			
-			#AI will never give up states
+
 			if = {
 				limit = {
-					OR = { 
-						scope:target_state = { is_homeland_of_country_cultures = scope:target_country }
-						scope:target_country = { country_rank >= rank_value:major_power }
-					}
-				}
-				add = 500
-			}
-			
-			#AI has no interest in non-core states
-			if = {
-				limit = {
-					scope:target_state = { NOT = { is_homeland_of_country_cultures = root } }
-				}
-				add = -500
-			}
-			
-			#AI armed isolationism
-			if = {
-				limit = { 
-					has_strategy = ai_strategy_armed_isolationism 
-					scope:target_state = { 
+					has_strategy = ai_strategy_armed_isolationism
+					scope:target_state = {
 						NOR = {
 							owner = root
 							has_claim_by = root
 						}
 					}
 				}
-				multiply = 0
+				multiply = {
+					value = 0
+					desc = "STATE_VALUE_ARMED_ISOLATIONISM"
+				}
 			}
-
+			
 		}
-		
-		min = 0
+
+		min = {
+			value = 0
+			desc = "STATE_VALUE_CLAMP_MIN"
+		}
 		if = {
 			limit = { scope:target_state = { owner = root } }
-			max = 1000
+			max = {
+				value = 1000
+				desc = "STATE_VALUE_CLAMP_OWNED"
+			}
 		}
 		else = {
-			max = 200
-		}			
+			max = {
+				value = 200
+				desc = "STATE_VALUE_CLAMP_FOREIGN"
+			}
+		}
 	}
 	
 	# How much does the AI desire a state owned by another country
@@ -3617,7 +3686,7 @@ ai_strategy_default = {
 			max = 100
 		}
 		
-		make_protectorate = {
+		make_subject = {
 			if = {
 				limit = {
 					has_secret_goal = {

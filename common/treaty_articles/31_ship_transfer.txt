@@ -48,6 +48,17 @@
                 input_ship = { is_in_battle = no }
             }
         }
+
+		custom_tooltip = {
+            text = SHIP_TRANSFER_REQUIRES_RECIPROCAL_ARTICLE
+            scope:treaty ?= {
+                any_scope_article_option = {
+                    NOT = { has_type = alliance }
+                    NOT = { has_type = defensive_pact }
+                    target_country = scope:source_country
+                }
+            }
+        }
 	}
 
 	ship_valid_trigger = {
@@ -124,15 +135,13 @@
 			value = 0.1
 		}
 
+		# `offer` omitted: AI sales are driven by CheckForWantedCommands_SellObsoleteShips, which pre-assembles the bundle directly.
 		article_ai_usage = {
 			request
-            offer
         }
 
         combined_acceptance_cap_max = 50
 		
-		# Proactively pick this article when the candidate ship is obsolete for us but not for them
-		# 5x the normal proposal weight nudges the treaty composer toward proactively offering the sale.
 		proposal_weight = {
 			value = 1
 
@@ -147,9 +156,6 @@
 			}
 		}		
 
-		# Ship valuation lives in contextual_accept_score because it depends on
-		# scope:treaty.binding_period, which is only bound in contextual (where
-		# scope:treaty holds either the live treaty or the proposed STreatyOptions).
 		contextual_accept_score = {
 			value = 0
 
