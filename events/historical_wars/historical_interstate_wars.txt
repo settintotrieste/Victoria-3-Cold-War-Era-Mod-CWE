@@ -1382,8 +1382,7 @@ historical_interstate_wars.11 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		exists = c:EGY
-		this = c:EGY											# Change TAG of the overlord ****
+		c:EGY ?= this
 		game_date >= 1967.6.5									# START DATE: Date colony became self governing ****
 		game_date < 1977.6.5									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
@@ -1395,8 +1394,21 @@ historical_interstate_wars.11 = {
 		
 		#left_wing_ruling_coalition = yes						# Correct ruling coalition ****
 		
+		# Event has not been fired before
+		NOT = { has_variable = 6_day_war_hiw }					# CHANGE ****
+		
 		owns_entire_state_region = STATE_SINAI
-		has_state_in_state_region = STATE_PALESTINE
+		
+		OR = {
+			has_state_in_state_region = STATE_PALESTINE
+			AND = {
+				exists = c:GZA
+				c:GZA ?= {
+					is_direct_subject_of = ROOT
+					aggressive_diplomatic_plays_permitted = no
+				}
+			}
+		}
 		
 		#Recipent conditions
 		exists = c:ISR
@@ -1408,7 +1420,7 @@ historical_interstate_wars.11 = {
 		
 		#Other participants
 		exists = c:JOR
-		c:JOR = { 												
+		c:JOR ?= { 												
 			OR = { 
 				is_a_regime_monarchy = yes
 				is_a_republican_regime = yes
@@ -1416,7 +1428,16 @@ historical_interstate_wars.11 = {
 			}
 			is_sufficiently_independent = yes
 			is_at_war = no
-			has_state_in_state_region = STATE_PALESTINE
+			OR = { 
+				has_state_in_state_region = STATE_PALESTINE
+				AND = {
+					exists = c:PAL
+					c:PAL ?= {
+						is_direct_subject_of = c:JOR
+						aggressive_diplomatic_plays_permitted = no
+					}
+				}
+			}
 			is_not_neutral = yes
 		}
 		exists = c:SYR
@@ -1427,12 +1448,26 @@ historical_interstate_wars.11 = {
 			is_not_neutral = yes
 		}
 		
-		# Event has not been fired before
-		NOT = { has_variable = 6_day_war_hiw }					# CHANGE ****
-		
     }
 	
 	immediate = {
+	
+		#Mark states to attach
+		random_scope_state = {
+			limit = { state_region = s:STATE_PALESTINE }
+			save_scope_as = gaza_state_scope
+		}
+		random_country = {
+			limit = {
+				c:GZA ?= this
+				is_direct_subject_of = ROOT
+				aggressive_diplomatic_plays_permitted = no
+			}
+			random_scope_state = {
+				limit = { state_region = s:STATE_PALESTINE }
+				save_scope_as = gaza_state_scope
+			}
+		}
 	
 		# Fire only once
 		set_variable = 6_day_war_hiw							# Change variable ****
@@ -1459,14 +1494,14 @@ historical_interstate_wars.11 = {
 			add_war_goal = {
 				holder = c:ISR
 				type = return_state
-				target_state = s:STATE_PALESTINE.region_state:EGY
+				target_state = scope:gaza_state_scope
 			}
 			
 		}
 		
 		#Option for war
-		c:JOR = { trigger_event = { id = historical_interstate_wars.12 } }
-		c:SYR = { trigger_event = { id = historical_interstate_wars.12 } }
+		c:JOR ?= { trigger_event = { id = historical_interstate_wars.12 } }
+		c:SYR ?= { trigger_event = { id = historical_interstate_wars.12 } }
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
@@ -1486,10 +1521,21 @@ historical_interstate_wars.11 = {
 			limit = { state_region = s:STATE_PALESTINE }
 			set_state_owner = c:ISR
 		}
+		random_country = {
+			limit = {
+				c:GZA ?= this
+				is_direct_subject_of = ROOT
+				aggressive_diplomatic_plays_permitted = no
+			}
+			random_scope_state = {
+				limit = { state_region = s:STATE_PALESTINE }
+				set_state_owner = c:ISR
+			}
+		}
 		
 		#Option for war
-		c:JOR = { trigger_event = { id = historical_interstate_wars.12 } }
-		c:SYR = { trigger_event = { id = historical_interstate_wars.12 } }
+		c:JOR ?= { trigger_event = { id = historical_interstate_wars.12 } }
+		c:SYR ?= { trigger_event = { id = historical_interstate_wars.12 } }
 		
 		#Minor discontent
 		add_radicals = {
@@ -1541,6 +1587,23 @@ historical_interstate_wars.12 = {
 	
 	immediate = {
 		
+		#Mark states to attach
+		random_scope_state = {
+			limit = { state_region = s:STATE_PALESTINE }
+			save_scope_as = west_bank_state_scope
+		}
+		random_country = {
+			limit = {
+				c:PAL ?= this
+				is_direct_subject_of = ROOT
+				aggressive_diplomatic_plays_permitted = no
+			}
+			random_scope_state = {
+				limit = { state_region = s:STATE_PALESTINE }
+				save_scope_as = west_bank_state_scope
+			}
+		}
+		
 	}
     
     option = {
@@ -1551,6 +1614,17 @@ historical_interstate_wars.12 = {
 		every_scope_state = {
 			limit = { state_region = { OR = { is_homeland = cu:palestinian is_homeland = cu:israeli } } }
 			set_state_owner = c:ISR
+		}
+		random_country = {
+			limit = {
+				c:PAL ?= this
+				is_direct_subject_of = ROOT
+				aggressive_diplomatic_plays_permitted = no
+			}
+			random_scope_state = {
+				limit = { state_region = s:STATE_PALESTINE }
+				set_state_owner = c:ISR
+			}
 		}
 		
 		#Minor discontent
@@ -1603,7 +1677,7 @@ historical_interstate_wars.12 = {
 				add_war_goal = {
 					holder = c:ISR
 					type = conquer_state
-					target_state = s:STATE_PALESTINE.region_state:JOR
+					target_state = scope:west_bank_state_scope
 				}
 			}
 		}
