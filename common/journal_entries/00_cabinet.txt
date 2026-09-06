@@ -16,6 +16,8 @@ je_cabinet = {
 	#scripted_button = je_controlled_elections_disabled_button
 	
 	scripted_button = je_establish_republican_dynasty_button
+	
+	scripted_button = je_appoint_vice_president_button
 
 	possible = {
 		
@@ -49,19 +51,27 @@ je_cabinet = {
 				NOT = { has_law_or_variant = law_type:law_HOS_monarch }
 				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
 				shares_same_head_of_state_republic = no
-				ruler ?= {
-					NOT = { has_role = character_role_head_of_state }
-					NOT = { has_trait = character_ineligible_as_office_holder }
-				}
 			}
 			
 			#Set President
-			ruler ?= { set_character_as_head_of_state = yes }
+			if = {
+				limit = {
+					ruler ?= {
+						NOT = { has_role = character_role_head_of_state }
+						NOT = { has_trait = character_ineligible_as_office_holder }
+					}
+				}
+				ruler ?= { set_character_as_head_of_state = yes }
+			}
 			
 			#Set Vice President
 			if = {
 				limit = {
 					has_law_or_variant = law_type:law_HOG_none
+					ruler ?= {
+						has_role = character_role_head_of_state
+						NOT = { has_trait = character_ineligible_as_office_holder }
+					}
 					is_a_dynastic_government = no
 					NOT = {
 						active_law:lawgroup_governance_principles ?= {
@@ -69,20 +79,19 @@ je_cabinet = {
 						}
 					}
 					NOT = { exists = heir }
+					is_a_colonial_subject_colony_gov = no
 				}
 				if = {
 					limit = {
 						any_scope_character = {
 							has_variable = vice_president_character
 							is_ruler_of_own_country = no
-							has_role_of_type = politician
 						}
 					}
 					random_scope_character = {
 						limit = {
 							has_variable = vice_president_character
 							is_ruler_of_own_country = no
-							has_role_of_type = politician
 						}
 						save_scope_as = vice_president_scope
 						owner ?= {
