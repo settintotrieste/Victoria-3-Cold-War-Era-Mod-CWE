@@ -119,7 +119,15 @@ je_cabinet = {
 						set_variable = vice_president_character
 					}
 				}
-				else = {
+				else_if = {
+					limit = {
+						any_scope_character = {
+							has_role_of_type = politician
+							interest_group ?= { OR = { is_same_interest_group_type = root.ruler.interest_group is_in_government = yes } }
+							character_is_key_state_officeholder = no
+							NOT = { has_trait = character_ineligible_as_office_holder }
+						}
+					}
 					ordered_scope_character = {
 						limit = {
 							has_role_of_type = politician
@@ -138,6 +146,27 @@ je_cabinet = {
 							}
 						}
 						set_variable = vice_president_character
+					}
+				}
+				else = {
+					random_primary_culture = { save_scope_as = dominant_country_culture }
+					ruler ?= { interest_group ?= { save_scope_as = dominant_country_IG } }
+					create_character = {
+						heir = yes
+						culture = scope:dominant_country_culture
+						interest_group = scope:dominant_country_IG
+						religion = root.religion
+						on_created = {
+							add_character_role = character_role_politician
+							save_scope_as = vice_president_scope
+							owner ?= {
+								set_heir = scope:vice_president_scope
+								every_scope_character = {
+									remove_variable = vice_president_character
+								}
+							}
+							set_variable = vice_president_character
+						}
 					}
 				}
 			}
