@@ -54,7 +54,69 @@ je_cabinet = {
 					NOT = { has_trait = character_ineligible_as_office_holder }
 				}
 			}
+			
+			#Set President
 			ruler ?= { set_character_as_head_of_state = yes }
+			
+			#Set Vice President
+			if = {
+				limit = {
+					has_law_or_variant = law_type:law_HOG_none
+					is_a_dynastic_government = no
+					NOT = {
+						active_law:lawgroup_governance_principles ?= {
+							has_amendment = amendment_type:amendment_rotating_presidency
+						}
+					}
+					NOT = { exists = heir }
+				}
+				if = {
+					limit = {
+						any_scope_character = {
+							has_variable = vice_president_character
+							is_ruler_of_own_country = no
+							has_role_of_type = politician
+						}
+					}
+					random_scope_character = {
+						limit = {
+							has_variable = vice_president_character
+							is_ruler_of_own_country = no
+							has_role_of_type = politician
+						}
+						save_scope_as = vice_president_scope
+						owner ?= {
+							set_heir = scope:vice_president_scope
+							every_scope_character = {
+								remove_variable = vice_president_character
+							}
+						}
+						set_variable = vice_president_character
+					}
+				}
+				else = {
+					ordered_scope_character = {
+						limit = {
+							has_role_of_type = politician
+							interest_group ?= { OR = { is_same_interest_group_type = root.ruler.interest_group is_in_government = yes } }
+							character_is_key_state_officeholder = no
+							NOT = { has_trait = character_ineligible_as_office_holder }
+						}
+						order_by = popularity
+						position = 0
+						check_range_bounds = no
+						save_scope_as = vice_president_scope
+						owner ?= {
+							set_heir = scope:vice_president_scope
+							every_scope_character = {
+								remove_variable = vice_president_character
+							}
+						}
+						set_variable = vice_president_character
+					}
+				}
+			}
+			
 		}
 	
 		#Mark ruler
@@ -116,6 +178,19 @@ je_cabinet = {
 					NOT = { has_trait = character_ineligible_as_office_holder }
 				}
 			}
+			AND = {
+				exists = heir
+				heir ?= { has_variable = vice_president_character }
+				NAND = {
+					has_law_or_variant = law_type:law_HOG_none
+					is_a_dynastic_government = no
+					NOT = {
+						active_law:lawgroup_governance_principles ?= {
+							has_amendment = amendment_type:amendment_rotating_presidency
+						}
+					}
+				}
+			}
 		}
 		
 	}
@@ -174,6 +249,15 @@ je_cabinet = {
 				limit = { has_role = character_role_head_of_government }
 				remove_character_role = character_role_head_of_government
 			}
+		}
+		
+		#Clean up vice presidents
+		scope:vice_president_scope ?= {
+			if = {
+				limit = { has_role_of_type = heir }
+				disinherit_character = yes
+			}
+			remove_variable = vice_president_character
 		}
 		
 	}
