@@ -78,7 +78,6 @@ je_cabinet = {
 							has_amendment = amendment_type:amendment_rotating_presidency
 						}
 					}
-					NOT = { exists = heir }
 					is_a_colonial_subject_colony_gov = no
 					NOR = {
 						has_law_or_variant = law_type:law_appointed_legislature
@@ -86,6 +85,19 @@ je_cabinet = {
 					}
 				}
 				if = {
+					limit = { exists = heir }
+					heir ?= { 
+						save_scope_as = vice_president_scope
+						owner ?= {
+							set_heir = scope:vice_president_scope
+							every_scope_character = {
+								remove_variable = vice_president_character
+							}
+						}
+						set_variable = vice_president_character
+					}
+				}
+				else_if = {
 					limit = {
 						any_scope_character = {
 							has_variable = vice_president_character
@@ -252,12 +264,25 @@ je_cabinet = {
 		}
 		
 		#Clean up vice presidents
-		scope:vice_president_scope ?= {
-			if = {
-				limit = { has_role_of_type = heir }
-				disinherit_character = yes
+		if = {
+			limit = { exists = scope:vice_president_scope }
+			scope:vice_president_scope ?= {
+				if = {
+					limit = { is_heir_of_own_country = yes }
+					disinherit_character = yes
+				}
+				remove_variable = vice_president_character
 			}
-			remove_variable = vice_president_character
+		}
+		else = {
+			every_scope_character = {
+				limit = { 
+					is_heir_of_own_country = yes
+					has_variable = vice_president_character
+				}
+				disinherit_character = yes
+				remove_variable = vice_president_character
+			}
 		}
 		
 	}
