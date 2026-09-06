@@ -1583,3 +1583,127 @@ strip_prince_titles_character = {
 	}
 	
 }
+
+appoint_as_ruler_deputy = {
+	icon = "gfx/interface/icons/generic_icons/in_government_icon.dds"
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/agitator_promote"
+
+	potential = {
+		
+		owner ?= scope:actor
+		
+		#Eligible to deputy
+		has_role_of_type = politician
+		is_heir_of_own_country = no
+		owner ?= {
+			country_eligible_for_vice_president_system = yes
+		}
+		
+	}
+
+	possible = {
+		
+		interest_group ?= { OR = { is_same_interest_group_type = root.ruler.interest_group is_in_government = yes } }
+		character_is_key_state_officeholder = no
+		NOT = { has_trait = character_ineligible_as_office_holder }
+		
+	}
+
+	effect = {
+		
+		#Appoint as Deputy
+		save_scope_as = vice_president_scope
+		owner ?= {
+			set_heir = scope:vice_president_scope
+			every_scope_character = {
+				remove_variable = vice_president_character
+			}
+		}
+		set_variable = vice_president_character
+		
+		#Domestic reaction
+		interest_group ?= { save_scope_as = THIS_IG_scope }
+		owner ?= {
+			add_loyalists = {
+				value = large_radicals
+				interest_group = scope:THIS_IG_scope
+			}
+		}
+		
+	}
+
+	cooldown = { months = 12 }
+	#show_confirmation_box = yes
+	
+	should_ai_evaluate = {
+		always = no
+	}
+
+	ai_chance = {
+		value = 0
+	}
+	
+}
+
+remove_as_ruler_deputy = {
+	icon = "gfx/interface/icons/generic_icons/in_government_icon.dds"
+	clicksound = "event:/SFX/UI/Military/command_remove"
+
+	potential = {
+		
+		owner ?= scope:actor
+		
+		#Eligible to deputy
+		is_heir_of_own_country = yes
+		has_variable = vice_president_character
+		
+		#Character is not pre-occupied
+		is_busy = no
+		is_in_battle = no
+		
+	}
+
+	possible = {
+		
+		#Has parliamentary support
+		owner ?= {
+			custom_tooltip = {
+				text = government_has_legislative_super_majority.tt
+				government_has_legislative_super_majority = yes
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Remove as Deputy
+		if = {
+			limit = { is_heir_of_own_country = yes }
+			disinherit_character = yes
+		}
+		remove_variable = vice_president_character
+		
+		#Domestic reaction
+		interest_group ?= { save_scope_as = THIS_IG_scope }
+		owner ?= {
+			add_radicals = {
+				value = large_radicals
+				interest_group = scope:THIS_IG_scope
+			}
+		}
+		
+	}
+
+	cooldown = { months = 12 }
+	#show_confirmation_box = yes
+	
+	should_ai_evaluate = {
+		always = no
+	}
+
+	ai_chance = {
+		value = 0
+	}
+	
+}
