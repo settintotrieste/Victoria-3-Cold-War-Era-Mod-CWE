@@ -4,6 +4,7 @@
 	group = je_group_political_organs
 
 	scripted_button = je_create_collective_presidency_button
+	scripted_button = je_extend_term_limit_button
 
 	is_shown_when_inactive = {
 		
@@ -45,6 +46,10 @@
 			name = term_limit_var
 			value = 0
 		}
+		set_variable = {
+			name = term_limit_max_var
+			value = 8
+		}
 		
 		#Mark current ruler
 		ruler ?= {
@@ -52,6 +57,12 @@
 			interest_group ?= {
 				save_scope_as = the_current_president_ig_scope
 			}
+			owner ?= {
+				every_scope_character = {
+					remove_variable = is_term_limited_character
+				}
+			}
+			set_variable = is_term_limited_character
 		}
 		
 	}
@@ -67,6 +78,11 @@
 		
 		#Reset Term Limits
 		remove_variable = term_limit_var
+		
+		#Clean up markers
+		every_scope_character = {
+			remove_variable = is_term_limited_character
+		}
 		
 	}
 	
@@ -98,6 +114,11 @@
 		#Reset Term Limits
 		remove_variable = term_limit_var
 		
+		#Clean up markers
+		every_scope_character = {
+			remove_variable = is_term_limited_character
+		}
+		
 	}
 
 	current_value = {
@@ -125,8 +146,9 @@
 	complete = {
 		
 		#Term completed
-		scope:journal_entry = {
-			is_goal_complete = yes
+		custom_tooltip = {
+			text = je_term_limits_goal
+			root.var:term_limit_var >= root.var:term_limit_max_var
 		}
 		
 		#Elections are not suspended
@@ -134,10 +156,13 @@
 		
 		#Only step down during election campaign
 		trigger_if = {
-			limit = { 
-				country_has_voting_franchise = yes 
+			limit = {
+				country_has_voting_franchise = yes
 			}
-			in_election_campaign = yes
+			custom_tooltip = {
+				text = ruler_change_after_elections_only.tt
+				always = no
+			}
 		}
 		
 	}
@@ -175,6 +200,11 @@
 			else = {
 				scope:the_current_president_scope ?= { retire_character = yes }
 			}
+			
+			#Clean up markers
+			every_scope_character = {
+				remove_variable = is_term_limited_character
+			}
 		
 			#Reset Term Limits
 			remove_variable = term_limit_var
@@ -195,6 +225,8 @@ je_term_limits_collective_HOS = {
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 
 	group = je_group_political_organs
+
+	scripted_button = je_extend_term_limit_collective_button
 
 	is_shown_when_inactive = {
 		
@@ -230,6 +262,10 @@ je_term_limits_collective_HOS = {
 		set_variable = {
 			name = term_limit_var
 			value = 0
+		}
+		set_variable = {
+			name = term_limit_max_var
+			value = 12
 		}
 		
 		#Mark ruler
@@ -308,8 +344,9 @@ je_term_limits_collective_HOS = {
 	complete = {
 		
 		#Term completed
-		scope:journal_entry = {
-			is_goal_complete = yes
+		custom_tooltip = {
+			text = je_term_limits_goal
+			root.var:term_limit_var >= root.var:term_limit_max_var
 		}
 		
 		#Elections are not suspended
