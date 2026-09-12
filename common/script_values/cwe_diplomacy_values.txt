@@ -638,6 +638,35 @@ REPLACE_OR_CREATE:liberty_desire_weekly_change = { #AKA liberty_desire_weekly_pr
 		value = root.second_country.liberty_desire_weekly_progress_from_support_independence
 		desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_FROM_SUPPORTING_INDEPENDENCE"
 	}
+	
+	#liberty desire increase when war support is low in an overlord war
+	#depth is 0 at the war support threshold and 1 at war support 0, then shaped by the same curve as the other low war support effects
+	if = {
+		limit = {
+			root.second_country = {
+				lowest_war_support_in_overlord_war < define:NDiplomacy|WAR_SUPPORT_RADICALIZATION_THRESHOLD
+			}
+		}
+		add = {
+			desc = "LIBERTY_DESIRE_WEEKLY_CHANGE_FROM_LOW_WAR_SUPPORT"
+			value = define:NDiplomacy|WAR_SUPPORT_RADICALIZATION_THRESHOLD
+			subtract = root.second_country.lowest_war_support_in_overlord_war
+			divide = define:NDiplomacy|WAR_SUPPORT_RADICALIZATION_THRESHOLD
+			multiply = {
+				value = define:NDiplomacy|WAR_SUPPORT_LIBERTY_DESIRE_CURVE_LINEARITY
+				add = {
+					value = 1
+					subtract = define:NDiplomacy|WAR_SUPPORT_LIBERTY_DESIRE_CURVE_LINEARITY
+					multiply = {
+						value = define:NDiplomacy|WAR_SUPPORT_RADICALIZATION_THRESHOLD
+						subtract = root.second_country.lowest_war_support_in_overlord_war
+						divide = define:NDiplomacy|WAR_SUPPORT_RADICALIZATION_THRESHOLD
+					}
+				}
+			}
+			multiply = define:NDiplomacy|WAR_SUPPORT_LIBERTY_DESIRE_WEEKLY_MAX
+		}
+	}
 
 	#liberty desire modifiers on subject
 	add = {
