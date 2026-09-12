@@ -17,27 +17,47 @@ grant_command_to_ruler = {
 	clicksound = "event:/SFX/UI/Military/command_grant"
 
 	potential = {
-		is_ruler_of_own_country = yes
+		
+		owner ?= scope:actor
+		
+		#Not already a general
 		NOR = {
 			has_role_of_type = general
 			has_role_of_type = admiral
 		}
-		owner ?= scope:actor
-		owner ?= {
-			ruler_can_have_command = yes
-			is_a_nationalist_government = yes
+		
+		#Is a ruler
+		OR = { 
+			is_ruler_of_own_country = yes
+			has_role = character_role_monarch
+			has_role = character_role_head_of_state
 		}
+		
 	}
 
 	possible = {
+		
+		#No kid generals
 		is_adult = yes
-		OR = {
-			is_female = no
+		
+		#Country allows politicians to be generals
+		owner ?= {
+			has_law_or_variant = law_type:law_politicised_armed_forces
+		}
+		
+		#Females cannot join military unless laws allow that
+		trigger_if = {
+			limit = {
+				is_female = yes
+			}
 			owner ?= {
 				OR = { has_law_or_variant = law_type:law_womens_suffrage has_law_or_variant = law_type:law_women_in_the_workplace }
 			}
 		}
+		
+		#There is a formation to command
 		exists = owner.capital.land_hq
+		
 	}
 
 	effect = {
@@ -72,9 +92,22 @@ remove_command_from_ruler = {
 	clicksound = "event:/SFX/UI/Military/command_remove"
 
 	potential = {
+		
 		owner ?= scope:actor
-		is_ruler_of_own_country = yes
-		has_role_of_type = general
+		
+		#Is a ruler
+		OR = { 
+			is_ruler_of_own_country = yes
+			has_role = character_role_monarch
+			has_role = character_role_head_of_state
+		}
+		
+		#Is a general
+		OR = {
+			has_role_of_type = general
+			has_role_of_type = admiral
+		}
+		
 	}
 
 	possible = {
@@ -86,7 +119,18 @@ remove_command_from_ruler = {
 	}
 
 	effect = {
-		remove_character_role = general
+		if = { 
+			limit = {
+				has_role_of_type = general
+			}
+			remove_character_role = general
+		}
+		if = { 
+			limit = {
+				has_role_of_type = admiral
+			}
+			remove_character_role = admiral
+		}
 	}
 
 	ai_chance = {
