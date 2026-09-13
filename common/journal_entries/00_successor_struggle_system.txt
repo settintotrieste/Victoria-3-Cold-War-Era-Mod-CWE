@@ -1,0 +1,355 @@
+﻿je_successor_struggle_system = {
+	icon = "gfx/interface/icons/event_icons/event_carlist_beret.dds"
+
+	group = je_group_internal_affairs
+
+	is_shown_when_inactive = {
+		
+		#Dictatorship
+		NOT = { has_law_or_variant = law_type:law_democratic_legislature }
+		
+		#Not already has a power struggle
+		NOT = { has_journal_entry = je_successor_struggle_system }
+		
+		#Has a heir
+		exists = heir
+		heir ?= { loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD }
+		
+		#Not a dynastic republic
+		has_dynastic_ruler = no
+		
+		#Not has strong government
+		NOT = { has_modifier = strengthened_government_authority }
+		
+	}
+
+	possible = {
+		
+		#Ruler is weak
+		ruler ?= {
+			OR = {
+				age >= 80
+				interest_group ?= {
+					ig_approval <= angry
+				}
+				interest_group ?= {
+					ig_counts_as_marginal = yes
+				}
+				OR = {
+					has_trait = psychological_affliction
+					has_trait = cancer
+					has_trait = senile
+					has_trait = wounded
+				}
+				owner ?= {
+					trigger_if = {
+						limit = {
+							any_political_movement = {
+								is_insurrectionary = yes
+								exists = most_desired_law
+							}
+						}
+						AND = {
+							any_political_movement = {
+								is_revolutionary = yes
+								exists = most_desired_law
+								most_desired_law ?= { save_temporary_scope_as = revolutionary_law }
+							}
+							custom_tooltip = {
+								text = ruler_disapproves_of_revolutionary_law
+								root = {
+									OR = {
+										law_enactment_stance = {
+											law = scope:revolutionary_law
+											value < neutral
+										}
+										interest_group ?= {
+											law_enactment_stance = {
+												law = scope:revolutionary_law
+												value < neutral
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					trigger_else = {
+						AND = {
+							any_political_movement = {
+								is_insurrectionary = yes
+							}
+							custom_tooltip = {
+								text = ruler_disapproves_of_revolutionary_law_contextless
+								always = no
+							}
+						}
+					}
+				}
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		#Candidate 1
+		ruler ?= { 
+			save_scope_as = successor_struggle_candidate_1
+			owner ?= {
+				set_variable = {
+					name = successor_struggle_candidate_1
+					value = 0
+				}
+			}
+		}
+		
+		#Candidate 2
+		heir ?= { 
+			save_scope_as = successor_struggle_candidate_2
+			owner ?= {
+				set_variable = {
+					name = successor_struggle_candidate_2
+					value = 0
+				}
+			}
+		}
+		
+	}
+
+	complete = {
+		
+		OR = {
+		
+			#Won competition
+			AND = {
+				trigger_if = {
+					limit = { has_variable = successor_struggle_candidate_1 }
+					custom_tooltip = {
+						text = successor_struggle_candidate_1_completed.tt
+						var:successor_struggle_candidate_1 >= 100
+					}
+				}
+				trigger_if = {
+					limit = { has_variable = successor_struggle_candidate_2 }
+					custom_tooltip = {
+						text = successor_struggle_candidate_2_completed.tt
+						var:successor_struggle_candidate_2 >= 100
+					}
+				}
+			}
+			
+			#All rivals eliminated
+			custom_tooltip = {
+				text = no_leadership_challengers_remains.tt
+				exists = scope:successor_struggle_candidate_1
+				OR = {
+					NOT = { exists = scope:successor_struggle_candidate_2 }
+					scope:successor_struggle_candidate_2 ?= { has_role = character_role_prisoner }
+				}
+			}
+			
+		}
+		
+	}
+	
+	on_complete = {
+		
+		#Declare victor
+		if = {
+			limit = { 
+				has_variable = successor_struggle_candidate_1
+				var:successor_struggle_candidate_1 >= 100
+			}
+			ruler ?= { set_character_as_ruler = yes }
+		}
+		else_if = {
+			limit = { 
+				has_variable = successor_struggle_candidate_2
+				var:successor_struggle_candidate_2 >= 100
+			}
+			scope:successor_struggle_candidate_2 ?= { set_character_as_ruler = yes }
+		}
+		
+		#Domestic Peace
+		hidden_effect = { has_modifier = strengthened_government_authority }
+		add_modifier = { 
+			name = strengthened_government_authority 
+			years = 5
+			is_decaying = yes
+		}
+		
+	}
+	
+	invalid = {
+		
+		OR = {
+			
+			#Ruler is no longer Ruler
+			NOT = { exists = scope:successor_struggle_candidate_1 }
+			scope:successor_struggle_candidate_1 ?= { is_ruler_of_own_country = no }
+			
+			#No longer a dictatorship
+			NOT = { has_law_or_variant = law_type:law_appointed_legislature }
+			
+			#Has distributed power
+			has_law_or_variant = law_type:law_yes_term_limit
+			active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_rotating_presidency }
+			is_a_regency_government = yes
+			is_a_regime_monarchy = yes
+			
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			#Calculate progress for Candidate 1
+			if = {
+				limit = { 
+					has_variable = successor_struggle_candidate_1
+					exists = ruler
+				}
+				
+				#Popularity
+				if = { limit = { ruler.popularity >= 0.20 } change_variable = { name = successor_struggle_candidate_1 add = 1 } }
+				if = { limit = { ruler.popularity >= 0.40 } change_variable = { name = successor_struggle_candidate_1 add = 1 } }
+				if = { limit = { ruler.popularity >= 0.60 } change_variable = { name = successor_struggle_candidate_1 add = 1 } }
+				if = { limit = { ruler.popularity >= 0.80 } change_variable = { name = successor_struggle_candidate_1 add = 1 } }
+				if = { limit = { ruler.popularity >= 1.00 } change_variable = { name = successor_struggle_candidate_1 add = 1 } }
+				
+				#IG Clout
+				if = { limit = { ruler.interest_group.ig_clout >= 0.05 } change_variable = { name = successor_struggle_candidate_1 add = 1 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.10 } change_variable = { name = successor_struggle_candidate_1 add = 2 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.20 } change_variable = { name = successor_struggle_candidate_1 add = 3 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.30 } change_variable = { name = successor_struggle_candidate_1 add = 4 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.40 } change_variable = { name = successor_struggle_candidate_1 add = 5 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.50 } change_variable = { name = successor_struggle_candidate_1 add = 6 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.60 } change_variable = { name = successor_struggle_candidate_1 add = 7 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.70 } change_variable = { name = successor_struggle_candidate_1 add = 8 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.80 } change_variable = { name = successor_struggle_candidate_1 add = 9 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.90 } change_variable = { name = successor_struggle_candidate_1 add = 10 } }
+				
+				#Limit
+				clamp_variable = {
+					name = successor_struggle_candidate_1
+					max = 100
+					min = 0
+				}
+				
+			}
+			
+			#Calculate progress for Candidate 2
+			if = {
+				limit = { 
+					has_variable = successor_struggle_candidate_2
+					exists = scope:successor_struggle_candidate_2
+				}
+				
+				#Popularity
+				if = { limit = { scope:successor_struggle_candidate_2.popularity >= 0.20 } change_variable = { name = successor_struggle_candidate_2 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_2.popularity >= 0.40 } change_variable = { name = successor_struggle_candidate_2 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_2.popularity >= 0.60 } change_variable = { name = successor_struggle_candidate_2 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_2.popularity >= 0.80 } change_variable = { name = successor_struggle_candidate_2 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_2.popularity >= 1.00 } change_variable = { name = successor_struggle_candidate_2 add = 1 } }
+				
+				#IG Clout
+				if = { limit = { scope:successor_struggle_candidate_2.interest_group.ig_clout >= 0.05 } change_variable = { name = successor_struggle_candidate_1 add = 0.5 } }
+				if = { limit = { scope:successor_struggle_candidate_2.interest_group.ig_clout >= 0.10 } change_variable = { name = successor_struggle_candidate_1 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_2.interest_group.ig_clout >= 0.20 } change_variable = { name = successor_struggle_candidate_1 add = 1.5 } }
+				if = { limit = { scope:successor_struggle_candidate_2.interest_group.ig_clout >= 0.30 } change_variable = { name = successor_struggle_candidate_1 add = 2 } }
+				if = { limit = { scope:successor_struggle_candidate_2.interest_group.ig_clout >= 0.40 } change_variable = { name = successor_struggle_candidate_1 add = 2.5 } }
+				if = { limit = { scope:successor_struggle_candidate_2.interest_group.ig_clout >= 0.50 } change_variable = { name = successor_struggle_candidate_1 add = 3 } }
+				if = { limit = { scope:successor_struggle_candidate_2.interest_group.ig_clout >= 0.60 } change_variable = { name = successor_struggle_candidate_1 add = 3.5 } }
+				if = { limit = { scope:successor_struggle_candidate_2.interest_group.ig_clout >= 0.70 } change_variable = { name = successor_struggle_candidate_1 add = 4 } }
+				if = { limit = { scope:successor_struggle_candidate_2.interest_group.ig_clout >= 0.80 } change_variable = { name = successor_struggle_candidate_1 add = 4.5 } }
+				if = { limit = { scope:successor_struggle_candidate_2.interest_group.ig_clout >= 0.90 } change_variable = { name = successor_struggle_candidate_1 add = 5 } }
+				
+				#Prominence
+				if = { limit = { scope:successor_struggle_candidate_2.prominence >= 10 } change_variable = { name = successor_struggle_candidate_2 add = 0.5 } }
+				if = { limit = { scope:successor_struggle_candidate_2.prominence >= 20 } change_variable = { name = successor_struggle_candidate_2 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_2.prominence >= 30 } change_variable = { name = successor_struggle_candidate_2 add = 1.5 } }
+				if = { limit = { scope:successor_struggle_candidate_2.prominence >= 40 } change_variable = { name = successor_struggle_candidate_2 add = 2 } }
+				if = { limit = { scope:successor_struggle_candidate_2.prominence >= 50 } change_variable = { name = successor_struggle_candidate_2 add = 2.5 } }
+				if = { limit = { scope:successor_struggle_candidate_2.prominence >= 60 } change_variable = { name = successor_struggle_candidate_2 add = 3 } }
+				if = { limit = { scope:successor_struggle_candidate_2.prominence >= 70 } change_variable = { name = successor_struggle_candidate_2 add = 3.5 } }
+				if = { limit = { scope:successor_struggle_candidate_2.prominence >= 80 } change_variable = { name = successor_struggle_candidate_2 add = 4 } }
+				if = { limit = { scope:successor_struggle_candidate_2.prominence >= 90 } change_variable = { name = successor_struggle_candidate_2 add = 4.5 } }
+				if = { limit = { scope:successor_struggle_candidate_2.prominence >= 100 } change_variable = { name = successor_struggle_candidate_2 add = 5 } }
+				
+				#Limit
+				clamp_variable = {
+					name = successor_struggle_candidate_2
+					max = 100
+					min = 0
+				}
+				
+			}
+			
+			#Calculate progress for Candidate 3
+			if = {
+				limit = { 
+					has_variable = successor_struggle_candidate_3
+					exists = scope:successor_struggle_candidate_3
+				}
+				
+				#Popularity
+				if = { limit = { scope:successor_struggle_candidate_3.popularity >= 0.20 } change_variable = { name = successor_struggle_candidate_3 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_3.popularity >= 0.40 } change_variable = { name = successor_struggle_candidate_3 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_3.popularity >= 0.60 } change_variable = { name = successor_struggle_candidate_3 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_3.popularity >= 0.80 } change_variable = { name = successor_struggle_candidate_3 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_3.popularity >= 1.00 } change_variable = { name = successor_struggle_candidate_3 add = 1 } }
+				
+				#IG Clout
+				if = { limit = { scope:successor_struggle_candidate_3.interest_group.ig_clout >= 0.05 } change_variable = { name = successor_struggle_candidate_1 add = 0.5 } }
+				if = { limit = { scope:successor_struggle_candidate_3.interest_group.ig_clout >= 0.10 } change_variable = { name = successor_struggle_candidate_1 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_3.interest_group.ig_clout >= 0.20 } change_variable = { name = successor_struggle_candidate_1 add = 1.5 } }
+				if = { limit = { scope:successor_struggle_candidate_3.interest_group.ig_clout >= 0.30 } change_variable = { name = successor_struggle_candidate_1 add = 2 } }
+				if = { limit = { scope:successor_struggle_candidate_3.interest_group.ig_clout >= 0.40 } change_variable = { name = successor_struggle_candidate_1 add = 2.5 } }
+				if = { limit = { scope:successor_struggle_candidate_3.interest_group.ig_clout >= 0.50 } change_variable = { name = successor_struggle_candidate_1 add = 3 } }
+				if = { limit = { scope:successor_struggle_candidate_3.interest_group.ig_clout >= 0.60 } change_variable = { name = successor_struggle_candidate_1 add = 3.5 } }
+				if = { limit = { scope:successor_struggle_candidate_3.interest_group.ig_clout >= 0.70 } change_variable = { name = successor_struggle_candidate_1 add = 4 } }
+				if = { limit = { scope:successor_struggle_candidate_3.interest_group.ig_clout >= 0.80 } change_variable = { name = successor_struggle_candidate_1 add = 4.5 } }
+				if = { limit = { scope:successor_struggle_candidate_3.interest_group.ig_clout >= 0.90 } change_variable = { name = successor_struggle_candidate_1 add = 5 } }
+				
+				#Prominence
+				if = { limit = { scope:successor_struggle_candidate_3.prominence >= 10 } change_variable = { name = successor_struggle_candidate_3 add = 0.5 } }
+				if = { limit = { scope:successor_struggle_candidate_3.prominence >= 20 } change_variable = { name = successor_struggle_candidate_3 add = 1 } }
+				if = { limit = { scope:successor_struggle_candidate_3.prominence >= 30 } change_variable = { name = successor_struggle_candidate_3 add = 1.5 } }
+				if = { limit = { scope:successor_struggle_candidate_3.prominence >= 40 } change_variable = { name = successor_struggle_candidate_3 add = 2 } }
+				if = { limit = { scope:successor_struggle_candidate_3.prominence >= 50 } change_variable = { name = successor_struggle_candidate_3 add = 2.5 } }
+				if = { limit = { scope:successor_struggle_candidate_3.prominence >= 60 } change_variable = { name = successor_struggle_candidate_3 add = 3 } }
+				if = { limit = { scope:successor_struggle_candidate_3.prominence >= 70 } change_variable = { name = successor_struggle_candidate_3 add = 3.5 } }
+				if = { limit = { scope:successor_struggle_candidate_3.prominence >= 80 } change_variable = { name = successor_struggle_candidate_3 add = 4 } }
+				if = { limit = { scope:successor_struggle_candidate_3.prominence >= 90 } change_variable = { name = successor_struggle_candidate_3 add = 4.5 } }
+				if = { limit = { scope:successor_struggle_candidate_3.prominence >= 100 } change_variable = { name = successor_struggle_candidate_3 add = 5 } }
+				
+				#Limit
+				clamp_variable = {
+					name = successor_struggle_candidate_3
+					max = 100
+					min = 0
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
+	modifiers_while_active = {
+		power_vacuum_modifier
+	}
+
+	weight = 20
+
+	should_be_pinned_by_default_uninvolved_or_context = yes
+
+	transferable = no
+
+	progressbar = no
+	
+}
