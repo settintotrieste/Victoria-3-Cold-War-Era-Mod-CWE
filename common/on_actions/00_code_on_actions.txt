@@ -886,12 +886,21 @@ on_character_death = {
 						active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_rotating_presidency }
 						active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy }
 						is_a_regency_government = yes
+						is_a_regime_monarchy = yes
 					}
 				}
 				
 			}
 			owner ?= {
-				add_journal_entry = { type = je_power_struggle_system }
+				if = {
+					limit = {
+						OR = {
+							is_player = yes
+							ruler ?= { is_historical = no }
+						}
+					}
+					add_journal_entry = { type = je_power_struggle_system }
+				}
 			}
 		}
 		
@@ -985,7 +994,7 @@ on_new_ruler = {
 					limit = {
 						owner ?= { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_corporate_state } }
 						NOR = {
-							interest_group = {
+							interest_group ?= {
 								OR = { 
 									is_interest_group_type = ig_industrialists
 									is_interest_group_type = ig_armed_forces
@@ -1047,11 +1056,10 @@ on_new_ruler = {
 		#Always have ruler's IG or party in government
 		if = {
 			limit = {
-				owner ?= {
-					ruler ?= { interest_group ?= { is_in_government = no } }
-				}
+				interest_group ?= { is_in_government = no }
 			}
-			owner.ruler ?= { interest_group ?= { save_scope_as = ruler_IG } }
+			save_scope_as = current_ruler
+			interest_group ?= { save_scope_as = ruler_IG }
 			owner ?= {
 				scope:ruler_IG ?= {
 					if = {
@@ -1068,6 +1076,7 @@ on_new_ruler = {
 						add_ruling_interest_group = yes
 					}
 				}
+				scope:current_ruler ?= { set_character_as_ruler = yes }
 			}
 		}
 		

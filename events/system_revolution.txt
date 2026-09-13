@@ -1735,16 +1735,27 @@ revolution_system.21 = {
 	hidden = yes
 	
 	trigger = {
-	
-		NOT = { exists = heir }
 		
 	}
 	
 	immediate = {
 		
-		#Enforce eligible ruler types
+		#Enforce Vice President System
 		if = {
-			limit = { 
+			limit = {
+				exists = heir
+				heir ?= { is_adult = yes }
+				country_eligible_for_vice_president_system = yes
+			}
+			heir ?= { set_character_as_ruler = yes }
+			every_scope_character = {
+				remove_variable = vice_president_character
+			}
+		}
+		
+		#Enforce eligible ruler types
+		else_if = {
+			limit = {
 				ruler ?= {
 					NOR = {
 						interest_group = {
@@ -1759,29 +1770,40 @@ revolution_system.21 = {
 					}
 				}
 			}
-			random_scope_character = {
-				limit = {
-					OR = {
-						AND = {
-							has_role_of_type = politician
-							interest_group = {
-								OR = { 
-									is_interest_group_type = ig_industrialists
-									is_interest_group_type = ig_armed_forces
-									is_interest_group_type = ig_intelligentsia
+			if = {
+				limit = { NOT = { exists = heir } }
+				random_scope_character = {
+					limit = {
+						OR = {
+							AND = {
+								has_role_of_type = politician
+								interest_group = {
+									OR = { 
+										is_interest_group_type = ig_industrialists
+										is_interest_group_type = ig_armed_forces
+										is_interest_group_type = ig_intelligentsia
+									}
 								}
 							}
+							has_role_of_type = executive
+							has_role_of_type = magnate
 						}
-						has_role_of_type = executive
-						has_role_of_type = magnate
+					}
+					set_character_as_ruler = yes
+					save_scope_as = new_ruler_scope
+					owner = { 
+						save_scope_as = new_ruler_country_scope
+					}
+					post_notification = new_ruler_simpliciter
+				}
+			}
+			else = {
+				ruler ?= {
+					if = {
+						limit = { owner = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_corporate_state } } }
+						add_character_role = magnate
 					}
 				}
-				set_character_as_ruler = yes
-				save_scope_as = new_ruler_scope
-				owner = { 
-					save_scope_as = new_ruler_country_scope
-				}
-				post_notification = new_ruler_simpliciter
 			}
 		}
 		
