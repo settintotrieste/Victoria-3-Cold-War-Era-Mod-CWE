@@ -1,0 +1,214 @@
+﻿je_sato_system = {
+	icon = "gfx/interface/icons/diplo_icons/sato_member.dds"
+
+	group = je_group_international_organisations
+	
+	scripted_button = je_request_international_alliance_intervention_button
+	scripted_button = je_leave_sato_button
+	
+	scripted_button = je_fund_sato_button
+	scripted_button = je_defund_sato_button
+	
+	scripted_button = je_hold_sato_exercise_button
+	
+	scripted_button = je_become_sato_leader_button
+	
+	is_shown_when_inactive = {
+		
+	}
+	
+	possible = {
+		OR = {
+			has_modifier = sato_leader
+			has_modifier = sato_member
+		}
+	}
+	
+	immediate = {
+		
+		#Count post_colonial_org members
+		random_country = {
+			limit = {
+				has_modifier = sato_leader
+			}
+			set_global_variable = { 
+				name = sato_org_member_count
+				value = 0 
+			}
+			every_country = {
+				limit = {
+					OR = { 
+						has_modifier = sato_leader
+						has_modifier = sato_member
+					}
+				}
+				change_global_variable = {
+					name = sato_org_member_count
+					add = 1
+				}
+			}
+		}
+		
+		#Default is leader funds SATO
+		if = {
+			limit = { has_modifier = sato_leader }
+			set_global_variable = fund_sato
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+		
+		effect = {
+		
+			#Count post_colonial_org members
+			if = {
+				limit = {
+					has_modifier = sato_leader
+				}
+				set_global_variable = { 
+					name = sato_org_member_count
+					value = 0 
+				}
+				every_country = {
+					limit = {
+						OR = { 
+							has_modifier = sato_leader
+							has_modifier = sato_member
+						}
+					}
+					change_global_variable = {
+						name = sato_org_member_count
+						add = 1
+					}
+				}
+			}
+			
+			#Impose foreign military bases
+			if = {
+				limit = {
+					has_global_variable = fund_sato
+					has_modifier = sato_leader
+					in_default = no
+				}
+				every_country = {
+					limit = { 
+						NOT = { this = root } 
+						has_modifier = sato_member 
+						NOT = { has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement is_initiator = no } }
+					}
+					save_scope_as = sato_member_scope
+					ROOT = {
+						create_diplomatic_pact = {
+							country = scope:sato_member_scope
+							type = military_cooperation_agreement
+						}
+					}
+				}
+			}
+		
+		}
+		
+	}
+	
+	modifiers_while_active = {
+		
+	}
+
+	invalid = {
+	
+		OR = {
+		
+			#Ineligible country
+			is_a_democracy = no
+			is_not_sufficiently_independent = yes
+			is_neutral = yes
+			infamy >= infamy_threshold:pariah
+			
+			#No leader of org
+			any_country = {
+				count < 1
+				has_modifier = sato_leader
+			}
+			
+		}
+		
+	}
+	
+	on_invalid = {
+		
+		#Clear modifiers
+		if = {
+			limit = { has_modifier = sato_exercise }
+			remove_modifier = sato_exercise
+		}
+		if = {
+			limit = { has_modifier = sato_leader }
+			remove_modifier = sato_leader
+			
+			#Select new SATO leader, if applicable
+			if = {
+				limit = {
+					NOT = {
+						any_country = {
+							has_modifier = sato_leader
+						}
+					}
+				}
+				ordered_country = {
+					limit = {
+						has_modifier = sato_member
+						is_subject = no
+						is_sufficiently_independent = yes
+					}
+					order_by = prestige
+					position = 0
+					if = {
+						limit = { has_modifier = sato_leader }
+						add_modifier = { name = sato_leader }
+					}
+					if = {
+						limit = { has_modifier = sato_member }
+						remove_modifier = sato_member
+					}
+				}
+			}
+			
+		}
+		if = {
+			limit = { has_modifier = sato_member }
+			remove_modifier = sato_member
+		}
+		
+	}
+	
+	on_fail = {
+	
+		#Display members
+		every_country = {
+			limit = { 
+				has_modifier = sato_leader
+			}
+			save_scope_as = superstate_leader_label
+			custom_tooltip = {
+				text = superstate_leader_label.tt
+			}
+		}
+		every_country = {
+			limit = { 
+				has_modifier = sato_member
+			}
+			save_scope_as = superstate_member_label
+			custom_tooltip = {
+				text = superstate_member_label.tt
+			}
+		}
+		
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default_uninvolved_or_context = no
+
+	progressbar = no
+}

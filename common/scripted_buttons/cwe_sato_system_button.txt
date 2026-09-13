@@ -1,0 +1,367 @@
+je_fund_sato_button = {
+	name = "je_fund_sato_button"
+	desc = "je_fund_sato_button_desc"
+
+	visible = { 
+		
+		NOT = { has_global_variable = fund_sato }
+		
+		has_modifier = sato_leader
+		
+	}
+
+	possible = {
+		
+		is_at_war = no
+		
+		in_default = no
+		
+		any_interest_group ?= {
+			is_in_government = yes
+			ig_government_power_share > 0.5 
+			law_stance = {
+				law = law_type:law_isolationism
+				value <= disapprove
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		set_global_variable = fund_sato
+		
+		#NATO leader will station troops in NATO countries
+		custom_tooltip = {
+			text = fund_sato.tt
+			every_country = {
+				limit = { 
+					NOT = { this = root } 
+					has_modifier = sato_member 
+					NOT = { has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement is_initiator = no } }
+				}
+				save_scope_as = sato_member_scope
+				ROOT = {
+					create_diplomatic_pact = {
+						country = scope:sato_member_scope
+						type = military_cooperation_agreement
+					}
+				}
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}
+
+je_defund_sato_button = {
+	name = "je_defund_sato_button"
+	desc = "je_defund_sato_button_desc"
+
+	visible = { 
+		
+		has_global_variable = fund_sato
+		
+		has_modifier = sato_leader
+		
+	}
+
+	possible = {
+		
+		is_at_war = no
+		
+		OR = { 
+			any_interest_group ?= {
+				is_in_government = yes
+				ig_government_power_share > 0.5 
+				law_stance = {
+					law = law_type:law_isolationism
+					value >= approve
+				}
+			}
+			in_default = yes
+		}
+		
+	}
+
+	effect = {
+		
+		remove_global_variable = fund_sato
+		
+		#NATO leader will un-station troops in NATO countries
+		custom_tooltip = {
+			text = defund_sato.tt
+			every_country = {
+				limit = { 
+					NOT = { this = root } 
+					has_modifier = sato_member 
+					has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement is_initiator = no }
+				}
+				save_scope_as = sato_member_scope
+				ROOT = {
+					remove_diplomatic_pact = {
+						country = scope:sato_member_scope
+						type = military_cooperation_agreement
+					}
+				}
+			}
+		}
+		every_country = {
+			limit = { 
+				NOT = { this = root } 
+				has_modifier = sato_member 
+				has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement is_initiator = no }
+			}
+			change_relations = { country = ROOT value = -20 }
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+	}
+	
+}
+
+je_hold_sato_exercise_button = {
+	name = "je_hold_sato_exercise_button"
+	desc = "je_hold_sato_exercise_button_desc"
+
+	visible = { 
+		
+		OR = {
+			has_modifier = sato_leader
+			has_modifier = sato_member
+		}
+		
+	}
+
+	possible = {
+		
+		NOT = { has_modifier = sato_exercise }
+		
+		is_at_war = no
+		
+		in_default = no
+		
+		any_interest_group ?= {
+			is_in_government = yes
+			ig_government_power_share > 0.5 
+			OR = {
+				law_stance = {
+					law = law_type:law_defensive_war
+					value >= approve
+				}
+				law_stance = {
+					law = law_type:law_offensive_war
+					value >= approve
+				}
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Add military exercises modifier
+		add_modifier = { 
+			name = sato_exercise 
+			years = 5 
+			is_decaying = yes 
+		}
+		hidden_effect = {
+			every_country = {
+				limit = {
+					NOT = { this = root } 
+					has_modifier = sato_member
+				}
+				hidden_effect = { remove_modifier = sato_exercise }
+				add_modifier = { 
+					name = sato_exercise 
+					years = 5 
+					is_decaying = yes 
+				}
+			}
+		}
+		
+		#Antagonise hostile countries
+		every_country = {
+			limit = { 
+				NOT = { this = root } 
+				NOT = { has_modifier = sato_member }
+				OR = {
+					has_diplomatic_pact = { who = ROOT type = rivalry }
+					has_modifier = warsaw_pact_leader
+					has_modifier = warsaw_pact_member
+					has_modifier = csto_leader
+					has_modifier = csto_member
+				}
+				is_sufficiently_independent = yes
+				relations:root < relations_threshold:neutral
+			}
+			change_relations = { country = ROOT value = -20 }
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 0
+		
+		if = {
+			limit = { 
+				OR = {
+					has_global_variable = medium_world_tension
+					has_global_variable = high_world_tension
+					has_global_variable = very_high_world_tension
+				}
+			}
+			add = 10 
+		}
+		
+	}
+	
+}
+
+je_leave_sato_button = {
+	name = "je_leave_sato_button"
+	desc = "je_leave_sato_button_desc"
+
+	visible = {
+		
+		OR = {
+			has_modifier = sato_leader
+			has_modifier = sato_member
+		}
+		
+	}
+
+	possible = {
+		
+		#Conditions to leave sato
+		OR = {
+		
+			is_a_communist_government = yes
+		
+			NOT = { is_sufficiently_independent = yes }
+			
+			is_neutral = yes
+			
+			any_country = {
+				has_modifier = sato_leader
+				NOT = { THIS = ROOT }
+			
+				NOT = { has_subject_relation_with = ROOT }
+				has_attitude = {
+					who = ROOT
+					attitude <= antagonistic
+				}
+			}
+			
+			is_player = yes
+			
+		}
+		
+		#Parliament support
+		government_has_legislative_simple_majority = yes
+		
+	}
+
+	effect = {
+		
+		#THIS leaves NATO
+		if = {
+			limit = { has_modifier = sato_member }
+			remove_modifier = sato_member
+		}
+		if = {
+			limit = { has_modifier = sato_leader }
+			remove_modifier = sato_leader
+		}
+		
+		#Block reapplication for 1 years
+		set_variable = {
+			name = sato_application_cooldown
+			years = 1
+		}
+		
+		#Lose relations
+		every_country = {
+			limit = {
+				OR = {
+					has_modifier = sato_leader
+					has_modifier = sato_member
+				}
+			}
+			change_relations = {
+				country = ROOT
+				value = -50
+			}
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}
+
+je_become_sato_leader_button = {
+	name = "je_become_sato_leader_button"
+	desc = "je_become_sato_leader_button_desc"
+
+	visible = {
+		
+		NOT = { has_modifier = sato_leader }
+		has_modifier = sato_member
+		
+	}
+
+	possible = {
+		
+		#Eligible to be leader
+		is_subject = no
+		is_sufficiently_independent = yes
+		infamy < infamy_threshold:infamous
+		
+		#Stronger rank than leader
+		any_country = {
+			NOT = { THIS = ROOT }
+			has_modifier = sato_leader
+			country_rank < root.country_rank
+		}
+		
+	}
+
+	effect = {
+		
+		#THIS becomes new NATO leader
+		every_country = {
+			limit = { has_modifier = sato_leader }
+			remove_modifier = sato_leader
+			if = {
+				limit = { has_modifier = sato_member }
+				add_modifier = { name = sato_member }
+			}
+			change_relations = { country = ROOT value = -50 }
+		}
+		if = {
+			limit = { has_modifier = sato_leader }
+			add_modifier = { name = sato_leader }
+		}
+		if = {
+			limit = { has_modifier = sato_member }
+			remove_modifier = sato_member
+		}
+		
+	}
+	
+	ai_chance = {
+		base = 100
+	}
+	
+}

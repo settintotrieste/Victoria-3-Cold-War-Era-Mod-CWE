@@ -1,0 +1,528 @@
+namespace = sato_system
+
+#Set SATO leader
+sato_system.1 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = {
+		
+			#No SATO leader and there is an eligible one
+			AND = { 
+			
+				NOT = { any_country = { has_modifier = sato_leader } }
+				
+				any_country = { 
+					has_modifier = sato_member 
+					OR = { 
+						country_is_in_europe = yes
+						country_is_in_north_america = yes
+					}
+					is_a_democracy = yes
+					country_rank = rank_value:super_power
+				}
+				
+			}
+			
+			#SATO leader is wrong
+			AND = { 
+				has_modifier = sato_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOT = { is_not_neutral = yes }
+					NOT = { country_rank = rank_value:super_power }
+				}
+			}
+			
+			#Overlapping modifiers
+			any_country = { has_modifier = sato_leader has_modifier = sato_member }
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Clear SATO leader
+		every_country = {
+			limit = { has_modifier = sato_leader }
+			remove_modifier = sato_leader
+			if = { 
+				limit = { NOT = { has_modifier = sato_member } }
+				add_modifier = { name = sato_member }
+			}
+		}
+	
+		#Set SATO leader
+		if = {
+			limit = { 
+				NOT = { any_country = { has_modifier = sato_leader } }
+				
+				any_country = { 
+					has_modifier = sato_member 
+					OR = { 
+						country_is_in_europe = yes
+						country_is_in_north_america = yes
+					}
+					is_a_democracy = yes
+					country_rank = rank_value:super_power
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = sato_member 
+					OR = { 
+						country_is_in_europe = yes
+						country_is_in_north_america = yes
+					}
+					is_a_democracy = yes
+					country_rank = rank_value:super_power
+				}
+				add_modifier = { name = sato_leader }
+			}
+		}
+		else_if = {
+			limit = {
+				has_modifier = sato_leader 
+				OR = {
+					NOT = { is_sufficiently_independent = yes }
+					NOT = { is_not_neutral = yes }
+					NOT = { country_rank = rank_value:super_power }
+				}
+			}
+			random_country = {
+				limit = {
+					has_modifier = sato_member 
+					OR = { 
+						country_is_in_europe = yes
+						country_is_in_north_america = yes
+					}
+					is_a_democracy = yes
+					country_rank = rank_value:super_power
+				}
+				add_modifier = { name = sato_leader }
+			}
+		}
+		
+		#Clean up memberships
+		if = { 
+			limit = { has_modifier = sato_leader has_modifier = sato_member }
+			remove_modifier = sato_member
+		}
+		
+	}
+
+}
+
+#Set SATO relations
+sato_system.2 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = { has_modifier = sato_member has_modifier = sato_leader }
+		
+		any_country = { 
+			OR = { has_modifier = sato_member has_modifier = sato_leader }
+			NOR = { any_scope_treaty = { binds = ROOT any_scope_article = { has_type = defensive_pact } } any_scope_treaty = { binds = ROOT any_scope_article = { has_type = alliance } } }
+		}
+		
+	}
+
+	immediate = {
+		
+		#Force defensive pact on SATO members
+		every_country = { 
+			limit = { 
+				NOT = { this = ROOT }
+				OR = { has_modifier = sato_member has_modifier = sato_leader }
+				NOR = { any_scope_treaty = { binds = ROOT any_scope_article = { has_type = defensive_pact } } any_scope_treaty = { binds = ROOT any_scope_article = { has_type = alliance } } }
+			}
+			save_scope_as = target_country
+			create_treaty = {
+				name = treaty_name_SATO_alliance
+				first_country = ROOT
+				second_country = scope:target_country
+
+				is_draft = no
+				#binding_period = { years = 10 }
+
+				articles_to_create = {
+					{
+						article = defensive_pact
+					}
+				}
+			}
+		}
+		
+	}
+
+}
+
+#Dissolve SATO
+sato_system.3 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		
+		OR = { 
+		
+			#THIS is the sole member of SATO
+			AND = { 
+				OR = { has_modifier = sato_member has_modifier = sato_leader }
+				NOT = { any_country = { has_modifier = sato_member } }
+			}
+			
+			#No SATO leader
+			AND = { 
+				NOT = { has_modifier = sato_leader }
+				NOT = { any_country = { has_modifier = sato_leader } }
+			}
+			
+		}
+		
+	}
+
+	immediate = {
+		
+		#Everyone leaves SATO
+		remove_modifier = sato_member
+		remove_modifier = sato_leader
+		
+		every_country = {
+			remove_modifier = sato_member
+			remove_modifier = sato_leader
+		}
+		
+	}
+
+}
+
+#Kick ineligible countries out of SATO
+sato_system.4 = {
+	type = country_event
+	title = sato_expulsion.t 					# Title of the event; ADD LOCALISATION
+    desc = sato_expulsion.d 					# Description of the event; ADD LOCALISATION
+    flavor = sato_expulsion.f 					# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+	event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/diplo_icons/sato_member.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		OR = { 
+			has_modifier = sato_member
+			has_modifier = sato_leader
+			has_variable = sato_application_var
+		}
+		
+		OR = { 
+			NOT = { is_sufficiently_independent = yes }
+			NOT = { is_not_neutral = yes }
+			is_a_communist_government = yes
+		}
+		
+	}
+
+	immediate = {
+	
+		#THIS leaves SATO
+		remove_modifier = sato_member
+		remove_modifier = sato_leader
+		
+		#Terminate any applications
+		remove_variable = sato_application_var
+		
+		#Block reapplication for 5 years
+		set_variable = {
+			name = left_sato_var
+			months = 60
+		}
+		
+	}
+	
+	option = {
+        name = sato_application_rejection.1				# Unfortunate
+		
+    }
+
+}
+
+#Option for SATO leader to accept or reject application for membership
+sato_system.5 = {
+	title = sato_application_choice.t 					# Title of the event; ADD LOCALISATION
+    desc = sato_application_choice.d 					# Description of the event; ADD LOCALISATION
+    #flavor = sato_application_choice.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	trigger = {
+		
+		has_modifier = sato_leader
+		
+		any_country = {
+			has_variable = sato_application_var
+			
+			is_sufficiently_independent = yes
+			is_not_neutral = yes
+			is_at_war = no
+		}
+		
+	}
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_variable = sato_application_var }
+			save_scope_as = sato_applicant
+		}
+		
+		ROOT = {
+			save_scope_as = sato_leader
+		}
+		
+	}
+
+	option = {
+        name = sato_application_choice.option.1			# Accept application from PREV
+        highlighted_option = yes
+		
+		#Accept FROM into SATO
+		scope:sato_applicant ?= {
+			#FROM joins SATO
+			add_modifier = { name = sato_member }
+			remove_variable = sato_application_var
+		}
+		
+		#Create defensive alliance with FROM
+		every_country = {
+			limit = { 
+				NOT = { this = ROOT }
+				NOT = { this = scope:sato_applicant }
+				OR = { has_modifier = sato_member has_modifier = sato_leader }
+				NOR = { any_scope_treaty = { binds = ROOT any_scope_article = { has_type = defensive_pact } } any_scope_treaty = { binds = ROOT any_scope_article = { has_type = alliance } } }
+			}
+			save_scope_as = target_country
+			create_treaty = {
+				name = treaty_name_SATO_alliance
+				first_country = ROOT
+				second_country = scope:target_country
+
+				is_draft = no
+				#binding_period = { years = 10 }
+
+				articles_to_create = {
+					{
+						article = defensive_pact
+					}
+				}
+			}
+			scope:sato_applicant ?= {
+				change_relations = {
+					country = ROOT
+					value = 50
+				}
+			}
+		}
+		
+		#Inform applicant of successful outcome
+		scope:sato_applicant ?= { trigger_event = { id = sato_system.7 } }
+		
+		#FROM is happy with THIS
+		scope:sato_applicant ?= {
+			change_relations = {
+				country = ROOT
+				value = 50
+			}
+		}
+		
+		#Hostile countries become more hostile
+		every_country = {
+			limit = { 
+				has_attitude = {
+					who = ROOT
+					attitude <= antagonistic
+				}
+			}
+			change_relations = {
+				country = root
+				value = -25
+			}
+		}
+		
+		ai_chance = { 
+			base = 99
+		}
+		
+    }
+	
+	option = {
+        name = sato_application_choice.option.2 # Refuse application from PREV
+		default_option = yes
+		
+		#Inform applicant of unsuccessful outcome
+		scope:sato_applicant ?= { 
+			trigger_event = { id = sato_system.6 } 
+			remove_variable = sato_application_var
+		}
+		
+		#FROM is angry!
+		scope:sato_applicant ?= { 
+			change_relations = {
+				country = ROOT
+				value = -50
+			}
+		}
+		
+		#Hostile countries become less hostile
+		every_country = {
+			limit = { 
+				has_attitude = {
+					who = ROOT
+					attitude <= antagonistic
+				}
+			}
+			change_relations = {
+				country = root
+				value = 25
+			}
+		}
+		
+		ai_chance = { 
+			base = 1
+		}
+		
+    }
+
+}
+
+#Notification of rejection
+sato_system.6 = {
+	title = sato_application_rejection.t 				# Title of the event; ADD LOCALISATION
+    desc = sato_application_rejection.d 				# Description of the event; ADD LOCALISATION
+    flavor = sato_application_rejection.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = sato_leader }
+			save_scope_as = sato_leader
+		}
+		
+	}
+
+	option = {
+        name = sato_application_rejection.1				# Unfortunate
+		
+    }
+
+}
+
+#Notification of acceptance
+sato_system.7 = {
+	title = sato_application_acceptance.t 				# Title of the event; ADD LOCALISATION
+    desc = sato_application_acceptance.d 				# Description of the event; ADD LOCALISATION
+    #flavor = sato_application_acceptance.f 				# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+	
+		random_country = {
+			limit = { has_modifier = sato_leader }
+			save_scope_as = sato_leader
+		}
+		
+	}
+
+	option = {
+        name = sato_application_acceptance.1				# Fortunate
+		
+    }
+
+}
+
+#Notification of SATO call for help
+sato_system.8 = {
+	placement = scope:sato_victim
+	
+	title = sato_join_war.t 							# Title of the event; ADD LOCALISATION
+    desc = sato_join_war.d 								# Description of the event; ADD LOCALISATION
+    flavor = sato_join_war.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_signed_contract" }
+
+    icon = "gfx/interface/icons/diplo_icons/sato_member.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+
+	immediate = {
+		
+		random_country = {
+			limit = { has_variable = requested_sato_intervention }
+			save_scope_as = sato_victim
+		}
+		
+	}
+
+	option = {
+        name = sato_join_war.1							# Fortunate
+		
+		#Join SATO war
+		custom_tooltip = {
+			text = join_sato_war.tt
+			every_diplomatic_play = {
+				limit = {
+					is_war = yes
+					any_scope_play_involved = {
+						this = scope:sato_victim
+					}
+					initiator = {
+						NOT = { this = scope:sato_victim }
+						NOR = { 
+							has_modifier = sato_member
+							has_modifier = sato_leader
+						}
+					}
+					target = {
+						this = scope:sato_victim
+						OR = { 
+							has_modifier = sato_member
+							has_modifier = sato_leader
+						}
+					}
+					has_an_aggressive_war_goal = yes
+				}
+				add_target_backers = { ROOT }
+			}
+		}
+		
+    }
+
+}
