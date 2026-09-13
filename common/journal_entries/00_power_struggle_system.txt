@@ -1,0 +1,321 @@
+﻿je_power_struggle_system = {
+	icon = "gfx/interface/icons/event_icons/event_carlist_beret.dds"
+
+	group = je_group_internal_affairs
+
+	is_shown_when_inactive = {
+		
+	}
+
+	possible = {
+		
+	}
+
+	immediate = {
+		
+		#Candidate 1
+		ruler ?= { 
+			save_scope_as = power_struggle_candidate_1
+			owner ?= {
+				set_variable = {
+					name = power_struggle_candidate_1
+					value = 0
+				}
+			}
+		}
+		
+		#Candidate 2
+		ordered_scope_character = {
+			limit = {
+				is_ruler_of_own_country = no
+				is_heir_of_own_country = no
+				OR = { 
+					character_is_public_servant = yes
+					is_an_IG_leader = yes
+				}
+				interest_group ?= { is_in_government = yes }
+			}
+			order_by = prominence
+			position = 0
+			check_range_bounds = no
+			save_scope_as = power_struggle_candidate_2
+			owner ?= {
+				set_variable = {
+					name = power_struggle_candidate_2
+					value = 0
+				}
+			}
+			add_modifier = { name = leadership_contender_modifier years = 1 }
+		}
+		
+		#Candidate 3
+		ordered_scope_character = {
+			limit = {
+				is_ruler_of_own_country = no
+				is_heir_of_own_country = no
+				OR = { 
+					character_is_public_servant = yes
+					is_an_IG_leader = yes
+				}
+				interest_group ?= { is_in_government = yes }
+			}
+			order_by = prominence
+			position = 1
+			check_range_bounds = no
+			save_scope_as = power_struggle_candidate_3
+			owner ?= {
+				set_variable = {
+					name = power_struggle_candidate_3
+					value = 0
+				}
+			}
+			add_modifier = { name = leadership_contender_modifier years = 1 }
+		}
+		
+	}
+
+	complete = {
+		
+		OR = {
+		
+			#Won competition
+			AND = {
+				trigger_if = {
+					limit = { has_variable = power_struggle_candidate_1 }
+					custom_tooltip = {
+						text = power_struggle_candidate_1_completed.tt
+						var:power_struggle_candidate_1 >= 100
+					}
+				}
+				trigger_if = {
+					limit = { has_variable = power_struggle_candidate_2 }
+					custom_tooltip = {
+						text = power_struggle_candidate_2_completed.tt
+						var:power_struggle_candidate_2 >= 100
+					}
+				}
+				trigger_if = {
+					limit = { has_variable = power_struggle_candidate_3 }
+					custom_tooltip = {
+						text = power_struggle_candidate_3_completed.tt
+						var:power_struggle_candidate_3 >= 100
+					}
+				}
+			}
+			
+			#All rivals eliminated
+			custom_tooltip = {
+				text = no_leadership_challengers_remains.tt
+				AND = {
+					exists = scope:power_struggle_candidate_1
+					OR = {
+						NOT = { exists = scope:power_struggle_candidate_2 }
+						scope:power_struggle_candidate_2 ?= { has_role = character_role_prisoner }
+					}
+					OR = {
+						NOT = { exists = scope:power_struggle_candidate_3 }
+						scope:power_struggle_candidate_3 ?= { has_role = character_role_prisoner }
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	on_complete = {
+		
+		#Declare victor
+		if = {
+			limit = { 
+				has_variable = power_struggle_candidate_1
+				var:power_struggle_candidate_1 >= 100
+			}
+			ruler ?= { set_character_as_ruler = yes }
+		}
+		else_if = {
+			limit = { 
+				has_variable = power_struggle_candidate_2
+				var:power_struggle_candidate_2 >= 100
+			}
+			scope:power_struggle_candidate_2 ?= { set_character_as_ruler = yes }
+		}
+		else_if = {
+			limit = { 
+				has_variable = power_struggle_candidate_3
+				var:power_struggle_candidate_3 >= 100
+			}
+			scope:power_struggle_candidate_3 ?= { set_character_as_ruler = yes }
+		}
+		
+		#Domestic Peace
+		hidden_effect = { has_modifier = strengthened_government_authority }
+		add_modifier = { 
+			name = strengthened_government_authority 
+			years = 5
+			is_decaying = yes
+		}
+		
+	}
+	
+	fail = {
+		
+		OR = { 
+			NOT = { exists = scope:power_struggle_candidate_1 }
+			scope:power_struggle_candidate_1 ?= { is_ruler_of_own_country = no }
+			NOT = { has_law_or_variant = law_type:law_appointed_legislature }
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+	
+		effect = {
+			
+			#Calculate progress for Candidate 1
+			if = {
+				limit = { 
+					has_variable = power_struggle_candidate_1
+					exists = ruler
+				}
+				
+				#Popularity
+				if = { limit = { ruler.popularity >= 0.20 } change_variable = { name = power_struggle_candidate_1 add = 1 } }
+				if = { limit = { ruler.popularity >= 0.40 } change_variable = { name = power_struggle_candidate_1 add = 1 } }
+				if = { limit = { ruler.popularity >= 0.60 } change_variable = { name = power_struggle_candidate_1 add = 1 } }
+				if = { limit = { ruler.popularity >= 0.80 } change_variable = { name = power_struggle_candidate_1 add = 1 } }
+				if = { limit = { ruler.popularity >= 1.00 } change_variable = { name = power_struggle_candidate_1 add = 1 } }
+				
+				#IG Clout
+				if = { limit = { ruler.interest_group.ig_clout >= 0.05 } change_variable = { name = power_struggle_candidate_1 add = 1 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.10 } change_variable = { name = power_struggle_candidate_1 add = 2 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.20 } change_variable = { name = power_struggle_candidate_1 add = 3 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.30 } change_variable = { name = power_struggle_candidate_1 add = 4 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.40 } change_variable = { name = power_struggle_candidate_1 add = 5 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.50 } change_variable = { name = power_struggle_candidate_1 add = 6 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.60 } change_variable = { name = power_struggle_candidate_1 add = 7 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.70 } change_variable = { name = power_struggle_candidate_1 add = 8 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.80 } change_variable = { name = power_struggle_candidate_1 add = 9 } }
+				if = { limit = { ruler.interest_group.ig_clout >= 0.90 } change_variable = { name = power_struggle_candidate_1 add = 10 } }
+				
+				#Limit
+				clamp_variable = {
+					name = power_struggle_candidate_1
+					max = 100
+					min = 0
+				}
+				
+			}
+			
+			#Calculate progress for Candidate 2
+			if = {
+				limit = { 
+					has_variable = power_struggle_candidate_2
+					exists = scope:power_struggle_candidate_2
+				}
+				
+				#Popularity
+				if = { limit = { scope:power_struggle_candidate_2.popularity >= 0.20 } change_variable = { name = power_struggle_candidate_2 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_2.popularity >= 0.40 } change_variable = { name = power_struggle_candidate_2 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_2.popularity >= 0.60 } change_variable = { name = power_struggle_candidate_2 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_2.popularity >= 0.80 } change_variable = { name = power_struggle_candidate_2 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_2.popularity >= 1.00 } change_variable = { name = power_struggle_candidate_2 add = 1 } }
+				
+				#IG Clout
+				if = { limit = { scope:power_struggle_candidate_2.interest_group.ig_clout >= 0.05 } change_variable = { name = power_struggle_candidate_1 add = 0.5 } }
+				if = { limit = { scope:power_struggle_candidate_2.interest_group.ig_clout >= 0.10 } change_variable = { name = power_struggle_candidate_1 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_2.interest_group.ig_clout >= 0.20 } change_variable = { name = power_struggle_candidate_1 add = 1.5 } }
+				if = { limit = { scope:power_struggle_candidate_2.interest_group.ig_clout >= 0.30 } change_variable = { name = power_struggle_candidate_1 add = 2 } }
+				if = { limit = { scope:power_struggle_candidate_2.interest_group.ig_clout >= 0.40 } change_variable = { name = power_struggle_candidate_1 add = 2.5 } }
+				if = { limit = { scope:power_struggle_candidate_2.interest_group.ig_clout >= 0.50 } change_variable = { name = power_struggle_candidate_1 add = 3 } }
+				if = { limit = { scope:power_struggle_candidate_2.interest_group.ig_clout >= 0.60 } change_variable = { name = power_struggle_candidate_1 add = 3.5 } }
+				if = { limit = { scope:power_struggle_candidate_2.interest_group.ig_clout >= 0.70 } change_variable = { name = power_struggle_candidate_1 add = 4 } }
+				if = { limit = { scope:power_struggle_candidate_2.interest_group.ig_clout >= 0.80 } change_variable = { name = power_struggle_candidate_1 add = 4.5 } }
+				if = { limit = { scope:power_struggle_candidate_2.interest_group.ig_clout >= 0.90 } change_variable = { name = power_struggle_candidate_1 add = 5 } }
+				
+				#Prominence
+				if = { limit = { scope:power_struggle_candidate_2.prominence >= 10 } change_variable = { name = power_struggle_candidate_2 add = 0.5 } }
+				if = { limit = { scope:power_struggle_candidate_2.prominence >= 20 } change_variable = { name = power_struggle_candidate_2 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_2.prominence >= 30 } change_variable = { name = power_struggle_candidate_2 add = 1.5 } }
+				if = { limit = { scope:power_struggle_candidate_2.prominence >= 40 } change_variable = { name = power_struggle_candidate_2 add = 2 } }
+				if = { limit = { scope:power_struggle_candidate_2.prominence >= 50 } change_variable = { name = power_struggle_candidate_2 add = 2.5 } }
+				if = { limit = { scope:power_struggle_candidate_2.prominence >= 60 } change_variable = { name = power_struggle_candidate_2 add = 3 } }
+				if = { limit = { scope:power_struggle_candidate_2.prominence >= 70 } change_variable = { name = power_struggle_candidate_2 add = 3.5 } }
+				if = { limit = { scope:power_struggle_candidate_2.prominence >= 80 } change_variable = { name = power_struggle_candidate_2 add = 4 } }
+				if = { limit = { scope:power_struggle_candidate_2.prominence >= 90 } change_variable = { name = power_struggle_candidate_2 add = 4.5 } }
+				if = { limit = { scope:power_struggle_candidate_2.prominence >= 100 } change_variable = { name = power_struggle_candidate_2 add = 5 } }
+				
+				#Limit
+				clamp_variable = {
+					name = power_struggle_candidate_2
+					max = 100
+					min = 0
+				}
+				
+			}
+			
+			#Calculate progress for Candidate 3
+			if = {
+				limit = { 
+					has_variable = power_struggle_candidate_3
+					exists = scope:power_struggle_candidate_3
+				}
+				
+				#Popularity
+				if = { limit = { scope:power_struggle_candidate_3.popularity >= 0.20 } change_variable = { name = power_struggle_candidate_3 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_3.popularity >= 0.40 } change_variable = { name = power_struggle_candidate_3 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_3.popularity >= 0.60 } change_variable = { name = power_struggle_candidate_3 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_3.popularity >= 0.80 } change_variable = { name = power_struggle_candidate_3 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_3.popularity >= 1.00 } change_variable = { name = power_struggle_candidate_3 add = 1 } }
+				
+				#IG Clout
+				if = { limit = { scope:power_struggle_candidate_3.interest_group.ig_clout >= 0.05 } change_variable = { name = power_struggle_candidate_1 add = 0.5 } }
+				if = { limit = { scope:power_struggle_candidate_3.interest_group.ig_clout >= 0.10 } change_variable = { name = power_struggle_candidate_1 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_3.interest_group.ig_clout >= 0.20 } change_variable = { name = power_struggle_candidate_1 add = 1.5 } }
+				if = { limit = { scope:power_struggle_candidate_3.interest_group.ig_clout >= 0.30 } change_variable = { name = power_struggle_candidate_1 add = 2 } }
+				if = { limit = { scope:power_struggle_candidate_3.interest_group.ig_clout >= 0.40 } change_variable = { name = power_struggle_candidate_1 add = 2.5 } }
+				if = { limit = { scope:power_struggle_candidate_3.interest_group.ig_clout >= 0.50 } change_variable = { name = power_struggle_candidate_1 add = 3 } }
+				if = { limit = { scope:power_struggle_candidate_3.interest_group.ig_clout >= 0.60 } change_variable = { name = power_struggle_candidate_1 add = 3.5 } }
+				if = { limit = { scope:power_struggle_candidate_3.interest_group.ig_clout >= 0.70 } change_variable = { name = power_struggle_candidate_1 add = 4 } }
+				if = { limit = { scope:power_struggle_candidate_3.interest_group.ig_clout >= 0.80 } change_variable = { name = power_struggle_candidate_1 add = 4.5 } }
+				if = { limit = { scope:power_struggle_candidate_3.interest_group.ig_clout >= 0.90 } change_variable = { name = power_struggle_candidate_1 add = 5 } }
+				
+				#Prominence
+				if = { limit = { scope:power_struggle_candidate_3.prominence >= 10 } change_variable = { name = power_struggle_candidate_3 add = 0.5 } }
+				if = { limit = { scope:power_struggle_candidate_3.prominence >= 20 } change_variable = { name = power_struggle_candidate_3 add = 1 } }
+				if = { limit = { scope:power_struggle_candidate_3.prominence >= 30 } change_variable = { name = power_struggle_candidate_3 add = 1.5 } }
+				if = { limit = { scope:power_struggle_candidate_3.prominence >= 40 } change_variable = { name = power_struggle_candidate_3 add = 2 } }
+				if = { limit = { scope:power_struggle_candidate_3.prominence >= 50 } change_variable = { name = power_struggle_candidate_3 add = 2.5 } }
+				if = { limit = { scope:power_struggle_candidate_3.prominence >= 60 } change_variable = { name = power_struggle_candidate_3 add = 3 } }
+				if = { limit = { scope:power_struggle_candidate_3.prominence >= 70 } change_variable = { name = power_struggle_candidate_3 add = 3.5 } }
+				if = { limit = { scope:power_struggle_candidate_3.prominence >= 80 } change_variable = { name = power_struggle_candidate_3 add = 4 } }
+				if = { limit = { scope:power_struggle_candidate_3.prominence >= 90 } change_variable = { name = power_struggle_candidate_3 add = 4.5 } }
+				if = { limit = { scope:power_struggle_candidate_3.prominence >= 100 } change_variable = { name = power_struggle_candidate_3 add = 5 } }
+				
+				#Limit
+				clamp_variable = {
+					name = power_struggle_candidate_3
+					max = 100
+					min = 0
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
+	modifiers_while_active = {
+		power_vacuum_modifier
+	}
+
+	weight = 20
+
+	should_be_pinned_by_default_uninvolved_or_context = yes
+
+	transferable = no
+
+	progressbar = no
+	
+}
