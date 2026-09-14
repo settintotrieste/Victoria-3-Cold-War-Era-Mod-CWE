@@ -1,5 +1,5 @@
 REPLACE_OR_CREATE:capitulate_to_revolution = {
-	scope:ongoing_revolution_movement = { #Can't trigger if they want governance reforms anyway.
+	scope:ongoing_revolution_movement ?= { #Can't trigger if they want governance reforms anyway.
 		this.most_desired_law ?= {
 			save_scope_as = revolutionaries_law
 		}
@@ -16,10 +16,20 @@ REPLACE_OR_CREATE:capitulate_to_revolution = {
 		}
 		order_by = ig_clout
 		position = 0
+		check_range_bounds = no
 		save_scope_as = revolution_leader_ig
 	}
-	activate_law = scope:revolutionaries_law
-	
+	if = {
+		limit = { exists = scope:revolutionaries_law }
+		activate_law = scope:revolutionaries_law
+	}
+	else = {
+		activate_law = law_type:law_fair_voting
+		activate_law = law_type:law_parties_allowed
+		activate_law = law_type:law_democratic_legislature
+		activate_law = law_type:law_full_free_speech
+	}
+
 	every_interest_group = {
 		limit = {
 			has_variable = revolutionary_ig
@@ -31,10 +41,11 @@ REPLACE_OR_CREATE:capitulate_to_revolution = {
 			}
 		}
 	}
-	
+
 	if = {
 		limit = {
 			country_has_voting_franchise = yes
+			in_election_campaign = no
 		}
 		call_election = {
 			months = 6
@@ -47,27 +58,26 @@ REPLACE_OR_CREATE:capitulate_to_revolution = {
 			}
 		}
 		hidden_effect = {
-			scope:revolution_leader_ig = {
-				leader = {
+			scope:revolution_leader_ig ?= {
+				leader ?= {
 					set_character_as_ruler = yes
 				}
 			}
 		}
 	}
-	
+
 	every_interest_group = {
 		limit = {
-			has_party = no
 			is_in_government = yes
 		}
 		remove_ruling_interest_group = yes
 		add_modifier = {
 			name = modifier_revolution_defeated_light
-			months = normal_modifier_time
+			days = normal_modifier_time
 			is_decaying = yes
 		}
 	}
-	
+
 	every_interest_group = {
 		limit = {
 			has_variable = revolutionary_ig
@@ -77,18 +87,16 @@ REPLACE_OR_CREATE:capitulate_to_revolution = {
 		}
 		add_modifier = {
 			name = modifier_revolution_victorious_light
-			months = normal_modifier_time
+			days = normal_modifier_time
 			is_decaying = yes
 		}
 		if = {
 			limit = {
-				has_party = no
 				is_insurrectionary = no
 			}
 			add_ruling_interest_group = yes
 		}
 	}
-	
 }
 
 REPLACE_OR_CREATE:enact_preferred_governance_principle = {

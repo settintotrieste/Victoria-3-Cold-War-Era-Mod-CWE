@@ -164,6 +164,7 @@ resignation.1 = {
 		trigger = {
 			exists = scope:replacement_ruler_autocratic
 			NOT = { exists = heir }
+			has_power_struggle_ongoing = no
 		}
 		
 		#Legacy of previous ruler
@@ -239,6 +240,7 @@ resignation.1 = {
 		trigger = {
 			exists = scope:replacement_ruler_power_hungry
 			NOT = { exists = heir }
+			has_power_struggle_ongoing = no
 		}
 		
 		#Legacy of previous ruler
@@ -314,6 +316,7 @@ resignation.1 = {
 		trigger = {
 			exists = scope:replacement_ruler_elitist
 			NOT = { exists = heir }
+			has_power_struggle_ongoing = no
 		}
 		
 		#Legacy of previous ruler
@@ -389,6 +392,7 @@ resignation.1 = {
 		trigger = {
 			exists = scope:replacement_ruler_democratic
 			NOT = { exists = heir }
+			has_power_struggle_ongoing = no
 		}
 		
 		#Legacy of previous ruler
@@ -464,6 +468,7 @@ resignation.1 = {
 		trigger = {
 			exists = scope:replacement_ruler_liberal
 			NOT = { exists = heir }
+			has_power_struggle_ongoing = no
 		}
 		
 		#Legacy of previous ruler
@@ -537,6 +542,7 @@ resignation.1 = {
 		name = resignation_1.6.a
 		trigger = {
 			NOT = { exists = heir }
+			has_power_struggle_ongoing = no
 		}
 		
 		#Select ruler based on popularity
@@ -594,6 +600,7 @@ resignation.1 = {
 		name = resignation_1.7.a
 		trigger = {
 			exists = heir
+			has_power_struggle_ongoing = no
 		}
 		
 		#Legacy of previous ruler
@@ -653,6 +660,60 @@ resignation.1 = {
 		
 	}
 	
+	option = { # Successor in leadership challenge
+		name = resignation_1.8.a
+		trigger = {
+			has_power_struggle_ongoing = yes
+		}
+		
+		#Legacy of previous ruler
+		if = {
+			limit = {
+				NOR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician ?= {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_best_of_luck
+				days = normal_modifier_time
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician ?= {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_disastrous_administration
+				days = normal_modifier_time
+			}
+			add_loyalists = {
+				value = small_radicals
+			}
+		}
+		
+		#Give leadership to most prominent leadership contender
+		set_variable = { name = ruler_resigned_in_leadership_challenge months = 1 }
+		
+	}
+	
 }
 
 # Resignation in the face of revolution
@@ -698,8 +759,11 @@ resignation.2 = {
 		default_option = yes
 		custom_tooltip = {
 			text = leader_resigns_from_office_tt
+			heir ?= {
+				set_character_as_ruler = yes
+			}
 			scope:resigning_politician ?= {
-				resign_and_retire = yes
+				exile_character_with_martyrdom = yes
 			}
 		}
 		if = {
@@ -708,7 +772,7 @@ resignation.2 = {
 					popularity >= 0
 				}
 			}
-			scope:ongoing_revolution_movement = {
+			scope:ongoing_revolution_movement ?= {
 				add_modifier = {
 					name = modifier_ruler_resigned
 					days = long_modifier_time
@@ -716,7 +780,7 @@ resignation.2 = {
 			}
 		}
 		else = {
-			scope:ongoing_revolution_movement = {
+			scope:ongoing_revolution_movement ?= {
 				add_modifier = {
 					name = modifier_ruler_resigned
 					days = long_modifier_time
@@ -728,38 +792,77 @@ resignation.2 = {
 
 	option = {
 		name = resignation.2.b
+		
+		#Leader flees country, successor is kicked out
 		custom_tooltip = {
 			text = leader_resigns_from_office_tt
-			scope:resigning_politician ?= {
-				resign_and_retire = yes
-				evaluate_warlordism_eligibility = yes
+			heir ?= {
+				disinherit_character = yes
 			}
+			scope:resigning_politician ?= {
+				evaluate_warlordism_eligibility = yes
+				exile_character_with_martyrdom = yes
+			}
+			add_journal_entry = { type = je_power_struggle_system }
 		}
+		
+		#Lose to revolution
 		capitulate_to_revolution = yes
 		add_radicals = {
 			value = large_radicals
 			interest_group = scope:resigning_politician.interest_group
 		}
+		
 	}
 
 	option = {
 		name = resignation.2.c
 		trigger = {
 			country_has_voting_franchise = yes
+			government_has_legislative_super_majority = yes
+			exists = heir
 		}
+		
+		#Leader flees and successor becomes ruler
 		custom_tooltip = {
 			text = leader_resigns_from_office_tt
+			heir ?= {
+				set_character_as_ruler = yes
+			}
 			scope:resigning_politician ?= {
-				resign_and_retire = yes
+				exile_character_with_martyrdom = yes
 			}
 		}
-		effect_starting_politics_dictatorship = yes
-		scope:ongoing_revolution = {
+		
+		#Enact dictatorship
+		custom_tooltip = {
+			text = self_coup_effects.tt
+			effect_starting_politics_dictatorship = yes
+		}
+	
+		#Massive domestic unrest
+		effect_increase_opposition_radicals = yes
+		hidden_effect = {
+			remove_modifier = self_coup_recently
+		}
+		add_modifier = { 
+			name = self_coup_recently 
+			years = 5 
+			is_decaying = yes
+		}
+		effect_increase_government_loyalists = yes
+		
+		#Gain infamy
+		change_infamy = 20
+		
+		#Revolution is made worse
+		scope:ongoing_revolution ?= {
 			add_civil_war_progress = revolution_retreat_large
 		}
 		add_radicals = {
 			value = medium_radicals
 		}
+		
 	}
 	
 }
@@ -866,6 +969,7 @@ resignation.3 = {
 				disinherit_character = yes
 			}
 			scope:abdicating_monarch ?= {
+				evaluate_warlordism_eligibility = yes
 				exile_character_with_martyrdom = yes
 			}
 			clean_up_any_princes = yes

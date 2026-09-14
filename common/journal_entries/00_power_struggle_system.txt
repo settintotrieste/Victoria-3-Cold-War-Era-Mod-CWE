@@ -51,7 +51,7 @@
 				}
 			}
 			hidden_effect = { remove_modifier = leadership_contender_modifier }
-			add_modifier = { name = leadership_contender_modifier years = 1 }
+			add_modifier = { name = leadership_contender_modifier years = 5 }
 		}
 		
 		#Candidate 3
@@ -76,7 +76,7 @@
 				}
 			}
 			hidden_effect = { remove_modifier = leadership_contender_modifier }
-			add_modifier = { name = leadership_contender_modifier years = 1 }
+			add_modifier = { name = leadership_contender_modifier years = 5 }
 		}
 		
 	}
@@ -106,6 +106,12 @@
 					text = power_struggle_candidate_3_completed.tt
 					var:power_struggle_candidate_3 >= 100
 				}
+			}
+			
+			#Ruler resigned
+			custom_tooltip = {
+				text = ruler_resigned_in_leadership_challenge.tt
+				has_variable = ruler_resigned_in_leadership_challenge
 			}
 			
 			#All rivals eliminated
@@ -153,12 +159,46 @@
 			scope:power_struggle_candidate_3 ?= { set_character_as_ruler = yes }
 		}
 		
+		#Ruler resigned
+		if = {
+			limit = { 
+				has_variable = ruler_resigned_in_leadership_challenge
+				var:power_struggle_candidate_2 >= var:power_struggle_candidate_3
+			}
+			scope:power_struggle_candidate_2 ?= { set_character_as_ruler = yes }
+			if = {
+				limit = { exists = scope:power_struggle_candidate_3 }
+				set_heir = scope:power_struggle_candidate_3
+			}
+			remove_variable = ruler_resigned_in_leadership_challenge
+		}
+		else_if = {
+			limit = { 
+				has_variable = ruler_resigned_in_leadership_challenge
+				var:power_struggle_candidate_3 >= var:power_struggle_candidate_2
+			}
+			scope:power_struggle_candidate_3 ?= { set_character_as_ruler = yes }
+			if = {
+				limit = { exists = scope:power_struggle_candidate_2 }
+				set_heir = scope:power_struggle_candidate_2
+			}
+			remove_variable = ruler_resigned_in_leadership_challenge
+		}
+		
 		#Domestic Peace
 		hidden_effect = { has_modifier = strengthened_government_authority }
 		add_modifier = { 
 			name = strengthened_government_authority 
 			years = 5
 			is_decaying = yes
+		}
+		
+		#Clean up modifiers
+		hidden_effect = {
+			every_scope_character = {
+				limit = { has_modifier = leadership_contender_modifier }
+				remove_modifier = leadership_contender_modifier
+			}
 		}
 		
 	}
@@ -182,6 +222,18 @@
 			
 		}
 		
+	}
+	
+	on_fail = {
+	
+		#Clean up modifiers
+		hidden_effect = {
+			every_scope_character = {
+				limit = { has_modifier = leadership_contender_modifier }
+				remove_modifier = leadership_contender_modifier
+			}
+		}
+	
 	}
 	
 	on_monthly_pulse = {
