@@ -212,25 +212,21 @@ resignation.1 = {
 		
 		#Appoint ruler
 		scope:replacement_ruler_autocratic ?= {
-			if = {
-				limit = { owner = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_corporate_state } } }
-				add_character_role = magnate
-			}
-			set_character_as_ruler = yes 
+			set_character_as_ruler_cwe = yes
 		}
 		
 		#Call snap elections where applicable
 		if = {
 			limit = { 
-				OR = { 
-					is_a_presidential_democracy = yes 
-					is_a_parliamentary_democracy = yes
-				}
+				is_a_parliamentary_elective_system = yes
 			}
 			call_election = {
 				months = 3
 			}
 		}
+		
+		#Power Struggle
+		check_power_struggle_eligibility = yes
 		
 	}
 	
@@ -288,25 +284,21 @@ resignation.1 = {
 		
 		#Appoint ruler
 		scope:replacement_ruler_power_hungry ?= {
-			if = {
-				limit = { owner = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_corporate_state } } }
-				add_character_role = magnate
-			}
-			set_character_as_ruler = yes 
+			set_character_as_ruler_cwe = yes
 		}
 		
 		#Call snap elections where applicable
 		if = {
 			limit = { 
-				OR = { 
-					is_a_presidential_democracy = yes 
-					is_a_parliamentary_democracy = yes
-				}
+				is_a_parliamentary_elective_system = yes
 			}
 			call_election = {
 				months = 3
 			}
 		}
+		
+		#Power Struggle
+		check_power_struggle_eligibility = yes
 		
 	}
 	
@@ -364,25 +356,21 @@ resignation.1 = {
 		
 		#Appoint ruler
 		scope:replacement_ruler_elitist ?= {
-			if = {
-				limit = { owner = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_corporate_state } } }
-				add_character_role = magnate
-			}
-			set_character_as_ruler = yes 
+			set_character_as_ruler_cwe = yes
 		}
 		
 		#Call snap elections where applicable
 		if = {
 			limit = { 
-				OR = { 
-					is_a_presidential_democracy = yes 
-					is_a_parliamentary_democracy = yes
-				}
+				is_a_parliamentary_elective_system = yes
 			}
 			call_election = {
 				months = 3
 			}
 		}
+		
+		#Power Struggle
+		check_power_struggle_eligibility = yes
 		
 	}
 	
@@ -440,25 +428,21 @@ resignation.1 = {
 		
 		#Appoint ruler
 		scope:replacement_ruler_democratic ?= {
-			if = {
-				limit = { owner = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_corporate_state } } }
-				add_character_role = magnate
-			}
-			set_character_as_ruler = yes 
+			set_character_as_ruler_cwe = yes
 		}
 		
 		#Call snap elections where applicable
 		if = {
 			limit = { 
-				OR = { 
-					is_a_presidential_democracy = yes 
-					is_a_parliamentary_democracy = yes
-				}
+				is_a_parliamentary_elective_system = yes
 			}
 			call_election = {
 				months = 3
 			}
 		}
+		
+		#Power Struggle
+		check_power_struggle_eligibility = yes
 		
 	}
 	
@@ -516,33 +500,39 @@ resignation.1 = {
 		
 		#Appoint ruler
 		scope:replacement_ruler_liberal ?= {
-			if = {
-				limit = { owner = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_corporate_state } } }
-				add_character_role = magnate
-			}
-			set_character_as_ruler = yes 
+			set_character_as_ruler_cwe = yes
 		}
 		
 		#Call snap elections where applicable
 		if = {
 			limit = { 
-				OR = { 
-					is_a_presidential_democracy = yes 
-					is_a_parliamentary_democracy = yes
-				}
+				is_a_parliamentary_elective_system = yes
 			}
 			call_election = {
 				months = 3
 			}
 		}
 		
+		#Power Struggle
+		check_power_struggle_eligibility = yes
+		
 	}
 
 	option = { # Leave it to fate
 		name = resignation_1.6.a
 		trigger = {
-			NOT = { exists = heir }
+			OR = { 
+				NOT = { exists = heir }
+				heir ?= { is_adult = no }
+			}
 			has_power_struggle_ongoing = no
+			NOR = {
+				exists = scope:replacement_ruler_autocratic
+				exists = scope:replacement_ruler_power_hungry
+				exists = scope:replacement_ruler_elitist
+				exists = scope:replacement_ruler_democratic
+				exists = scope:replacement_ruler_liberal
+			}
 		}
 		
 		#Select ruler based on popularity
@@ -583,16 +573,16 @@ resignation.1 = {
 		
 		#Call snap elections where applicable
 		if = {
-			limit = { 
-				OR = { 
-					is_a_presidential_democracy = yes 
-					is_a_parliamentary_democracy = yes
-				}
+			limit = {
+				is_a_parliamentary_elective_system = yes
 			}
 			call_election = {
 				months = 3
 			}
 		}
+		
+		#Power Struggle
+		check_power_struggle_eligibility = yes
 		
 	}
 	
@@ -600,6 +590,7 @@ resignation.1 = {
 		name = resignation_1.7.a
 		trigger = {
 			exists = heir
+			heir ?= { is_adult = yes }
 			has_power_struggle_ongoing = no
 		}
 		
@@ -648,14 +639,161 @@ resignation.1 = {
 		
 		#Heir becomes ruler
 		if = {
-			limit = { exists = heir }
-			heir ?= {
-				if = {
-					limit = { owner = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_corporate_state } } }
-					add_character_role = magnate
-				}
-				set_character_as_ruler = yes 
+			limit = { 
+				exists = heir
+				heir ?= { is_adult = yes }
 			}
+			heir ?= {
+				set_character_as_ruler_cwe = yes
+			}
+		}
+		else_if = {
+			limit = { 
+				exists = heir
+				heir ?= { is_adult = no }
+			}
+			if = {
+				limit = {
+					any_scope_character = {
+						has_role_of_type = politician
+						NOT = { has_role = character_role_monarch }
+						is_ruler_of_own_country = no
+						interest_group ?= { is_in_government = yes }
+					}
+				}
+				ordered_scope_character = {
+					limit = {
+						has_role_of_type = politician
+						NOT = { has_role = character_role_monarch }
+						is_ruler_of_own_country = no
+						interest_group ?= { is_in_government = yes }
+					}
+					order_by = popularity
+					position = 0
+					check_range_bounds = no
+					if = {
+						limit = { owner = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_corporate_state } } }
+						add_character_role = magnate
+					}
+					set_character_as_ruler = yes
+				}
+			}
+			else = {
+				custom_tooltip = {
+					text = leader_resigns_from_office_tt
+					scope:resigning_politician ?= {
+						resign_and_retire = yes
+					}
+				}
+			}
+			#Power Struggle
+			check_power_struggle_eligibility = yes
+		}
+		
+	}
+	
+	option = { # Vice President
+		name = resignation_1.7.b
+		trigger = {
+			exists = heir
+			heir ?= { is_adult = no }
+			has_power_struggle_ongoing = no
+		}
+		
+		#Legacy of previous ruler
+		if = {
+			limit = {
+				NOR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician ?= {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_best_of_luck
+				days = normal_modifier_time
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician ?= {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_disastrous_administration
+				days = normal_modifier_time
+			}
+			add_loyalists = {
+				value = small_radicals
+			}
+		}
+		
+		#"Regent"
+		if = {
+			limit = { 
+				exists = heir
+				heir ?= { is_adult = yes }
+			}
+			heir ?= {
+				set_character_as_ruler_cwe = yes
+			}
+		}
+		else_if = {
+			limit = { 
+				exists = heir
+				heir ?= { is_adult = no }
+			}
+			if = {
+				limit = {
+					any_scope_character = {
+						has_role_of_type = politician
+						NOT = { has_role = character_role_monarch }
+						is_ruler_of_own_country = no
+						interest_group ?= { is_in_government = yes }
+					}
+				}
+				ordered_scope_character = {
+					limit = {
+						has_role_of_type = politician
+						NOT = { has_role = character_role_monarch }
+						is_ruler_of_own_country = no
+						interest_group ?= { is_in_government = yes }
+					}
+					order_by = popularity
+					position = 0
+					check_range_bounds = no
+					if = {
+						limit = { owner = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_corporate_state } } }
+						add_character_role = magnate
+					}
+					set_character_as_ruler = yes
+				}
+			}
+			else = {
+				custom_tooltip = {
+					text = leader_resigns_from_office_tt
+					scope:resigning_politician ?= {
+						resign_and_retire = yes
+					}
+				}
+			}
+			#Power Struggle
+			check_power_struggle_eligibility = yes
 		}
 		
 	}
@@ -756,11 +894,16 @@ resignation.2 = {
 
 	option = {
 		name = resignation.2.a
-		default_option = yes
+		trigger = {
+			exists = heir
+			heir ?= { is_adult = yes }
+		}
+		
+		#Resign in favour of successor
 		custom_tooltip = {
 			text = leader_resigns_from_office_tt
 			heir ?= {
-				set_character_as_ruler = yes
+				set_character_as_ruler_cwe = yes
 			}
 			scope:resigning_politician ?= {
 				exile_character_with_martyrdom = yes
@@ -788,10 +931,12 @@ resignation.2 = {
 				}
 			}
 		}
+		
 	}
 
 	option = {
 		name = resignation.2.b
+		default_option = yes
 		
 		#Leader flees country, successor is kicked out
 		custom_tooltip = {
@@ -803,7 +948,7 @@ resignation.2 = {
 				evaluate_warlordism_eligibility = yes
 				exile_character_with_martyrdom = yes
 			}
-			add_journal_entry = { type = je_power_struggle_system }
+			check_power_struggle_eligibility = yes
 		}
 		
 		#Lose to revolution
@@ -811,56 +956,6 @@ resignation.2 = {
 		add_radicals = {
 			value = large_radicals
 			interest_group = scope:resigning_politician.interest_group
-		}
-		
-	}
-
-	option = {
-		name = resignation.2.c
-		trigger = {
-			country_has_voting_franchise = yes
-			government_has_legislative_super_majority = yes
-			exists = heir
-		}
-		
-		#Leader flees and successor becomes ruler
-		custom_tooltip = {
-			text = leader_resigns_from_office_tt
-			heir ?= {
-				set_character_as_ruler = yes
-			}
-			scope:resigning_politician ?= {
-				exile_character_with_martyrdom = yes
-			}
-		}
-		
-		#Enact dictatorship
-		custom_tooltip = {
-			text = self_coup_effects.tt
-			effect_starting_politics_dictatorship = yes
-		}
-	
-		#Massive domestic unrest
-		effect_increase_opposition_radicals = yes
-		hidden_effect = {
-			remove_modifier = self_coup_recently
-		}
-		add_modifier = { 
-			name = self_coup_recently 
-			years = 5 
-			is_decaying = yes
-		}
-		effect_increase_government_loyalists = yes
-		
-		#Gain infamy
-		change_infamy = 20
-		
-		#Revolution is made worse
-		scope:ongoing_revolution ?= {
-			add_civil_war_progress = revolution_retreat_large
-		}
-		add_radicals = {
-			value = medium_radicals
 		}
 		
 	}
@@ -891,9 +986,10 @@ resignation.3 = {
 	}
 
 	immediate = {
-		#ruler = {
-		#	save_scope_as = abdicating_monarch
-		#}
+		random_scope_character = {
+			limit = { has_role = character_role_monarch }
+			save_scope_as = abdicating_monarch
+		}
 		ROOT = {
 			save_scope_as = country_scope
 		}
@@ -917,13 +1013,15 @@ resignation.3 = {
 		name = resignation.3.a
 		trigger = {
 			exists = heir
+			heir ?= { is_eligible_to_become_monarch = yes }
 		}
 		
-		heir ?= {
-			set_character_as_ruler = yes
-		}
+		#Abdicate in favour of heir
 		custom_tooltip = {
 			text = leader_abdicates_the_throne_tt
+			heir ?= {
+				set_character_as_ruler = yes
+			}
 			scope:abdicating_monarch ?= {
 				exile_character_with_martyrdom = yes
 			}
@@ -1012,106 +1110,6 @@ resignation.3 = {
 				}
 			}
 		}
-		
-	}
-
-	option = {
-		name = resignation.3.c
-		trigger = {
-			country_has_voting_franchise = yes
-			government_has_legislative_super_majority = yes
-			exists = heir
-		}
-		
-		custom_tooltip = {
-			text = leader_abdicates_the_throne_tt
-			heir ?= {
-				set_character_as_ruler = yes
-			}
-			scope:abdicating_monarch ?= {
-				exile_character_with_martyrdom = yes
-			}
-		}
-		scope:ongoing_revolution ?= {
-			add_civil_war_progress = revolution_retreat_large
-		}
-		
-		if = {
-			limit = {
-				scope:abdicating_monarch ?= {
-					popularity >= 0
-				}
-			}
-			scope:ongoing_revolution_movement ?= {
-				add_modifier = {
-					name = modifier_ruler_abdicated
-					days = long_modifier_time
-					is_decaying = yes
-				}
-			}
-		}
-		else = {
-			scope:ongoing_revolution_movement ?= {
-				add_modifier = {
-					name = modifier_ruler_abdicated
-					days = long_modifier_time
-					multiplier = 3
-					is_decaying = yes
-				}
-			}
-		}
-		
-		if = {
-			limit = { ruler ?= { is_adult = no } }
-			if = {
-				limit = {
-					any_scope_character = {
-						OR = {
-							has_role_of_type = general
-							has_role_of_type = admiral
-						}
-					}
-				}
-				random_scope_character = {
-					limit = {
-						OR = {
-							has_role_of_type = general
-							has_role_of_type = admiral
-						}
-					}
-					set_character_as_regent = yes
-				}
-			}
-			else = {
-				create_character = {
-					ruler = yes noble = yes
-					on_created = {
-						set_character_as_regent = yes
-					}
-				}
-			}
-		}
-		
-		#Enact dictatorship
-		custom_tooltip = {
-			text = self_coup_effects.tt
-			effect_starting_politics_dictatorship = yes
-		}
-	
-		#Massive domestic unrest
-		effect_increase_opposition_radicals = yes
-		hidden_effect = {
-			remove_modifier = self_coup_recently
-		}
-		add_modifier = { 
-			name = self_coup_recently 
-			years = 5 
-			is_decaying = yes
-		}
-		effect_increase_government_loyalists = yes
-		
-		#Gain infamy
-		change_infamy = 20
 		
 	}
 	
