@@ -825,6 +825,17 @@ on_diplomatic_play_started = {
 				scope:initiator = { annex = prev }
 			}
 		}
+		# A subject whose own overlord turns on it starts looking for the exit
+		if = {
+			limit = {
+				scope:target ?= {
+					is_direct_subject_of = scope:initiator
+				}
+			}
+			scope:target ?= {
+				add_liberty_desire = define:NDiplomacy|LIBERTY_DESIRE_FROM_OVERLORD_DIPLOMATIC_PLAY
+			}
+		}
 		if = {
 			limit = {
 				NOR = {
@@ -2084,6 +2095,13 @@ on_diplo_play_join_side = {
 }
 
 # Root = Diplomatic Play
+on_diplo_play_overlord_protects_subject = {
+	effect = {
+		post_notification = diplo_play_overlord_protects_subject_notification
+	}
+}
+
+# Root = Diplomatic Play
 on_diplo_play_abandon_side = {
 	effect = {
 		post_notification = diplo_play_abandon_side_notification
@@ -3054,6 +3072,20 @@ on_wargoal_enforced = {
 			}
 			scope:target = {
 				set_variable = wargoal_enforced_by_recognized_power
+			}
+		}
+		# Terms imposed by its own overlord push a subject towards independence, scaled by how harsh the war goal was
+		if = {
+			limit = {
+				scope:target ?= {
+					is_direct_subject_of = scope:actor
+				}
+			}
+			scope:target ?= {
+				add_liberty_desire = {
+					value = scope:wargoal_impact
+					max = define:NDiplomacy|LIBERTY_DESIRE_FROM_OVERLORD_WAR_GOAL_MAX
+				}
 			}
 		}
 	}

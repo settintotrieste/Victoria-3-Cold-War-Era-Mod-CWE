@@ -131,28 +131,17 @@
 	ai = {
 
 		treaty_categories = {
-			trade
+			expansion
 		}
 
-        goods_input_filter = {
-            scope:input = {
-                is_tradeable = yes
-            }
-            scope:market_goods = {
-                ai_treaty_export_value:root > 0
-                "ai_treaty_import_value(scope:other_country)" > 0
-            }
-        }
-
 		evaluation_chance = {
-            value = 0
+			value = 0
 
 			if = {
-				limit = { country_rank >= rank_value:major_power }
-				add = {
-					value = country_rank
-					multiply = 0.05
+				limit = {
+					country_rank >= rank_value:major_power
 				}
+				add = 0.25
 			}
 		}
 
@@ -160,78 +149,181 @@
             request
         }
 
-		combined_acceptance_cap_max = 50
-		combined_acceptance_cap_min = -500
-
 		inherent_accept_score = {
 			value = 0
 
-            if = {
-                limit = {
-                    scope:source_country ?= this
-                }
-
-                add = {
-                    desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
-                    value = -50
-                }
+			if = {
+				limit = {
+					exists = scope:article.input_strategic_region
+					scope:article.input_strategic_region = { "ai_colonization_value(scope:source_country)" > 0 }
+					scope:article.input_strategic_region = { "ai_colonization_value(scope:target_country)" > 0 }
+				}
 
 				if = {
 					limit = {
-						has_law_or_variant = law_type:law_isolationism
+						scope:source_country ?= this
 					}
+
+					scope:source_country = {
+						save_temporary_scope_as = target
+					}
+					scope:target_country = {
+						save_temporary_scope_as = actor
+					}
+
+					scope:article.input_strategic_region = {
+						subtract = {
+							desc = "DIPLOMATIC_ACCEPTANCE_COLONIAL_INTEREST"
+							value = "ai_colonization_value(scope:source_country)"
+							multiply = 2
+						}
+					}
+
 					add = {
-						desc = "law_isolationism"
-						add = -100
+						desc = "DIPLOMATIC_ACCEPTANCE_RANK"
+
+						if = {
+							limit = {
+								country_rank >= rank_value:great_power
+							}
+							value = -50
+						}
+						else_if = {
+							limit = {
+								country_rank >= rank_value:major_power
+							}
+							value = -25
+						}
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_UNRECOGNIZED"
+
+						if = {
+							limit = {
+								scope:target_country ?= {
+									is_country_type = unrecognized
+								}
+							}
+							value = -100
+						}
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_COLONIAL_EXPANSION"
+
+						if = {
+							limit = {
+								has_strategy = ai_strategy_colonial_expansion
+							}
+							add = -25
+						}
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+						if = {
+							limit = {
+								OR = {
+									has_attitude = {
+										who = scope:target_country
+										attitude = disinterested
+									}
+									has_attitude = {
+										who = scope:target_country
+										attitude = wary
+									}
+								}
+							}
+							value = -300
+						}
+					}
+
+					add = {
+						desc = "concept_claims"
+						if = {
+							limit = {
+								scope:article.input_strategic_region = {
+									any_scope_state = {
+										has_claim_by = scope:source_country
+									}
+								}
+							}
+							value = -1000
+						}
 					}
 				}
-
-				if = {
+				else_if = {
 					limit = {
-						"goods_production_rank(scope:article.input_goods)" <= 10
+						scope:target_country ?= this
+						OR = {
+							has_colonial_growth = yes
+							scope:target_country.capital.region = {
+								this = scope:article.input_strategic_region
+							}
+						}
 					}
 
-					subtract = {
-						desc = "DIPLOMATIC_ACCEPTANCE_DOMESTIC_PRODUCTION"
-						value = 11
-						subtract = "goods_production_rank(scope:article.input_goods)"
-						multiply = 50
+					scope:source_country = {
+						save_temporary_scope_as = target
+					}
+					scope:target_country = {
+						save_temporary_scope_as = actor
+					}
+
+					scope:article.input_strategic_region = {
+						add = {
+							desc = "DIPLOMATIC_ACCEPTANCE_COLONIAL_INTEREST"
+							value = "ai_colonization_value(scope:target_country)"
+						}
+					}
+
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_COLONIAL_EXPANSION"
+
+						if = {
+							limit = {
+								NOT = { exists = scope:is_treaty_active }
+								has_strategy = ai_strategy_colonial_expansion
+							}
+							add = 10
+						}
+					}
+
+					add = {
+						desc = "concept_claims"
+						if = {
+							limit = {
+								scope:article.input_strategic_region = {
+									any_scope_state = {
+										has_claim_by = scope:target_country
+									}
+								}
+							}
+							value = 10
+						}
 					}
 				}
-            }
-            else_if = {
-                limit = {
-                    scope:target_country ?= this
-					"scope:source_country.goods_production_rank(scope:article.input_goods)" <= 10
-					"goods_production_rank(scope:article.input_goods)" <= 10
-                    "scope:article.input_market_goods(root)" ?= {
-                        market_goods_exports >= 100
-                    }
-                }
-
+				else_if = {
+					limit = { NOT = { exists = scope:is_treaty_active } }
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
+						value = -300
+					}
+				}
+				else = {
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
+						value = -30
+					}
+				}
+			}
+			else = {
 				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_DOMESTIC_PRODUCTION"
-					value = 20
-					subtract = "goods_production_rank(scope:article.input_goods)"
-					subtract = "scope:source_country.goods_production_rank(scope:article.input_goods)"
-					multiply = 1.5
-
-					min = 5
-					max = 25
+					desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
+					value = -100
 				}
-            }
-            else_if = {
-                add = {
-                    desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
-                    value = -300
-                }
-            }
-            else = {
-                add = {
-                    desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
-                    value = -30
-                }
-            }
+			}
 		}
 	}
 
@@ -240,16 +332,10 @@
 		contestion_type = control_any_target_incorporated_state
 
 		maneuvers = {
-			value = 0
-
-			add = {
-				desc = "MANEUVERS_BASE_VALUE"
-				value = 2.5
-			}
+			value = 2.5
 
 			scope:target_country = {
 				multiply = {
-					desc = "MANEUVERS_TARGET_COUNTRY_POPULATION_FACTOR"
 					value = total_population
 					divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
 					multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
@@ -262,17 +348,33 @@
 			value = 0
 
 			add = {
-				desc = "INFAMY_BASE_VALUE"
-				value = 0.5
+				desc = "INFAMY_NON_COLONIZATION_DECENTRALIZED"
+				scope:region ?= {
+					every_scope_state = {
+						limit = {
+							owner = {
+								is_country_type = decentralized
+							}
+						}
+						add = state_infamy_value
+					}
+				}
+				multiply = define:NDiplomacy|WAR_GOAL_INFAMY_NON_COLONIZATION_FRACTION
+				min = define:NDiplomacy|WAR_GOAL_INFAMY_MODERATE_DEMAND_MIN
+				max = define:NDiplomacy|WAR_GOAL_INFAMY_MODERATE_DEMAND_MAX
 			}
 
-			scope:target_country = {
+			if = {
+				limit = {
+					scope:region ?= {
+						any_scope_state = {
+							has_claim_by = scope:target_country
+						}
+					}
+				}
 				multiply = {
-					desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
-					value = total_population
-					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
-					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
-                    max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+					desc = "INFAMY_NON_COLONIZATION_TARGET_CLAIM"
+					value = define:NDiplomacy|WAR_GOAL_INFAMY_NON_COLONIZATION_CLAIM_MULT
 				}
 			}
 		}

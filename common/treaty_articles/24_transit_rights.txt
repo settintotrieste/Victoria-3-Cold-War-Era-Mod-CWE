@@ -170,18 +170,7 @@
 				scope:target_country = {
 					save_temporary_scope_as = actor
 				}
-				
-				#Help reduce isolation
-				if = {
-					limit = { 
-						scope:source_country ?= { capital.world_market_access > 0 }
-						scope:target_country ?= { capital.world_market_access <= 0 }
-					}
-					add = {
-						desc = "concept_isolated_state_short"
-						value = 100
-					}
-				}
+
 
 				# Generally permissive
 				add = {
@@ -191,9 +180,9 @@
 
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+
 					if = {
 						limit = {
-							scope:source_country = { is_a_democracy = no }
 							OR = {
 								has_attitude = {
 									who = scope:target_country
@@ -209,27 +198,7 @@
 								}
 							}
 						}
-						add = -100
-					}
-					else_if = {
-						limit = {
-							scope:source_country = { is_a_democracy = yes }
-							OR = {
-								has_attitude = {
-									who = scope:target_country
-									attitude = antagonistic
-								}
-								has_attitude = {
-									who = scope:target_country
-									attitude = domineering
-								}
-								has_attitude = {
-									who = scope:target_country
-									attitude = belligerent
-								}
-							}
-						}
-						add = -50
+						add = -200
 					}
 				}
 			}
@@ -256,37 +225,6 @@
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_DOES_NOT_WANT_ARTICLE"
 					value = -300
-				}
-			}
-			
-			#Democracies want to help each other
-			if = {
-				limit = { 
-					scope:target_country = { 
-						is_a_democracy = yes
-						any_primary_culture = { shares_non_heritage_trait_with_any_primary_culture = scope:source_country } 
-					} 
-					scope:source_country = {
-						is_a_democracy = yes
-					}
-				}
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_SIMILAR_CULTURE"
-					value = 200
-				}
-			}
-			if = {
-				limit = { 
-					scope:target_country = { 
-						is_neutral = yes
-					} 
-					scope:source_country = {
-						is_a_democracy = yes
-					}
-				}
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_TRANSIT_RIGHTS_NEUTRALITY"
-					value = 100
 				}
 			}
 		}
@@ -319,19 +257,23 @@
 		infamy = {
 			value = 0
 
-			add = {
-				desc = "INFAMY_BASE_VALUE"
-				value = 0.1
+			scope:target_country = {
+				add = country_infamy_value
 			}
 
-			scope:target_country = {
-				multiply = {
-					desc = "INFAMY_TARGET_COUNTRY_POPULATION_FACTOR"
-					value = total_population
-					divide = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_FACTOR
-					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER
-                    max = define:NDiplomacy|WAR_GOAL_INFAMY_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
-				}
+			multiply = {
+				desc = "INFAMY_WAR_GOAL_SEVERITY"
+				value = 0.02
+			}
+
+			min = {
+				desc = "INFAMY_MINIMUM_VALUE"
+				value = define:NDiplomacy|WAR_GOAL_INFAMY_MINOR_DEMAND_MIN
+			}
+
+			max = {
+				desc = "INFAMY_MAXIMUM_VALUE"
+				value = define:NDiplomacy|WAR_GOAL_INFAMY_MINOR_DEMAND_MAX
 			}
 		}
 	}

@@ -323,8 +323,8 @@
                         "scope:article.input_market_goods(root)" ?= {
                             goods ?= {
                                 OR = {
-                                    g:steel ?= this
-                                    g:industrial_chemicals ?= this
+                                    g:ammunition ?= this
+                                    g:fertilizer ?= this
                                 }
                             }
                         }
@@ -387,6 +387,7 @@
                                     g:fabric ?= this
                                     g:coffee ?= this
                                     g:tea ?= this
+                                    g:opium ?= this
                                     g:tobacco ?= this
                                 }
                             }
@@ -400,13 +401,14 @@
 
                 if = {
                     limit = {
-						OR = {
+                        OR = {
                             NOT = { exists = scope:is_treaty_active }
                             exists = scope:is_renegotiation
                         }
                         scope:article.input_quantity >= {
                             "scope:article.input_market_goods(root)" ?= {
                                 add = market_goods_delta
+                                multiply = 0.3
                                 add = 10
                             }
                         }
@@ -542,7 +544,7 @@
                         "scope:article.input_market_goods(root)" ?= {
                             goods ?= {
                                 OR = {
-                                    g:industrial_chemicals ?= this
+                                    g:fertilizer ?= this
                                     g:industrial_robots ?= this
                                 }
                             }
@@ -559,7 +561,7 @@
                         "scope:article.input_market_goods(root)" ?= {
 						    goods ?= {
 								OR = {
-									g:industrial_chemicals ?= this
+									g:ammunition ?= this
 									g:industrial_robots ?= this
 								}
 							}
@@ -695,46 +697,59 @@
 				}
 
 				add = {
-					desc = "INFAMY_QUANTITY_FACTOR"
+					desc = "INFAMY_GOODS_TRANSFER_TARGET_SHARE"
 					value = scope:quantity
 					divide = {
 						value = scope:market_goods.market_goods_sell_orders
 						min = 10
 					}
-					multiply = 15
-					min = 0
-					max = 20
+					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_GOODS_TRANSFER_SHARE_MULT
+					min = define:NDiplomacy|WAR_GOAL_INFAMY_GOODS_TRANSFER_SHARE_MIN
+					max = define:NDiplomacy|WAR_GOAL_INFAMY_GOODS_TRANSFER_SHARE_MAX
+				}
 
-                    if = {
-                        limit = {
-                            scope:market_goods ?= {
-                                goods ?= {
-                                    g:grain ?= this
-                                }
-                            }
-                        }
-                        multiply = 6
-                    }
-                    else_if = {
-                        limit = {
-                            scope:market_goods ?= {
-                                goods ?= {
-                                    OR = {
-                                        g:fish ?= this
-                                        g:meat ?= this
-                                        g:fruit ?= this
-                                        g:groceries ?= this
-                                    }
-                                }
-                            }
-                        }
-                        multiply = 3
-                    }
-                    max = {
-                        value = scope:market_goods.market_goods_sell_orders
-                        max = 75
-                        min = 10
-                    }
+				add = {
+					desc = "INFAMY_GOODS_TRANSFER_SELF_SHARE"
+					value = scope:quantity
+					divide = {
+						value = scope:own_market_goods.market_goods_sell_orders
+						min = 10
+					}
+					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_GOODS_TRANSFER_SHARE_MULT
+					min = define:NDiplomacy|WAR_GOAL_INFAMY_GOODS_TRANSFER_SHARE_MIN
+					max = define:NDiplomacy|WAR_GOAL_INFAMY_GOODS_TRANSFER_SHARE_MAX
+				}
+			}
+
+			if = {
+				limit = {
+					scope:market_goods ?= {
+						goods ?= {
+							g:grain ?= this
+						}
+					}
+				}
+				multiply = {
+					desc = "INFAMY_GOODS_TRANSFER_FOOD"
+					value = define:NDiplomacy|WAR_GOAL_INFAMY_GOODS_TRANSFER_GRAIN_MULT
+				}
+			}
+			else_if = {
+				limit = {
+					scope:market_goods ?= {
+						goods ?= {
+							OR = {
+								g:fish ?= this
+								g:meat ?= this
+								g:fruit ?= this
+								g:groceries ?= this
+							}
+						}
+					}
+				}
+				multiply = {
+					desc = "INFAMY_GOODS_TRANSFER_FOOD"
+					value = define:NDiplomacy|WAR_GOAL_INFAMY_GOODS_TRANSFER_STAPLE_FOOD_MULT
 				}
 			}
 		}

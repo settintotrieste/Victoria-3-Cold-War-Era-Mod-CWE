@@ -7,6 +7,10 @@
 	settings = {
 		require_target_be_part_of_war
 		turns_into_subject
+		can_add_for_other_country
+		requires_interest
+
+		# Validation
 		conflicts_with_make_subject
 		validate_subject_relation
 		validate_conflicts_make_subject
@@ -34,10 +38,66 @@
 			desc = "MANEUVERS_BASE_VALUE"
 			value = 10
 		}
+
+		scope:target_country = {
+			multiply = {
+				desc = "MANEUVERS_TARGET_COUNTRY_POPULATION_FACTOR"
+				value = total_population
+				divide = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_FACTOR
+				multiply = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER
+				max = define:NDiplomacy|SWAY_OFFER_WARGOAL_MANEUVERS_COST_POPULATION_SCALING_MULTIPLIER_MAX_TOTAL
+			}
+		}
 	}
 
 	infamy = {
 		value = 0
+
+		scope:target_country = {
+			add = country_infamy_value
+		}
+
+		multiply = {
+			desc = "INFAMY_WAR_GOAL_SEVERITY"
+			value = 0.5
+		}
+
+		multiply = {
+			desc = "INFAMY_FROM_LOYAL_SUBJECT"
+			value = 1
+
+			if = {
+				limit = {
+					scope:target_country = {
+						is_subject_of = root
+						liberty_desire < define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_THRESHOLD
+					}
+				}
+				multiply = define:NDiplomacy|WAR_GOAL_INFAMY_LOW_LIBERTY_DESIRE_SUBJECT_MULT
+			}
+		}
+
+		multiply = {
+			desc = "INFAMY_FROM_REBELLIOUS_SUBJECT" # Rebellious as in they are the aggressor in the play
+			value = 1
+
+			if = {
+				limit = {
+					scope:target_country = {
+						is_subject_of = root
+						is_diplomatic_play_enemy_of = root
+						scope:diplomatic_play ?= {
+							initiator_is = scope:target_country
+						}
+					}
+				}
+				multiply = define:NDiplomacy|WAR_GOAL_INFAMY_REBELLING_SUBJECT_MULT
+			}
+		}
+	}
+	
+	on_enforced = {
+		# script effect on top of the predefined code effect
 	}
 
 	mirrored_wargoal = {
