@@ -8,20 +8,35 @@
 	second_state_list = second_country
 
 	selectable = {
-		NOT = { is_country_type = decentralized }
-		OR = {
-			NOT = { has_law_or_variant = law_type:law_no_colonial_affairs }
-			is_a_colonial_subject_gov = yes
-		}
+		
 	}
 
 	potential = {
+		
+		#THIS is not decentralized
+		NOT = { is_country_type = decentralized }
+		scope:target_country = { NOT = { is_country_type = decentralized } }
+		
+		#THIS & TARGET are not revolutionary countries
+		is_revolutionary = no is_secessionist = no is_warlord_state = no
+		scope:target_country = { is_revolutionary = no is_secessionist = no is_warlord_state = no }
+		
+		#Has colonial policy
+		NOT = { has_law_or_variant = law_type:law_no_colonial_affairs }
+		
+		#THIS is not a subject
+		is_sufficiently_independent = yes
+		
+		#THIS is not isolationist
+		NOT = { has_law_or_variant = law_type:law_isolationism }
+		
+		#TARGET is a non-primary country
 		scope:target_country = {
-			OR = {
-				is_country_type = decentralized
-				is_country_type = unrecognized
+			any_primary_culture = {
+				NOT = { shares_heritage_trait_group_with_any_primary_culture = scope:actor }
 			}
 		}
+		
 	}
 
 	possible = {
@@ -32,9 +47,8 @@
 			}
 		}
 		OR = {
-			NAND = {
-				is_country_on_same_continent = { TARGET = root }
-				has_law_or_variant = law_type:law_no_colonial_affairs
+			NOT = {
+				is_country_on_same_continent = { TARGET = scope:target_country }
 			}
 			is_a_colonial_subject_gov = yes
 		}
