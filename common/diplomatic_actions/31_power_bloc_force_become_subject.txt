@@ -14,21 +14,23 @@
 	}
 	
 	potential = {
-		scope:target_country = { 
-			NOT = { is_subject_of = ROOT } 
-		}
 		power_bloc ?= {
 			scope:target_country.power_bloc ?= this
+		}
+		scope:target_country = {
+			is_subject = no
 		}
 	}
 	
 	possible = {
-		scope:target_country = { 
-			is_subject = no
-			country_rank < rank_value:unrecognized_major_power 
+		
+		#Potential subject is weaker than THIS
+		scope:target_country = {
+			country_rank < root.country_rank
 			is_diplomatic_play_committed_participant = no
 		}
-	
+		
+		#Power bloc is strong
 		power_bloc = {
 			current_cohesion_percentage >= 0.5
 		}
@@ -40,9 +42,9 @@
 			multiply = 5
 		}
 		
+		#THIS is strong and interventionist
 		is_sufficiently_independent = yes
 		is_at_war = no
-		
 		has_interventionist_fp = yes
 		
 	}
@@ -52,21 +54,28 @@
 		#TARGET becomes a subject of THIS
 		create_diplomatic_pact = {
 			country = scope:target_country
-			type = satellite
+			type = protectorate
+		}
+		create_diplomatic_pact = {
+			country = scope:target_country
+			type = dominate_politics
 		}
 		create_incident = {
 			country = scope:target_country
 			value = 20
 		}
 		
+		#Truce
 		create_unidirectional_truce = { country = scope:target_country months = 60 }
 		hidden_effect = { scope:target_country = { add_liberty_desire = 30 } } # Starts at a higher LD level
 		
-		power_bloc = {
+		#Power bloc effects
+		power_bloc ?= {
 			add_cohesion_percent = {
 				value = scaled_cohesion_cost_subjugation
 			}
 		}
+		
 	}
 	
 	ai = {
@@ -94,11 +103,12 @@
 				scope:target_country = {
 					is_country_type = unrecognized
 				}
-			}		
+			}
 		}
 
 		propose_score = {								
 			value = 10			
 		}
 	}
+	
 }
