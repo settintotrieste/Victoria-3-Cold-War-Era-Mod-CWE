@@ -8,13 +8,6 @@
 	possible = {
 		
 		#Has a state religion
-		NAND = {
-			has_law_or_variant = law_type:law_HOS_religious_leader 
-			OR = {
-				has_law_or_variant = law_type:law_HOG_none
-				has_law_or_variant = law_type:law_HOG_president_prime_minister
-			}
-		}
 		OR = {
 			AND = { 
 				OR = { 
@@ -43,85 +36,101 @@
 		
 		#Appoint a bishop
 		if = {
+			limit = { any_scope_character = { has_role = character_role_chief_religious_officer } }
+			random_scope_character = {
+				limit = { has_role = character_role_chief_religious_officer }
+				set_character_as_chief_religious_officer = yes
+			}
+		}
+		else_if = {
 			limit = {
 				has_law_or_variant = law_type:law_HOS_religious_leader 
 				NOR = {
 					has_law_or_variant = law_type:law_HOG_none
 					has_law_or_variant = law_type:law_HOG_president_prime_minister
 				}
-				ruler ?= { interest_group = { is_interest_group_type = ig_devout } }
+				ruler ?= { interest_group ?= { is_interest_group_type = ig_devout } }
 			}
 			ruler ?= {
 				remove_character_role = politician
 				add_character_role = agitator
 				if = {
 					limit = { NOT = { has_role = character_role_chief_religious_officer } }
-					add_character_role = character_role_chief_religious_officer
+					set_character_as_chief_religious_officer = yes
 				}
 			}
 			random_scope_character = {
 				limit = {
 					has_role_of_type = politician
+					interest_group ?= { is_interest_group_type = ig_devout }
 					is_ruler_of_own_country = no
 				}
-				set_character_as_ruler = yes
+				set_character_as_ruler_cwe = yes
 			}
 		}
 		else_if = {
-			limit = { NOT = { any_scope_character = { has_role = character_role_chief_religious_officer } } }
-			random_list = {
-				1 = {
-					create_character = {
-						is_agitator = yes
-						interest_group = ig_devout
-						ideology = ideology_agitator_anti_human_rights
-						religion = root.religion
-						on_created = {
-							add_character_role = character_role_chief_religious_officer
+			limit = {
+				NOT = { any_scope_character = { has_role = character_role_chief_religious_officer } }
+			}
+			if = {
+				limit = { ruler.religion ?= { is_state_religion = ROOT } }
+				ruler ?= { set_character_as_chief_religious_officer = yes }
+			}
+			else = {
+				random_list = {
+					1 = {
+						create_character = {
+							is_agitator = yes
+							interest_group = ig_devout
+							ideology = ideology_agitator_anti_human_rights
+							religion = root.religion
+							on_created = {
+								set_character_as_chief_religious_officer = yes
+							}
 						}
 					}
-				}
-				1 = {
-					create_character = {
-						is_agitator = yes
-						interest_group = ig_devout
-						ideology = ideology_agitator_nationalist
-						religion = root.religion
-						on_created = {
-							add_character_role = character_role_chief_religious_officer
+					1 = {
+						create_character = {
+							is_agitator = yes
+							interest_group = ig_devout
+							ideology = ideology_agitator_nationalist
+							religion = root.religion
+							on_created = {
+								set_character_as_chief_religious_officer = yes
+							}
 						}
 					}
-				}
-				1 = {
-					create_character = {
-						is_agitator = yes
-						interest_group = ig_devout
-						ideology = ideology_agitator_pro_war_rights
-						religion = root.religion
-						on_created = {
-							add_character_role = character_role_chief_religious_officer
+					1 = {
+						create_character = {
+							is_agitator = yes
+							interest_group = ig_devout
+							ideology = ideology_agitator_pro_war_rights
+							religion = root.religion
+							on_created = {
+								set_character_as_chief_religious_officer = yes
+							}
 						}
 					}
-				}
-				1 = {
-					create_character = {
-						is_agitator = yes
-						interest_group = ig_devout
-						ideology = ideology_agitator_theocrat
-						religion = root.religion
-						on_created = {
-							add_character_role = character_role_chief_religious_officer
+					1 = {
+						create_character = {
+							is_agitator = yes
+							interest_group = ig_devout
+							ideology = ideology_agitator_theocrat
+							religion = root.religion
+							on_created = {
+								set_character_as_chief_religious_officer = yes
+							}
 						}
 					}
-				}
-				1 = {
-					create_character = {
-						is_agitator = yes
-						interest_group = ig_devout
-						ideology = ideology_agitator_pro_human_rights
-						religion = root.religion
-						on_created = {
-							add_character_role = character_role_chief_religious_officer
+					1 = {
+						create_character = {
+							is_agitator = yes
+							interest_group = ig_devout
+							ideology = ideology_agitator_pro_human_rights
+							religion = root.religion
+							on_created = {
+								set_character_as_chief_religious_officer = yes
+							}
 						}
 					}
 				}
@@ -130,6 +139,21 @@
 		random_scope_character = {
 			limit = { has_role = character_role_chief_religious_officer }
 			save_scope_as = chief_religious_officer_scope
+		}
+		
+		#Set ruler
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_HOS_religious_leader 
+				OR = {
+					has_law_or_variant = law_type:law_HOG_none
+					has_law_or_variant = law_type:law_HOG_president_prime_minister
+				}
+				ruler ?= { NOT = { has_role = character_role_chief_religious_officer } }
+			}
+			scope:chief_religious_officer_scope ?= {
+				set_character_as_ruler_cwe = yes
+			}
 		}
 		
 		#Set Church radicalism
@@ -267,7 +291,7 @@
 								ideology = ideology_agitator_anti_human_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -278,7 +302,7 @@
 								ideology = ideology_agitator_nationalist
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -289,7 +313,7 @@
 								ideology = ideology_agitator_pro_war_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -300,7 +324,7 @@
 								ideology = ideology_agitator_theocrat
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -311,7 +335,7 @@
 								ideology = ideology_agitator_pro_human_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -327,7 +351,7 @@
 								ideology = ideology_agitator_anti_human_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -338,7 +362,7 @@
 								ideology = ideology_agitator_nationalist
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -349,7 +373,7 @@
 								ideology = ideology_agitator_pro_war_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -360,7 +384,7 @@
 								ideology = ideology_agitator_theocrat
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -371,7 +395,7 @@
 								ideology = ideology_agitator_pro_human_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -387,7 +411,7 @@
 								ideology = ideology_agitator_anti_human_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -398,7 +422,7 @@
 								ideology = ideology_agitator_nationalist
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -409,7 +433,7 @@
 								ideology = ideology_agitator_pro_war_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -420,7 +444,7 @@
 								ideology = ideology_agitator_theocrat
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -431,7 +455,7 @@
 								ideology = ideology_agitator_pro_human_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -447,7 +471,7 @@
 								ideology = ideology_agitator_anti_human_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -458,7 +482,7 @@
 								ideology = ideology_agitator_nationalist
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -469,7 +493,7 @@
 								ideology = ideology_agitator_pro_war_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -480,7 +504,7 @@
 								ideology = ideology_agitator_theocrat
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -491,7 +515,7 @@
 								ideology = ideology_agitator_pro_human_rights
 								religion = root.religion
 								on_created = {
-									add_character_role = character_role_chief_religious_officer
+									set_character_as_chief_religious_officer = yes
 								}
 							}
 						}
@@ -504,7 +528,7 @@
 						ideology = ideology_agitator_pro_human_rights
 						religion = root.religion
 						on_created = {
-							add_character_role = character_role_chief_religious_officer
+							set_character_as_chief_religious_officer = yes
 						}
 					}
 				}
@@ -518,16 +542,8 @@
 	
 		OR = {
 		
-			AND = {
-				has_law_or_variant = law_type:law_HOS_religious_leader 
-				OR = {
-					has_law_or_variant = law_type:law_HOG_none
-					has_law_or_variant = law_type:law_HOG_president_prime_minister
-				}
-			}
-		
 			NOR = {
-				AND = { 
+				AND = {
 					OR = { 
 						has_law_or_variant = law_type:law_state_religion
 						#has_law_or_variant = law_type:law_freedom_of_conscience
