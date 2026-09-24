@@ -167,7 +167,7 @@ some_treaty_article = {
 
         maneuvers = { script value }
 
-        infamy = { script value }
+        infamy_severity = 0.5 infamy = { script value }
 
         contestion_type = type
     }

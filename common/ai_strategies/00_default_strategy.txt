@@ -873,6 +873,10 @@ ai_strategy_default = {
 					limit = { ai_state_ambition_sphere = yes }
 					add = ai_state_ambition_sphere_weight
 				}
+				if = {
+					limit = { ai_state_ambition_regional_objective = yes }
+					add = ai_state_ambition_regional_objective_weight
+				}
 
 				max = ai_state_ambition_max
 				desc = "STATE_VALUE_AMBITION"
@@ -1165,7 +1169,14 @@ ai_strategy_default = {
 					scope:target_country = { is_subject_of = root }
 					can_reach_target_country = { TARGET_COUNTRY = scope:target_country }	
 				}
-			}	
+			}
+			
+			if = {
+				limit = {
+					ai_is_regional_objective_subjugate_target = { TARGET = scope:target_country }
+				}
+				add = ai_regional_objective_subject_value
+			}
 			
 			add = {
 				if = {
@@ -2147,48 +2158,85 @@ ai_strategy_default = {
 		value = 10
 	}
 
-	# Set the weights for ship groups, this determines the ratio that the AI aims to have of each, and thus what ship classes it adds to fleets
+	# Set the weights for AI ship categories, this determines the ratio that the AI aims to have of each, and thus what ship classes it adds to fleets
 	# Using this value in other strategies will function additively
 	# root = country
-	ship_group_weights = {
-		ship_group_capital_ships = {
+	ai_ship_category_weights = {
+		ai_ship_category_battle_line = {
 			value = 30
-
 			if = {
 				limit = { has_law_or_variant = law_type:law_professional_navy }
 				add = 10
-			}			
-			else_if = {
-				limit = { has_law_or_variant = law_type:law_merchant_navy }
-				subtract = 15
 			}
 			else_if = {
 				limit = { has_law_or_variant = law_type:law_jeune_ecole }
 				subtract = 10
-			}			
-		}
-		ship_group_cruisers = {
-			value = 60
-
-			if = {
-				limit = { has_law_or_variant = law_type:law_professional_navy }
-				subtract = 10
-			}			
-			else_if = {
-				limit = { has_law_or_variant = law_type:law_merchant_navy }
-				add = 15
 			}
 			else_if = {
-				limit = { has_law_or_variant = law_type:law_jeune_ecole }
-				add = 10
-			}			
+				limit = { has_law_or_variant = law_type:law_merchant_navy }
+				subtract = 10
+			}
 		}
-		ship_group_torpedo_craft = {
-			value = 10
+		ai_ship_category_coastal_defense = {
+			value = 0
 			if = {
-				limit = { has_law_or_variant = law_type:law_jeune_ecole }
+				limit =  { has_law_or_variant = law_type:law_merchant_navy }
 				add = 20
-			}			
+			}
+			else_if = {
+				limit = { has_law_or_variant = law_type:law_jeune_ecole }
+				add = 10
+			}
+		}
+		ai_ship_category_screens = {
+			value = 30
+			if = {
+				limit = {
+					OR = {
+						has_law_or_variant = law_type:law_merchant_navy
+						has_law_or_variant = law_type:law_diplomatic_navy
+						has_law_or_variant = law_type:law_jeune_ecole
+					}
+				}
+				add = 10
+			}
+		}
+		ai_ship_category_torpedo_craft = {
+			value = 0
+			if = {
+				limit = {
+					has_law_or_variant = law_type:law_jeune_ecole
+				}
+				add = 20
+			}
+			else_if = {
+				limit = {
+					has_law_or_variant = law_type:law_merchant_navy
+				}
+				add = 10
+			}
+		}
+		ai_ship_category_carriers = {
+			value = 0
+			if = { # Seaplane Tenders
+				limit = {
+					OR = {
+						has_law_or_variant = law_type:law_professional_navy
+						has_law_or_variant = law_type:law_jeune_ecole
+					}
+				}
+				add = 5
+			}
+
+			if = { # Carriers
+				limit = {
+					has_law_or_variant = law_type:law_professional_navy
+				}
+				add = 5
+			}
+		}
+		ai_ship_category_transports = {
+			value = 20
 		}
 	}
 
@@ -2548,11 +2596,9 @@ ai_strategy_default = {
 
 			add = {
 				scope:region = {
-					every_scope_state = {
-						add = gdp
-					}
+					add = gdp
 				}
-				divide = 40000
+				divide = 400000
 				max = 50
 			}
 
@@ -2846,6 +2892,15 @@ ai_strategy_default = {
 		reconcile = {
 			trigger = {
 			
+				OR = {
+					has_diplomatic_pact = {
+						who = scope:target_country
+						type = rivalry
+					}
+					scope:target_country = { relations:root <= relations_threshold:poor }
+					ai_has_regional_objective_befriend_reason = { TARGET = scope:target_country }
+				}
+			
 				#Jingoists do not want to reconcile
 				ruler ?= { character_is_autocratic = no }
 
@@ -2858,6 +2913,13 @@ ai_strategy_default = {
 			}
 			score = {
 				value = 100
+				
+				if = {
+					limit = {
+						ai_has_regional_objective_befriend_reason = { TARGET = scope:target_country }
+					}
+					add = ai_regional_objective_reconcile_score
+				}
 
 				if = {
 					limit = {
@@ -3054,6 +3116,13 @@ ai_strategy_default = {
 						ai_has_systemic_protect_reason = { TARGET = scope:target_country }
 					}
 					add = ai_systemic_protect_score
+				}
+				
+				if = {
+					limit = {
+						ai_is_regional_objective_protect_target = { TARGET = scope:target_country }
+					}
+					add = ai_regional_objective_protect_score
 				}
 
 				multiply = {
@@ -3394,6 +3463,27 @@ ai_strategy_default = {
 					}
 					add = ai_systemic_conquest_score
 				}
+				
+				if = {
+					limit = {
+						OR = {
+							ai_is_regional_objective_local_country = {
+								TYPE = aro:ai_regional_objective_acquire_states
+								TARGET = scope:target_country
+							}
+							AND = {
+								ai_is_regional_objective_local_country = {
+									TYPE = aro:ai_regional_objective_recover_claims
+									TARGET = scope:target_country
+								}
+								scope:target_country = {
+									any_scope_state = { has_claim_by = root }
+								}
+							}
+						}
+					}
+					add = ai_regional_objective_conquest_score
+				}
 
 				if = {
 					limit = {
@@ -3583,6 +3673,14 @@ ai_strategy_default = {
 						}
 					}
 					add = ai_systemic_subjugation_score
+				}
+				
+				if = {
+					limit = {
+						NOT = { is_subject_of = root }
+						ai_is_regional_objective_subjugate_target = { TARGET = scope:target_country }
+					}
+					add = ai_regional_objective_subjugation_score
 				}
 
 				if = {
@@ -3934,19 +4032,22 @@ ai_strategy_default = {
 			# Placement here is intentional
 			if = {
 				limit = {
-					any_country_strategic_region = {
-						scope:target_state.region = this
-						root = {
-							OR = {
-								has_region_stance = {
-									region = prev
-									stance = stance_conquer_region
-								}
-								AND = {
-									scope:target_country = { is_country_type = unrecognized }
+					OR = {
+						ai_state_ambition_regional_objective = yes
+						any_country_strategic_region = {
+							scope:target_state.region = this
+							root = {
+								OR = {
 									has_region_stance = {
 										region = prev
-										stance = stance_colonize_region
+										stance = stance_conquer_region
+									}
+									AND = {
+										scope:target_country = { is_country_type = unrecognized }
+										has_region_stance = {
+											region = prev
+											stance = stance_colonize_region
+										}
 									}
 								}
 							}
@@ -3991,19 +4092,22 @@ ai_strategy_default = {
 			# Placement here is intentional
 			if = {
 				limit = {
-					any_country_strategic_region = {
-						scope:target_state.region = this
-						root = {
-							OR = {
-								has_region_stance = {
-									region = prev
-									stance = stance_conquer_region
-								}
-								AND = {
-									scope:target_country = { is_country_type = unrecognized }
+					OR = {
+						ai_state_ambition_regional_objective = yes
+						any_country_strategic_region = {
+							scope:target_state.region = this
+							root = {
+								OR = {
 									has_region_stance = {
 										region = prev
-										stance = stance_colonize_region
+										stance = stance_conquer_region
+									}
+									AND = {
+										scope:target_country = { is_country_type = unrecognized }
+										has_region_stance = {
+											region = prev
+											stance = stance_colonize_region
+										}
 									}
 								}
 							}
@@ -4068,14 +4172,17 @@ ai_strategy_default = {
 		make_subject = {
 			if = {
 				limit = {
-					has_secret_goal = {
-						who = scope:target_country
-						secret_goal = dominate
-					}	
+					OR = {
+						has_secret_goal = {
+							who = scope:target_country
+							secret_goal = dominate
+						}
+						ai_is_regional_objective_subjugate_target = { TARGET = scope:target_country }
+					}
 				}
-			
-				add = scope:target_country.ai_subject_value:root			
-			}	
+
+				add = scope:target_country.ai_subject_value:root
+			}
 
 			min = 0
 			max = 100
@@ -4766,12 +4873,15 @@ ai_strategy_default = {
 	# to match each of the country's existing fleets to the role they best fit.
 	# All numeric fields accept script values, so weights can be tuned from country scope.
 	#
-	# ship_group_weights:
-	#   Per ship group desire for this role. Across all available roles, weights are summed per
-	#   group, and each role's share becomes its target ratio of the country's total ships in
-	#   that group. Existing fleets are scored against every role's target ratios and assigned to
-	#   the role they fit best, so these weights drive both "how should the country's ships be
-	#   split across roles" and "which fleet plays which role".
+	# ai_ship_category_weights:
+	#   Per AI ship category desire for this role, see common/ai_ship_categories. Across all
+	#   available roles, weights are summed per category, and each role's share becomes its target
+	#   ratio of the country's total ships in that category. Existing fleets are scored against
+	#   every role's target ratios and assigned to the role they fit best, so these weights drive
+	#   both "how should the country's ships be split across roles" and "which fleet plays which
+	#   role".
+	#   A category left at 0 here is never allocated to this role, so a category that only one role
+	#   wants is kept out of every other fleet.
 	#
 	# mission_type_weights:
 	#   Multiplier applied when a fleet in this role picks which mission to pursue. 1.0 is
@@ -4784,6 +4894,10 @@ ai_strategy_default = {
 	#   Soft floor on fleet size used during role-fit scoring. Fleets smaller than this take a
 	#   penalty when matched to this role; it does not disqualify them and is not a hard cap.
 	#
+	# num_fleets_wanted:
+	#   How many fleets should take this role. Omitted means one. Evaluated in country scope, so
+	#   it can scale with navy size, and a value of 0 drops the role for that country.
+	#
 	# potential:
 	#   Country-scoped trigger. If it fails the role is dropped entirely, so no fleet will be
 	#   assigned to it.
@@ -4794,15 +4908,17 @@ ai_strategy_default = {
 	#   default role (e.g. a custom raid_fleet with replace_key = raid_fleet swaps out the one
 	#   defined here). Without a replace_key the composition is added alongside the existing set.
 	fleet_compositions = {
-		main_battle_fleet = {
-			ship_group_weights = {
-				ship_group_capital_ships = 200.0
-				ship_group_cruisers = 200.0
-				ship_group_torpedo_craft = 200.0
+		main_battle_fleet = { # A single main battle fleet that can concentrate the AI's fleet power in one place
+			ai_ship_category_weights = {
+				ai_ship_category_battle_line = 100.0
+				ai_ship_category_screens = 100.0
+				ai_ship_category_torpedo_craft = 100.0
+				ai_ship_category_carriers = 100.0
+				ai_ship_category_transports = 100.0
 			}
 			mission_type_weights = {
 				intercept = 1.0
-				project_power = 1.0
+				project_power = 0.0
 				blockade = 1.0
 				raid_supply = 0.0
 				protect_supply = 0.0
@@ -4814,41 +4930,26 @@ ai_strategy_default = {
 
 			min_ships_wanted = 30 # This is a soft limit
 			num_fleets_wanted = {
-				value = 0
-
-				# At least 1 if matching law
-				if = {
-					limit = {
-						has_law_or_variant = law_type:law_professional_navy
-					}
-
-					add = 1
-				}
-
-				# 1 per 30 capital ships
-				add = {
-					value = "num_ships_of_group(ship_group:ship_group_capital_ships)"
-					divide = 30
-				}
-
-				max = 2 # No more than 2
+				value = 1
 			}
 
 			potential = { # No main battle fleet if you don't even have capital ships!
 				any_scope_ship = {
-					ship_group = ship_group:ship_group_capital_ships
+					is_ai_ship_category = ai_ship_category_battle_line
 				}
 			}
 		}
-		secondary_fleet = {
-			ship_group_weights = {
-				ship_group_capital_ships = 25.0
-				ship_group_cruisers = 100.0
-				ship_group_torpedo_craft = 50.0
+		secondary_fleet = { # A secondary battle fleet for large AI navies so they can cover more of the world
+			ai_ship_category_weights = { # Intended to be around half the size of the main fleet
+				ai_ship_category_battle_line = 50.0
+				ai_ship_category_screens = 50.0
+				ai_ship_category_torpedo_craft = 50.0
+				ai_ship_category_carriers = 50.0
+				ai_ship_category_transports = 50.0
 			}
 			mission_type_weights = {
 				intercept = 0.5
-				project_power = 1.0
+				project_power = 0.0
 				blockade = 0.25
 				raid_supply = 0.5
 				protect_supply = 1.0
@@ -4859,74 +4960,64 @@ ai_strategy_default = {
 			}
 
 			min_ships_wanted = 10 # This is a soft limit
-			num_fleets_wanted = {
-				value = 0
-
-				# At least 1 if matching law
-				if = {
-					limit = {
-						OR = {
-							has_law_or_variant = law_type:law_jeune_ecole
-							has_law_or_variant = law_type:law_diplomatic_navy
-							has_law_or_variant = law_type:law_professional_navy
-						}
-					}
-
-					add = 1
-				}
-
-				# 1 per 50 capital & cruiser ships
-				add = {
-					value = "num_ships_of_group(ship_group:ship_group_capital_ships)"
-					add = "num_ships_of_group(ship_group:ship_group_cruisers)"
-					divide = 50
-				}
-
-				max = 4 # No more than 4
+			num_fleets_wanted = { # Only if we have a large navy
+				value = navy_size_adjusted_by_tech
+				divide = 100
+				max = 1
 			}
 		}
-		raid_fleet = {
-			ship_group_weights = {
-				ship_group_capital_ships = 0.0
-				ship_group_cruisers = 50.0
-				ship_group_torpedo_craft = 100.0
+		light_ship_fleet = { # Small fleets for raiding and projecting power, cruisers & torpedo only
+			ai_ship_category_weights = {
+				ai_ship_category_screens = 30.0
+				ai_ship_category_torpedo_craft = 20.0
 			}
 			mission_type_weights = {
-				intercept = 0.25
-				project_power = 0.25
+				intercept = 0.0
+				project_power = 1.0
 				blockade = 0.0
 				raid_supply = 1.0
-				protect_supply = 1.0
+				protect_supply = 0.25
 				port_bombardment = 0.0
 				piracy = 1.0
 				privateer = 1.0
 				hunt_pirates = 1.0
 			}
 
-			min_ships_wanted = 10 # This is a soft limit
+			min_ships_wanted = 5 # This is a soft limit
+			num_fleets_wanted = {
+				value = navy_size_adjusted_by_tech
+				divide = 30
+				max = 5
+			}
+		}
+		coastal_defense_fleet = { # A single fleet for the AI's coastal defense ships that only does intercept orders
+			ai_ship_category_weights = {
+				ai_ship_category_coastal_defense = 100.0
+			}
+			mission_type_weights = {
+				intercept = 1.0
+				project_power = 0.0
+				blockade = 0.0
+				raid_supply = 0.0
+				protect_supply = 0.0
+				port_bombardment = 0.0
+				piracy = 0.0
+				privateer = 0.0
+				hunt_pirates = 0.0
+			}
+
 			num_fleets_wanted = {
 				value = 0
 
-				# At least 1 if matching law
 				if = {
 					limit = {
-						OR = {
-							has_law_or_variant = law_type:law_jeune_ecole
-							has_law_or_variant = law_type:law_merchant_navy
+						any_scope_ship = {
+							is_ai_ship_category = ai_ship_category_coastal_defense
 						}
 					}
 
 					add = 1
 				}
-
-				# 1 raid fleet per 50 torpedo ships & cruisers
-				add = {
-					value = "num_ships_of_group(ship_group:ship_group_torpedo_craft)"
-					add = "num_ships_of_group(ship_group:ship_group_cruisers)"
-					divide = 50
-				}
-
-				max = 2 # No more than 2
 			}
 		}
 	}
