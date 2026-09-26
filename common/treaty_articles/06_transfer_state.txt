@@ -213,19 +213,12 @@
 
 			if = {
 				limit = {
-					exists = scope:is_renegotiation
-				}
-
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_ALREADY_TRADED_STATE"
-					value = -1000
-				}
-			}
-			else_if = {
-				limit = {
 					exists = scope:article.input_state
 					scope:source_country ?= this
-					NOT = { exists = scope:is_treaty_active }
+					OR = {
+						NOT = { exists = scope:is_treaty_active }
+						exists = scope:is_renegotiation
+					}
 					scope:article.input_state.ai_state_value:root > 0
 				}
 				subtract = {
@@ -260,7 +253,7 @@
 						}
 					}
 				}
-				
+
 				if = {
 					limit = {
 						scope:article.input_state = {
@@ -292,16 +285,46 @@
 				limit = {
 					exists = scope:article.input_state
 					scope:target_country ?= this
-					NOT = { exists = scope:is_treaty_active }
+					OR = {
+						NOT = { exists = scope:is_treaty_active }
+						exists = scope:is_renegotiation
+					}
 					scope:article.input_state.ai_state_value:root > 0
 				}
 				add = {
 					value = scope:article.input_state.ai_state_value:root
 					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_TARGET"
 				}
+
+				if = {
+					limit = {
+						OR = {
+							ai_is_regional_objective_state = {
+								TYPE = aro:ai_regional_objective_acquire_states
+								STATE = scope:article.input_state
+							}
+							AND = {
+								ai_is_regional_objective_state = {
+									TYPE = aro:ai_regional_objective_recover_claims
+									STATE = scope:article.input_state
+								}
+								scope:article.input_state = { has_claim_by = root }
+							}
+						}
+					}
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_REGIONAL_OBJECTIVE_ACQUIRE"
+						value = 25
+					}
+				}
 			}
 			else_if = {
-				limit = { NOT = { exists = scope:is_treaty_active } }
+				limit = {
+					OR = {
+						NOT = { exists = scope:is_treaty_active }
+						exists = scope:is_renegotiation
+					}
+				}
 				add = {
 					desc = "DIPLOMATIC_ACCEPTANCE_TRADE_STATE_REJECT"
 					value = -300

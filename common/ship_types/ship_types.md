@@ -32,7 +32,7 @@
 
 	# [Default = 1] How important is this ship type to build for AI
 	# root - country
-	ai_weight = fixed_point
+	#ai_weight = fixed_point
 
 	# The modification slots and their configurations, each slot should have atleast one modification and all slots marked as required should be present
 	modifications = {
