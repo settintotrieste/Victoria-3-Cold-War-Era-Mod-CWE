@@ -7,7 +7,7 @@
 		
 		#Revolutionaries won civil war
 		has_variable = civil_war_country_var
-		is_at_war = no
+		has_revolution = no
 		
 	}
 
@@ -22,6 +22,9 @@
 	}
 
 	immediate = {
+		
+		#Set appropriate IG ideologies
+		trigger_event = { id = dynamic_ideology_system.3 }
 		
 		#Candidate 1
 		ruler ?= { 
@@ -214,34 +217,31 @@
 		}
 		
 		#Regime Change from New Ruler
-		if = {
-			limit = { scope:provisional_government_candidate_1 ?= { is_ruler_of_own_country = no } }
-			custom_tooltip = {
-				text = form_new_provisional_government.tt
-				if = {
-					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_monarchist } }
-					activate_law = law_type:law_HOS_monarch
-				}
-				else_if = {
-					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_republican } }
-					activate_law = law_type:law_HOS_president
-				}
-				else_if = {
-					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_theocrat } }
-					activate_law = law_type:law_HOS_religious_leader
-				}
-				else_if = {
-					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_militarist } }
-					activate_law = law_type:law_HOS_nationalist_leader
-				}
-				else_if = {
-					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_communist } }
-					activate_law = law_type:law_HOS_nationalist_leader
-				}
-				else_if = {
-					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_communist } }
-					activate_law = law_type:law_HOS_communist_leader
-				}
+		custom_tooltip = {
+			text = form_new_provisional_government.tt
+			if = {
+				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_monarchist } }
+				activate_law = law_type:law_HOS_monarch
+			}
+			else_if = {
+				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_republican } }
+				activate_law = law_type:law_HOS_president
+			}
+			else_if = {
+				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_theocrat } }
+				activate_law = law_type:law_HOS_religious_leader
+			}
+			else_if = {
+				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_militarist } }
+				activate_law = law_type:law_HOS_nationalist_leader
+			}
+			else_if = {
+				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_communist } }
+				activate_law = law_type:law_HOS_nationalist_leader
+			}
+			else_if = {
+				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_communist } }
+				activate_law = law_type:law_HOS_communist_leader
 			}
 		}
 		
@@ -266,12 +266,28 @@
 	fail = {
 		
 		#Ruler is no longer Ruler
-		NOT = { exists = scope:provisional_government_candidate_1 }
-		scope:provisional_government_candidate_1 ?= { is_ruler_of_own_country = no }
+		OR = { 
+			NOT = { exists = scope:provisional_government_candidate_1 }
+			scope:provisional_government_candidate_1 ?= { is_ruler_of_own_country = no }
+		}
 		
 	}
 	
 	on_fail = {
+	
+		#Remove flags
+		remove_variable = civil_war_country_var
+		
+		#Costs of sudden leader change
+		custom_tooltip = {
+			text = change_of_warlordism.tt
+			trigger_event = { id = warlord_state_system.1 }
+		}
+		custom_tooltip = {
+			text = change_of_power_struggle.tt
+			set_variable = civil_war_country_var
+			add_journal_entry = { type = je_provisional_government_system }
+		}
 	
 		#Clean up modifiers
 		hidden_effect = {
@@ -280,9 +296,6 @@
 				remove_modifier = leadership_contender_modifier
 			}
 		}
-		
-		#Remove flags
-		remove_variable = civil_war_country_var
 	
 	}
 	
