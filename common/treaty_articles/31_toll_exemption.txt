@@ -100,11 +100,35 @@
 					multiply = 0.025
 				}
 			}
+
+			# Any country a strait controller is hurting looks for relief, whatever its rank
+			add = {
+				value = worst_strait_toll_grievance
+				multiply = 0.005
+			}
 		}
 
 		article_ai_usage = {
 			request
 			offer
+		}
+
+		proposal_weight = {
+			value = 1
+
+			# Pursued harder the more the strait controller is hurting us
+			add = {
+				value = "strait_toll_grievance_against(scope:source_country)"
+				multiply = 0.04
+			}
+
+			if = {
+				limit = {
+					root = scope:target_country
+					has_law_or_variant = law_type:law_free_trade # Free traders ask for no tolls for anyone instead
+				}
+				value = 0
+			}
 		}
 
 		inherent_accept_score = {
@@ -130,18 +154,21 @@
 
 				add = {
 					desc = "concept_tolls"
-					value = {
-						scope:target_country = {
-							add = "strait_trade_importance_by(scope:source_country)"
+					value = { # A combination of both dependencies
+						add = {
+							value = {
+								scope:target_country = {
+									add = "strait_trade_dependence_by(scope:source_country)"
+								}
+							}
+							multiply = 0.5
+						}
+						add = {
+							value = "strait_trade_dependence_by(scope:target_country)"
+							multiply = 0.5
 						}
 					}
-					divide = gdp
-					multiply = {
-						scope:target_country = {
-							add = "strait_trade_importance_by(scope:source_country)"
-						}
-					}
-					multiply = -1
+					multiply = -0.25
 					min = -25
 				}
 			}
@@ -153,25 +180,44 @@
 					save_temporary_scope_as = target
 				}
 
-				add = {
-					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
-					value = -10
-				}
+				if = {
+					limit = {
+						scope:target_country = {
+							"strait_trade_dependence_by(scope:source_country)" < define:NDiplomacy|STRAIT_GRIEVANCE_MIN_DEPENDENCE
+						}
+					}
 
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_NO_STRAIT_DEPENDENCE"
+						value = -10
+					}
+				}
+				else = {
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_STRAIT_DEPENDENCE"
+						value = {
+							scope:target_country = {
+								add = "strait_trade_dependence_by(scope:source_country)"
+							}
+						}
+						multiply = 0.25
+						max = 25
+					}
+				}
+			}
+		}
+
+		wargoal_score_multiplier = {
+			value = 0
+			if = {
+				limit = {
+					NOT = { has_law_or_variant = law_type:law_free_trade } # Free traders demand no tolls for anyone instead
+					"strait_toll_grievance_against(scope:source_country)" > 0
+				}
+				value = 1
 				add = {
-					desc = "concept_tolls"
-					value = {
-						scope:target_country = {
-							add = "strait_trade_importance_by(scope:source_country)"
-						}
-					}
-					divide = gdp
-					multiply = {
-						scope:target_country = {
-							add = "strait_trade_importance_by(scope:source_country)"
-						}
-					}
-					max = 25
+					value = "strait_toll_grievance_against(scope:source_country)"
+					multiply = 0.15
 				}
 			}
 		}
@@ -213,4 +259,5 @@
 			}
 		}
 	}
+	
 }
