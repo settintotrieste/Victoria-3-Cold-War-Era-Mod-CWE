@@ -466,6 +466,59 @@ ai_strategy_default = {
 					desc = "STATE_VALUE_TREATY_PORT"
 				}
 			}
+			
+			if = {
+				limit = {
+					scope:target_state = {
+						OR = {
+							"num_potential_resources(bt:building_rubber_plantation)" > 0
+							"num_potential_resources(bt:building_oil_rig)" > 0
+							"num_potential_resources(bt:building_gold_field)" > 0
+							"num_potential_resources(bt:building_gold_mine)" > 0
+						}
+					}
+				}
+				multiply = {
+					add = 1
+					if = {
+						limit = {
+							"scope:target_state.num_potential_resources(bt:building_rubber_plantation)" > 0
+						}
+						add = {
+							value = "scope:target_state.num_potential_resources(bt:building_rubber_plantation)"
+							divide = 100
+						}
+					}
+					if = {
+						limit = {
+							"scope:target_state.num_potential_resources(bt:building_oil_rig)" > 0
+						}
+						add = {
+							value = "scope:target_state.num_potential_resources(bt:building_oil_rig)"
+							divide = 100
+						}
+					}
+					if = {
+						limit = {
+							"scope:target_state.num_potential_resources(bt:building_gold_field)" > 0
+						}
+						add = {
+							value = "scope:target_state.num_potential_resources(bt:building_gold_field)"
+							divide = 100
+						}
+					}
+					if = {
+						limit = {
+							"scope:target_state.num_potential_resources(bt:building_gold_mine)" > 0
+						}
+						add = {
+							value = "scope:target_state.num_potential_resources(bt:building_gold_mine)"
+							divide = 100
+						}
+					}
+					desc = "STATE_VALUE_VALUABLE_RESOURCE_POTENTIAL"
+				}
+			}
 
 			if = { # Very reluctant to cede incorporated states
 				limit = {
@@ -881,6 +934,78 @@ ai_strategy_default = {
 				max = ai_state_ambition_max
 				desc = "STATE_VALUE_AMBITION"
 			}
+			
+			if = {
+				limit = {
+					scope:target_state = {
+						OR = {
+							"num_potential_resources(bt:building_rubber_plantation)" > 0
+							"num_potential_resources(bt:building_oil_rig)" > 0
+							"num_potential_resources(bt:building_gold_field)" > 0
+							"num_potential_resources(bt:building_gold_mine)" > 0
+						}
+					}
+				}
+				multiply = {
+					add = 1
+					if = {
+						limit = {
+							"scope:target_state.num_potential_resources(bt:building_rubber_plantation)" > 0
+						}
+						add = {
+							value = "scope:target_state.num_potential_resources(bt:building_rubber_plantation)"
+							divide = 100
+						}
+					}
+					if = {
+						limit = {
+							"scope:target_state.num_potential_resources(bt:building_oil_rig)" > 0
+						}
+						add = {
+							value = "scope:target_state.num_potential_resources(bt:building_oil_rig)"
+							divide = 100
+						}
+					}
+					if = {
+						limit = {
+							"scope:target_state.num_potential_resources(bt:building_gold_field)" > 0
+						}
+						add = {
+							value = "scope:target_state.num_potential_resources(bt:building_gold_field)"
+							divide = 100
+						}
+					}
+					if = {
+						limit = {
+							"scope:target_state.num_potential_resources(bt:building_gold_mine)" > 0
+						}
+						add = {
+							value = "scope:target_state.num_potential_resources(bt:building_gold_mine)"
+							divide = 100
+						}
+					}
+					desc = "STATE_VALUE_VALUABLE_RESOURCE_POTENTIAL"
+				}
+			}
+
+			if = {
+				limit = {
+					scope:target_state = {
+						primary_cultures_percent_state = {
+							target_country = root
+							value >= 0.05
+						}
+					}
+				}
+				multiply = {
+					value = {
+						add = 1
+						add = "scope:target_state.primary_cultures_percent_state(root)"
+						max = 1.5
+					}
+					desc = "STATE_VALUE_PRIMARY_CULTURES_PERCENT"
+				}
+			}
 
 			if = {
 				limit = {
@@ -974,6 +1099,19 @@ ai_strategy_default = {
 				multiply = {
 					value = 0
 					desc = "STATE_VALUE_INVALID_TARGET"
+				}
+			}
+			
+			if = {
+				limit = {
+					has_strategic_region_interest_tier = {
+						strategic_region = scope:target_state.region
+						value <= 1
+					}
+				}
+				multiply = {
+					value = 0
+					desc = "STATE_VALUE_NOT_INTEREST_IN_REGION"
 				}
 			}
 		}
@@ -4007,6 +4145,7 @@ ai_strategy_default = {
 	# Using this value in other strategies will function additively
 	# scope:target_country = wargoal target country
 	# scope:target_state = wargoal target state (if any)
+	# scope:diplomatic_play = the diplomatic play (if there is one)
 	wargoal_scores = {
 		conquer_state = {
 			if = {
@@ -4015,16 +4154,24 @@ ai_strategy_default = {
 						has_secret_goal = {
 							who = scope:target_state.owner
 							secret_goal = conquer
-						}	
-						has_attitude = {
-							who = scope:target_country
-							attitude = antagonistic
-						}						
-					}				
+						}
+						AND = {
+							has_attitude = {
+								who = scope:target_country
+								attitude = antagonistic
+							}
+							NOT = { scope:diplomatic_play ?= { initiator_is = root } } # An antagonistic initiator is settling a grievance, not taking land
+						}
+					}
 				}
-				
-				add = scope:target_state.ai_state_value:root
-			}			
+
+				if = {
+					limit = {
+						scope:target_state.ai_state_value:root >= ai_strongly_desires_state_value_threshold
+					}
+					add = scope:target_state.ai_state_value:root
+				}
+			}
 
 			min = 0
 			max = 100
@@ -4209,8 +4356,20 @@ ai_strategy_default = {
 		}
 
 		humiliation = {
-			value = 25
-		}	
+			value = 0
+
+			if = {
+				limit = {
+					has_diplomatic_pact = {
+						who = scope:target_country
+						type = rivalry
+					}
+					scope:diplomatic_play ?= { target_is = root }
+				}
+
+				add = 20
+			}
+		}
 		
 		join_power_bloc = {
 			if = {
@@ -4754,21 +4913,54 @@ ai_strategy_default = {
 	strait_scores = {
 		status_scores = {
 			open = {
-				value = 0
+				value = 1 # Options scoring exactly 0 are skipped, so keep opening up available
 			}
 
 			no_military = {
 				value = 10
+
+				subtract = { # Fallout with the countries this would hurt
+					value = {
+						scope:strait = {
+							add = "military_fallout_for(root)"
+						}
+					}
+					multiply = ai_strait_fallout_weight
+				}
+				min = 0
 			}
 
 			closed = {
-				value = 0		
+				value = 0
+
+				if = { # Close canals to enemy trade
+					limit = {
+						scope:strait = {
+							OR = {
+								type = strait_type:canal_panama
+								type = strait_type:canal_suez
+							}
+						}
+					}
+
+					add = 100
+				}
+
+				subtract = { # Fallout with the countries this would hurt
+					value = {
+						scope:strait = {
+							add = "fallout_for(root)"
+						}
+					}
+					multiply = ai_strait_fallout_weight
+				}
+				min = 0
 			}
 		}
 
 		permissions_scores = {
 			all = {
-				value = 0					
+				value = 0
 			}
 
 			no_enemies = {
@@ -4777,6 +4969,37 @@ ai_strategy_default = {
 
 			only_allies = {
 				value = 0
+
+				if = { # Wants to keep competitor navies out
+					limit = {
+						OR = {
+							has_strategy = ai_strategy_colonial_expansion
+							has_strategy = ai_strategy_territorial_expansion
+						}
+					}
+
+					add = 20
+				}
+
+				subtract = { # Fallout with the non-allies this would shut out
+					value = {
+						scope:strait = {
+							add = "only_allies_fallout_for(root)"
+						}
+					}
+					multiply = ai_strait_fallout_weight
+				}
+				min = 0
+
+				if = { # Don't close off gibraltar
+					limit = {
+						scope:strait = {
+							type = strait_type:strait_gibraltar
+						}
+					}
+
+					multiply = 0
+				}
 			}
 
 			only_controller = {
@@ -4786,24 +5009,12 @@ ai_strategy_default = {
 
 		toll_rate_scores = {
 			no_tolls = {
-				value = 0
-				
-				if = {
-					limit = {
-						scope:is_sole_controller = no
-						OR = {
-							has_strategy = ai_strategy_maintain_power_balance
-							has_strategy = ai_strategy_anti_imperialism
-						}
-					}
-					
-					add = 20
-				}				
+				value = 1 # Options scoring exactly 0 are skipped, so keep dropping tolls available
 			}
 
 			low_tolls = {
 				value = 10
-				
+
 				if = {
 					limit = {
 						scope:is_sole_controller = yes
@@ -4812,14 +5023,39 @@ ai_strategy_default = {
 							has_strategy = ai_strategy_anti_imperialism
 						}
 					}
-					
+
 					add = 20
-				}			
+				}
+
+				add = { # The income the tolls would bring
+					value = scope:toll_income_per_percent
+					multiply = define:NEconomy|TOLL_RATE_LOW_TOLLS
+					multiply = 100 # The toll rate defines are fractions, the income is per percent
+					multiply = ai_strait_toll_income_weight
+				}
+
+				subtract = { # Fallout with the countries this would hurt
+					value = {
+						scope:strait = {
+							add = "trade_fallout_for(root)"
+						}
+					}
+					multiply = ai_strait_fallout_weight
+					multiply = define:NEconomy|TOLL_RATE_LOW_TOLLS # The share of their crossing trade the tolls would take
+					divide = 2
+					if = {
+						limit = {
+							scope:is_sole_controller = yes
+						}
+						multiply = define:NEconomy|TOLL_RATE_MULTIPLIER_FULL_CONTROL
+					}
+				}
+				min = 0
 			}
 
 			medium_tolls = {
 				value = 0
-				
+
 				if = { # "Greed is good"
 					limit = {
 						OR = {
@@ -4827,15 +5063,15 @@ ai_strategy_default = {
 							has_strategy = ai_strategy_colonial_expansion
 						}
 					}
-					
+
 					add = 20
 				}
-				
+
 				if = { # Can charge higher tolls if we control both sides
 					limit = {
 						scope:is_sole_controller = yes
 					}
-					
+
 					add = 20
 				}
 
@@ -4843,11 +5079,11 @@ ai_strategy_default = {
 					limit = {
 						scope:strait = {
 							type = strait_type:strait_gibraltar
-						}					
+						}
 					}
-					
+
 					multiply = 0.5
-				}					
+				}
 				else_if = { # Make some money on your canals
 					limit = {
 						scope:strait = {
@@ -4857,15 +5093,40 @@ ai_strategy_default = {
 							}
 						}
 					}
-					
+
 					add = 100
-				}				
+				}
+
+				add = { # The income the tolls would bring
+					value = scope:toll_income_per_percent
+					multiply = define:NEconomy|TOLL_RATE_MEDIUM_TOLLS
+					multiply = 100 # The toll rate defines are fractions, the income is per percent
+					multiply = ai_strait_toll_income_weight
+				}
+
+				subtract = { # Fallout with the countries this would hurt
+					value = {
+						scope:strait = {
+							add = "trade_fallout_for(root)"
+						}
+					}
+					multiply = ai_strait_fallout_weight
+					multiply = define:NEconomy|TOLL_RATE_MEDIUM_TOLLS # The share of their crossing trade the tolls would take
+					if = {
+						limit = {
+							scope:is_sole_controller = yes
+						}
+						multiply = define:NEconomy|TOLL_RATE_MULTIPLIER_FULL_CONTROL
+					}
+				}
+				min = 0
 			}
 
 			high_tolls = {
 				value = 0
 			}
 		}
+		
 	}
 	
 	# A fleet composition describes a role a fleet can take (e.g. main_battle_fleet, raid_fleet):
