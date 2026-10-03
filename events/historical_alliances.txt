@@ -22,6 +22,9 @@ historical_alliances_system.1 = {
 		game_date >= 1954.9.8									# START DATE: Date colony became self governing ****
 		game_date < 1977.6.30									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
+		# Event has not been fired before
+		NOT = { has_variable = SEATO_form_hae }					# CHANGE ****
+		
 		is_a_democracy = yes									# Correct gov types
 		is_sufficiently_independent = yes						# is_vassal = no		
 		#is_at_war = no											# war = no
@@ -38,7 +41,7 @@ historical_alliances_system.1 = {
 		any_country = { 
 			OR = { 
 				country_is_in_southeast_asia = yes
-				country_is_in_east_asia = yes
+				#country_is_in_east_asia = yes
 				c:PAK ?= this
 			}
 			is_a_communist_government = yes
@@ -49,22 +52,16 @@ historical_alliances_system.1 = {
 		any_country = { 
 			OR = { 
 				country_is_in_southeast_asia = yes
-				country_is_in_east_asia = yes
+				#country_is_in_east_asia = yes
 				c:PAK ?= this
 			}
-			OR = { 
-				is_some_kind_of_democracy = yes
-				is_a_monarchy = yes
-			}
+			is_a_communist_government = no
 			is_sufficiently_independent = yes
 			is_not_neutral = yes
 			right_wing_ruling_coalition = yes
-			relations:ROOT >= relations_threshold:neutral
+			#relations:ROOT >= relations_threshold:neutral
 			is_power_bloc_leader = no
 		}
-		
-		# Event has not been fired before
-		NOT = { has_variable = SEATO_form_hae }					# CHANGE ****
 		
     }
 	
@@ -88,19 +85,16 @@ historical_alliances_system.1 = {
 			limit = {
 				OR = { 
 					country_is_in_southeast_asia = yes
-					country_is_in_east_asia = yes
+					#country_is_in_east_asia = yes
 					c:PAK ?= this
 					c:AST ?= this
 					c:NZL ?= this
 				}
-				OR = { 
-					is_some_kind_of_democracy = yes
-					is_a_monarchy = yes
-				}
+				is_a_communist_government = no
 				is_sufficiently_independent = yes
 				is_not_neutral = yes
 				right_wing_ruling_coalition = yes
-				relations:ROOT >= relations_threshold:neutral
+				#relations:ROOT >= relations_threshold:neutral
 				is_power_bloc_leader = no
 			}
 			trigger_event = { id = historical_alliances_system.2 }
@@ -208,6 +202,11 @@ historical_alliances_system.2 = {
 						c:PAK ?= this
 						c:PHI ?= this
 						c:THI ?= this
+						c:DAI ?= this
+						c:NVM ?= this
+						c:SVM ?= this
+						c:CAM ?= this
+						c:LAO ?= this
 					}
 				} 
 				add = -100 
@@ -237,6 +236,11 @@ historical_alliances_system.2 = {
 						c:PAK ?= this
 						c:PHI ?= this
 						c:THI ?= this
+						c:DAI ?= this
+						c:NVM ?= this
+						c:SVM ?= this
+						c:CAM ?= this
+						c:LAO ?= this
 					}
 				} 
 				add = -100 
@@ -269,6 +273,9 @@ historical_alliances_system.3 = {
 		game_date >= 1955.2.24									# START DATE: Date colony became self governing ****
 		game_date < 1979.3.16									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
+		# Event has not been fired before
+		NOT = { has_variable = CENTO_form_hae }					# CHANGE ****
+		
 		is_a_democracy = yes									# Correct gov types
 		is_sufficiently_independent = yes						# is_vassal = no		
 		#is_at_war = no											# war = no
@@ -295,17 +302,18 @@ historical_alliances_system.3 = {
 		any_country = { 
 			OR = { 
 				country_is_in_middle_east = yes
-				country_is_in_india = yes
+				c:PAK ?= this
+				c:TUR ?= this
 			}
-			is_some_kind_of_democracy = yes
+			OR = { 
+				is_some_kind_of_democracy = yes
+				is_a_monarchy = yes
+			}
 			is_sufficiently_independent = yes
 			is_not_neutral = yes
 			right_wing_ruling_coalition = yes
-			relations:ROOT >= relations_threshold:cordial
+			#relations:ROOT >= relations_threshold:cordial
 		}
-		
-		# Event has not been fired before
-		NOT = { has_variable = CENTO_form_hae }					# CHANGE ****
 		
     }
 	
@@ -329,15 +337,19 @@ historical_alliances_system.3 = {
 			limit = {
 				OR = { 
 					country_is_in_middle_east = yes
-					country_is_in_india = yes
+					c:PAK ?= this
+					c:TUR ?= this
 				}
-				is_some_kind_of_democracy = yes
+				OR = { 
+					is_some_kind_of_democracy = yes
+					is_a_monarchy = yes
+				}
 				is_sufficiently_independent = yes
 				is_not_neutral = yes
 				right_wing_ruling_coalition = yes
-				relations:ROOT >= relations_threshold:cordial
+				#relations:ROOT >= relations_threshold:cordial
 			}
-			trigger_event = { id = historical_alliances_system.2 }
+			trigger_event = { id = historical_alliances_system.4 }
 		}
 		
 		ai_chance = { 
@@ -399,7 +411,7 @@ historical_alliances_system.4 = {
 				value = 100
 			}
 		}
-		scope:CENTO_leader = {
+		scope:CENTO_leader ?= {
 			create_treaty = {
 				name = treaty_name_CENTO_alliance
 				first_country = scope:CENTO_leader
@@ -410,16 +422,25 @@ historical_alliances_system.4 = {
 
 				articles_to_create = {
 					{
-						article = defensive_pact
-					}
-					{
 						article = military_assistance
 						source_country = scope:SEATO_leader
 						target_country = ROOT
 					}
 				}
 			}
+			hidden_effect = {
+				remove_modifier = meto_member
+				remove_modifier = meto_leader
+			}
+			add_modifier = { name = meto_leader }
+			add_journal_entry = { type = je_meto_system }
 		}
+		hidden_effect = {
+			remove_modifier = meto_member
+			remove_modifier = meto_leader
+		}
+		add_modifier = { name = meto_member }
+		add_journal_entry = { type = je_meto_system }
 		
 		ai_chance = { 
 			base = 90 
