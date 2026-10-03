@@ -8,6 +8,7 @@
 		#Revolutionaries won civil war
 		has_variable = civil_war_country_var
 		has_revolution = no
+		is_diplomatic_play_committed_participant = no
 		
 	}
 
@@ -25,6 +26,31 @@
 		
 		#Set appropriate IG ideologies
 		trigger_event = { id = dynamic_ideology_system.3 }
+		
+		#Disable elections
+		random_active_law = {
+			limit = {
+				OR = { 
+					has_amendment = amendment_type:amendment_voting_age_18
+					has_amendment = amendment_type:amendment_voting_age_21
+					has_amendment = amendment_type:amendment_voting_age_25
+					has_amendment = amendment_type:amendment_corporate_state_voting_rights
+					has_amendment = amendment_type:amendment_council_state_voting_rights
+				}
+			}
+			random_scope_amendment = {
+				limit = {
+					OR = { 
+						amendment_type:amendment_voting_age_18 ?= this.type
+						amendment_type:amendment_voting_age_21 ?= this.type
+						amendment_type:amendment_voting_age_25 ?= this.type
+						amendment_type:amendment_corporate_state_voting_rights ?= this.type
+						amendment_type:amendment_council_state_voting_rights ?= this.type
+					}
+				}
+				remove_amendment = yes
+			}
+		}
 		
 		#Candidate 1
 		ruler ?= { 
@@ -277,6 +303,14 @@
 	
 		#Remove flags
 		remove_variable = civil_war_country_var
+	
+		#Clean up modifiers
+		hidden_effect = {
+			every_scope_character = {
+				limit = { has_modifier = leadership_contender_modifier }
+				remove_modifier = leadership_contender_modifier
+			}
+		}
 		
 		#Costs of sudden leader change
 		custom_tooltip = {
@@ -287,14 +321,6 @@
 			text = change_of_power_struggle.tt
 			set_variable = civil_war_country_var
 			add_journal_entry = { type = je_provisional_government_system }
-		}
-	
-		#Clean up modifiers
-		hidden_effect = {
-			every_scope_character = {
-				limit = { has_modifier = leadership_contender_modifier }
-				remove_modifier = leadership_contender_modifier
-			}
 		}
 	
 	}
