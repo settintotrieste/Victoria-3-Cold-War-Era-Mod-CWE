@@ -1,0 +1,213 @@
+﻿je_adto_system = {
+	icon = "gfx/interface/icons/diplo_icons/adto_member.dds"
+
+	group = je_group_international_organisations
+	
+	scripted_button = je_request_international_alliance_intervention_button
+	scripted_button = je_leave_adto_button
+	
+	scripted_button = je_fund_adto_button
+	scripted_button = je_defund_adto_button
+	
+	scripted_button = je_hold_adto_exercise_button
+	
+	scripted_button = je_become_adto_leader_button
+	
+	is_shown_when_inactive = {
+		
+	}
+	
+	possible = {
+		OR = {
+			has_modifier = adto_leader
+			has_modifier = adto_member
+		}
+	}
+	
+	immediate = {
+		
+		#Count post_colonial_org members
+		random_country = {
+			limit = {
+				has_modifier = adto_leader
+			}
+			set_global_variable = { 
+				name = adto_org_member_count
+				value = 0 
+			}
+			every_country = {
+				limit = {
+					OR = { 
+						has_modifier = adto_leader
+						has_modifier = adto_member
+					}
+				}
+				change_global_variable = {
+					name = adto_org_member_count
+					add = 1
+				}
+			}
+		}
+		
+		#Default is leader funds ADTO
+		if = {
+			limit = { has_modifier = adto_leader }
+			set_global_variable = fund_adto
+		}
+		
+	}
+	
+	on_monthly_pulse = {
+		
+		effect = {
+		
+			#Count post_colonial_org members
+			if = {
+				limit = {
+					has_modifier = adto_leader
+				}
+				set_global_variable = { 
+					name = adto_org_member_count
+					value = 0 
+				}
+				every_country = {
+					limit = {
+						OR = { 
+							has_modifier = adto_leader
+							has_modifier = adto_member
+						}
+					}
+					change_global_variable = {
+						name = adto_org_member_count
+						add = 1
+					}
+				}
+			}
+			
+			#Impose foreign military bases
+			if = {
+				limit = {
+					has_global_variable = fund_adto
+					has_modifier = adto_leader
+					in_default = no
+				}
+				every_country = {
+					limit = { 
+						NOT = { this = root } 
+						has_modifier = adto_member 
+						NOT = { has_diplomatic_pact = { who = ROOT type = military_cooperation_agreement is_initiator = no } }
+					}
+					save_scope_as = adto_member_scope
+					ROOT = {
+						create_diplomatic_pact = {
+							country = scope:adto_member_scope
+							type = military_cooperation_agreement
+						}
+					}
+				}
+			}
+		
+		}
+		
+	}
+	
+	modifiers_while_active = {
+		
+	}
+
+	invalid = {
+	
+		OR = {
+		
+			#Ineligible country
+			is_not_sufficiently_independent = yes
+			is_neutral = yes
+			infamy >= infamy_threshold:pariah
+			
+			#No leader of org
+			any_country = {
+				count < 1
+				has_modifier = adto_leader
+			}
+			
+		}
+		
+	}
+	
+	on_invalid = {
+		
+		#Clear modifiers
+		if = {
+			limit = { has_modifier = adto_exercise }
+			remove_modifier = adto_exercise
+		}
+		if = {
+			limit = { has_modifier = adto_leader }
+			remove_modifier = adto_leader
+			
+			#Select new ADTO leader, if applicable
+			if = {
+				limit = {
+					NOT = {
+						any_country = {
+							has_modifier = adto_leader
+						}
+					}
+				}
+				ordered_country = {
+					limit = {
+						has_modifier = adto_member
+						is_subject = no
+						is_sufficiently_independent = yes
+					}
+					order_by = prestige
+					position = 0
+					if = {
+						limit = { has_modifier = adto_leader }
+						add_modifier = { name = adto_leader }
+					}
+					if = {
+						limit = { has_modifier = adto_member }
+						remove_modifier = adto_member
+					}
+				}
+			}
+			
+		}
+		if = {
+			limit = { has_modifier = adto_member }
+			remove_modifier = adto_member
+		}
+		
+	}
+	
+	on_fail = {
+	
+		#Display members
+		every_country = {
+			limit = { 
+				has_modifier = adto_leader
+			}
+			save_scope_as = superstate_leader_label
+			custom_tooltip = {
+				text = superstate_leader_label.tt
+			}
+		}
+		every_country = {
+			limit = { 
+				has_modifier = adto_member
+			}
+			save_scope_as = superstate_member_label
+			custom_tooltip = {
+				text = superstate_member_label.tt
+			}
+		}
+		
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default_uninvolved_or_context = no
+
+	progressbar = no
+}
