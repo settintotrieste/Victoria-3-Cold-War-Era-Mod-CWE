@@ -19,6 +19,7 @@ je_foreign_head_of_state_system = {
 		has_law_or_variant = law_type:law_HOG_prime_minister
 		
 		#Foreign HOS - Republic
+		#shares_same_monarch = no
 		shares_same_head_of_state_republic = yes
 		is_a_colonial_subject_colony_gov = no
 		
@@ -40,14 +41,52 @@ je_foreign_head_of_state_system = {
 				}
 				else_if = {
 					limit = { has_law_or_variant = law_type:law_HOG_prime_minister }
-					random_scope_character = {
-						limit = {
-							OR = { 
-								has_role = character_role_head_of_state
-								has_role = character_role_monarch
+					if = {
+						limit = { 
+							any_scope_character = {
+								OR = {
+									has_role = character_role_head_of_state
+									has_role = character_role_monarch
+								}
 							}
 						}
-						save_scope_as = head_of_state_pm_scope
+						random_scope_character = {
+							limit = {
+								OR = {
+									has_role = character_role_head_of_state
+									has_role = character_role_monarch
+								}
+							}
+							save_scope_as = head_of_state_pm_scope
+						}
+					}
+					else_if = {
+						limit = { 
+							root.top_overlord ?= {
+								any_scope_character = {
+									OR = {
+										has_role = character_role_head_of_state
+										has_role = character_role_monarch
+									}
+								}
+							}
+						}
+						root.top_overlord ?= {
+							random_scope_character = {
+								limit = {
+									OR = { 
+										has_role = character_role_head_of_state
+										has_role = character_role_monarch
+									}
+								}
+								save_scope_as = head_of_state_pm_scope
+							}
+						}
+					}
+					else = {
+						ruler ?= {
+							save_scope_as = head_of_state_pm_scope
+						}
 					}
 				}
 			}
@@ -71,6 +110,7 @@ je_foreign_head_of_state_system = {
 			}
 			
 			#Not a foreign HOS, if applicable
+			#shares_same_monarch = yes
 			shares_same_head_of_state_republic = no
 			is_a_colonial_subject_colony_gov = yes
 			
@@ -93,6 +133,9 @@ je_foreign_head_of_state_system = {
 					}
 				}
 			}
+			
+			#Different overlord
+			NOT = { is_subject_of = scope:head_of_state_pm_scope.owner }
 		
 		}
 		
