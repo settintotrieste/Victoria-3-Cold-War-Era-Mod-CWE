@@ -1212,11 +1212,11 @@ historical_interstate_wars.10 = {
 	trigger = {													# What triggers the event, if using other events or journal entries leave empty
 		
 		#Overlord conditions
-		c:PAK ?= this
-		game_date >= 1971.9.3									# START DATE: Date colony became self governing ****
+		c:HND ?= this
+		game_date >= 1971.12.3									# START DATE: Date colony became self governing ****
 		game_date < 1981.12.3									# END DATE: All historical events must not fire 10 years after the START DATE ****
 		
-		#is_a_democracy = yes									# Correct gov types
+		is_a_democracy = yes									# Correct gov types
 		is_sufficiently_independent = yes						# is_vassal = no		
 		is_at_war = no											# war = no
 		
@@ -1225,23 +1225,14 @@ historical_interstate_wars.10 = {
 		# Event has not been fired before
 		NOT = { has_variable = third_indo_pakistan_war_hiw }	# CHANGE ****
 		
-		#Owns Bangladesh
-		OR = {
-			AND = { 
-				NOT = { exists = c:BNG }
-				has_state_in_state_region = STATE_EAST_BENGAL
-			}
-			AND = {
-				exists = c:BNG
-				c:BNG ?= { is_direct_subject_of = ROOT }
-			}
-		}
-		
-		#Recipent conditions
-		exists = c:HND
-		c:HND ?= { 												# Change TAG of the transferee ****
-			is_a_democracy = yes
-			is_sufficiently_independent = yes
+		#Bangladesh War
+		has_global_variable = bangladesh_revolt_1971_happened
+		exists = c:BNG
+		exists = c:PAK
+		is_adjacent_to_country = c:BNG
+		is_adjacent_to_country = c:PAK
+		c:BNG ?= { has_war_with = c:PAK }
+		c:PAK ?= {
 			is_not_a_diplomatic_ally = yes
 		}
 		
@@ -1262,9 +1253,6 @@ historical_interstate_wars.10 = {
 			limit = { state_region = s:STATE_EAST_BENGAL }
 			save_scope_as = BNG_Bengal
 		}
-		
-		#Add claim
-		s:STATE_KASHMIR ?= { add_claim = c:PAK add_claim = c:HND }
 	
 		# Fire only once
 		set_variable = third_indo_pakistan_war_hiw				# Change variable ****
@@ -1275,129 +1263,34 @@ historical_interstate_wars.10 = {
         name = historical_interstate_wars.option.1				# Declare war!
         highlighted_option = yes
 		
-		# Release East Pakistan
-		if = {
-			limit = {
-				NOT = { exists = c:BNG }
-				has_state_in_state_region = STATE_EAST_BENGAL
-			}
-			create_country = {
-				tag = BNG										# Change TAG of country being released ****
-				origin = ROOT									# TAG where the created country takes tech from
-				state = s:STATE_EAST_BENGAL.region_state:PAK
-				
-				on_created = {									# Set government laws & rulers here
-					
-					# SET laws for colony ****
-					effect_starting_politics_parliamentary_republic = yes
-					effect_starting_politics_democratic = yes
-					effect_starting_politics_constitutional_unitary_state = yes
-					effect_starting_politics_war_policy_anti_military = yes
-					effect_starting_politics_economic_policy_interventionism = yes
-					effect_starting_politics_trade_policy_protectionism = yes
-					effect_starting_politics_anti_nuclear_policy = yes
-					
-					# Set diplomatic recognition
-					set_country_type = unrecognized
-				}
-			}
-			every_scope_state = {
-				limit = {
-					state_region = { is_homeland = cu:bengali }		# Change homeland identity to match colony to be released ****
-				}
-				set_state_owner = c:BNG								# Change TAG to colony ****
-			}
-		}
+		#Add claim
+		s:STATE_KASHMIR ?= { add_claim = c:PAK add_claim = c:HND }
 		
-		#Bangladesh war of independence
-		random_country = {
+		#Join Bangladesh side
+		random_diplomatic_play = {
 			limit = {
-				c:BNG ?= this
-				is_sufficiently_independent = no
-				is_direct_subject_of = ROOT
-			}
-			
-			effect_starting_politics_parliamentary_republic = yes
-			effect_starting_politics_democratic = yes
-			
-			create_character = {
-				first_name = "Sheikh_Mujibur_Rahman_first_name"
-				last_name = "Sheikh_Mujibur_Rahman_last_name"
-				ruler = yes ig_leader = yes historical = yes
-				birth_date = 1920.3.17
-				interest_group = ig_rural_folk
-				ideology = ideology_liberal
-				culture = cu:bengali
-				religion = rel:sunni
-				traits = {
-					charismatic
-					ambitious
-					brave
+				is_diplomatic_play_type = dp_independence
+				OR = {
+					initiator_is = c:BNG
+					target_is = c:PAK
 				}
-				on_created = {
-					set_variable = Sheikh_Mujibur_Rahman
-				}
+				is_war = yes
 			}
-			
-			create_diplomatic_play = {
-				name = third_indo_pakistan_war
-				type = dp_independence
-				target_country = ROOT
-				
-				war = yes
+			add_initiator_backers = { ROOT }
+			add_war_goal = {
+				holder = c:PAK
+				type = humiliation
+				target_country = c:HND
 			}
-		
-		}
-		
-		# War
-		if = {
-			limit = {
-				c:HND ?= { OR = { has_state_in_state_region = STATE_KASHMIR any_subject_or_below = { has_state_in_state_region = STATE_KASHMIR } } }
+			add_war_goal = {
+				holder = c:HND
+				type = humiliation
+				target_country = c:PAK
 			}
-			if = {
-				limit = {
-					scope:HND_Kashmir.owner ?= { NOT = { this = c:HND } is_subject_of = c:HND }
-				}
-				create_diplomatic_play = {
-					name = third_indo_pakistan_war
-					type = dp_annex_war_historical
-					target_state = scope:HND_Kashmir
-					
-					war = yes
-					
-					add_target_backers = { c:BNG }
-					add_war_goal = {
-						holder = c:PAK
-						type = humiliation
-						target_country = c:HND
-					}
-					add_war_goal = {
-						holder = c:HND
-						type = humiliation
-						target_country = c:PAK
-					}
-				}
-			}
-			else = {
-				create_diplomatic_play = {
-					name = third_indo_pakistan_war
-					type = dp_return_state_historical
-					target_state = scope:HND_Kashmir
-					
-					war = yes
-					
-					add_target_backers = { c:BNG }
-					add_war_goal = {
-						holder = c:PAK
-						type = humiliation
-						target_country = c:HND
-					}
-					add_war_goal = {
-						holder = c:HND
-						type = humiliation
-						target_country = c:PAK
-					}
-				}
+			add_war_goal = {
+				holder = c:PAK
+				target_state = scope:PAK_Kashmir
+				type = return_state
 			}
 		}
 		
@@ -1410,47 +1303,6 @@ historical_interstate_wars.10 = {
 	option = {
         name = historical_interstate_wars.option.2				# Peace option
 		default_option = yes
-		
-		#Bangladesh independence
-		if = {
-			limit = {
-				exists = c:BNG
-				c:BNG ?= { is_direct_subject_of = ROOT }
-			}
-			c:BNG ?= {
-				make_independent_effect = yes
-				
-				effect_starting_politics_parliamentary_republic = yes
-				effect_starting_politics_democratic = yes
-				
-				create_character = {
-					first_name = "Sheikh_Mujibur_Rahman_first_name"
-					last_name = "Sheikh_Mujibur_Rahman_last_name"
-					ruler = yes ig_leader = yes historical = yes
-					birth_date = 1920.3.17
-					interest_group = ig_rural_folk
-					ideology = ideology_liberal
-					culture = cu:bengali
-					religion = rel:sunni
-					traits = {
-						charismatic
-						ambitious
-						brave
-					}
-					on_created = {
-						set_variable = Sheikh_Mujibur_Rahman
-					}
-				}
-				
-			}
-		}
-		
-		#National humiliation
-		add_modifier = { 
-			name = national_humiliation 
-			years = 5
-			is_decaying = yes 
-		}
 		
 		#Minor discontent
 		add_radicals = {

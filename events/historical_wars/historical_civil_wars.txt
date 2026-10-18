@@ -7139,3 +7139,131 @@ historical_civil_wars.40 = {
     }
 
 }
+
+### Bangladesh War of Independence ###
+
+historical_civil_wars.41 = {
+    type = country_event
+
+    title = bangladesh_revolt_1971.t 							# Title of the event; ADD LOCALISATION
+    desc = bangladesh_revolt_1971.d 							# Description of the event; ADD LOCALISATION
+    #flavor = bangladesh_revolt_1971.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "middleeast_battlefield_trenches" }
+
+    icon = "gfx/interface/icons/event_icons/bicorne_hat.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:BNG ?= this
+		game_date >= 1971.3.26									# START DATE: Date colony became self governing ****
+		game_date < 1981.3.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		# Event has not been fired before
+		NOT = { has_variable = bangladesh_revolt_1971_hccw }	# CHANGE ****
+		
+		is_a_democracy = no										# Correct gov types
+		is_sufficiently_independent = no						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Recipent conditions
+		exists = c:PAK
+		c:PAK ?= { 												# Change TAG of the transferee ****
+			is_a_democracy = no
+			is_sufficiently_independent = yes
+			is_at_war = no
+		}
+		is_subject_of = c:PAK
+		
+    }
+	
+	immediate = {
+	
+		random_state = {
+			limit = { state_region = s:STATE_KASHMIR owner = { NOR = { this = root is_subject_of = ROOT } } }
+			save_scope_as = HND_Kashmir
+		}
+		random_state = {
+			limit = { state_region = s:STATE_KASHMIR owner = { OR = { this = root is_subject_of = ROOT } } }
+			save_scope_as = PAK_Kashmir
+		}
+		
+		random_state = {
+			limit = { state_region = s:STATE_EAST_BENGAL }
+			save_scope_as = BNG_Bengal
+		}
+	
+		# Fire only once
+		set_variable = bangladesh_revolt_1971_hccw				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_civil_wars.option.1					# Declare war!
+        highlighted_option = yes
+		
+		#Enact new regime
+		effect_starting_politics_parliamentary_republic = yes
+		effect_starting_politics_democratic = yes
+		
+		#New ruler
+		create_character = {
+			first_name = "Sheikh_Mujibur_Rahman_first_name"
+			last_name = "Sheikh_Mujibur_Rahman_last_name"
+			ruler = yes ig_leader = yes historical = yes
+			birth_date = 1920.3.17
+			interest_group = ig_rural_folk
+			ideology = ideology_liberal
+			culture = cu:bengali
+			religion = rel:sunni
+			traits = {
+				charismatic
+				ambitious
+				brave
+			}
+			on_created = {
+				set_variable = Sheikh_Mujibur_Rahman
+			}
+		}
+		
+		#Bangladesh war of independence
+		create_diplomatic_play = {
+			name = third_indo_pakistan_war
+			type = dp_independence
+			target_country = overlord
+			
+			#war = yes
+		}
+		set_global_variable = bangladesh_revolt_1971_happened
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_civil_wars.option.2					# Peace option
+		default_option = yes
+		
+		#Minor discontent
+		add_radicals = {
+			value = large_radicals
+		}
+		add_modifier = { 
+			name = nationalist_agitation 
+			months = 60 
+			is_decaying = yes 
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
