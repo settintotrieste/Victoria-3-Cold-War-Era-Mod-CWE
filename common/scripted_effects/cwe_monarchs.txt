@@ -225,6 +225,52 @@ generate_monarch_for_country = {
 		set_variable = felipe_vi_generated
 	}
 	
+	#Portugal
+	else_if = {
+		limit = {
+			AND = { OR = { c:POR ?= this was_formed_from = POR } game_date >= 1907.9.23 game_date < 1976.12.24 }							# Duarte Nuno
+			NOT = { has_variable = duarte_nuno_generated }
+		}
+		if = {
+			limit = {
+				any_character = {
+					has_variable = duarte_nuno
+					is_ruler_of_own_country = no
+				}
+			}
+			random_character = {
+				limit = {
+					has_variable = duarte_nuno
+					is_ruler_of_own_country = no
+				}
+				resolve_any_exiled_monarch = yes
+				set_character_as_monarch = yes
+			}
+		}
+		else = {
+			create_character = {
+				first_name = "Duarte_Nuno_first_name"
+				last_name = "Duarte_Nuno_last_name"
+				birth_date = 1907.9.23
+				role = character_role_monarch historical = yes
+				interest_group = ig_landowners
+				ideology = ideology_elitist
+				culture = cu:portuguese
+				religion = rel:catholic
+				traits = { healthy_character
+					reserved
+					pious
+					honorable
+				}
+				on_created = {
+					set_variable = duarte_nuno
+					set_character_as_monarch = yes
+				}
+			}
+		}
+		set_variable = duarte_nuno_generated
+	}
+	
 	#Belgium
 	else_if = {
 		limit = {
@@ -2356,6 +2402,10 @@ set_character_as_monarch = {
 		limit = { has_role = character_role_prince }
 		remove_character_role = character_role_prince
 	}
+	if = {
+		limit = { has_role = character_role_head_of_government }
+		remove_character_role = character_role_head_of_government
+	}
 	
 	#Clothes
 	if = {
@@ -2367,6 +2417,7 @@ set_character_as_monarch = {
 	if = {
 		limit = { has_role = character_role_regent }
 		remove_character_role = character_role_regent
+		clean_up_regent_character = yes
 	}
 	if = {
 		limit = { has_modifier = regent_character }
@@ -2376,7 +2427,20 @@ set_character_as_monarch = {
 		limit = { 
 			is_eligible_to_become_monarch = yes
 		}
-		owner ?= { remove_regency_modifier = yes }
+		owner ?= { 
+			remove_regency_modifier = yes
+			every_scope_character = {
+				if = {
+					limit = { has_role = character_role_regent }
+					remove_character_role = character_role_regent
+					clean_up_regent_character = yes
+				}
+				if = {
+					limit = { has_modifier = regent_character }
+					remove_modifier = regent_character
+				}
+			}
+		}
 	}
 	
 	#Set as ruler if applicable
@@ -2505,10 +2569,14 @@ clean_up_regent_character = {
 
 clean_up_any_monarchs = {
 	
-	#Clean up deposed monarchy
+	#Clean up deposed monarchy & subjects
 	if = {
 		limit = {
-			NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+			OR = { 
+				NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+				ruler_is_governor_general = yes
+				is_a_devolved_monarchy = yes
+			}
 		}
 		clean_up_all_royal_titles = yes
 	}
@@ -2796,14 +2864,28 @@ generate_viceroy_for_country = {
 			is_subject = yes
 			overlord ?= { save_temporary_scope_as = viceroy_overlord }
 			any_scope_character = {
-				OR = { is_ruler_of_own_country = yes has_role_of_type = politician }
+				OR = { 
+					is_ruler_of_own_country = yes 
+					has_role_of_type = politician 
+				}
+				NAND = {
+					OR = { has_role = character_role_head_of_government is_ruler_of_own_country = yes }
+					owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+				}
 				culture = { is_primary_culture_of = scope:viceroy_overlord }
 			}
 		}
 		overlord ?= { save_scope_as = viceroy_overlord }
 		random_scope_character = {
 			limit = {
-				OR = { is_ruler_of_own_country = yes has_role_of_type = politician }
+				OR = { 
+					is_ruler_of_own_country = yes 
+					has_role_of_type = politician 
+				}
+				NAND = {
+					OR = { has_role = character_role_head_of_government is_ruler_of_own_country = yes }
+					owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
+				}
 				culture = { is_primary_culture_of = scope:viceroy_overlord }
 			}
 			set_character_as_viceroy = yes
@@ -2883,6 +2965,12 @@ set_character_as_viceroy = {
 				has_role = character_role_head_of_state
 			}
 			remove_character_role = character_role_head_of_state
+		}
+		every_scope_character = {
+			limit = {
+				has_role = character_role_regent
+			}
+			remove_character_role = character_role_regent
 		}
 	}
 	if = {
@@ -2983,35 +3071,63 @@ clean_up_all_royal_titles = {
 	#Remove all monarch titles
 	if = {
 		limit = {
-			NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+			OR = { 
+				NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+				ruler_is_governor_general = yes
+			}
 		}
-		every_scope_character = {
-			limit = { has_role = character_role_monarch }
-			remove_character_role = character_role_monarch
-			set_character_as_royal = yes
+		
+		if = {
+			limit = {
+				OR = {
+					NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+					ruler_is_governor_general = yes
+				}
+				is_a_devolved_monarchy = no
+			}
+			every_scope_character = {
+				limit = { has_role = character_role_monarch }
+				remove_character_role = character_role_monarch
+				set_character_as_royal = yes
+			}
+			every_scope_character = {
+				limit = { has_role = character_role_monarch_elective }
+				remove_character_role = character_role_monarch_elective
+				set_character_as_royal = yes
+			}
+			every_scope_character = {
+				limit = { has_role = character_role_regent }
+				remove_character_role = character_role_regent
+				clean_up_regent_character = yes
+			}
+			every_scope_character = {
+				limit = { has_role = character_role_prince }
+				remove_character_role = character_role_prince
+			}
+			heir ?= {
+				disinherit_character = yes
+			}
 		}
-		every_scope_character = {
-			limit = { has_role = character_role_monarch_elective }
-			remove_character_role = character_role_monarch_elective
-			set_character_as_royal = yes
-		}
-		every_scope_character = {
-			limit = { has_role = character_role_regent }
-			remove_character_role = character_role_regent
-			clean_up_regent_character = yes
-		}
-		every_scope_character = {
-			limit = { has_role = character_role_prince }
-			remove_character_role = character_role_prince
-		}
-		heir ?= {
-			disinherit_character = yes
+		
+		#Remove all regents
+		if = {
+			limit = { 
+				is_a_devolved_monarchy = yes
+			}
+			every_scope_character = {
+				limit = { has_role = character_role_regent }
+				remove_character_role = character_role_regent
+				clean_up_regent_character = yes
+			}
 		}
 		
 		#Remove all viceroys
-		every_scope_character = {
-			limit = { has_role = character_role_viceroy }
-			remove_character_role = character_role_viceroy
+		if = {
+			limit = { ruler_is_governor_general = no }
+			every_scope_character = {
+				limit = { has_role = character_role_viceroy }
+				remove_character_role = character_role_viceroy
+			}
 		}
 	
 		#Remove Regency

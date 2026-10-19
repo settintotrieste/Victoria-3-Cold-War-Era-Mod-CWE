@@ -18,9 +18,12 @@ je_constitutional_monarchy = {
 		NOT = { has_variable = block_constitutional_monarchy_generation }
 		
 		#Not has regency
-		NOR = {
-			has_journal_entry = je_regency_system
-			any_scope_character = { has_role = character_role_regent }
+		trigger_if = {
+			limit = { shares_same_monarch = no }
+			NOR = {
+				has_journal_entry = je_regency_system
+				any_scope_character = { has_role = character_role_regent }
+			}
 		}
 		
 	}
@@ -30,13 +33,14 @@ je_constitutional_monarchy = {
 		trigger_if = {
 			limit = { 
 				overlord ?= { has_law_or_variant = law_type:law_HOS_monarch }
+				top_overlord ?= { has_law_or_variant = law_type:law_HOS_monarch }
 				OR = { 
 					is_a_colonial_government = yes
 					shares_same_monarch = yes
 				}
 				is_subject = yes
 			}
-			overlord ?= {
+			top_overlord ?= {
 				any_scope_character = {
 					OR = {
 						has_role = character_role_monarch
@@ -50,6 +54,23 @@ je_constitutional_monarchy = {
 
 	immediate = {
 		
+		#Clean up accidental regents
+		if = {
+			limit = {
+				any_scope_character = { has_role = character_role_regent }
+				OR = {
+					any_scope_character = { has_role = character_role_monarch is_eligible_to_become_monarch = yes }
+					shares_same_monarch = yes
+					ruler_is_governor_general = yes
+				}
+			}
+			every_scope_character = {
+				limit = { has_role = character_role_regent }
+				clean_up_regent_character = yes
+			}
+		}
+		
+		#Select monarch
 		if = {
 			limit = { 
 				OR = { 
@@ -336,10 +357,40 @@ je_constitutional_monarchy = {
 			NAND = {
 				has_law_or_variant = law_type:law_HOS_monarch
 				is_a_constitutional_monarchy = yes
+				
+				ruler_is_governor_general = no
+				
+				NOT = { has_variable = block_constitutional_monarchy_generation }
+				
+				#Not has regency
+				trigger_if = {
+					limit = { shares_same_monarch = no }
+					NOR = {
+						has_journal_entry = je_regency_system
+						any_scope_character = { has_role = character_role_regent }
+					}
+				}
+				
+				trigger_if = {
+					limit = {
+						overlord ?= { has_law_or_variant = law_type:law_HOS_monarch }
+						top_overlord ?= { has_law_or_variant = law_type:law_HOS_monarch }
+						OR = { 
+							is_a_colonial_government = yes
+							shares_same_monarch = yes
+						}
+						is_subject = yes
+					}
+					top_overlord ?= {
+						any_scope_character = {
+							OR = {
+								has_role = character_role_monarch
+								has_role = character_role_regent
+							}
+						}
+					}
+				}
 			}
-			
-			#Ruler is a governor general
-			ruler_is_governor_general = yes
 			
 			#Monarch no longer exists
 			NOT = { exists = scope:constitutional_monarch_scope }
@@ -368,11 +419,7 @@ je_constitutional_monarchy = {
 				owner ?= ROOT
 				has_role = character_role_monarch
 				OR = {
-					is_adult = no
-					AND = {
-						is_female = yes
-						owner ?= { has_variable = primogeniture_system }
-					}
+					is_eligible_to_become_monarch = no
 					AND = {
 						has_role = character_role_regent
 						has_role = character_role_monarch
