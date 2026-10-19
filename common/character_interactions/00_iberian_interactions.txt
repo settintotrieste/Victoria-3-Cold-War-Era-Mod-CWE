@@ -7,8 +7,8 @@
 
 	possible = {
        
-	   #No Monarchs
-	   custom_tooltip = {
+		#No Monarchs
+		custom_tooltip = {
             text = no_heir_tt
 			OR = {
 				NOT = { exists = owner.heir }
@@ -101,6 +101,82 @@
 	}
 
 	cooldown = { days = long_modifier_time }
+	show_confirmation_box = yes
+
+	ai_chance = {
+		value = 1
+	}
+	
+}
+
+restore_abdicated_monarch = {
+    icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_royalist.dds"
+	potential = {
+		has_variable = prince_renounced_throne
+		OR = {
+			has_role = character_role_monarch
+			has_role = character_role_prince
+		}
+		NOT = { has_role = character_role_regent }
+		owner ?= { has_law_or_variant = law_type:law_HOS_monarch }
+	}
+
+	possible = {
+		
+		#Parliament support
+		owner ?= {
+			custom_tooltip = {
+				text = government_has_legislative_super_majority.tt
+				government_has_legislative_super_majority = yes
+			}
+		}
+		
+		#No other monarch
+		trigger_if = {
+			limit = { has_role = character_role_prince }
+			owner ?= {
+				custom_tooltip = {
+					text = there_is_no_monarch.tt
+					NOT = { any_scope_character = { has_role = character_role_monarch } }
+				}
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Become monarch
+		set_character_as_monarch = yes
+		
+		#Set popularity
+        owner ?= {
+            if = { # Sorts an edge case
+                limit = {
+                    NAND = {
+                        root.popularity < 27
+                        root.popularity > 23
+                    }
+                }
+                custom_tooltip = effects_depend_on_popularity_tt
+                add_modifier = {
+                    name = modifier_new_royal_dynasty
+                    days = long_modifier_time
+                    is_decaying = yes
+                    multiplier = {
+                        value = root.popularity
+                        subtract = 25
+                        divide = 2
+                        min = -25
+                        max = 25
+                    }
+                }
+            }
+            remove_regency_modifier = yes
+        }
+		
+	}
+	
 	show_confirmation_box = yes
 
 	ai_chance = {
