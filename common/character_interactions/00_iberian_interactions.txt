@@ -142,42 +142,152 @@ restore_abdicated_monarch = {
 			}
 		}
 		
+		#Not recently suspended monarch
+		trigger_if = {
+			limit = { has_role = character_role_monarch }
+			custom_tooltip = {
+				text = suspended_monarch_timer.tt
+				NOT = { has_variable = suspended_monarch_timer }
+			}
+		}
+		
 	}
 
 	effect = {
 		
 		#Become monarch
-		set_character_as_monarch = yes
+		if = {
+			limit = { NOT = { has_role = character_role_monarch } }
+			set_character_as_monarch = yes
+		}
 		
 		#Set popularity
-        owner ?= {
-            if = { # Sorts an edge case
-                limit = {
-                    NAND = {
-                        root.popularity < 27
-                        root.popularity > 23
-                    }
-                }
-                custom_tooltip = effects_depend_on_popularity_tt
-                add_modifier = {
-                    name = modifier_new_royal_dynasty
-                    days = long_modifier_time
-                    is_decaying = yes
-                    multiplier = {
-                        value = root.popularity
-                        subtract = 25
-                        divide = 2
-                        min = -25
-                        max = 25
-                    }
-                }
-            }
-            remove_regency_modifier = yes
-        }
+		if = {
+			limit = { NOT = { has_role = character_role_monarch } }
+			owner ?= {
+				if = { # Sorts an edge case
+					limit = {
+						NAND = {
+							root.popularity < 27
+							root.popularity > 23
+						}
+					}
+					custom_tooltip = effects_depend_on_popularity_tt
+					add_modifier = {
+						name = modifier_new_royal_dynasty
+						days = long_modifier_time
+						is_decaying = yes
+						multiplier = {
+							value = root.popularity
+							subtract = 25
+							divide = 2
+							min = -25
+							max = 25
+						}
+					}
+				}
+				remove_regency_modifier = yes
+			}
+		}
+		else = {
+			owner ?= {
+				every_interest_group = {
+					limit = {
+						law_stance = {
+							law = law_type:law_HOS_monarch
+							value < neutral
+						}
+					}
+					save_scope_as = THIS_IG
+					owner ?= { 
+						add_radicals = {
+							value = large_radicals
+							interest_group = scope:THIS_IG
+						}
+					}
+				}
+			}
+		}
+		
+		#Restore to throne
+		remove_variable = prince_renounced_throne
 		
 	}
 	
 	show_confirmation_box = yes
+	
+	should_ai_evaluate = {
+		always = no
+	}
+
+	ai_chance = {
+		value = 1
+	}
+	
+}
+
+suspend_monarch = {
+    #icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_royalist.dds"
+	potential = {
+		has_role = character_role_monarch
+		NOT = { has_variable = prince_renounced_throne }
+		owner ?= { has_law_or_variant = law_type:law_HOS_monarch }
+	}
+
+	possible = {
+		
+		#Has debilitating illness
+		OR = {
+			has_trait = psychological_affliction
+			has_trait = senile
+			has_trait = cancer
+			age >= 90
+		}
+		
+		#Parliament support
+		owner ?= {
+			custom_tooltip = {
+				text = government_has_legislative_super_majority.tt
+				government_has_legislative_super_majority = yes
+			}
+		}
+		
+		#Not recently suspended monarch
+		trigger_if = {
+			limit = { has_role = character_role_monarch }
+			custom_tooltip = {
+				text = suspended_monarch_timer.tt
+				NOT = { has_variable = suspended_monarch_timer }
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Anger Monarch's interest group
+		interest_group ?= { save_scope_as = THIS_IG }
+		owner ?= { 
+			add_radicals = {
+				value = large_radicals
+				interest_group = scope:THIS_IG
+			}
+		}
+		
+		#Mark
+		set_variable = prince_renounced_throne
+		owner ?= { trigger_event = { id = regency.1 } }
+		
+		#Timer
+		set_variable = { name = suspended_monarch_timer years = 1 }
+		
+	}
+	
+	show_confirmation_box = yes
+	
+	should_ai_evaluate = {
+		always = no
+	}
 
 	ai_chance = {
 		value = 1
