@@ -2,6 +2,9 @@ je_governor = {
 	icon = "gfx/interface/icons/lens_toolbar_icons/puppet.dds"
 
 	group = je_group_political_organs
+	
+	scripted_button = je_governor_make_elected_button
+	scripted_button = je_governor_make_appointed_button
 
 	is_shown_when_inactive = {
 		
@@ -28,6 +31,78 @@ je_governor = {
 		random_scope_character = {
 			limit = { has_role = character_role_governor }
 			save_scope_as = governor_scope
+		}
+		
+		#Notification
+		scope:governor_scope ?= {
+			save_scope_as = newly_elected_president
+			post_notification = newly_elected_president
+		}
+		
+		#Set term duration
+		set_variable = { 
+			name = character_role_governor_term 
+			value = 0
+		}
+		
+	}
+	
+	current_value = {
+		value =	root.var:character_role_governor_term
+	}
+
+	goal_add_value = {
+		add = 5
+	}
+
+	on_yearly_pulse = {
+		
+		#Add term ticker
+		effect = {
+			
+			#Unelected Head of State has an unlimited term
+			if = {
+				limit = {
+					has_variable = elected_governor_system
+				}
+				change_variable = {
+					name = character_role_governor_term
+					add = 1
+				}
+			}
+			
+		}
+		
+	}
+	
+	complete = {
+	
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+		NOR = { 
+			has_modifier = state_of_emergency_issued 
+			active_law:lawgroup_distribution_of_power ?= { has_amendment = amendment_type:amendment_wartime_suspended_elections } 
+			has_modifier = wartime_measures_martial_law 
+		}
+		
+		#Only step down during election campaign
+		trigger_if = {
+			limit = { 
+				country_has_voting_franchise = yes 
+			}
+			in_election_campaign = yes
+		}
+		
+	}
+	
+	on_complete = {
+	
+		scope:governor_scope ?= {
+			if = {
+				limit = { has_role = character_role_governor }
+				remove_character_role = character_role_governor
+			}
 		}
 		
 	}
@@ -59,7 +134,38 @@ je_governor = {
 		scope:governor_scope ?= {
 			remove_character_role = character_role_governor
 		}
+		if = {
+			limit = { has_a_republican_governor_HOG = no }
+			every_scope_character = {
+				limit = { has_role = character_role_governor }
+				remove_character_role = character_role_governor
+			}
+		}
 		
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = governor_general_elected
+				trigger = {
+					has_variable = elected_governor_system
+					scope:governor_scope ?= { has_role = character_role_governor }
+				}
+			}
+			triggered_desc = {
+				desc = governor_general_unelected
+				trigger = {
+					scope:governor_scope ?= { has_role = character_role_governor }
+				}
+			}
+			triggered_desc = {
+				desc = governor_vacant
+				trigger = {
+					
+				}
+			}
+		}
 	}
 
 	weight = 50
