@@ -4158,3 +4158,225 @@ reserve_powers_system.22 = {
 	}
 	
 }
+
+#Governor's Veto
+reserve_powers_system.23 = {
+	type = country_event
+
+	title = reserve_powers_governor_veto.t
+	desc = reserve_powers_governor_veto.d
+	flavor = reserve_powers_governor_veto.f
+
+	event_image = {
+		texture = "asia_politician_parliament_motion"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/unspecific/leader_speaking_to_a_group_of_people"
+
+	duration = 1
+
+	trigger = {
+		
+		enacting_any_law = yes
+		
+		NOT = { has_variable = governor_veto_overruled }
+		
+		is_a_policy_type_law = no NOT = { has_journal_entry = je_law_imposition } NOT = { has_modifier = law_enactment_paused_modifier }
+		
+		#After Ruler's Assent
+		enactment_phase = 2
+		OR = {
+			has_variable = national_parliament_veto_overruled
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = yes }
+				government_has_legislative_super_majority = yes
+			}
+			trigger_if = {
+				limit = { is_enacting_a_constitutional_law = no }
+				government_has_legislative_simple_majority = yes
+			}
+		}
+		OR = {
+			has_variable = national_ruler_veto_overruled
+			NOT = { 
+				ruler ?= {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
+			}
+		}
+		NOR = { 
+			#has_variable = national_parliament_veto_overruled
+			#has_variable = national_ruler_veto_overruled
+			#has_variable = governor_veto_overruled
+			has_variable = constitutional_monarch_veto_overruled
+			has_variable = judiciary_veto_overruled
+			has_variable = constitutional_veto_overruled
+			has_variable = overlord_veto_overruled 
+		}
+		
+		#Governor opposes Law Enactment
+		has_journal_entry = je_governor
+		any_scope_character = {
+			has_role = character_role_governor
+			OR = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+				interest_group = {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
+			}
+		}
+		
+	}
+
+	immediate = {
+		
+		random_scope_character = {
+			limit = { 
+				has_role = character_role_governor
+			}
+			save_scope_as = governor
+			interest_group ?= { save_scope_as = governor_ig }
+		}
+		
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		
+		if = { limit = { has_modifier = law_enactment_paused_modifier } remove_modifier = law_enactment_paused_modifier } add_modifier = { name = law_enactment_paused_modifier months = 1 }
+		
+	}
+	
+	cancellation_trigger = {
+		OR = {
+			NOT = { 
+				any_scope_character = {
+					has_role = character_role_governor
+					OR = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < neutral
+						}
+						interest_group = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+						}
+					}
+				}
+			}
+			enacting_any_law = no
+		}
+	}
+
+	option = {
+		name = reserve_powers_governor_accept_option #Accept the presidential veto
+		default_option = yes
+		
+		if = {
+			limit = { enacting_any_law = yes }
+			cancel_enactment = yes
+		}
+		
+		if = { limit = { has_modifier = law_enactment_paused_modifier } remove_modifier = law_enactment_paused_modifier }
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					ruler ?= {
+						OR = {
+							has_ideology_autocratic = yes
+							has_ideology_power_hungry = yes
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+	option = {
+		name = reserve_powers_governor_reject_option #Reject the presidential veto
+		trigger = {
+			OR = {
+				AND = { 
+					has_journal_entry = je_upper_house
+					has_variable = upper_house_has_super_majority
+					government_legitimacy > 50
+				}
+				AND = { 
+					NOT = { has_journal_entry = je_upper_house }
+					government_legitimacy > 50
+				}
+			}
+		}
+		
+		set_variable = governor_veto_overruled
+		
+		if = {
+			limit = { 
+				enacting_any_law = yes
+				enactment_setback_count < 2 
+			}
+			add_enactment_setback = 1
+		}
+		else_if = {
+			limit = {
+				enacting_any_law = yes
+			}
+			hidden_effect = {
+				remove_modifier = HOS_governor_opposes_law
+			}
+			add_enactment_modifier = {
+				name = HOS_governor_opposes_law
+			}
+		}
+		
+		#Opposition IGs are angry
+		every_interest_group = {
+			limit = { 
+				OR = { 
+					is_in_government = no
+					is_interest_group_type = scope:governor_ig
+				}
+			}
+			hidden_effect = {
+				remove_modifier = ig_angry_with_government
+			}
+			add_modifier = { name = ig_angry_with_government years = 2 is_decaying = yes }
+		}
+		
+		if = { limit = { has_modifier = law_enactment_paused_modifier } remove_modifier = law_enactment_paused_modifier }
+		
+		ai_chance = {
+			base = 50
+			modifier = { 
+				trigger = {
+					ruler ?= {
+						OR = {
+							has_ideology_democratic = yes
+							has_ideology_liberal = yes
+						}
+					}
+				}
+				add = -100 
+			}
+		}
+		
+	}
+	
+}
