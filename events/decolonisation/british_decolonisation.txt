@@ -1225,7 +1225,7 @@ british_decolonisation.8 = {
 # Botswana
 british_decolonisation.9 = {
     type = country_event
-	placement = scope:colonial_state
+	placement = c:BOT
 
     title = british_botswana.sgc.t 			# Title of the event; ADD LOCALISATION
     desc = british_botswana.sgc.d 			# Description of the event; ADD LOCALISATION
@@ -1250,13 +1250,10 @@ british_decolonisation.9 = {
 		is_at_war = no											# war = no
 		
 		#Colony conditions
-		NOT = { 												# Colony to be released must not already exist on the map
-			exists = c:BOT										# Change TAG of the colony ****
-		}
-		any_scope_state = { 									# Overlord owns the states of the colony to be released
-			state_region = { is_homeland = cu:botswanan }			# Change homeland identity to match colony to be released ****
-			#is_incorporated = no								# State is a colony
-			#owner = THIS										# Overlord must own the state to be released
+		exists = c:BOT
+		c:BOT ?= { 												# Change TAG of the colony ****
+			is_direct_subject_of = ROOT
+			is_not_sufficiently_independent = yes
 		}
 		
 		# Event has not been fired before
@@ -1267,14 +1264,14 @@ british_decolonisation.9 = {
 	immediate = {
 	
 		# Generate list of provinces to be released				# DO NOT TOUCH THIS SECTION
-		every_scope_state = {
-			limit = {
-				state_region = { is_homeland = cu:botswanan }		# Change homeland identity to match colony to be released ****
-				#is_incorporated = no							# State is a colony
-				#contains_capital_of = c:BOT						# State is the capital of colony ****
+		c:BOT ?= {
+			capital ?= {
+				save_scope_as = colonial_state
 			}
-			save_scope_as = colonial_state
 		}
+	
+		# Fire only once
+		set_variable = british_botswana_sgc						# Change variable ****
 		
 	}
     
@@ -1282,62 +1279,31 @@ british_decolonisation.9 = {
         name = british_decolonisation.option.1				#Grant them self-government
         default_option = yes highlighted_option = yes
 		
-		#Release country
-		create_country = {
-			tag = BOT										# Change TAG of country being released ****
-			origin = THIS									# TAG where the created country takes tech from
-			state = scope:colonial_state
-			
-			on_created = {									# Set government laws & rulers here
-				
-				# SET laws for colony ****
-				effect_starting_politics_constitutional_monarchy = yes
-				effect_starting_politics_democratic = yes
-				effect_starting_politics_constitutional_unitary_state = yes
-				effect_starting_politics_war_policy_anti_military = yes
-				effect_starting_politics_economic_policy_interventionism = yes
-				effect_starting_politics_trade_policy_protectionism = yes
-				effect_starting_politics_anti_nuclear_policy = yes
-				
-				# CREATE leader for colony ****
-				create_character = {
-					#first_name = "guy_incognito_first_name"		# CHANGE
-					#last_name = "guy_incognito_last_name"		# CHANGE
-					ruler = yes
-					#birth_date = 1910.1.1						# CHANGE
-					interest_group = ig_rural_folk					# CHANGE
-					ideology = ideology_democratic				# CHANGE
-					traits = {
-						charismatic								# CHANGE
-						persistent								# CHANGE
-						meticulous								# CHANGE
-					}
+		#Set government type
+		c:BOT ?= {
+			effect_starting_politics_constitutional_monarchy = yes
+			effect_starting_politics_democratic = yes
+			create_character = {
+				first_name = "seretse_khama_first_name"
+				last_name = "seretse_khama_last_name"
+				ruler = yes ig_leader = yes historical = yes
+				birth_date = 1921.7.1
+				interest_group = ig_rural_folk
+				ideology = ideology_democratic
+				culture = cu:botswanan
+				religion = rel:protestant
+				traits = {
+					charismatic
+					tactful
+					ambitious
 				}
-				
-				# Set diplomatic recognition
-				set_country_type = unrecognized
+				on_created = { 
+					set_character_as_head_of_government = yes
+					set_character_as_royal = yes
+					set_variable = seretse_khama
+				}
 			}
 		}
-		every_scope_state = {
-			limit = {
-		 		state_region = { is_homeland = cu:botswanan }		# Change homeland identity to match colony to be released ****
-				#is_incorporated = no							# State is a colony
-		 	}
-			set_state_owner = c:BOT								# Change TAG to colony ****
-		}
-		
-		# Overlord create self governing colony pact with colony
-		if = {
-			limit = { exists = c:BOT }
-			create_diplomatic_pact = {
-				country = c:BOT										# Change TAG ****
-				type = semi_autonomous_colony
-			}
-			create_decolonisation_pacts = yes
-		}
-		
-		# Fire only once
-		set_variable = british_botswana_sgc						# Change variable ****
 		
 		ai_chance = { 
 			base = 90 
@@ -1349,19 +1315,13 @@ british_decolonisation.9 = {
         name = british_decolonisation.option.2					# REFUSE
 		
 		# Natives are angry!
-		every_scope_state = {
-			limit = {
-		 		state_region = { is_homeland = cu:botswanan }		# Change homeland identity to match colony to be released ****
-		 	}
-			add_radicals_in_state = {
+		c:BOT ?= {
+			add_radicals = {
 				culture = cu:botswanan							# Change culture ****
 				value = large_radicals
 			}
-			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes } 
+			add_modifier = { name = nationalist_agitation months = 60 is_decaying = yes }
 		}
-		
-		# Fire only once
-		set_variable = british_botswana_sgc						# Change variable ****
 		
 		ai_chance = { 
 			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
