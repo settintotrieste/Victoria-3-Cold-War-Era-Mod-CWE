@@ -74,152 +74,158 @@ je_organised_crime_system = {
 		
 	}
 	
-	complete = {
-		
-		trigger_if = {
-			limit = {
-				OR = {
-					has_law_or_variant = law_type:law_lenient_policing
-					has_law_or_variant = law_type:law_very_low_anti_corruption
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_organised_crime_system_completed_desc
+		color = "gold_positive"
+		trigger = {
+			trigger_if = {
+				limit = {
+					OR = {
+						has_law_or_variant = law_type:law_lenient_policing
+						has_law_or_variant = law_type:law_very_low_anti_corruption
+					}
+				}
+				institution_investment_level = {
+					institution = institution_police
+					value >= 5
 				}
 			}
-			institution_investment_level = {
-				institution = institution_police
-				value >= 5
-			}
-		}
-		trigger_else_if = {
-			limit = {
-				OR = {
-					has_law_or_variant = law_type:law_balanced_policing
-					has_law_or_variant = law_type:law_low_anti_corruption
+			trigger_else_if = {
+				limit = {
+					OR = {
+						has_law_or_variant = law_type:law_balanced_policing
+						has_law_or_variant = law_type:law_low_anti_corruption
+					}
+				}
+				institution_investment_level = {
+					institution = institution_police
+					value >= 4
 				}
 			}
-			institution_investment_level = {
-				institution = institution_police
-				value >= 4
-			}
-		}
-		trigger_else_if = {
-			limit = {
-				OR = {
-					has_law_or_variant = law_type:law_strict_policing
-					has_law_or_variant = law_type:law_medium_anti_corruption
+			trigger_else_if = {
+				limit = {
+					OR = {
+						has_law_or_variant = law_type:law_strict_policing
+						has_law_or_variant = law_type:law_medium_anti_corruption
+					}
+				}
+				institution_investment_level = {
+					institution = institution_police
+					value >= 3
 				}
 			}
-			institution_investment_level = {
-				institution = institution_police
-				value >= 3
+			trigger_else_if = {
+				limit = {
+					OR = {
+						has_law_or_variant = law_type:law_draconian_policing
+						has_law_or_variant = law_type:law_high_anti_corruption
+					}
+				}
+				institution_investment_level = {
+					institution = institution_police
+					value >= 2
+				}
 			}
-		}
-		trigger_else_if = {
-			limit = {
-				OR = {
+			trigger_else_if = {
+				limit = {
 					has_law_or_variant = law_type:law_draconian_policing
-					has_law_or_variant = law_type:law_high_anti_corruption
+					has_law_or_variant = law_type:law_very_high_anti_corruption
+				}
+				institution_investment_level = {
+					institution = institution_police
+					value >= 1
 				}
 			}
-			institution_investment_level = {
-				institution = institution_police
-				value >= 2
+			trigger_else = {
+				always = yes
 			}
 		}
-		trigger_else_if = {
-			limit = {
-				has_law_or_variant = law_type:law_draconian_policing
-				has_law_or_variant = law_type:law_very_high_anti_corruption
+		effect = {
+			#Remove illegal buildings
+			if = {
+				limit = {
+					OR = {
+						has_law_or_variant = law_type:law_no_minority_issues
+						has_law_or_variant = law_type:law_some_minority_issues
+					}
+				}
+				custom_tooltip = {
+					text = building_opium_plantation_destroy_tt
+					every_scope_state = {
+						if = {
+							limit = {
+								has_building = building_opium_plantation
+							}
+							remove_building = building_opium_plantation
+						}
+					}
+				}
 			}
-			institution_investment_level = {
-				institution = institution_police
-				value >= 1
+			if = {
+				limit = { has_law_or_variant = law_type:law_no_minority_issues }
+				custom_tooltip = {
+					text = building_vineyard_destroy_tt
+					every_scope_state = {
+						if = {
+							limit = {
+								has_building = building_vineyard
+							}
+							remove_building = building_vineyard
+						}
+					}
+				}
+				custom_tooltip = {
+					text = building_liquor_factory_destroy_tt
+					every_scope_state = {
+						if = {
+							limit = {
+								has_building = building_liquor_factory
+							}
+							remove_building = building_liquor_factory
+						}
+					}
+				}
+				custom_tooltip = {
+					text = building_tobacco_plantation_destroy_tt
+					every_scope_state = {
+						if = {
+							limit = {
+								has_building = building_tobacco_plantation
+							}
+							remove_building = building_tobacco_plantation
+						}
+					}
+				}
+			}
+			#Clear modifiers
+			if = {
+				limit = { has_modifier = organised_crime_effect_modifier }
+				remove_modifier = organised_crime_effect_modifier
 			}
 		}
-		trigger_else = {
-			always = yes
-		}
-		
 	}
-	
-	on_complete = {
-		
-		#Remove illegal buildings
-		if = {
-			limit = { 
-				OR = { 
-					has_law_or_variant = law_type:law_no_minority_issues
-					has_law_or_variant = law_type:law_some_minority_issues
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		conclusion_desc = je_organised_crime_system_failed_desc
+		color = "blue_negative"
+		trigger = {
+			always = no
+		}
+		effect = {
+			#Mark criminals
+			every_scope_character = {
+				limit = {
+					character_committed_crimes = yes
 				}
-			}
-			custom_tooltip = {
-				text = building_opium_plantation_destroy_tt
-				every_scope_state = {
-					if = {
-						limit = {
-							has_building = building_opium_plantation
-						}
-						remove_building = building_opium_plantation
-					}
+				save_scope_as = criminal_character_label
+				custom_tooltip = {
+					text = criminal_character_label.tt
 				}
 			}
 		}
-		if = {
-			limit = { has_law_or_variant = law_type:law_no_minority_issues }
-			custom_tooltip = {
-				text = building_vineyard_destroy_tt
-				every_scope_state = {
-					if = {
-						limit = {
-							has_building = building_vineyard
-						}
-						remove_building = building_vineyard
-					}
-				}
-			}
-			custom_tooltip = {
-				text = building_liquor_factory_destroy_tt
-				every_scope_state = {
-					if = {
-						limit = {
-							has_building = building_liquor_factory
-						}
-						remove_building = building_liquor_factory
-					}
-				}
-			}
-			custom_tooltip = {
-				text = building_tobacco_plantation_destroy_tt
-				every_scope_state = {
-					if = {
-						limit = {
-							has_building = building_tobacco_plantation
-						}
-						remove_building = building_tobacco_plantation
-					}
-				}
-			}
-		}
-		
-		#Clear modifiers
-		if = {
-			limit = { has_modifier = organised_crime_effect_modifier }
-			remove_modifier = organised_crime_effect_modifier
-		}
-		
-	}
-	
-	on_fail = {
-		
-		#Mark criminals
-		every_scope_character = {
-			limit = {
-				character_committed_crimes = yes
-			}
-			save_scope_as = criminal_character_label
-			custom_tooltip = {
-				text = criminal_character_label.tt
-			}
-		}
-	
 	}
 	
 	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country

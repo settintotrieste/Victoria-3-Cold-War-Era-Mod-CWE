@@ -33,114 +33,48 @@ je_law_enactment_system = {
 		
 	}
 
-	invalid = {
-		OR = { 
-			enacting_any_law = no
-			NOT = { currently_enacting_law ?= scope:current_law_scope }
+	outcome = {
+		conclusion_desc = je_law_enactment_system_invalid_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			OR = {
+				enacting_any_law = no
+				NOT = { currently_enacting_law ?= scope:current_law_scope }
+			}
+		}
+		effect = {
+			#Reset bipartisan pacts after each law enactment
+			remove_variable = has_bipartisan_plan
+			every_interest_group = {
+				remove_variable = bipartisan_participant
+			}
+			if = {
+				limit = { has_journal_entry = je_upper_house }
+				calculate_upper_house_composition = yes
+			}
+			if = {
+				limit = { has_journal_entry = je_lower_house }
+				calculate_lower_house_composition = yes
+			}
 		}
 	}
-	
-	on_invalid = {
-	
-		#Reset bipartisan pacts after each law enactment
-		remove_variable = has_bipartisan_plan
-		every_interest_group = {
-			remove_variable = bipartisan_participant
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		conclusion_desc = je_law_enactment_system_failed_desc
+		color = "blue_negative"
+		trigger = {
+			always = no
 		}
-		if = { 
-			limit = { has_journal_entry = je_upper_house }
-			calculate_upper_house_composition = yes
-		}
-		if = { 
-			limit = { has_journal_entry = je_lower_house }
-			calculate_lower_house_composition = yes
-		}
-		
-	}
-
-	on_fail = {
-		
-		if = {
-			limit = {
-				#Cabinet opposes
-				has_journal_entry = je_cabinet
-				any_scope_character = {
-					is_an_IG_leader = yes
-					is_ruler_of_own_country = no
-					has_role = character_role_cabinet_minister
-					OR = {
-						law_stance = {
-							law = owner.currently_enacting_law.type
-							value < neutral
-						}
-						interest_group = {
-							law_stance = {
-								law = owner.currently_enacting_law.type
-								value < neutral
-							}
-						}
-					}
-				}
-			}
-			random_scope_character = {
+		effect = {
+			if = {
 				limit = {
-					is_an_IG_leader = yes
-					is_ruler_of_own_country = no
-					has_role = character_role_cabinet_minister
-					OR = {
-						law_stance = {
-							law = owner.currently_enacting_law.type
-							value < neutral
-						}
-						interest_group = {
-							law_stance = {
-								law = owner.currently_enacting_law.type
-								value < neutral
-							}
-						}
-					}
-				}
-				save_scope_as = cabinet_minister
-			}
-			custom_tooltip = cabinet_minister_veto.tt
-		}
-		if = {
-			limit = {
-				#Reserved powers holder opposes
-				has_journal_entry = je_reserved_powers
-				any_scope_character = {
-					has_role = character_role_reserved_powers_holder
-					OR = {
-						law_stance = {
-							law = owner.currently_enacting_law.type
-							value < neutral
-						}
-						interest_group = {
-							law_stance = {
-								law = owner.currently_enacting_law.type
-								value < neutral
-							}
-						}
-					}
-				}
-			}
-			random_scope_character = {
-				limit = {
-					has_role = character_role_reserved_powers_holder
-				}
-				save_scope_as = reserved_powers_holder
-			}
-			custom_tooltip = reserved_powers_holder_veto.tt
-		}
-		if = {
-			limit = {
-				#Paramilitary group leader opposes
-				has_journal_entry = je_paramilitary_groups
-				OR = {
-				
-					#Paramilitary IG disapproves of the law being enacted
+					#Cabinet opposes
+					has_journal_entry = je_cabinet
 					any_scope_character = {
-						has_role = character_role_head_of_paramilitary
+						is_an_IG_leader = yes
+						is_ruler_of_own_country = no
+						has_role = character_role_cabinet_minister
 						OR = {
 							law_stance = {
 								law = owner.currently_enacting_law.type
@@ -154,147 +88,173 @@ je_law_enactment_system = {
 							}
 						}
 					}
-					
-					#Paramilitary IG disapproves of a law being enacted that would disable them
-					is_enacting_law = law_type:law_no_secret_police
-					
-					is_enacting_law = law_type:law_peasant_levies
-					is_enacting_law = law_type:law_national_militia
-					
-					is_enacting_law = law_type:law_semi_politicised_armed_forces
-					is_enacting_law = law_type:law_no_politicised_armed_forces
-					
-					#Paramilitary IG disapproves of decreasing corruption
-					AND = {
-						has_law_or_variant = law_type:law_very_low_anti_corruption
-						is_enacting_law = law_type:law_low_anti_corruption
-					}
-					AND = {
-						has_law_or_variant = law_type:law_low_anti_corruption
-						is_enacting_law = law_type:law_medium_anti_corruption
-					}
-					AND = {
-						has_law_or_variant = law_type:law_medium_anti_corruption
-						is_enacting_law = law_type:law_high_anti_corruption
-					}
-					AND = {
-						has_law_or_variant = law_type:law_high_anti_corruption
-						is_enacting_law = law_type:law_very_high_anti_corruption
-					}
-					
 				}
+				random_scope_character = {
+					limit = {
+						is_an_IG_leader = yes
+						is_ruler_of_own_country = no
+						has_role = character_role_cabinet_minister
+						OR = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+							interest_group = {
+								law_stance = {
+									law = owner.currently_enacting_law.type
+									value < neutral
+								}
+							}
+						}
+					}
+					save_scope_as = cabinet_minister
+				}
+				custom_tooltip = cabinet_minister_veto.tt
 			}
-			random_scope_character = {
+			if = {
 				limit = {
-					has_role = character_role_head_of_paramilitary
-				}
-				save_scope_as = head_of_paramilitary
-			}
-			custom_tooltip = head_of_paramilitary_veto.tt
-		}
-		if = {
-			limit = {
-				#PM opposes
-				has_journal_entry = je_cohabitation_system
-				any_scope_character = {
-					has_role = character_role_head_of_government
-					law_stance = {
-						law = owner.currently_enacting_law.type
-						value < neutral
+					#Reserved powers holder opposes
+					has_journal_entry = je_reserved_powers
+					any_scope_character = {
+						has_role = character_role_reserved_powers_holder
+						OR = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+							interest_group = {
+								law_stance = {
+									law = owner.currently_enacting_law.type
+									value < neutral
+								}
+							}
+						}
 					}
-					interest_group = {
+				}
+				random_scope_character = {
+					limit = {
+						has_role = character_role_reserved_powers_holder
+					}
+					save_scope_as = reserved_powers_holder
+				}
+				custom_tooltip = reserved_powers_holder_veto.tt
+			}
+			if = {
+				limit = {
+					#Paramilitary group leader opposes
+					has_journal_entry = je_paramilitary_groups
+					OR = {
+						#Paramilitary IG disapproves of the law being enacted
+						any_scope_character = {
+							has_role = character_role_head_of_paramilitary
+							OR = {
+								law_stance = {
+									law = owner.currently_enacting_law.type
+									value < neutral
+								}
+								interest_group = {
+									law_stance = {
+										law = owner.currently_enacting_law.type
+										value < neutral
+									}
+								}
+							}
+						}
+						#Paramilitary IG disapproves of a law being enacted that would disable them
+						is_enacting_law = law_type:law_no_secret_police
+						is_enacting_law = law_type:law_peasant_levies
+						is_enacting_law = law_type:law_national_militia
+						is_enacting_law = law_type:law_semi_politicised_armed_forces
+						is_enacting_law = law_type:law_no_politicised_armed_forces
+						#Paramilitary IG disapproves of decreasing corruption
+						AND = {
+							has_law_or_variant = law_type:law_very_low_anti_corruption
+							is_enacting_law = law_type:law_low_anti_corruption
+						}
+						AND = {
+							has_law_or_variant = law_type:law_low_anti_corruption
+							is_enacting_law = law_type:law_medium_anti_corruption
+						}
+						AND = {
+							has_law_or_variant = law_type:law_medium_anti_corruption
+							is_enacting_law = law_type:law_high_anti_corruption
+						}
+						AND = {
+							has_law_or_variant = law_type:law_high_anti_corruption
+							is_enacting_law = law_type:law_very_high_anti_corruption
+						}
+					}
+				}
+				random_scope_character = {
+					limit = {
+						has_role = character_role_head_of_paramilitary
+					}
+					save_scope_as = head_of_paramilitary
+				}
+				custom_tooltip = head_of_paramilitary_veto.tt
+			}
+			if = {
+				limit = {
+					#PM opposes
+					has_journal_entry = je_cohabitation_system
+					any_scope_character = {
+						has_role = character_role_head_of_government
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value < neutral
+						}
+						interest_group = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+						}
+					}
+				}
+				random_scope_character = {
+					limit = {
+						has_role = character_role_head_of_government
+					}
+					save_scope_as = prime_minister
+				}
+				custom_tooltip = prime_minister_veto.tt
+			}
+			if = {
+				limit = {
+					trigger_if = {
+						limit = { is_enacting_a_constitutional_law = yes }
+						government_has_legislative_super_majority = no
+					}
+					trigger_if = {
+						limit = { is_enacting_a_constitutional_law = no }
+						government_has_legislative_simple_majority = no
+					}
+				}
+				custom_tooltip = parliament_veto.tt
+			}
+			if = {
+				limit = {
+					#Ruler opposes
+					ruler ?= {
 						law_stance = {
 							law = owner.currently_enacting_law.type
 							value < neutral
 						}
 					}
 				}
-			}
-			random_scope_character = {
-				limit = {
-					has_role = character_role_head_of_government
-				}
-				save_scope_as = prime_minister
-			}
-			custom_tooltip = prime_minister_veto.tt
-		}
-		if = {
-			limit = {
-				trigger_if = {
-					limit = { is_enacting_a_constitutional_law = yes }
-					government_has_legislative_super_majority = no
-				}
-				trigger_if = {
-					limit = { is_enacting_a_constitutional_law = no }
-					government_has_legislative_simple_majority = no
-				}
-			}
-			custom_tooltip = parliament_veto.tt
-		}
-		if = {
-			limit = {
-				#Ruler opposes
 				ruler ?= {
-					law_stance = {
-						law = owner.currently_enacting_law.type
-						value < neutral
-					}
+					save_scope_as = ruler
 				}
+				custom_tooltip = ruler_veto.tt
 			}
-			ruler ?= {
-				save_scope_as = ruler
-			}
-			custom_tooltip = ruler_veto.tt
-		}
-		if = {
-			limit = {
-				#Overlord opposes enactment
-				is_subject = yes
-				trigger_if = {
-					limit = { is_sufficiently_independent = no }
-					overlord ?= {
-						ruler ?= {
-							OR = {
-								law_stance = {
-									law = ROOT.currently_enacting_law.type
-									value < neutral
-								}
-								interest_group = {
-									law_stance = {
-										law = ROOT.currently_enacting_law.type
-										value < neutral
-									}
-								}
-							}
-						}
-					}
-				}
-				trigger_else_if = {
-					limit = { is_sufficiently_independent = yes }
-					OR = {
-						AND = {
-							has_journal_entry = je_foreign_head_of_state_system
-							overlord ?= {
-								ruler ?= {
-									OR = {
-										law_stance = {
-											law = ROOT.currently_enacting_law.type
-											value < neutral
-										}
-										interest_group = {
-											law_stance = {
-												law = ROOT.currently_enacting_law.type
-												value < neutral
-											}
-										}
-									}
-								}
-							}
-						}
-						AND = {
-							has_journal_entry = je_resident_general
-							any_scope_character = {
-								has_role = character_role_resident_general
+			if = {
+				limit = {
+					#Overlord opposes enactment
+					is_subject = yes
+					trigger_if = {
+						limit = { is_sufficiently_independent = no }
+						overlord ?= {
+							ruler ?= {
 								OR = {
 									law_stance = {
 										law = ROOT.currently_enacting_law.type
@@ -310,50 +270,74 @@ je_law_enactment_system = {
 							}
 						}
 					}
-				}
-			}
-			overlord ?= {
-				save_scope_as = overlord
-			}
-			custom_tooltip = overlord_veto.tt
-		}
-		if = {
-			limit = {
-				#Judiciary opposes
-				has_journal_entry = ﻿je_judiciary
-				enacting_law_is_unconstitutional = yes
-			}
-			custom_tooltip = judiciary_veto.tt
-		}
-		if = {
-			limit = {
-				#Constitutional Monarch opposes
-				has_journal_entry = je_constitutional_monarchy
-				NOT = { 
-					active_law:lawgroup_governance_principles ?= {
-						has_amendment = amendment_type:amendment_symbolic_monarchy
-					}
-				}
-				OR = {
-					any_scope_character = {
-						has_role = character_role_monarch
+					trigger_else_if = {
+						limit = { is_sufficiently_independent = yes }
 						OR = {
-							law_stance = {
-								law = owner.currently_enacting_law.type
-								value < neutral
+							AND = {
+								has_journal_entry = je_foreign_head_of_state_system
+								overlord ?= {
+									ruler ?= {
+										OR = {
+											law_stance = {
+												law = ROOT.currently_enacting_law.type
+												value < neutral
+											}
+											interest_group = {
+												law_stance = {
+													law = ROOT.currently_enacting_law.type
+													value < neutral
+												}
+											}
+										}
+									}
+								}
 							}
-							interest_group = {
-								law_stance = {
-									law = owner.currently_enacting_law.type
-									value < neutral
+							AND = {
+								has_journal_entry = je_resident_general
+								any_scope_character = {
+									has_role = character_role_resident_general
+									OR = {
+										law_stance = {
+											law = ROOT.currently_enacting_law.type
+											value < neutral
+										}
+										interest_group = {
+											law_stance = {
+												law = ROOT.currently_enacting_law.type
+												value < neutral
+											}
+										}
+									}
 								}
 							}
 						}
 					}
-					AND = {
-						is_subject = yes
+				}
+				overlord ?= {
+					save_scope_as = overlord
+				}
+				custom_tooltip = overlord_veto.tt
+			}
+			if = {
+				limit = {
+					#Judiciary opposes
+					has_journal_entry = ﻿je_judiciary
+					enacting_law_is_unconstitutional = yes
+				}
+				custom_tooltip = judiciary_veto.tt
+			}
+			if = {
+				limit = {
+					#Constitutional Monarch opposes
+					has_journal_entry = je_constitutional_monarchy
+					NOT = {
+						active_law:lawgroup_governance_principles ?= {
+							has_amendment = amendment_type:amendment_symbolic_monarchy
+						}
+					}
+					OR = {
 						any_scope_character = {
-							has_role = character_role_viceroy
+							has_role = character_role_monarch
 							OR = {
 								law_stance = {
 									law = owner.currently_enacting_law.type
@@ -367,142 +351,159 @@ je_law_enactment_system = {
 								}
 							}
 						}
+						AND = {
+							is_subject = yes
+							any_scope_character = {
+								has_role = character_role_viceroy
+								OR = {
+									law_stance = {
+										law = owner.currently_enacting_law.type
+										value < neutral
+									}
+									interest_group = {
+										law_stance = {
+											law = owner.currently_enacting_law.type
+											value < neutral
+										}
+									}
+								}
+							}
+						}
 					}
 				}
-			}
-			if = {
-				limit = {
-					any_scope_character = {
-						has_role = character_role_monarch
-					}
-				}
-				random_scope_character = {
-					limit = { 
-						has_role = character_role_monarch
-					}
-					save_scope_as = constitutional_monarch
-				}
-			}
-			else_if = {
-				limit = {
-					is_subject = yes
-					any_scope_character = {
-						has_role = character_role_viceroy
-					}
-					top_overlord ?= {
+				if = {
+					limit = {
 						any_scope_character = {
 							has_role = character_role_monarch
 						}
 					}
-				}
-				top_overlord ?= {
 					random_scope_character = {
-						limit = { 
+						limit = {
 							has_role = character_role_monarch
 						}
 						save_scope_as = constitutional_monarch
 					}
 				}
-				random_scope_character = {
-					limit = { has_role = character_role_viceroy }
-					save_scope_as = constitutional_monarch
-				}
-			}
-			custom_tooltip = constitutional_monarch_veto.tt
-		}
-		if = {
-			limit = {
-				#Regent opposes
-				has_journal_entry = je_regency_system
-				NOT = { 
-					active_law:lawgroup_governance_principles ?= {
-						has_amendment = amendment_type:amendment_symbolic_monarchy
-					}
-				}
-				any_scope_character = {
-					has_role = character_role_regent
-					OR = {
-						law_stance = {
-							law = owner.currently_enacting_law.type
-							value < neutral
+				else_if = {
+					limit = {
+						is_subject = yes
+						any_scope_character = {
+							has_role = character_role_viceroy
 						}
-						interest_group = {
-							law_stance = {
-								law = owner.currently_enacting_law.type
-								value < neutral
+						top_overlord ?= {
+							any_scope_character = {
+								has_role = character_role_monarch
 							}
 						}
 					}
+					top_overlord ?= {
+						random_scope_character = {
+							limit = {
+								has_role = character_role_monarch
+							}
+							save_scope_as = constitutional_monarch
+						}
+					}
+					random_scope_character = {
+						limit = { has_role = character_role_viceroy }
+						save_scope_as = constitutional_monarch
+					}
 				}
+				custom_tooltip = constitutional_monarch_veto.tt
 			}
 			if = {
 				limit = {
+					#Regent opposes
+					has_journal_entry = je_regency_system
+					NOT = {
+						active_law:lawgroup_governance_principles ?= {
+							has_amendment = amendment_type:amendment_symbolic_monarchy
+						}
+					}
 					any_scope_character = {
 						has_role = character_role_regent
+						OR = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+							interest_group = {
+								law_stance = {
+									law = owner.currently_enacting_law.type
+									value < neutral
+								}
+							}
+						}
+					}
+				}
+				if = {
+					limit = {
+						any_scope_character = {
+							has_role = character_role_regent
+						}
+					}
+					random_scope_character = {
+						limit = {
+							has_role = character_role_regent
+						}
+						save_scope_as = regent
+					}
+				}
+				custom_tooltip = regent_veto.tt
+			}
+			if = {
+				limit = {
+					#Head of State opposes
+					has_journal_entry = je_head_of_state_system
+					any_scope_character = {
+						has_role = character_role_head_of_state
+						OR = {
+							law_stance = {
+								law = owner.currently_enacting_law.type
+								value < neutral
+							}
+							interest_group = {
+								law_stance = {
+									law = owner.currently_enacting_law.type
+									value < neutral
+								}
+							}
+						}
 					}
 				}
 				random_scope_character = {
-					limit = { 
-						has_role = character_role_regent
-					}
-					save_scope_as = regent
+					limit = { has_role = character_role_head_of_state }
+					save_scope_as = head_of_state
 				}
+				custom_tooltip = head_of_state_veto.tt
 			}
-			custom_tooltip = regent_veto.tt
-		}
-		if = {
-			limit = {
-				#Head of State opposes
-				has_journal_entry = je_head_of_state_system
-				any_scope_character = {
-					has_role = character_role_head_of_state
-					OR = {
-						law_stance = {
-							law = owner.currently_enacting_law.type
-							value < neutral
-						}
-						interest_group = {
+			if = {
+				limit = {
+					#Governor opposes
+					has_journal_entry = je_governor
+					any_scope_character = {
+						has_role = character_role_governor
+						OR = {
 							law_stance = {
 								law = owner.currently_enacting_law.type
 								value < neutral
 							}
-						}
-					}
-				}
-			}
-			random_scope_character = {
-				limit = { has_role = character_role_head_of_state }
-				save_scope_as = head_of_state
-			}
-			custom_tooltip = head_of_state_veto.tt
-		}
-		if = {
-			limit = {
-				#Governor opposes
-				has_journal_entry = je_governor
-				any_scope_character = {
-					has_role = character_role_governor
-					OR = {
-						law_stance = {
-							law = owner.currently_enacting_law.type
-							value < neutral
-						}
-						interest_group = {
-							law_stance = {
-								law = owner.currently_enacting_law.type
-								value < neutral
+							interest_group = {
+								law_stance = {
+									law = owner.currently_enacting_law.type
+									value < neutral
+								}
 							}
 						}
 					}
 				}
+				random_scope_character = {
+					limit = { has_role = character_role_governor }
+					save_scope_as = governor
+				}
+				custom_tooltip = governor_veto.tt
 			}
-			random_scope_character = {
-				limit = { has_role = character_role_governor }
-				save_scope_as = governor
-			}
-			custom_tooltip = governor_veto.tt
 		}
-		
 	}
 	
 	status_desc = {

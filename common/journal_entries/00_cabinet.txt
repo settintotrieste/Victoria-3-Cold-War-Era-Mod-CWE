@@ -242,117 +242,110 @@ je_cabinet = {
 		
 	}
 
-	invalid = {
-		
-		OR = {
-			scope:ruler_scope ?= { is_ruler_of_own_country = no }
-			NOT = { exists = scope:ruler_scope }
-			AND = {
-				has_law_or_variant = law_type:law_HOG_prime_minister
-				scope:ruler_scope ?= {
-					NOT = { has_role = character_role_head_of_government }
-					NOT = { has_trait = character_ineligible_as_office_holder }
+	outcome = {
+		conclusion_desc = je_cabinet_invalid_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			OR = {
+				scope:ruler_scope ?= { is_ruler_of_own_country = no }
+				NOT = { exists = scope:ruler_scope }
+				AND = {
+					has_law_or_variant = law_type:law_HOG_prime_minister
+					scope:ruler_scope ?= {
+						NOT = { has_role = character_role_head_of_government }
+						NOT = { has_trait = character_ineligible_as_office_holder }
+					}
+					trigger_if = {
+						limit = { has_law_or_variant = law_type:law_HOS_communist_leader }
+						NOR = {
+							has_law_or_variant = law_type:law_single_party_state
+							has_law_or_variant = law_type:law_parties_not_allowed
+						}
+					}
 				}
-				trigger_if = {
-					limit = { has_law_or_variant = law_type:law_HOS_communist_leader }
-					NOR = {
-						has_law_or_variant = law_type:law_single_party_state
-						has_law_or_variant = law_type:law_parties_not_allowed
+				AND = {
+					NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+					NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+					#shares_same_head_of_state_republic = no
+					scope:ruler_scope ?= {
+						NOT = { has_role = character_role_head_of_state }
+						NOT = { has_trait = character_ineligible_as_office_holder }
 					}
 				}
 			}
-			AND = {
-				NOT = { has_law_or_variant = law_type:law_HOS_monarch }
-				NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
-				#shares_same_head_of_state_republic = no
-				scope:ruler_scope ?= {
-					NOT = { has_role = character_role_head_of_state }
-					NOT = { has_trait = character_ineligible_as_office_holder }
+		}
+		effect = {
+			custom_tooltip = {
+				text = government_resigns.tt
+				#Clear all modifiers
+				every_interest_group = {
+					limit = { has_modifier = cabinet_minister_ig }
+					remove_modifier = cabinet_minister_ig
+				}
+				every_scope_character = {
+					limit = { has_role = character_role_cabinet_minister }
+					remove_character_role = character_role_cabinet_minister
+				}
+			}
+			#Clear variables
+			remove_variable = strong_cabinet_unity
+			remove_variable = medium_cabinet_unity
+			remove_variable = low_cabinet_unity
+			remove_variable = cabinet_unity_var
+			remove_variable = cabinet_unity_divisor_var
+			remove_variable = cabinet_incompetence_var
+			#Clear modifiers
+			if = {
+				limit = { has_modifier = cabinet_incompetence_modifier }
+				remove_modifier = cabinet_incompetence_modifier
+			}
+			#Reset Dynastic Republic
+			if = {
+				limit = {
+					is_a_dynastic_government = no
+				}
+				scope:ruler_scope ?= { remove_variable = dynastic_ruler_enabled }
+			}
+			#Bipartisanship
+			remove_variable = has_bipartisan_plan
+			every_interest_group = {
+				remove_variable = bipartisan_participant
+			}
+			#Clean up heads of government
+			if = {
+				limit = {
+					has_law_or_variant = law_type:law_HOG_none
+				}
+				every_scope_character = {
+					limit = { has_role = character_role_head_of_government }
+					remove_character_role = character_role_head_of_government
+				}
+			}
+			#Clean up vice presidents
+			if = {
+				limit = { exists = scope:vice_president_scope }
+				scope:vice_president_scope ?= {
+					if = {
+						limit = { is_heir_of_own_country = yes }
+						disinherit_character = yes
+					}
+					remove_variable = vice_president_character
+				}
+			}
+			else = {
+				every_scope_character = {
+					limit = {
+						is_heir_of_own_country = yes
+						has_variable = vice_president_character
+					}
+					disinherit_character = yes
+					remove_variable = vice_president_character
 				}
 			}
 		}
-		
 	}
 	
-	on_invalid = {
-		
-		custom_tooltip = {
-			text = government_resigns.tt
-		
-			#Clear all modifiers
-			every_interest_group = {
-				limit = { has_modifier = cabinet_minister_ig }
-				remove_modifier = cabinet_minister_ig
-			}
-			every_scope_character = {
-				limit = { has_role = character_role_cabinet_minister }
-				remove_character_role = character_role_cabinet_minister
-			}
-		
-		}
-		
-		#Clear variables
-		remove_variable = strong_cabinet_unity
-		remove_variable = medium_cabinet_unity
-		remove_variable = low_cabinet_unity
-		remove_variable = cabinet_unity_var
-		remove_variable = cabinet_unity_divisor_var
-		remove_variable = cabinet_incompetence_var
-		
-		#Clear modifiers
-		if = {
-			limit = { has_modifier = cabinet_incompetence_modifier }
-			remove_modifier = cabinet_incompetence_modifier
-		}
-		
-		#Reset Dynastic Republic
-		if = {
-			limit = { 
-				is_a_dynastic_government = no
-			}
-			scope:ruler_scope ?= { remove_variable = dynastic_ruler_enabled }
-		}
-		
-		#Bipartisanship
-		remove_variable = has_bipartisan_plan
-		every_interest_group = {
-			remove_variable = bipartisan_participant
-		}
-		
-		#Clean up heads of government
-		if = {
-			limit = {
-				has_law_or_variant = law_type:law_HOG_none
-			}
-			every_scope_character = {
-				limit = { has_role = character_role_head_of_government }
-				remove_character_role = character_role_head_of_government
-			}
-		}
-		
-		#Clean up vice presidents
-		if = {
-			limit = { exists = scope:vice_president_scope }
-			scope:vice_president_scope ?= {
-				if = {
-					limit = { is_heir_of_own_country = yes }
-					disinherit_character = yes
-				}
-				remove_variable = vice_president_character
-			}
-		}
-		else = {
-			every_scope_character = {
-				limit = { 
-					is_heir_of_own_country = yes
-					has_variable = vice_president_character
-				}
-				disinherit_character = yes
-				remove_variable = vice_president_character
-			}
-		}
-		
-	}
+
 	
 	on_monthly_pulse = {
 	
@@ -411,17 +404,24 @@ je_cabinet = {
 		
 	}
 	
-	on_fail = {
-	
-		#Mark Cabinet Officials
-		every_scope_character = {
-			limit = {
-				character_is_key_state_officeholder = yes
-			}
-			save_scope_as = cabinet_character
-			custom_tooltip = cabinet_character_label.tt
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		conclusion_desc = je_cabinet_failed_desc
+		color = "blue_negative"
+		trigger = {
+			always = no
 		}
-		
+		effect = {
+			#Mark Cabinet Officials
+			every_scope_character = {
+				limit = {
+					character_is_key_state_officeholder = yes
+				}
+				save_scope_as = cabinet_character
+				custom_tooltip = cabinet_character_label.tt
+			}
+		}
 	}
 
 	weight = 2

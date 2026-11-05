@@ -1,4 +1,4 @@
-﻿je_law_imposition = {
+je_law_imposition = {
     icon = "gfx/interface/icons/event_icons/event_scales.dds"
 
 	group = je_group_foreign_affairs
@@ -50,53 +50,61 @@
 		}
 	}
 
-    complete = {
-        has_law = scope:foreign_imposition_law.type
-    }
-
-    on_complete = {
-		change_relations = {
-			country = scope:foreign_imposition_country
-			value = 20
-		}
-		
-		every_political_lobby = {
-			limit = { pro_foreign_imposition_country = yes }
-			change_appeasement = { amount = 1 factor = appeasement_imposed_law_enacted }
-		}
-		every_political_lobby = {
-			limit = { anti_foreign_imposition_country = yes }
-			change_appeasement = { amount = -1 factor = appeasement_imposed_law_enacted }
-		}
-        add_modifier = {
-            name = successfully_met_foreign_imposition_legitimacy
-            days = normal_modifier_time
-            is_decaying = yes
+    outcome = {
+        header = je_standard_completion_header
+        effect_header = je_standard_on_completion_header
+        conclusion_desc = je_law_imposition_completed_desc
+        color = "gold_positive"
+        trigger = {
+            has_law = scope:foreign_imposition_law.type
+        }
+        effect = {
+            change_relations = {
+                country = scope:foreign_imposition_country
+                value = 20
+            }
+            every_political_lobby = {
+                limit = { pro_foreign_imposition_country = yes }
+                change_appeasement = { amount = 1 factor = appeasement_imposed_law_enacted }
+            }
+            every_political_lobby = {
+                limit = { anti_foreign_imposition_country = yes }
+                change_appeasement = { amount = -1 factor = appeasement_imposed_law_enacted }
+            }
+            add_modifier = {
+                name = successfully_met_foreign_imposition_legitimacy
+                days = normal_modifier_time
+                is_decaying = yes
+            }
         }
     }
-
-    invalid = {
-		OR = {
-			scope:journal_entry = {
-				has_variable = has_been_abandoned
-			}
-			scope:foreign_imposition_country ?= {
-				NOT = {
-					has_law_imposition_rights = {
-						target_country = root
-						law_type = scope:foreign_imposition_law.type
-					}
-				}
-			}
-		}
+    outcome = {
+        conclusion_desc = je_law_imposition_invalid_desc
+        flags = { hidden invalid_outcome }
+        trigger = {
+            OR = {
+                scope:journal_entry = {
+                    has_variable = has_been_abandoned
+                }
+                scope:foreign_imposition_country ?= {
+                    NOT = {
+                        has_law_imposition_rights = {
+                            target_country = root
+                            law_type = scope:foreign_imposition_law.type
+                        }
+                    }
+                }
+            }
+        }
+        effect = {
+            if = {
+                limit = { currently_enacting_law ?= scope:foreign_imposition_law }
+                cancel_enactment = yes
+            }
+        }
     }
 	
-	on_invalid = {
-		if = { 
-			limit = { currently_enacting_law ?= scope:foreign_imposition_law }
-			cancel_enactment = yes
-		}
-	}
+
 
     weight = 1000
 

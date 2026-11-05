@@ -1,4 +1,4 @@
-﻿je_elections_system = {
+je_elections_system = {
 	icon = "gfx/interface/icons/event_icons/event_election.dds"
 
 	group = je_group_internal_affairs
@@ -133,156 +133,155 @@
 		
 	}
 	
-	invalid = {
-		country_has_voting_franchise = no
+	outcome = {
+		conclusion_desc = je_elections_system_invalid_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			country_has_voting_franchise = no
+		}
 	}
-
-	complete = {
-		in_election_campaign = no
-		country_has_voting_franchise = yes
-	}
-	
-	on_complete = {
-		
-		#Method to select ruler if a regime
-		if = {
-			limit = { 
-				is_a_regime_type_government = yes
-				NOT = { has_variable = committed_electoral_fraud }
-			}
-			
-			#Enforce ruler IG restrictions for ideological republics
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_elections_system_completed_desc
+		color = "gold_positive"
+		trigger = {
+			in_election_campaign = no
+			country_has_voting_franchise = yes
+		}
+		effect = {
+			#Method to select ruler if a regime
 			if = {
 				limit = {
-					OR = {
-						is_a_communist_government = yes
-						is_a_theocratic_government = yes
-					}
+					is_a_regime_type_government = yes
+					NOT = { has_variable = committed_electoral_fraud }
 				}
+				#Enforce ruler IG restrictions for ideological republics
 				if = {
 					limit = {
-						is_a_communist_government = yes
-						ruler ?= {
-							interest_group ?= {
-								OR = {
-									is_interest_group_type = ig_industrialists
-									is_interest_group_type = ig_landowners
-									is_interest_group_type = ig_devout
+						OR = {
+							is_a_communist_government = yes
+							is_a_theocratic_government = yes
+						}
+					}
+					if = {
+						limit = {
+							is_a_communist_government = yes
+							ruler ?= {
+								interest_group ?= {
+									OR = {
+										is_interest_group_type = ig_industrialists
+										is_interest_group_type = ig_landowners
+										is_interest_group_type = ig_devout
+									}
 								}
 							}
 						}
-					}
-					custom_tooltip = {
-						text = enforce_ruler_restriction.tt
-						random_scope_character = {
-							limit = { 
-								is_ruler_of_own_country = no
-								is_an_IG_leader = yes
-								is_interest_group_type = ig_trade_unions
-							}
-							set_character_as_ruler = yes
-						}
-					}
-				}
-				if = {
-					limit = {
-						is_a_theocratic_government = yes
-						ruler ?= {
-							interest_group ?= {
-								OR = {
-									is_interest_group_type = ig_petty_bourgeoisie
+						custom_tooltip = {
+							text = enforce_ruler_restriction.tt
+							random_scope_character = {
+								limit = {
+									is_ruler_of_own_country = no
+									is_an_IG_leader = yes
 									is_interest_group_type = ig_trade_unions
 								}
+								set_character_as_ruler = yes
 							}
 						}
 					}
-					custom_tooltip = {
-						text = enforce_ruler_restriction.tt
-						random_scope_character = {
-							limit = { 
-								is_ruler_of_own_country = no
-								is_an_IG_leader = yes
-								is_interest_group_type = ig_devout
+					if = {
+						limit = {
+							is_a_theocratic_government = yes
+							ruler ?= {
+								interest_group ?= {
+									OR = {
+										is_interest_group_type = ig_petty_bourgeoisie
+										is_interest_group_type = ig_trade_unions
+									}
+								}
 							}
-							set_character_as_ruler = yes
+						}
+						custom_tooltip = {
+							text = enforce_ruler_restriction.tt
+							random_scope_character = {
+								limit = {
+									is_ruler_of_own_country = no
+									is_an_IG_leader = yes
+									is_interest_group_type = ig_devout
+								}
+								set_character_as_ruler = yes
+							}
 						}
 					}
 				}
-			}
-			
-			#Select ruler if a regime, only if the ruler's interest group is in government
-			else_if = {
-				limit = {
-					ruler ?= { 
-						interest_group ?= { 
-							is_in_government = yes 
-						}
-					} 
-				}
-				if = {
+				#Select ruler if a regime, only if the ruler's interest group is in government
+				else_if = {
 					limit = {
-						any_interest_group = {
-							is_in_government = yes
-							count > 1
+						ruler ?= {
+							interest_group ?= {
+								is_in_government = yes
+							}
 						}
 					}
-					custom_tooltip = {
-						text = semi_dictatorial_transfer_of_power_3.tt
-						trigger_event = { id = politicians_system.4 }
+					if = {
+						limit = {
+							any_interest_group = {
+								is_in_government = yes
+								count > 1
+							}
+						}
+						custom_tooltip = {
+							text = semi_dictatorial_transfer_of_power_3.tt
+							trigger_event = { id = politicians_system.4 }
+						}
+					}
+					else = {
+						custom_tooltip = {
+							text = semi_dictatorial_transfer_of_power_4.tt
+						}
 					}
 				}
 				else = {
 					custom_tooltip = {
-						text = semi_dictatorial_transfer_of_power_4.tt
+						text = semi_dictatorial_transfer_of_power_2.tt
 					}
 				}
 			}
-			
-			else = {
+			#Electoral fraud
+			if = {
+				limit = {
+					has_variable = committed_electoral_fraud
+					exists = scope:the_current_ruler_scope
+				}
 				custom_tooltip = {
-					text = semi_dictatorial_transfer_of_power_2.tt
+					text = electoral_fraud_committed.tt
+					scope:the_current_ruler_scope ?= { set_character_as_ruler = yes }
 				}
 			}
-			
-		}
-		
-		#Electoral fraud
-		if = {
-			limit = { 
-				has_variable = committed_electoral_fraud 
-				exists = scope:the_current_ruler_scope
+			remove_variable = committed_electoral_fraud
+			#Update upper house
+			if = {
+				limit = { has_journal_entry = je_upper_house }
+				calculate_upper_house_composition = yes
 			}
-			custom_tooltip = {
-				text = electoral_fraud_committed.tt
-				scope:the_current_ruler_scope ?= { set_character_as_ruler = yes }
+			#Update lower house
+			if = {
+				limit = { has_journal_entry = je_lower_house }
+				calculate_lower_house_composition = yes
 			}
+			#Historical elections
+			fire_historical_election_event = yes
+			#Clear variables
+			remove_variable = election_fluctuation_net_display
+			remove_variable = election_fluctuation_economy_display
+			remove_variable = election_fluctuation_politics_display
+			remove_variable = election_fluctuation_government_display
+			remove_variable = election_fluctuation_corruption_display
+			remove_variable = election_year_display
 		}
-		remove_variable = committed_electoral_fraud
-		
-		#Update upper house
-		if = {
-			limit = { has_journal_entry = je_upper_house }
-			calculate_upper_house_composition = yes
-		}
-		
-		#Update lower house
-		if = {
-			limit = { has_journal_entry = je_lower_house }
-			calculate_lower_house_composition = yes
-		}
-		
-		#Historical elections
-		fire_historical_election_event = yes
-		
-		#Clear variables
-		remove_variable = election_fluctuation_net_display
-		remove_variable = election_fluctuation_economy_display
-		remove_variable = election_fluctuation_politics_display
-		remove_variable = election_fluctuation_government_display
-		remove_variable = election_fluctuation_corruption_display
-		remove_variable = election_year_display
-		
 	}
+	
+
 	
 	on_monthly_pulse = {
 	

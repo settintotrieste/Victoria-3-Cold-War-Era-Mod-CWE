@@ -1,4 +1,4 @@
-﻿je_develop_nuclear_weapons = {
+je_develop_nuclear_weapons = {
 	icon = "gfx/interface/icons/diplo_icons/nuclear_capability.dds"
 
 	group = je_group_technology
@@ -23,70 +23,62 @@
 		
 	}
 
-	complete = {
-	
-		#Has nuclear weapons tech
-		has_technology_researched = tech_military_nuclear_3
-		
-		custom_tooltip = {
-			text = je_develop_nuclear_weapons_1.tt
-		
-			#Has at least 1 functional nuclear weapons building
-			any_scope_state = {
-				any_scope_building = {
-					is_building_type = building_nuclear_weapons_silo
-					level >= 1
-					building_has_goods_shortage = no
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_develop_nuclear_weapons_completed_desc
+		color = "gold_positive"
+		trigger = {
+			#Has nuclear weapons tech
+			has_technology_researched = tech_military_nuclear_3
+			custom_tooltip = {
+				text = je_develop_nuclear_weapons_1.tt
+				#Has at least 1 functional nuclear weapons building
+				any_scope_state = {
+					any_scope_building = {
+						is_building_type = building_nuclear_weapons_silo
+						level >= 1
+						building_has_goods_shortage = no
+					}
 				}
 			}
-			
-		}
-		
-		custom_tooltip = {
-			text = je_develop_nuclear_weapons_2.tt
-			NOT = { 
-				any_scope_treaty = { binds = ROOT any_scope_article = { has_type = pause_nuclear_weapons_development } }
+			custom_tooltip = {
+				text = je_develop_nuclear_weapons_2.tt
+				NOT = {
+					any_scope_treaty = { binds = ROOT any_scope_article = { has_type = pause_nuclear_weapons_development } }
+				}
 			}
 		}
-		
+		effect = {
+			#Set nuclear capability
+			trigger_event = { id = nuclear_warfare_system.1 }
+			#Prestige from victory!
+			add_modifier = {
+				name = national_pride_modifier
+				years = 5
+				is_decaying = yes
+			}
+			#Add nuclear development cost
+			add_modifier = {
+				name = nuclear_dev_cost
+				years = 5
+				is_decaying = yes
+			}
+		}
 	}
-	
-	on_complete = {
-		
-		#Set nuclear capability
-		trigger_event = { id = nuclear_warfare_system.1 }
-		
-		#Prestige from victory!
-		add_modifier = { 
-			name = national_pride_modifier 
-			years = 5
-			is_decaying = yes 
+	outcome = {
+		conclusion_desc = je_develop_nuclear_weapons_invalid_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			NAND = {
+				#Country is actively developing nukes
+				has_variable = nuclear_program_started
+				#Has nuclear weapons law
+				has_law_or_variant = law_type:law_wmd_allowed
+				#Must be a sovereign state
+				is_sufficiently_independent = yes
+			}
 		}
-		
-		#Add nuclear development cost
-		add_modifier = { 
-			name = nuclear_dev_cost 
-			years = 5
-			is_decaying = yes
-		}
-		
-	}
-	
-	invalid = {
-	
-		NAND = {
-		
-			#Country is actively developing nukes
-			has_variable = nuclear_program_started
-			
-			#Has nuclear weapons law
-			has_law_or_variant = law_type:law_wmd_allowed
-			
-			#Must be a sovereign state
-			is_sufficiently_independent = yes
-		
-		}
-		
 	}
 	
 	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country

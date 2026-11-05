@@ -53,179 +53,163 @@ je_political_trials_system = {
 		add = 12
 	}
 	
-	complete = {
-		scope:journal_entry = {
-			is_goal_complete = yes
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_political_trials_system_completed_desc
+		color = "gold_positive"
+		trigger = {
+			scope:journal_entry = {
+				is_goal_complete = yes
+			}
+			scope:indicted_character_scope ?= {
+				has_modifier = indicted_character
+				NOT = { has_role = character_role_prisoner }
+				is_busy = no
+				is_in_battle = no
+			}
 		}
-		scope:indicted_character_scope ?= {
-			has_modifier = indicted_character
-			NOT = { has_role = character_role_prisoner }
-			is_busy = no
-			is_in_battle = no
-		}
-	}
-	
-	on_complete = {
-	
-		#Guaranteed conviction if indicted character committed crimes OR there was a kangaroo court
-		if = {
-			limit = {
-				scope:indicted_character_scope ?= {
-					
-					OR = {
-						
-						# Character has committed a crime
-						character_committed_crimes = yes
-						
-						# Personal Misconduct
-						AND = {
-							OR = {
-								has_trait = cocaine_addiction
-								has_trait = opium_addiction
-							}
-							owner ?= {
+		effect = {
+			#Guaranteed conviction if indicted character committed crimes OR there was a kangaroo court
+			if = {
+				limit = {
+					scope:indicted_character_scope ?= {
+						OR = {
+							# Character has committed a crime
+							character_committed_crimes = yes
+							# Personal Misconduct
+							AND = {
 								OR = {
-									has_law_or_variant = law_type:law_no_minority_issues
-									has_law_or_variant = law_type:law_some_minority_issues
+									has_trait = cocaine_addiction
+									has_trait = opium_addiction
+								}
+								owner ?= {
+									OR = {
+										has_law_or_variant = law_type:law_no_minority_issues
+										has_law_or_variant = law_type:law_some_minority_issues
+									}
 								}
 							}
-						}
-						AND = {
-							OR = { 
-								has_trait = alcoholic
-								has_trait = hedonist
+							AND = {
+								OR = {
+									has_trait = alcoholic
+									has_trait = hedonist
+								}
+								owner ?= {
+									has_law_or_variant = law_type:law_no_minority_issues
+								}
 							}
-							owner ?= { 
-								has_law_or_variant = law_type:law_no_minority_issues
+							AND = {
+								has_trait = homosexual_character
+								owner ?= { has_law_or_variant = law_type:law_no_gender_issues }
 							}
 						}
+					}
+				}
+				scope:indicted_character_scope ?= {
+					#Imprison Character
+					hidden_effect = {
+						remove_modifier = indicted_character
+						replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
+						add_modifier = { name = convicted_character years = 10 }
+						set_variable = { name = convicted_character_flag months = 1 }
+						if = { limit = { NOT = { has_trait = character_ineligible_as_office_holder } } add_trait = character_ineligible_as_office_holder }
+					}
+				}
+				custom_tooltip = {
+					text = government_wins_political_trial.tt
+					trigger_event = { id = political_trials_system.1 } #Government won trial
+				}
+			}
+			else_if = {
+				limit = {
+					OR = {
 						AND = {
-							has_trait = homosexual_character
-							owner ?= { has_law_or_variant = law_type:law_no_gender_issues }
+							has_law_or_variant = law_type:law_politicised_judiciary
+							has_law_or_variant = law_type:law_kangaroo_law
 						}
-						
+						has_variable = political_trials_bribed_judge
 					}
-					
 				}
-			}
-			scope:indicted_character_scope ?= {
-				
-				#Imprison Character
-				hidden_effect = {
-					remove_modifier = indicted_character
-					replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
-					add_modifier = { name = convicted_character years = 10 }
-					set_variable = { name = convicted_character_flag months = 1 }
-					if = { limit = { NOT = { has_trait = character_ineligible_as_office_holder } } add_trait = character_ineligible_as_office_holder }
-				}
-				
-			}
-			custom_tooltip = {
-				text = government_wins_political_trial.tt
-				trigger_event = { id = political_trials_system.1 } #Government won trial
-			}
-		}
-		else_if = {
-			limit = {
-				OR = { 
-					AND = { 
-						has_law_or_variant = law_type:law_politicised_judiciary 
-						has_law_or_variant = law_type:law_kangaroo_law 
+				scope:indicted_character_scope ?= {
+					#Imprison Character
+					hidden_effect = {
+						remove_modifier = indicted_character
+						replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
+						add_modifier = { name = convicted_character years = 10 }
+						set_variable = { name = convicted_character_flag months = 1 }
+						if = { limit = { NOT = { has_trait = character_ineligible_as_office_holder } } add_trait = character_ineligible_as_office_holder }
 					}
-					has_variable = political_trials_bribed_judge
+				}
+				custom_tooltip = {
+					text = government_wins_political_trial.tt
+					trigger_event = { id = political_trials_system.1 } #Government won trial
 				}
 			}
-			scope:indicted_character_scope ?= {
-			
-				#Imprison Character
-				hidden_effect = {
-					remove_modifier = indicted_character
-					replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
-					add_modifier = { name = convicted_character years = 10 }
-					set_variable = { name = convicted_character_flag months = 1 }
-					if = { limit = { NOT = { has_trait = character_ineligible_as_office_holder } } add_trait = character_ineligible_as_office_holder }
+			#50% chance of conviction if no crimes committed IF court is somewhat crooked
+			else_if = {
+				limit = {
+					OR = {
+						NOT = { has_law_or_variant = law_type:law_independent_judiciary }
+						NOT = { has_law_or_variant = law_type:law_common_law }
+					}
 				}
-				
-			}
-			custom_tooltip = {
-				text = government_wins_political_trial.tt
-				trigger_event = { id = political_trials_system.1 } #Government won trial
-			}
-		}
-		
-		#50% chance of conviction if no crimes committed IF court is somewhat crooked
-		else_if = {
-			limit = {
-				OR = { 
-					NOT = { has_law_or_variant = law_type:law_independent_judiciary }
-					NOT = { has_law_or_variant = law_type:law_common_law }
-				}
-			}
-			
-			random_list = { 
-			
-				#Character is acquitted
-				1 = {
-					scope:indicted_character_scope ?= {
-						hidden_effect = {
-							remove_modifier = indicted_character
-							add_modifier = { name = acquitted_character years = 10 is_decaying = yes }
-							set_variable = { name = acquitted_character_flag months = 1 }
+				random_list = {
+					#Character is acquitted
+					1 = {
+						scope:indicted_character_scope ?= {
+							hidden_effect = {
+								remove_modifier = indicted_character
+								add_modifier = { name = acquitted_character years = 10 is_decaying = yes }
+								set_variable = { name = acquitted_character_flag months = 1 }
+							}
+						}
+						custom_tooltip = {
+							text = government_loses_political_trial.tt
+							trigger_event = { id = political_trials_system.2 } #Government lost trial
 						}
 					}
-					custom_tooltip = {
-						text = government_loses_political_trial.tt
-						trigger_event = { id = political_trials_system.2 } #Government lost trial
-					}
-				}
-				
-				#Character is convicted
-				1 = {
-					scope:indicted_character_scope ?= {
-					
-						#Imprison Character
-						hidden_effect = {
-							remove_modifier = indicted_character
-							replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
-							add_modifier = { name = convicted_character years = 10 }
-							set_variable = { name = convicted_character_flag months = 1 }
-							if = { limit = { NOT = { has_trait = character_ineligible_as_office_holder } } add_trait = character_ineligible_as_office_holder }
+					#Character is convicted
+					1 = {
+						scope:indicted_character_scope ?= {
+							#Imprison Character
+							hidden_effect = {
+								remove_modifier = indicted_character
+								replace_character_roles = { add = { character_role_prisoner } remove_all = yes }
+								add_modifier = { name = convicted_character years = 10 }
+								set_variable = { name = convicted_character_flag months = 1 }
+								if = { limit = { NOT = { has_trait = character_ineligible_as_office_holder } } add_trait = character_ineligible_as_office_holder }
+							}
 						}
-						
-					}
-					custom_tooltip = {
-						text = government_wins_political_trial.tt
-						trigger_event = { id = political_trials_system.1 } #Government won trial
+						custom_tooltip = {
+							text = government_wins_political_trial.tt
+							trigger_event = { id = political_trials_system.1 } #Government won trial
+						}
 					}
 				}
-				
 			}
-			
-		}
-		
-		#Guaranteed acquittal if courts are independent
-		else = {
-			
+			#Guaranteed acquittal if courts are independent
+			else = {
+				scope:indicted_character_scope ?= {
+					hidden_effect = {
+						remove_modifier = indicted_character
+						add_modifier = { name = acquitted_character years = 10 is_decaying = yes }
+						set_variable = { name = acquitted_character_flag months = 1 }
+					}
+				}
+				custom_tooltip = {
+					text = government_loses_political_trial.tt
+					trigger_event = { id = political_trials_system.2 } #Government lost trial
+				}
+			}
+			#Clean up markers
 			scope:indicted_character_scope ?= {
-				hidden_effect = {
-					remove_modifier = indicted_character
-					add_modifier = { name = acquitted_character years = 10 is_decaying = yes }
-					set_variable = { name = acquitted_character_flag months = 1 }
-				}
+				remove_variable = investigation_found_crimes
 			}
-			custom_tooltip = {
-				text = government_loses_political_trial.tt
-				trigger_event = { id = political_trials_system.2 } #Government lost trial
-			}
-			
 		}
-		
-		#Clean up markers
-		scope:indicted_character_scope ?= {
-			remove_variable = investigation_found_crimes
-		}
-		
 	}
+	
+
 
 	on_monthly_pulse = {
 		
@@ -288,61 +272,67 @@ je_political_trials_system = {
 		
 	}
 	
-	fail = {
-		OR = {
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		conclusion_desc = je_political_trials_system_failed_desc
+		color = "blue_negative"
+		trigger = {
+			OR = {
+				scope:indicted_character_scope ?= {
+					character_has_legal_immunity = yes
+				}
+				custom_tooltip = {
+					text = indicted_character_is_acquitted.tt
+					scope:indicted_character_scope ?= {
+						OR = {
+							NOT = { has_modifier = indicted_character }
+							has_modifier = acquitted_character
+						}
+					}
+				}
+			}
+		}
+		effect = {
 			scope:indicted_character_scope ?= {
-				character_has_legal_immunity = yes
+				hidden_effect = {
+					remove_modifier = indicted_character
+					add_modifier = { name = acquitted_character years = 2 is_decaying = yes }
+					set_variable = { name = acquitted_character_flag months = 1 }
+				}
 			}
 			custom_tooltip = {
-				text = indicted_character_is_acquitted.tt
-				scope:indicted_character_scope ?= {
-					OR = {
-						NOT = { has_modifier = indicted_character }
-						has_modifier = acquitted_character
-					}
+				text = government_loses_political_trial.tt
+				trigger_event = { id = political_trials_system.2 } #Government lost trial
+			}
+		}
+	}
+	outcome = {
+		conclusion_desc = je_political_trials_system_invalid_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			OR = {
+				#Ineligible character
+				NOT = { exists = scope:indicted_character_scope }
+				scope:indicted_character_scope ?= { has_role = character_role_prisoner }
+				scope:indicted_character_scope ?= { NOT = { owner ?= ROOT } }
+				#Prison Breakout
+				capital ?= {
+					market_access <= 0 # Occupied
+				}
+			}
+		}
+		effect = {
+			scope:indicted_character_scope ?= {
+				if = {
+					limit = { has_modifier = indicted_character }
+					remove_modifier = indicted_character
 				}
 			}
 		}
 	}
 	
-	on_fail = {
-		scope:indicted_character_scope ?= {
-			hidden_effect = {
-				remove_modifier = indicted_character
-				add_modifier = { name = acquitted_character years = 2 is_decaying = yes }
-				set_variable = { name = acquitted_character_flag months = 1 }
-			}
-		}
-		custom_tooltip = {
-			text = government_loses_political_trial.tt
-			trigger_event = { id = political_trials_system.2 } #Government lost trial
-		}
-	}
-	
-	invalid = {
-		OR = {
-			
-			#Ineligible character
-			NOT = { exists = scope:indicted_character_scope }
-			scope:indicted_character_scope ?= { has_role = character_role_prisoner }
-			scope:indicted_character_scope ?= { NOT = { owner ?= ROOT } }
-			
-			#Prison Breakout
-			capital ?= {
-				market_access <= 0 # Occupied
-			}
-			
-		}
-	}
-	
-	on_invalid = {
-		scope:indicted_character_scope ?= {
-			if = {
-				limit = { has_modifier = indicted_character }
-				remove_modifier = indicted_character
-			}
-		}
-	}
+
 	
 	weight = 200
 
