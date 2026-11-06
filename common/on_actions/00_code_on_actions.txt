@@ -5,23 +5,22 @@
 # No root scope set
 on_game_started = {
 	effect = {
-		# Memento Mori
-		every_country = {
-			every_interest_group = {
-				leader = {
-					if = {
-						limit = {
-							NOT = {
-								has_variable = memento_mori_immunity
-							}
-						}
-						set_variable = {
-							name = memento_mori_immunity
-							years = 5
-						}
-					}
-				}
+		# Game Rule: No Dynamic Naming
+		if = {
+			limit = {
+				has_game_rule = no_dynamic_naming
 			}
+			on_game_started_after_lobby_reset_dynamic_naming_effect = yes
+		}
+		# Electoral Confidence
+		on_game_started_after_lobby_electoral_confidence_effect = yes
+		# Country lists
+		assemble_country_list_effects = yes
+		# Liberalism sliding scale
+		calculate_global_democracy_index_effect = yes
+		set_global_variable = { # Ensures that Abraham Lincoln is not a valid leader of the Chinese Literati in 1836
+			name = ruler_selector_pool_invalidation_global_var
+			days = 30
 		}
 	}
 }
@@ -197,13 +196,55 @@ on_monthly_pulse_country = {
 					limit = {
 						modifier:country_electoral_confidence_over_time < 0
 					}
-					electoral_confidence > { # Can never drift to below 25%
-						value = 0.25
-						subtract = modifier:country_electoral_confidence_over_time
-					}
+					electoral_confidence > electoral_confidence_drift_limit # Can never drift to below 25%
 				}
 			}
 			add_electoral_confidence = modifier:country_electoral_confidence_over_time
+		}
+
+		if = {
+			limit = {
+				country_has_voting_franchise = yes
+			}
+			if = {
+				limit = {
+					NOT = { has_variable = electoral_confidence_notified_band }
+				}
+				set_variable = {
+					name = electoral_confidence_notified_band
+					value = electoral_confidence_band
+				}
+			}
+			else_if = {
+				limit = {
+					var:electoral_confidence_notified_band > electoral_confidence_band
+				}
+				save_scope_as = electoral_confidence_country
+				post_notification = electoral_confidence_fell_notification
+				clear_saved_scope = electoral_confidence_country
+				set_variable = {
+					name = electoral_confidence_notified_band
+					value = electoral_confidence_band
+				}
+			}
+			else_if = {
+				limit = {
+					var:electoral_confidence_notified_band < electoral_confidence_band
+				}
+				save_scope_as = electoral_confidence_country
+				post_notification = electoral_confidence_rose_notification
+				clear_saved_scope = electoral_confidence_country
+				set_variable = {
+					name = electoral_confidence_notified_band
+					value = electoral_confidence_band
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				has_variable = electoral_confidence_notified_band
+			}
+			remove_variable = electoral_confidence_notified_band
 		}
 		
 	}
@@ -3327,14 +3368,10 @@ on_journal_entry_deactivated = {
 }
 
 # Root = journal entry
-on_journal_entry_completed = {
+on_journal_entry_concluded = {
 	effect = {
-		post_notification = journal_entry_completed
+		post_notification = journal_entry_concluded
 	}
-}
-
-# Root = journal entry
-on_journal_entry_failed = {
 }
 
 # Root = country
@@ -3511,6 +3548,18 @@ on_party_created = {
 on_party_disbanded = {
 	effect = {
 		debug_log = "[SCOPE.sParty('target').GetNameNoFormatting] Disbanded - [THIS.GetCountry.GetNameNoFormatting]"
+		if = {
+			limit = {
+				scope:target ?= {
+					is_party_type = revolutionary_party
+				}
+				country_has_voting_franchise = yes
+				in_election_campaign = no
+			}
+			call_election = {
+				months = 3
+			}
+		}
 	}
 }
 
@@ -3520,16 +3569,10 @@ on_election_campaign_start = {
 		debug_log = "[TimeKeeper.GetCurrentDate.GetString]: Election Campaign Started - [THIS.GetCountry.GetNameNoFormatting]"
 		if = {
 			limit = {
-				active_law:lawgroup_distribution_of_power ?= {
-					has_amendment = amendment_type:amendment_tradition_of_free_elections
-				}
+				electoral_confidence_campaign_start_gain > 0
 			}
-			add_electoral_confidence = {
-				value = eagle_burger_freedom_index
-				divide = 10
-			}
+			add_electoral_confidence = electoral_confidence_campaign_start_gain
 		}
-		#effect_set_ig_electoral_strategy = yes
 	}
 	events = {
 		caciquismo.1
@@ -3738,71 +3781,19 @@ on_enemy_supply_ship_raiders_intercepted = {
 # Root = Country
 on_repudiate_obligation = {
 	effect = {
-		scope:target_country = {
-			change_relations = { country = root value = -50 }
-			hidden_effect = {
-				random_list = {
-					50 = {
-						if = {
-							limit = {
-								country_rank > root.country_rank
-							}
-							set_secret_goal = {
-								country = root
-								secret_goal = dominate
-							}								
-						}
-						else = {
-							set_secret_goal = {
-								country = root
-								secret_goal = antagonize
-							}							
-						}				
-					}
-					50 = {}
-				}
-			}		
-		}
-		every_country = {
-			limit = { 
-				NOT = { this = scope:target_country }
-				root = { owes_obligation_to = prev } 
-			}
-			change_relations = { country = root value = -30 }
-			hidden_effect = {
-				random_list = {
-					25 = {
-						if = {
-							limit = {
-								country_rank > root.country_rank
-							}
-							set_secret_goal = {
-								country = root
-								secret_goal = dominate
-							}								
-						}
-						else = {
-							set_secret_goal = {
-								country = root
-								secret_goal = antagonize
-							}							
-						}					
-					}
-					75 = {}
-				}
-			}
-		}		
+		on_repudiate_obligation_target_secret_goal_effect = yes
+		on_repudiate_obligation_obligees_secret_goal_effect = yes
 		hidden_effect = { # Should not stack the modifier
-			if = { 
-				limit = { has_modifier = repudiated_obligation } 
+			if = {
+				limit = { has_modifier = repudiated_obligation }
 				remove_modifier = repudiated_obligation
-			}			
+			}
 		}
 		add_modifier = {
 			name = repudiated_obligation
 			days = normal_modifier_time
-			is_decaying = yes			
-		}		
+			is_decaying = yes
+		}
 	}
 }
 
@@ -3894,6 +3885,15 @@ on_power_bloc_struggle_started = {
 # scope:successful_contender = country that won the Power Struggle
 # scope:failed_contender = country that lost the Power Struggle
 on_power_bloc_struggle_ended = {
+	effect = {
+		
+	}
+}
+
+# This on-action is triggered every time a Power Bloc is formed after the game has started, once its founding members have joined.
+# Root = Country that formed the Power Bloc (its leader)
+# scope:power_bloc = The newly formed Power Bloc
+on_power_bloc_formed = {
 	effect = {
 		
 	}
