@@ -93,10 +93,37 @@
 				}
 				add = 0.075
 			}
+
+			# Any country a pirate is hurting looks for relief, whatever its rank
+			if = {
+				limit = { has_law_or_variant = law_type:law_free_trade }
+				add = {
+					value = worst_piracy_grievance
+					multiply = 0.005
+				}
+			}
 		}
 
 		article_ai_usage = {
 			request
+		}
+
+		proposal_weight = {
+			value = 1
+
+			# Pursued harder the more the pirate is hurting us
+			add = {
+				value = "piracy_grievance_against(scope:source_country)"
+				multiply = 0.04
+			}
+
+			if = {
+				limit = {
+					root = scope:target_country
+					NOT = { has_law_or_variant = law_type:law_free_trade } # Everyone else asks for a non-piracy agreement for themselves instead
+				}
+				value = 0
+			}
 		}
 
 		inherent_accept_score = {
@@ -152,15 +179,17 @@
 				if = {
 					limit = {
 						scope:target_country = {
-							"pirated_trade_value_by(scope:source_country)" > 0
+							"piracy_grievance_against(scope:source_country)" > 0
 						}
 					}
 					add = {
-						desc = "country_piracy_income_add"
-						scope:target_country = {
-							add = "pirated_trade_value_by(scope:source_country)"
+						desc = "DIPLOMATIC_ACCEPTANCE_PIRACY_GRIEVANCE"
+						value = {
+							scope:target_country = {
+								add = "piracy_grievance_against(scope:source_country)"
+							}
 						}
-						divide = 100
+						multiply = 0.3
 						max = 30
 					}
 				}
@@ -168,24 +197,16 @@
 		}
 
 		wargoal_score_multiplier = {
-			value = 1
-
+			value = 0
 			if = {
 				limit = {
-					NOT = { is_country_type = unrecognized }
-					navy_size >= scope:source_country.navy_size
+					has_law_or_variant = law_type:law_free_trade # Everyone else demands a non-piracy agreement for themselves instead
+					"piracy_grievance_against(scope:source_country)" > 0
 				}
-
+				value = 1
 				add = {
-					value = navy_size
-					divide = 1000
-				}
-
-				add = {
-					root = {
-						add = "pirated_trade_value_by(scope:source_country)"
-					}
-					divide = 10000
+					value = "piracy_grievance_against(scope:source_country)"
+					multiply = 0.15
 				}
 			}
 		}
@@ -227,4 +248,5 @@
 			}
 		}
 	}
+	
 }

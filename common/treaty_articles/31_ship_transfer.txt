@@ -5,10 +5,9 @@
 	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/ship_transfer_treaties.dds"
 
 	flags = {
-		show_in_lens
-		can_be_enforced
 		giftable
 		is_ship_transfer
+		is_one_time
 	}
 
 	usage_limit = once_per_side_with_same_inputs
@@ -22,6 +21,10 @@
 	visible = {
 		is_not_revolutionary_or_decentralised = yes
 		scope:other_country = { is_not_revolutionary_or_decentralised = yes }
+		has_port_country = yes
+		scope:other_country = {
+			has_port_country = yes
+		}
 	}
 
 	can_ratify = {
@@ -47,17 +50,6 @@
             text = TREATY_SHIP_IN_BATTLE
             scope:article ?= {
                 input_ship = { is_in_battle = no }
-            }
-        }
-
-		custom_tooltip = {
-            text = SHIP_TRANSFER_REQUIRES_RECIPROCAL_ARTICLE
-            scope:treaty ?= {
-                any_scope_article_option = {
-                    NOT = { has_type = alliance }
-                    NOT = { has_type = defensive_pact }
-                    target_country = scope:source_country
-                }
             }
         }
 	}
@@ -141,7 +133,7 @@
 			request
         }
 
-        combined_acceptance_cap_max = 50
+        combined_acceptance_cap_max = 100
 		
 		proposal_weight = {
 			value = 1
@@ -215,6 +207,21 @@
 					max = 75
 				}
 
+				if = {
+					limit = {
+						NOT = { exists = scope:is_treaty_active }
+					}
+					multiply = {
+						desc = "DIPLOMATIC_ACCEPTANCE_SHIP_CATEGORY_SHORTFALL"
+						value = "scope:treaty.ai_ship_purchase_value_multiplier(scope:article.input_ship)"
+					}
+					subtract = {
+						desc = "DIPLOMATIC_ACCEPTANCE_SHIP_CATEGORY_UNWANTED"
+						value = "scope:treaty.ai_ship_purchase_rejected_share(scope:article.input_ship)"
+						multiply = 500
+					}
+				}
+
 				# Don't want to receive a ship that is already obsolete for us
 				if = {
 					limit = {
@@ -280,65 +287,36 @@
 					value = 1000
 				}
 			}
-		}
-	}
 
-	wargoal = {
-		execution_priority = 21
-
-		contestion_type = control_target_country_capital
-
-		maneuvers = {
-			value = 0
-
-			add = {
-				desc = "MANEUVERS_BASE_VALUE"
-				value = 2.5
-			}
-		}
-
-		infamy_severity = 0.5 infamy = {
-			value = 0
-
+			# Refuse to give away ships that would leave us too far below our
+			# wanted ships of that AI ship category. Very obsolete ships are
+			# exempt. Applied after the binding-period amplifier so the flat
+			# -300 is unaffected by it.
 			if = {
 				limit = {
-					exists = scope:ship
+					scope:source_country ?= this
+					NOT = { exists = scope:is_treaty_active }
+					scope:article.input_ship = {
+						NOT = { is_ship_very_obsolete_for = scope:source_country }
+					}
+					OR = {
+						AND = {
+							scope:article.input_ship = {
+								is_ship_obsolete_for = scope:source_country
+							}
+							"scope:treaty.ai_ship_sale_remaining_share(scope:article.input_ship)" <= define:NAI|SHIP_SALE_MIN_REMAINING_SHARE_OBSOLETE
+						}
+						AND = {
+							scope:article.input_ship = {
+								NOT = { is_ship_obsolete_for = scope:source_country }
+							}
+							"scope:treaty.ai_ship_sale_remaining_share(scope:article.input_ship)" <= define:NAI|SHIP_SALE_MIN_REMAINING_SHARE
+						}
+					}
 				}
-
 				add = {
-					desc = "INFAMY_SHIP_TRANSFER_TARGET_SHARE"
-					value = scope:ship.power_projection
-					divide = {
-						value = scope:target_country.naval_power_projection
-						min = 1
-					}
-					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_SHIP_TRANSFER_SHARE_MULT
-					min = define:NDiplomacy|WAR_GOAL_INFAMY_SHIP_TRANSFER_SHARE_MIN
-					max = define:NDiplomacy|WAR_GOAL_INFAMY_SHIP_TRANSFER_SHARE_MAX
-				}
-
-				add = {
-					desc = "INFAMY_SHIP_TRANSFER_SELF_SHARE"
-					value = scope:ship.power_projection
-					divide = {
-						value = naval_power_projection
-						min = 1
-					}
-					multiply = define:NDiplomacy|WAR_GOAL_INFAMY_SHIP_TRANSFER_SHARE_MULT
-					min = define:NDiplomacy|WAR_GOAL_INFAMY_SHIP_TRANSFER_SHARE_MIN
-					max = define:NDiplomacy|WAR_GOAL_INFAMY_SHIP_TRANSFER_SHARE_MAX
-				}
-			}
-
-			if = {
-				limit = {
-					scope:ship ?= {
-						is_flagship = yes
-					}
-				}
-				multiply = {
-					desc = "INFAMY_SHIP_TRANSFER_FLAGSHIP"
-					value = define:NDiplomacy|WAR_GOAL_INFAMY_SHIP_TRANSFER_FLAGSHIP_MULT
+					desc = "DIPLOMATIC_ACCEPTANCE_SHIP_CATEGORY_UNDERSTRENGTH"
+					value = -300
 				}
 			}
 		}
