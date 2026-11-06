@@ -128,8 +128,34 @@ ai_strategy_default = {
 		
 		#Base value - Reputation
 		add = {
-			value = "scope:country.modifier:country_diplomatic_reputation_add"
 			desc = "DIPLOMATIC_REPUTATION_REASON"
+			value = "scope:country.modifier:country_diplomatic_reputation_add"
+			if = {
+				limit = {
+					root = {
+						NOT = {
+							has_law_or_variant = law_type:law_HOS_communist_leader
+						}
+					}
+					scope:country = {
+						has_law_or_variant = law_type:law_HOS_communist_leader
+					}
+				}
+				subtract = {
+					value = "scope:country.modifier:country_other_country_socialist_government_hostility_impact_add"
+					multiply = {
+						value = 1
+						add = "scope:country.modifier:country_other_country_socialist_government_hostility_impact_mult"
+					}
+				}
+				subtract = {
+					value = "scope:country.modifier:country_other_country_socialist_government_hostility_impact_add"
+					multiply = {
+						value = 1
+						add = "scope:country.modifier:country_other_country_socialist_government_hostility_impact_mult"
+					}
+				}
+			}
 		}
 		
 	}
@@ -1114,6 +1140,23 @@ ai_strategy_default = {
 					desc = "STATE_VALUE_NOT_INTEREST_IN_REGION"
 				}
 			}
+			
+			if = {
+				limit = {
+					ai_state_is_invalid_target = no
+					NOT = {
+						has_strategic_region_interest_tier = {
+							strategic_region = scope:target_state.region
+							value <= 1
+						}
+					}
+					NOT = { can_reach_target_state_to_conquer = { TARGET_STATE = scope:target_state } }
+				}
+				multiply = {
+					value = 0.1
+					desc = "STATE_VALUE_UNREACHABLE"
+				}
+			}
 		}
 
 		min = {
@@ -1284,7 +1327,7 @@ ai_strategy_default = {
 
 			if = {
 				limit = {
-					can_reach_target_state = no
+					NOT = { can_reach_target_state_to_coerce = { TARGET_STATE = scope:target_state } }
 				}
 				multiply = 0
 			}
@@ -1305,7 +1348,7 @@ ai_strategy_default = {
 			limit = {		
 				OR = {
 					scope:target_country = { is_subject_of = root }
-					can_reach_target_country = { TARGET_COUNTRY = scope:target_country }	
+					can_reach_target_country_to_subjugate = { TARGET_COUNTRY = scope:target_country }
 				}
 			}
 			
@@ -1434,26 +1477,87 @@ ai_strategy_default = {
 			if = {
 				limit = {
 					AND = {
-						has_radical_leftist_government = no			
+						has_radical_leftist_government = no
 						scope:target_country = {
 							has_radical_leftist_government = yes
 						}
 					}
-					
 				}
-				multiply = 1.5
+				multiply = {
+					value = 1
+					subtract = {
+						value = 1
+						subtract = 1.5
+						multiply = {
+							value = 1
+							add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+						}
+					}
+					min = 0
+				}
+			}
+
+			if = {
+				limit = {
+					AND = {
+						has_radical_leftist_economy = no
+						scope:target_country = {
+							has_radical_leftist_economy = yes
+						}
+					}
+
+				}
+				multiply = {
+					value = 1
+					subtract = {
+						value = 1
+						subtract = 1.5
+						multiply = {
+							value = 1
+							add = scope:target_country.modifier:country_other_country_socialist_economy_hostility_impact_mult
+						}
+					}
+					min = 0
+				}
 			}
 			
 		}
-
-		min = 0
+		
 		if = {
-			limit = { scope:target_country = { is_subject_of = root } }
-			max = 1000			
+			limit = {
+				has_secret_goal = {
+					who = scope:target_country
+					secret_goal = dominate
+				}
+			}
+
+			min = 25
+		}
+
+		# AI should open up large isolationist powers, not subjugate them
+		if = {
+			limit = {
+				has_strategy = ai_strategy_economic_imperialism
+				scope:target_country = {
+					has_law_or_variant = law_type:law_isolationism
+					gdp >= 5000000
+				}
+			}
+			multiply = 0.0
+		}
+
+		if = {
+			limit = {
+				scope:target_country = { is_subject_of = root }
+			}
+			min = 100
+			max = 1000
 		}
 		else = {
-			max = 200		
+			min = 0
+			max = 200
 		}
+		
 	}
 
 	# How much does the AI desire becoming another country's subject
@@ -1770,7 +1874,7 @@ ai_strategy_default = {
 
 		# Aggression against radical leftists
 		if = {
-			limit = {	
+			limit = {
 				AND = {
 					has_radical_leftist_government = no
 					scope:target_country = {
@@ -1778,17 +1882,29 @@ ai_strategy_default = {
 					}
 				}
 			}
-			add = 1
+			add = {
+				value = 5
+				multiply = {
+					value = 1
+					add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+				}
+			}
 		}
-		
+
 		if = {
-			limit = {	
+			limit = {
 				has_radical_leftist_economy = no
 				scope:target_country = {
-					has_radical_leftist_economy = yes				
-				}				
+					has_radical_leftist_economy = yes
+				}
 			}
-			add = 1
+			add = {
+				value = 5
+				multiply = {
+					value = 1
+					add = scope:target_country.modifier:country_other_country_socialist_economy_hostility_impact_mult
+				}
+			}
 		}
 		
 		# Countries with high-fervour primary cultures are more aggressive against rivals or countries with homelands
@@ -2328,6 +2444,18 @@ ai_strategy_default = {
 		}
 		ai_ship_category_screens = {
 			value = 30
+			
+			if = { # Submarines take some of the cruisers' raiding role
+				limit = {
+					has_technology_researched = tech_military_naval_forces_1
+					OR = {
+						has_law_or_variant = law_type:law_jeune_ecole
+						has_law_or_variant = law_type:law_merchant_navy
+					}
+				}
+				subtract = 10
+			}
+			
 			if = {
 				limit = {
 					OR = {
@@ -2352,6 +2480,31 @@ ai_strategy_default = {
 					has_law_or_variant = law_type:law_merchant_navy
 				}
 				add = 10
+			}
+			
+			if = { # Submarines take some of the torpedo craft weight
+				limit = {
+					has_technology_researched = tech_military_naval_forces_1
+					OR = {
+						has_law_or_variant = law_type:law_jeune_ecole
+						has_law_or_variant = law_type:law_merchant_navy
+					}
+				}
+				subtract = 10
+			}
+			
+		}
+		ai_ship_category_submarines = { # Only navies built around commerce raiding or defense use submarines
+			value = 0
+			if = {
+				limit = {
+					has_technology_researched = tech_military_naval_forces_1
+					OR = {
+						has_law_or_variant = law_type:law_jeune_ecole
+						has_law_or_variant = law_type:law_merchant_navy
+					}
+				}
+				add = 20
 			}
 		}
 		ai_ship_category_carriers = {
@@ -2604,13 +2757,6 @@ ai_strategy_default = {
 			trigger = {
 				country_rank >= rank_value:great_power
 			}
-		}		
-		ironclads = {
-			stance = wants_high_supply
-			trigger = {
-				has_port_country = yes
-				country_rank >= rank_value:great_power
-			}
 		}
 		
 		#Critical Consumer Goods
@@ -2670,12 +2816,18 @@ ai_strategy_default = {
 				country_rank >= rank_value:major_power
 			}
 		}
-		
-		#Important stuff
-		real_estate = { 
+		copper = {
 			stance = wants_high_supply
 			trigger = {
-				has_famine = yes
+				country_rank >= rank_value:major_power
+			}
+		}
+		
+		#Important stuff
+		electricity = {
+			stance = wants_high_supply
+			trigger = {
+				country_rank >= rank_value:major_power
 			}
 		}
 		grain = {
@@ -2931,7 +3083,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -2943,7 +3106,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -2956,7 +3130,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -2969,7 +3154,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3117,7 +3313,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3129,7 +3336,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3142,7 +3360,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3155,7 +3384,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3294,7 +3534,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3306,7 +3557,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3319,7 +3581,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3332,7 +3605,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3440,7 +3724,7 @@ ai_strategy_default = {
 
 				if = {
 					limit = {
-						can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
+						can_reach_target_country_to_coerce = { TARGET_COUNTRY = scope:target_country }
 						NOT = { is_subject_of = scope:target_country }
 					}
 					add = 50
@@ -3513,7 +3797,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3525,7 +3820,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3538,7 +3844,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3551,7 +3868,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				# AI implications for Power Blocs: 'antagonize' secret goal is more likely towards the country from another Bloc
@@ -3572,8 +3900,10 @@ ai_strategy_default = {
 		}
 		conquer = {
 			trigger = {
-				can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
 				NOT = { is_subject_of = scope:target_country }
+
+				# Be nice to tutorial players
+				scope:target_country = { is_still_learning = no }
 
 				# Countries scripted to have a friendly pact or same power bloc shouldn't start with hostile goals
 				NAND = {
@@ -3582,9 +3912,8 @@ ai_strategy_default = {
 						is_in_same_power_bloc = scope:target_country
 						has_friendly_diplomatic_pact = { TARGET = scope:target_country }
 					}
-				}			
-				# Be nice to tutorial players
-				scope:target_country = { is_still_learning = no }
+				}
+				can_reach_target_country_to_conquer = { TARGET_COUNTRY = scope:target_country }
 			}
 			score = {
 				value = 0
@@ -3611,14 +3940,9 @@ ai_strategy_default = {
 								TYPE = aro:ai_regional_objective_acquire_states
 								TARGET = scope:target_country
 							}
-							AND = {
-								ai_is_regional_objective_local_country = {
-									TYPE = aro:ai_regional_objective_recover_claims
-									TARGET = scope:target_country
-								}
-								scope:target_country = {
-									any_scope_state = { has_claim_by = root }
-								}
+							ai_is_regional_objective_local_country = {
+								TYPE = aro:ai_regional_objective_recover_claims
+								TARGET = scope:target_country
 							}
 						}
 					}
@@ -3670,7 +3994,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3682,7 +4017,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3695,7 +4041,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3708,7 +4065,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3779,7 +4147,7 @@ ai_strategy_default = {
 						scope:target_country = { is_country_type = unrecognized }
 					}
 				}
-				can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
+				can_reach_target_country_to_subjugate = { TARGET_COUNTRY = scope:target_country }
 				NOT = { is_subject_of = scope:target_country }
 
 				# AI shouldn't be aggressive against subjects of their subjects
@@ -3844,7 +4212,7 @@ ai_strategy_default = {
 
 				if = {
 					limit = {
-						can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
+						can_reach_target_country_to_subjugate = { TARGET_COUNTRY = scope:target_country }
 						country_rank > scope:target_country.country_rank
 						NOT = { is_country_type = unrecognized }
 						scope:target_country = {
@@ -3887,12 +4255,26 @@ ai_strategy_default = {
 
 				if = {
 					limit = {
-						can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
+						can_reach_target_country_to_subjugate = { TARGET_COUNTRY = scope:target_country }
 						country_rank > scope:target_country.country_rank
 						scope:target_country.country_rank < rank_value:major_power
 						scope:target_country = { NOT = { is_subject_of = root }	}
 					}
-					add = 25
+					add = 15
+
+					if = {
+						limit = {
+							NOT = { scope:target_country = { is_subject_of = root } }
+							scope:target_country = { is_country_type = unrecognized }
+						}
+						add = 15
+					}
+					else_if = {
+						limit = {
+							scope:target_country = { NOT = { is_country_type = unrecognized } }
+						}
+						add = -5
+					}
 				}
 
 				multiply = {
@@ -3924,7 +4306,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3936,7 +4329,18 @@ ai_strategy_default = {
 							}
 						}
 					}
-					multiply = 0.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 0.5
+							multiply = {
+								value = 1
+								add = modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3949,7 +4353,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -3962,7 +4377,18 @@ ai_strategy_default = {
 						}
 
 					}
-					multiply = 1.5
+					multiply = {
+						value = 1
+						subtract = {
+							value = 1
+							subtract = 1.5
+							multiply = {
+								value = 1
+								add = scope:target_country.modifier:country_other_country_socialist_economy_hostility_impact_mult
+							}
+						}
+						min = 0
+					}
 				}
 
 				if = {
@@ -4169,7 +4595,7 @@ ai_strategy_default = {
 
 				if = {
 					limit = {
-						scope:target_state.ai_state_value:root >= ai_strongly_desires_state_value_threshold
+						scope:target_state.ai_state_value:root >= define:NAI|AI_STRONGLY_DESIRES_STATE_VALUE_THRESHOLD
 					}
 					add = scope:target_state.ai_state_value:root
 				}
@@ -4420,28 +4846,41 @@ ai_strategy_default = {
 			if = {
 				limit = {
 					AND = {
-						has_radical_leftist_government = no			
+						has_radical_leftist_government = no
 						scope:target_country = {
 							has_radical_leftist_government = yes
 						}
 					}
-					
+
 				}
-				add = 100
+				add = {
+					value = 100
+					multiply = {
+						value = 1
+						add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+					}
+				}
 			}
-	
+
 			if = {
 				limit = {
 					AND = {
-						has_radical_leftist_economy = no			
+						has_radical_leftist_economy = no
 						scope:target_country = {
 							has_radical_leftist_economy = yes
 						}
 					}
-					
+
 				}
-				add = 100
-			}					
+				add = {
+					value = 100
+					multiply = {
+						value = 1
+						add = scope:target_country.modifier:country_other_country_socialist_economy_hostility_impact_mult
+					}
+				}
+			}
+			
 		}		
 		
 		force_nationalization = {
@@ -4490,9 +4929,9 @@ ai_strategy_default = {
 						has_diplomatic_pact = {
 							who = root
 							type = embargo
-						}	
+						}
 					}
-					can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
+					can_reach_target_country_to_coerce = { TARGET_COUNTRY = scope:target_country }
 				}
 				add = 50
 			}
@@ -4500,28 +4939,40 @@ ai_strategy_default = {
 			if = {
 				limit = {
 					AND = {
-						has_radical_leftist_government = no			
+						has_radical_leftist_government = no
 						scope:target_country = {
 							has_radical_leftist_government = yes
 						}
 					}
-					
+
 				}
-				add = 50
+				add = {
+					value = 50
+					multiply = {
+						value = 1
+						add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+					}
+				}
 			}
-	
+
 			if = {
 				limit = {
 					AND = {
-						has_radical_leftist_economy = no			
+						has_radical_leftist_economy = no
 						scope:target_country = {
 							has_radical_leftist_economy = yes
 						}
 					}
-					
+
 				}
-				add = 50
-			}					
+				add = {
+					value = 50
+					multiply = {
+						value = 1
+						add = scope:target_country.modifier:country_other_country_socialist_economy_hostility_impact_mult
+					}
+				}
+			}
 			
 			# Not worth doing against very small markets
 			if = {
@@ -4905,6 +5356,146 @@ ai_strategy_default = {
 		
 	}
 	
+	# Determines whether the AI wants a Cossack Host in a state, highest score wins
+	# A score of 0 means that option is not on the table at all, it does not mean neutral, so a state is left alone until something scores it
+	# Whichever status the state is already in has its score multiplied by COSSACK_HOST_STICKYNESS
+	# Using these values in other strategies will function additively
+	# root = country
+	# scope:target_state = state
+	cossack_host_scores = {
+		establish_cossack_host = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:target_state = {
+						is_incorporated = no
+						OR = {
+							region = sr:region_central_asia
+							region = sr:region_russia
+							region = sr:region_siberia
+							region = sr:region_greater_persia
+							region = sr:region_north_china
+							region = sr:region_northeast_asia
+						}
+					}
+				}
+				add = 15
+			}
+
+			if = {
+				limit = {
+					scope:target_state = {
+						any_neighbouring_state = {
+							owner ?= {
+								OR = {
+									is_country_type = unrecognized
+									is_country_type = decentralized
+								}
+							}
+						}
+					}
+				}
+				add = 10
+
+				if = {
+					limit = {
+						scope:target_state = {
+							is_split_state = yes
+						}
+					}
+					add = 10
+				}
+			}
+
+			if = {
+				limit = {
+					scope:target_state = {
+						is_under_colonization = yes
+					}
+				}
+				add = 75
+			}
+
+			if = {
+				limit = {
+					scope:target_state = {
+						primary_cultures_percent_state = {
+							target_country = owner
+							value >= 0.9
+						}
+					}
+				}
+				multiply = 0
+			}
+			else_if = {
+				limit = {
+					scope:target_state = {
+						primary_cultures_percent_state = {
+							target_country = owner
+							value >= 0.8
+						}
+					}
+				}
+				multiply = 0.5
+			}
+
+			if = {
+				limit = {
+					OR = {
+						has_law_or_variant = law_type:law_HOS_communist_leader
+						has_law_or_variant = law_type:law_state_atheism
+						has_law_or_variant = law_type:law_command_economy
+						has_law_or_variant = law_type:law_multicultural
+					}
+				}
+				multiply = 0
+			}
+
+			if = {
+				limit = {
+					scope:target_state = {
+						has_recently_removed_cossack_host = yes
+					}
+				}
+				multiply = 0
+			}
+		}
+
+		disband_cossack_host = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:target_state = {
+						is_incorporated = yes
+					}
+				}
+				add = 10
+			}
+
+			if = { # Russia should be very unlikely to remove Cossacks
+				limit = {
+					NOT = { has_law_or_variant = law_type:law_HOS_communist_leader }
+					any_primary_culture = {
+						has_discrimination_trait = heritage_east_slavic
+					}
+				}
+				multiply = 0.5
+
+				if = {
+					limit = {
+						has_law = law_type:law_HOS_monarch
+					}
+					multiply = 0.25
+				}
+			}
+			else = { # Everyone else should remove Cossacks
+				add = 1000
+			}
+		}
+	}
+	
 	# Determines which strait settings the AI will use, highest score 
 	# Using this value in other strategies will function additively
 	# root = country
@@ -5273,6 +5864,34 @@ ai_strategy_default = {
 				max = 5
 			}
 		}
+		submarine_raiding_fleet = { # Small all-submarine fleets that only raid enemy supply
+			ai_ship_category_weights = {
+				ai_ship_category_submarines = 100.0
+			}
+			mission_type_weights = {
+				raid_supply = 1.0
+			}
+
+			min_ships_wanted = 8 # This is a soft limit
+			num_fleets_wanted = { # Around 10 submarines per fleet, but only split off another fleet once every fleet would have at least 6
+				value = ai_num_submarines
+				divide = 10
+				ceiling = yes
+				max = {
+					value = ai_num_submarines
+					divide = 6
+					floor = yes
+				}
+				min = 1
+				max = 8
+			}
+
+			potential = {
+				any_scope_ship = {
+					is_ai_ship_category = ai_ship_category_submarines
+				}
+			}
+		}
 		coastal_defense_fleet = { # A single fleet for the AI's coastal defense ships that only does intercept orders
 			ai_ship_category_weights = {
 				ai_ship_category_coastal_defense = 100.0
@@ -5290,16 +5909,12 @@ ai_strategy_default = {
 			}
 
 			num_fleets_wanted = {
-				value = 0
+				value = 1
+			}
 
-				if = {
-					limit = {
-						any_scope_ship = {
-							is_ai_ship_category = ai_ship_category_coastal_defense
-						}
-					}
-
-					add = 1
+			potential = {
+				any_scope_ship = {
+					is_ai_ship_category = ai_ship_category_coastal_defense
 				}
 			}
 		}
