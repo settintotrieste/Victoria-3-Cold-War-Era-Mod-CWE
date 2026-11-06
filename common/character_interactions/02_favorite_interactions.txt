@@ -1,0 +1,229 @@
+﻿appoint_favorite = {
+	icon = "gfx/interface/icons/character_role_icons/favorite.dds"
+	clicksound = "event:/SFX/UI/Military/command_grant"
+
+	potential = {
+		owner ?= scope:actor
+		is_ruler_of_own_country = no
+		is_heir_of_own_country = no
+		NOT = { has_role = character_role_favorite }
+	}
+
+	show_requirements = yes
+
+	possible = {
+		owner ?= {
+			can_have_favorites = yes
+		}
+	}
+
+	effect = {
+		owner ?= {
+			random_scope_character = {
+				limit = {
+					has_role = character_role_favorite
+				}
+				revoke_favorite_effect = yes
+			}
+		}
+		if = {
+			limit = {
+				owner ?= {
+					any_interest_group = {
+						favorite_appointment_ig_penalty >= 1
+					}
+				}
+			}
+			custom_tooltip = appoint_favorite_controversy_tt
+			owner ?= {
+				every_interest_group = {
+					limit = {
+						favorite_appointment_ig_penalty >= 1
+					}
+					add_modifier = {
+						name = modifier_controversial_favorite
+						days = normal_modifier_time
+						is_decaying = yes
+						multiplier = favorite_appointment_ig_penalty
+					}
+				}
+				every_interest_group = {
+					limit = {
+						favorite_appointment_ig_penalty >= 1
+						favorite_appointment_ig_radicals >= 0.01
+					}
+					save_temporary_scope_as = controversial_favorite_ig
+					owner = {
+						add_radicals = {
+							value = scope:controversial_favorite_ig.favorite_appointment_ig_radicals
+							interest_group = scope:controversial_favorite_ig
+						}
+					}
+				}
+			}
+		}
+		custom_tooltip = {
+			text = appoint_favorite_effect_tt
+			add_character_role = favorite
+		}
+		if = {
+			limit = {
+				has_modifier = revoked_favorite
+			}
+			remove_modifier = revoked_favorite
+		}
+	}
+
+	cooldown = { days = normal_modifier_time }
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = {
+				owner ?= {
+					NOT = {
+						any_scope_character = {
+							has_role = character_role_favorite
+						}
+					}
+				}
+				interest_group ?= {
+					is_insurrectionary = no
+				}
+			}
+			add = 5
+			if = {
+				limit = {
+					interest_group ?= {
+						OR = {
+							is_powerful = yes
+							is_in_government = yes
+						}
+					}
+				}
+				add = 25
+			}
+			if = {
+				limit = {
+					OR = {
+						is_interest_group_leader = yes
+						has_role = character_role_general
+						has_role = character_role_admiral
+					}
+				}
+				add = 10
+			}
+			if = {
+				limit = {
+					owner ?= {
+						OR = {
+							has_strategy = ai_strategy_reactionary_agenda
+							has_strategy = ai_strategy_conservative_agenda
+						}
+					}
+					OR = {
+						is_interest_group_type = ig_landowners
+						is_interest_group_type = ig_devout
+						is_interest_group_type = ig_armed_forces
+						has_ideology = ideology:ideology_traditionalist
+						has_ideology = ideology:ideology_royalist
+					}
+				}
+				add = 20
+			}
+			if = {
+				limit = {
+					owner ?= {
+						OR = {
+							has_strategy = ai_strategy_progressive_agenda
+							has_strategy = ai_strategy_great_reforms
+						}
+					}
+					OR = {
+						is_interest_group_type = ig_intelligentsia
+						is_interest_group_type = ig_industrialists
+						is_interest_group_type = ig_petty_bourgeoisie
+					}
+				}
+				add = 20
+			}
+			subtract = {
+				value = favorite_appointment_controversy
+				multiply = 5
+			}
+		}
+	}
+}
+
+revoke_favorite = {
+	icon = "gfx/interface/icons/character_role_icons/favorite.dds"
+	clicksound = "event:/SFX/UI/Military/commander_retire"
+
+	potential = {
+		owner ?= scope:actor
+		has_role = character_role_favorite
+	}
+
+	show_requirements = yes
+
+	possible = {
+		current_career_length = {
+			role = character_role_favorite
+			months = 12
+		}
+	}
+
+	effect = {
+		revoke_favorite_effect = yes
+	}
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = {
+				interest_group ?= {
+					is_insurrectionary = yes
+				}
+			}
+			add = 80
+		}
+		if = {
+			limit = {
+				owner ?= {
+					OR = {
+						has_strategy = ai_strategy_reactionary_agenda
+						has_strategy = ai_strategy_conservative_agenda
+					}
+				}
+				OR = {
+					has_socialist_ideology = yes
+					has_progressive_ideology = yes
+					has_liberal_ideology = yes
+					is_interest_group_type = ig_trade_unions
+				}
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				owner ?= {
+					OR = {
+						has_strategy = ai_strategy_progressive_agenda
+						has_strategy = ai_strategy_egalitarian_agenda
+						has_strategy = ai_strategy_great_reforms
+					}
+				}
+				has_reactionary_ideology = yes
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				interest_group ?= {
+					ig_approval <= -10
+				}
+			}
+			add = 5
+		}
+	}
+}
