@@ -23,15 +23,32 @@ assassination_events.1 = { #there's a plot to kill your ruler
 	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
 
 	trigger = {
+		# triggered by on_action - on_yearly_events
 		always = no # TODO PRCAL-43965 suppressed pending narrative pass
+		#any_interest_group = {
+		#	is_powerful = yes
+		#	ig_approval <= -10
+		#}
+		#radical_fraction = { #in the whole country
+		#	value >= 0.15
+		#}
+		#ruler = {
+		#	is_adult = yes
+		#	is_immortal = no
+		#}
+		#NOT = { has_variable = assassination_cooldown }
+		#NOT = { has_variable = ongoing_serial_killer_je }
 	}
 
 	immediate = {
-		ruler = { save_scope_as = assassination_ruler_scope }
-		set_variable = {
-			name = assassination_cooldown
-			days = stupidly_long_modifier_time #50 years
+		ruler = {
+			save_scope_as = assassination_ruler_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
+		#set_variable = {
+		#	name = assassination_cooldown
+		#	days = stupidly_long_modifier_time #50 years
+		#}
 	}
 
 	option = {
@@ -57,6 +74,10 @@ assassination_events.1 = { #there's a plot to kill your ruler
 			target = scope:assassination_ruler_scope
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:assassination_ruler_scope }
+	}
 }
 
 assassination_events.2 = { #suspicious meeting
@@ -81,6 +102,7 @@ assassination_events.2 = { #suspicious meeting
 	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
 
 	trigger = {
+		# triggered by journal entry - je_assassination [on_monthly_pulse]
 		#triggered on the JE yearly pulse
 	}
 
@@ -181,6 +203,7 @@ assassination_events.3 = { #The Snitch
 	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
 
 	trigger = {
+		# triggered by journal entry - je_assassination [on_monthly_pulse]
 		#triggered by the JE
 	}
 
@@ -190,6 +213,7 @@ assassination_events.3 = { #The Snitch
 			save_scope_as = snitch_ig
 			leader = {
 				save_scope_as = snitch_leader
+				set_temporary_event_immortality = { DURATION = 3 }
 			}
 		}
 		random_interest_group = {
@@ -241,6 +265,10 @@ assassination_events.3 = { #The Snitch
 			}
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:snitch_leader }
+	}
 }
 
 assassination_events.4 = { #accusatory talk in the high spheres
@@ -264,12 +292,16 @@ assassination_events.4 = { #accusatory talk in the high spheres
 	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
 
 	trigger = {
+		# triggered by journal entry - je_assassination [on_monthly_pulse]
 		any_scope_state = {
 			any_scope_building = {
 				is_building_type = building_urban_center
 				level >= 10
 			}
-			has_building = building_university
+			OR = {
+				has_building = building_university
+				has_building = building_art_academy
+			}
 		}
 		any_interest_group = {
 			ig_counts_as_marginal = no
@@ -283,7 +315,10 @@ assassination_events.4 = { #accusatory talk in the high spheres
 				is_building_type = building_urban_center
 				level >= 10
 				}
-				has_building = building_university
+				OR = {
+					has_building = building_university
+					has_building = building_art_academy
+				}
 			}
 			save_scope_as = high_spheres_state
 		}
@@ -310,6 +345,15 @@ assassination_events.4 = { #accusatory talk in the high spheres
 
 	option = { #sounds suspicious
 		name = assassination_events.4.a
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
+		}
 		custom_tooltip = advance_assassination_progress_tt
 		change_variable = {
 			name = je_assassination_progress
@@ -332,6 +376,15 @@ assassination_events.4 = { #accusatory talk in the high spheres
 	option = { #WHO is saying this
 		name = assassination_events.4.b
 		default_option = yes
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_wants_radicals = yes
+				}
+				add = 10
+			}
+		}
 		scope:high_spheres_state = {
 			add_radicals_in_state = {
 				strata = upper
@@ -386,12 +439,14 @@ assassination_events.5 = { #Failure to stop assassination
 		random_scope_character = {
 			limit = { has_variable = assassination_ruler_var }
 			save_scope_as = assassination_ruler_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 	}
 
 	option = {
 		name = assassination_events.5.a
 		default_option = yes
+		revoke_temporary_event_immortality = { CHARACTER = scope:assassination_ruler_scope }
 		scope:assassination_ruler_scope = {
 			kill_character = yes
 		}
@@ -399,6 +454,11 @@ assassination_events.5 = { #Failure to stop assassination
 			name = assassination_success_modifier #great authority hit
 			days = normal_modifier_time
 		}
+	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:assassination_ruler_scope }
+		je_assassination_cleanup = yes
 	}
 }
 
@@ -434,6 +494,7 @@ assassination_events.6 = { #ruler deposed
 		random_scope_character = {
 			limit = { has_variable = assassination_ruler_var }
 			save_scope_as = assassination_ruler_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 	}
 
@@ -446,6 +507,10 @@ assassination_events.6 = { #ruler deposed
 				days = normal_modifier_time
 			}
 		}
+	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:assassination_ruler_scope }
 	}
 }
 
@@ -482,6 +547,7 @@ assassination_events.7 = { #Stopped the assassination
 		random_scope_character = {
 			limit = { has_variable = assassination_ruler_var }
 			save_scope_as = assassination_ruler_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 	}
 
@@ -492,6 +558,11 @@ assassination_events.7 = { #Stopped the assassination
 			name = assassination_caught_em_modifier #legitimacy
 			days = short_modifier_time
 		}
+	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:assassination_ruler_scope }
+		je_assassination_cleanup = yes
 	}
 }
 
@@ -527,6 +598,7 @@ assassination_events.8 = { #ruler died of other cause
 		random_scope_character = {
 			limit = { has_variable = assassination_ruler_var }
 			save_scope_as = assassination_ruler_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 	}
 
@@ -537,5 +609,9 @@ assassination_events.8 = { #ruler died of other cause
 			name = assassination_dead_ruler_modifier #legitimacy loss
 			days = normal_modifier_time
 		}
+	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:assassination_ruler_scope }
 	}
 }
