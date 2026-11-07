@@ -19,7 +19,7 @@ acceptance_events.1 = { #Heir falls in love with unbecomingly unacceptable pop. 
 
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 
-	cooldown = { days = never_fire_again_modifier_time }
+	fire_only_once = yes
 
 	trigger = {
 		has_law_or_variant = law_type:law_HOS_monarch
@@ -50,6 +50,7 @@ acceptance_events.1 = { #Heir falls in love with unbecomingly unacceptable pop. 
 	immediate = {
 		heir ?= {
 			save_scope_as = romeo
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 		random_scope_pop = {
 			limit = {
@@ -62,9 +63,9 @@ acceptance_events.1 = { #Heir falls in love with unbecomingly unacceptable pop. 
 		}
 		set_variable = acceptance_events_1_happened
 	}
-	
+
 	cancellation_trigger = {
-		scope:romeo = {
+		scope:romeo ?= {
 			is_character_alive = no
 		}
 	}
@@ -74,6 +75,12 @@ acceptance_events.1 = { #Heir falls in love with unbecomingly unacceptable pop. 
 		name = acceptance_events.1.a
 		ai_chance = {
 			base = 10
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
 		}
 		ig:ig_landowners = {
 			add_modifier = {
@@ -89,7 +96,7 @@ acceptance_events.1 = { #Heir falls in love with unbecomingly unacceptable pop. 
 				culture = scope:romeo.culture
 			}
 		}
-		scope:romeo = {
+		scope:romeo ?= {
 			add_trait = wrathful
 			add_modifier = {
 				name = modifier_withdrawn_from_the_public
@@ -102,6 +109,12 @@ acceptance_events.1 = { #Heir falls in love with unbecomingly unacceptable pop. 
 		name = acceptance_events.1.b
 		ai_chance = {
 			base = 10
+			modifier = {
+				trigger = {
+					ai_wants_radicals = yes
+				}
+				add = 10
+			}
 		}
 		trigger = {
 			NOT = {
@@ -114,7 +127,7 @@ acceptance_events.1 = { #Heir falls in love with unbecomingly unacceptable pop. 
 				culture = scope:juliet
 			}
 		}
-		scope:romeo = {
+		scope:romeo ?= {
 			add_modifier = {
 				name = modifier_well_known_tragedy
 				days = stupidly_long_modifier_time
@@ -143,6 +156,12 @@ acceptance_events.1 = { #Heir falls in love with unbecomingly unacceptable pop. 
 					}
 				}
 				add = -3
+			}
+			modifier = {
+				trigger = {
+					ai_wants_radicals = yes
+				}
+				add = 10
 			}
 		}
 		random_scope_state = {
@@ -208,12 +227,19 @@ acceptance_events.1 = { #Heir falls in love with unbecomingly unacceptable pop. 
 				culture = scope:romeo.culture
 			}
 		}
-		scope:romeo = {
+		scope:romeo ?= {
 			add_modifier = {
 				name = modifier_scandalous_lover
 				days = stupidly_long_modifier_time
 			}
-			#set_ideology = ideology:ideology_humanitarian_royalist
+			if = {
+				limit = { NOT = { has_trait = scandalous } }
+				add_trait = scandalous
+			}
 		}
+	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:romeo }
 	}
 }
