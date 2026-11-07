@@ -8,9 +8,9 @@ election_neutral.1 = {
 	title = election_neutral.1.t
 	desc = election_neutral.1.d
 	flavor = election_neutral.1.f
-	
+
 	event_image = {
-		texture = "southamerica_election"
+		video = "southamerica_election"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -18,12 +18,14 @@ election_neutral.1 = {
 	icon = "gfx/interface/icons/event_icons/event_election.dds"
 
 	duration = 3
-	
+
 	cooldown = { days = very_long_modifier_time }
 
 	trigger = {
-		in_election_campaign = yes NOT = { has_variable = mute_election_events }
+		# triggered by on_action - elections_monthly_events
+		in_election_campaign = yes
 		NOT = { has_variable = election_event_cooldown }
+		NOT = { has_variable = mute_election_events }
 		any_active_party = {
 			party_has_members = yes
 			any_member = {
@@ -43,7 +45,7 @@ election_neutral.1 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		set_variable = {
 			name = election_event_cooldown
@@ -87,6 +89,7 @@ election_neutral.1 = {
 				save_scope_as = mulligan_letters_ig
 				leader = {
 					save_scope_as = mulligan_letters_leader
+					set_temporary_event_immortality = { DURATION = 3 }
 				}
 			}
 			save_scope_as = mulligan_letters_party
@@ -96,7 +99,7 @@ election_neutral.1 = {
 	cancellation_trigger = {
 		in_election_campaign = no
 	}
-	
+
 	option = { # Deny, Deny, Deny
 		name = election_neutral.1.a
 		default_option = yes
@@ -138,6 +141,10 @@ election_neutral.1 = {
 			add_momentum = momentum_small_decrease
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:mulligan_letters_leader }
+	}
 }
 
 # General speaks in favor of party
@@ -148,9 +155,9 @@ election_neutral.2 = {
 	title = election_neutral.2.t
 	desc = election_neutral.2.d
 	flavor = election_neutral.2.f
-	
+
 	event_image = {
-		texture = "europenorthamerica_before_the_battle"
+		video = "europenorthamerica_before_the_battle"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -158,20 +165,23 @@ election_neutral.2 = {
 	icon = "gfx/interface/icons/event_icons/event_election.dds"
 
 	duration = 3
-	
+
 	cooldown = { days = very_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - elections_monthly_events
 		country_has_free_political_parties = yes
-		in_election_campaign = yes NOT = { has_variable = mute_election_events }
+		in_election_campaign = yes
 		NOT = { has_variable = election_event_cooldown }
+		NOT = { has_variable = mute_election_events }
 		any_scope_character = {
 			OR = {
 				has_role_of_type = general
 				has_role_of_type = admiral
 			}
 			is_ruler_of_own_country = no
-			interest_group = {
+			character_is_valid_for_events = yes
+			interest_group ?= {
 				has_party = yes
 			}
 		}
@@ -189,12 +199,14 @@ election_neutral.2 = {
 					has_role_of_type = admiral
 				}
 				is_ruler_of_own_country = no
-				interest_group = {
+				character_is_valid_for_events = yes
+				interest_group ?= {
 					has_party = yes
 				}
 			}
 			save_scope_as = electioneering_commander
-			interest_group = {
+			set_temporary_event_immortality = { DURATION = 3 }
+			interest_group ?= {
 				save_scope_as = electioneering_commander_ig
 				party = {
 					save_scope_as = electioneering_commander_party
@@ -202,7 +214,7 @@ election_neutral.2 = {
 			}
 		}
 	}
-	
+
 	cancellation_trigger = {
 		in_election_campaign = no
 	}
@@ -210,6 +222,15 @@ election_neutral.2 = {
 	option = {
 		name = election_neutral.2.a
 		default_option = yes
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
+		}
 
 		scope:electioneering_commander_party = {
 			add_momentum = momentum_medium
@@ -218,6 +239,15 @@ election_neutral.2 = {
 
 	option = { # Reprimand the commander
 		name = election_neutral.2.b
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_wants_radicals = yes
+				}
+				add = 10
+			}
+		}
 		add_radicals = {
 			value = medium_radicals
 			pop_type = officers
@@ -226,6 +256,15 @@ election_neutral.2 = {
 
 	option = { # If he likes politics so much, why doesn't he...
 		name = election_neutral.2.c
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
+		}
 		highlighted_option = yes
 		trigger = {
 			custom_tooltip = election_neutral.2.c.tt
@@ -233,11 +272,14 @@ election_neutral.2 = {
 				NOT = { has_role_of_type = politician }
 			}
 		}
-		
+
 		scope:electioneering_commander = {
-			add_character_role = politician
 			set_as_interest_group_leader = yes
 		}
+	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:electioneering_commander }
 	}
 }
 
@@ -249,7 +291,7 @@ election_neutral.3 = {
 	title = election_neutral.3.t
 	desc = election_neutral.3.d
 	flavor = election_neutral.3.f
-	
+
 	event_image = {
 		video = "unspecific_trains"
 	}
@@ -259,13 +301,15 @@ election_neutral.3 = {
 	icon = "gfx/interface/icons/event_icons/event_election.dds"
 
 	duration = 3
-	
+
 	cooldown = { days = very_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - elections_monthly_events
 		country_has_free_political_parties = yes
-		in_election_campaign = yes NOT = { has_variable = mute_election_events }
+		in_election_campaign = yes
 		NOT = { has_variable = election_event_cooldown }
+		NOT = { has_variable = mute_election_events }
 		any_scope_state = {
 			has_building = building_railway
 		}
@@ -283,6 +327,7 @@ election_neutral.3 = {
 			save_scope_as = whistle_stop_ig
 			leader = {
 				save_scope_as = whistle_stop_leader
+				set_temporary_event_immortality = { DURATION = 3 }
 			}
 			party = {
 				save_scope_as = whistle_stop_party
@@ -295,7 +340,7 @@ election_neutral.3 = {
 			save_scope_as = whistle_stop_state
 		}
 	}
-	
+
 	cancellation_trigger = {
 		OR = {
 			in_election_campaign = no
@@ -320,6 +365,7 @@ election_neutral.3 = {
 		}
 	}
 
+
 	option = { # Sure would be a shame if that train kept being misdirected
 		name = election_neutral.3.b
 		highlighted_option = yes
@@ -335,7 +381,7 @@ election_neutral.3 = {
 			}
 		}
 
-		scope:whistle_stop_party ?= {
+		scope:whistle_stop_party = {
 			add_momentum = momentum_small_decrease
 		}
 		scope:whistle_stop_state = {
@@ -368,6 +414,10 @@ election_neutral.3 = {
 			}
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:whistle_stop_leader }
+	}
 }
 
 # The [State]/Midlothian Campaign
@@ -378,9 +428,9 @@ election_neutral.4 = {
 	title = election_neutral.4.t
 	desc = election_neutral.4.d
 	flavor = election_neutral.4.f
-	
+
 	event_image = {
-		texture = "southamerica_election"
+		video = "southamerica_election"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -388,13 +438,15 @@ election_neutral.4 = {
 	icon = "gfx/interface/icons/event_icons/event_election.dds"
 
 	duration = 3
-	
+
 	cooldown = { days = very_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - elections_monthly_events
 		country_has_free_political_parties = yes
-		in_election_campaign = yes NOT = { has_variable = mute_election_events }
+		in_election_campaign = yes
 		NOT = { has_variable = election_event_cooldown }
+		NOT = { has_variable = mute_election_events }
 		any_interest_group = {
 			has_party = yes
 			is_in_government = yes
@@ -432,7 +484,7 @@ election_neutral.4 = {
 		}
 		random_scope_ally = {
 			limit = {
-				infamy >= infamy_threshold:infamous			
+				infamy >= infamy_threshold:infamous
 			}
 			save_scope_as = midlothian_campaign_ally_country
 		}
@@ -472,9 +524,9 @@ election_neutral.5 = {
 	title = election_neutral.5.t
 	desc = election_neutral.5.d
 	flavor = election_neutral.5.f
-	
+
 	event_image = {
-		texture = "unspecific_vandalized_storefront"
+		video = "unspecific_vandalized_storefront"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -482,23 +534,25 @@ election_neutral.5 = {
 	icon = "gfx/interface/icons/event_icons/event_election.dds"
 
 	duration = 3
-	
+
 	cooldown = { days = very_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - elections_monthly_events
 		country_has_free_political_parties = yes
-		in_election_campaign = yes NOT = { has_variable = mute_election_events }
+		in_election_campaign = yes
 		NOT = { has_variable = election_event_cooldown }
-		any_active_party = { 
+		NOT = { has_variable = mute_election_events }
+		any_active_party = {
 			party_has_members = yes
-			count >= 2 
+			count >= 2
 		}
 		any_interest_group = {
 			has_party = yes
 		}
 		NOT = { has_variable = partisans_cooldown_var }
 	}
-	
+
 
 	immediate = {
 		set_variable = {
@@ -518,7 +572,7 @@ election_neutral.5 = {
 			days = normal_modifier_time
 		}
 	}
-	
+
 	cancellation_trigger = {
 		in_election_campaign = no
 	}
@@ -531,7 +585,7 @@ election_neutral.5 = {
 			add_momentum = momentum_small_decrease
 		}
 	}
-	
+
 	option = {
 		name = election_neutral.5.b
 
@@ -546,12 +600,12 @@ election_neutral.5 = {
 			}
 		}
 	}
-	
+
 	# Encourage them!
 	option = {
 		name = election_neutral.5.c
 		highlighted_option = yes
-		
+
 		trigger = {
 			custom_tooltip = election_neutral.5.c.tt
 			any_interest_group = {
@@ -590,9 +644,9 @@ election_neutral.6 = {
 	title = election_neutral.6.t
 	desc = election_neutral.6.d
 	flavor = election_neutral.6.f
-	
+
 	event_image = {
-		texture = "southamerica_election"
+		video = "southamerica_election"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -600,19 +654,21 @@ election_neutral.6 = {
 	icon = "gfx/interface/icons/event_icons/event_election.dds"
 
 	duration = 3
-	
+
 	cooldown = { days = very_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - elections_monthly_events
 		country_has_free_political_parties = yes
-		in_election_campaign = yes NOT = { has_variable = mute_election_events }
+		in_election_campaign = yes
 		NOT = { has_variable = election_event_cooldown }
+		NOT = { has_variable = mute_election_events }
 		NOT = { has_law_or_variant = law_type:law_outlawed_dissent }
 		any_interest_group = {
 			has_party = yes
 		}
 	}
-	
+
 	immediate = {
 		set_variable = {
 			name = election_event_cooldown
@@ -627,11 +683,11 @@ election_neutral.6 = {
 			}
 		}
 	}
-	
+
 	cancellation_trigger = {
 		in_election_campaign = no
 	}
-	
+
 	option = {
 		name = election_neutral.6.a
 		default_option = yes
@@ -640,7 +696,7 @@ election_neutral.6 = {
 			add_momentum = momentum_small
 		}
 	}
-	
+
 	option = {
 		name = election_neutral.6.b
 
@@ -649,11 +705,11 @@ election_neutral.6 = {
 			days = short_modifier_time
 		}
 	}
-	
+
 	option = {
 		name = election_neutral.6.c1
 		highlighted_option = yes
-		
+
 		trigger = {
 			has_law_or_variant = law_type:law_censorship
 			scope:newspaper_party = {
@@ -667,11 +723,11 @@ election_neutral.6 = {
 			add_momentum = momentum_medium
 		}
 	}
-	
+
 	option = {
 		name = election_neutral.6.c2
 		highlighted_option = yes
-		
+
 		trigger = {
 			has_law_or_variant = law_type:law_censorship
 			scope:newspaper_party = {
@@ -697,9 +753,9 @@ election_neutral.7 = {
 	title = election_neutral.7.t
 	desc = election_neutral.7.d
 	flavor = election_neutral.7.f
-	
+
 	event_image = {
-		texture = "unspecific_signed_contract"
+		video = "unspecific_signed_contract"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -707,18 +763,20 @@ election_neutral.7 = {
 	icon = "gfx/interface/icons/event_icons/event_election.dds"
 
 	duration = 3
-	
+
 	cooldown = { days = very_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - elections_monthly_events
 		country_has_free_political_parties = yes
-		in_election_campaign = yes NOT = { has_variable = mute_election_events }
+		in_election_campaign = yes
 		NOT = { has_variable = election_event_cooldown }
+		NOT = { has_variable = mute_election_events }
 		any_interest_group = {
 			has_party = yes
 		}
 	}
-	
+
 	immediate = {
 		set_variable = {
 			name = election_event_cooldown
@@ -751,7 +809,7 @@ election_neutral.7 = {
 			add_momentum = momentum_small
 		}
 	}
-	
+
 	option = {
 		name = election_neutral.7.b
 		add_modifier = {
@@ -764,12 +822,12 @@ election_neutral.7 = {
 			days = short_modifier_time
 		}
 	}
-	
+
 	option = {
 		name = election_neutral.7.c
 		scope:campaign_financing_party = {
 			add_momentum = momentum_small_decrease
-		}	
+		}
 	}
 }
 
@@ -781,9 +839,9 @@ election_neutral.8 = {
 	title = election_neutral.8.t
 	desc = election_neutral.8.d
 	flavor = election_neutral.8.f
-	
+
 	event_image = {
-		texture = "southamerica_election"
+		video = "southamerica_election"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -791,13 +849,15 @@ election_neutral.8 = {
 	icon = "gfx/interface/icons/event_icons/event_election.dds"
 
 	duration = 3
-	
+
 	cooldown = { days = very_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - elections_monthly_events
 		country_has_free_political_parties = yes
-		in_election_campaign = yes NOT = { has_variable = mute_election_events }
+		in_election_campaign = yes
 		NOT = { has_variable = election_event_cooldown }
+		NOT = { has_variable = mute_election_events }
 		enacting_any_law = yes
 		any_interest_group = {
 			has_party = yes
@@ -807,7 +867,7 @@ election_neutral.8 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		set_variable = {
 			name = election_event_cooldown
@@ -829,11 +889,11 @@ election_neutral.8 = {
 			}
 		}
 	}
-	
+
 	cancellation_trigger = {
 		in_election_campaign = no
 	}
-	
+
 	# Champions of Change!
 	option = {
 		name = election_neutral.8.a
