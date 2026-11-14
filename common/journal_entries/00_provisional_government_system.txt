@@ -1,4 +1,4 @@
-﻿je_provisional_government_system = {
+je_provisional_government_system = {
 	icon = "gfx/interface/icons/event_icons/event_carlist_beret.dds"
 
 	group = je_group_internal_affairs
@@ -135,195 +135,187 @@
 		
 	}
 
-	complete = {
-		
-		OR = {
-		
-			#Won competition
-			trigger_if = {
-				limit = { has_variable = provisional_government_candidate_1 }
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_standard_completion_conclusion_desc
+		color = "gold_positive"
+		trigger = {
+			OR = {
+				#Won competition
+				trigger_if = {
+					limit = { has_variable = provisional_government_candidate_1 }
+					custom_tooltip = {
+						text = provisional_government_candidate_1_completed.tt
+						var:provisional_government_candidate_1 >= 100
+					}
+				}
+				trigger_if = {
+					limit = { has_variable = provisional_government_candidate_2 }
+					custom_tooltip = {
+						text = provisional_government_candidate_2_completed.tt
+						var:provisional_government_candidate_2 >= 100
+					}
+				}
+				trigger_if = {
+					limit = { has_variable = provisional_government_candidate_3 }
+					custom_tooltip = {
+						text = provisional_government_candidate_3_completed.tt
+						var:provisional_government_candidate_3 >= 100
+					}
+				}
+				#Ruler resigned
 				custom_tooltip = {
-					text = provisional_government_candidate_1_completed.tt
+					text = ruler_resigned_in_leadership_challenge.tt
+					has_variable = ruler_resigned_in_leadership_challenge
+				}
+				#All rivals eliminated
+				custom_tooltip = {
+					text = no_leadership_challengers_remains.tt
+					AND = {
+						exists = scope:provisional_government_candidate_1
+						OR = {
+							NOT = { exists = scope:provisional_government_candidate_2 }
+							scope:provisional_government_candidate_2 ?= { has_role = character_role_prisoner }
+						}
+						OR = {
+							NOT = { exists = scope:provisional_government_candidate_3 }
+							scope:provisional_government_candidate_3 ?= { has_role = character_role_prisoner }
+						}
+					}
+				}
+			}
+		}
+		effect = {
+			#Remove flags
+			remove_variable = civil_war_country_var
+			#Declare victor
+			if = {
+				limit = {
+					has_variable = provisional_government_candidate_1
 					var:provisional_government_candidate_1 >= 100
 				}
+				scope:provisional_government_candidate_1 ?= { set_character_as_ruler_cwe = yes }
 			}
-			trigger_if = {
-				limit = { has_variable = provisional_government_candidate_2 }
-				custom_tooltip = {
-					text = provisional_government_candidate_2_completed.tt
+			else_if = {
+				limit = {
+					has_variable = provisional_government_candidate_2
 					var:provisional_government_candidate_2 >= 100
 				}
+				scope:provisional_government_candidate_2 ?= { set_character_as_ruler_cwe = yes }
 			}
-			trigger_if = {
-				limit = { has_variable = provisional_government_candidate_3 }
-				custom_tooltip = {
-					text = provisional_government_candidate_3_completed.tt
+			else_if = {
+				limit = {
+					has_variable = provisional_government_candidate_3
 					var:provisional_government_candidate_3 >= 100
 				}
+				scope:provisional_government_candidate_3 ?= { set_character_as_ruler_cwe = yes }
 			}
-			
 			#Ruler resigned
-			custom_tooltip = {
-				text = ruler_resigned_in_leadership_challenge.tt
-				has_variable = ruler_resigned_in_leadership_challenge
+			if = {
+				limit = {
+					has_variable = ruler_resigned_in_leadership_challenge
+					var:provisional_government_candidate_2 >= var:provisional_government_candidate_3
+				}
+				scope:provisional_government_candidate_2 ?= { set_character_as_ruler_cwe = yes }
+				if = {
+					limit = { exists = scope:provisional_government_candidate_3 }
+					set_heir = scope:provisional_government_candidate_3
+				}
+				remove_variable = ruler_resigned_in_leadership_challenge
 			}
-			
-			#All rivals eliminated
+			else_if = {
+				limit = {
+					has_variable = ruler_resigned_in_leadership_challenge
+					var:provisional_government_candidate_3 >= var:provisional_government_candidate_2
+				}
+				scope:provisional_government_candidate_3 ?= { set_character_as_ruler_cwe = yes }
+				if = {
+					limit = { exists = scope:provisional_government_candidate_2 }
+					set_heir = scope:provisional_government_candidate_2
+				}
+				remove_variable = ruler_resigned_in_leadership_challenge
+			}
+			#Regime Change from New Ruler
 			custom_tooltip = {
-				text = no_leadership_challengers_remains.tt
-				AND = {
-					exists = scope:provisional_government_candidate_1
-					OR = {
-						NOT = { exists = scope:provisional_government_candidate_2 }
-						scope:provisional_government_candidate_2 ?= { has_role = character_role_prisoner }
-					}
-					OR = {
-						NOT = { exists = scope:provisional_government_candidate_3 }
-						scope:provisional_government_candidate_3 ?= { has_role = character_role_prisoner }
-					}
+				text = form_new_provisional_government.tt
+				if = {
+					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_monarchist } }
+					activate_law = law_type:law_HOS_monarch
+				}
+				else_if = {
+					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_republican } }
+					activate_law = law_type:law_HOS_president
+				}
+				else_if = {
+					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_theocrat } }
+					activate_law = law_type:law_HOS_religious_leader
+				}
+				else_if = {
+					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_militarist } }
+					activate_law = law_type:law_HOS_nationalist_leader
+				}
+				else_if = {
+					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_communist } }
+					activate_law = law_type:law_HOS_nationalist_leader
+				}
+				else_if = {
+					limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_communist } }
+					activate_law = law_type:law_HOS_communist_leader
 				}
 			}
-			
+			#Domestic Peace
+			hidden_effect = { has_modifier = strengthened_government_authority }
+			add_modifier = {
+				name = strengthened_government_authority
+				years = 5
+				is_decaying = yes
+			}
+			#Clean up modifiers
+			hidden_effect = {
+				every_scope_character = {
+					limit = { has_modifier = leadership_contender_modifier }
+					remove_modifier = leadership_contender_modifier
+				}
+			}
 		}
-		
+	}
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		conclusion_desc = je_standard_failure_conclusion_desc
+		color = "blue_negative"
+		trigger = {
+			#Ruler is no longer Ruler
+			OR = {
+				NOT = { exists = scope:provisional_government_candidate_1 }
+				scope:provisional_government_candidate_1 ?= { is_ruler_of_own_country = no }
+			}
+		}
+		effect = {
+			#Remove flags
+			remove_variable = civil_war_country_var
+			#Clean up modifiers
+			hidden_effect = {
+				every_scope_character = {
+					limit = { has_modifier = leadership_contender_modifier }
+					remove_modifier = leadership_contender_modifier
+				}
+			}
+			#Costs of sudden leader change
+			custom_tooltip = {
+				text = change_of_warlordism.tt
+				trigger_event = { id = warlord_state_system.1 }
+			}
+			custom_tooltip = {
+				text = change_of_power_struggle.tt
+				set_variable = civil_war_country_var
+				add_journal_entry = { type = je_provisional_government_system }
+			}
+		}
 	}
 	
-	on_complete = {
-		
-		#Remove flags
-		remove_variable = civil_war_country_var
-		
-		#Declare victor
-		if = {
-			limit = { 
-				has_variable = provisional_government_candidate_1
-				var:provisional_government_candidate_1 >= 100
-			}
-			scope:provisional_government_candidate_1 ?= { set_character_as_ruler_cwe = yes }
-		}
-		else_if = {
-			limit = { 
-				has_variable = provisional_government_candidate_2
-				var:provisional_government_candidate_2 >= 100
-			}
-			scope:provisional_government_candidate_2 ?= { set_character_as_ruler_cwe = yes }
-		}
-		else_if = {
-			limit = { 
-				has_variable = provisional_government_candidate_3
-				var:provisional_government_candidate_3 >= 100
-			}
-			scope:provisional_government_candidate_3 ?= { set_character_as_ruler_cwe = yes }
-		}
-		
-		#Ruler resigned
-		if = {
-			limit = { 
-				has_variable = ruler_resigned_in_leadership_challenge
-				var:provisional_government_candidate_2 >= var:provisional_government_candidate_3
-			}
-			scope:provisional_government_candidate_2 ?= { set_character_as_ruler_cwe = yes }
-			if = {
-				limit = { exists = scope:provisional_government_candidate_3 }
-				set_heir = scope:provisional_government_candidate_3
-			}
-			remove_variable = ruler_resigned_in_leadership_challenge
-		}
-		else_if = {
-			limit = { 
-				has_variable = ruler_resigned_in_leadership_challenge
-				var:provisional_government_candidate_3 >= var:provisional_government_candidate_2
-			}
-			scope:provisional_government_candidate_3 ?= { set_character_as_ruler_cwe = yes }
-			if = {
-				limit = { exists = scope:provisional_government_candidate_2 }
-				set_heir = scope:provisional_government_candidate_2
-			}
-			remove_variable = ruler_resigned_in_leadership_challenge
-		}
-		
-		#Regime Change from New Ruler
-		custom_tooltip = {
-			text = form_new_provisional_government.tt
-			if = {
-				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_monarchist } }
-				activate_law = law_type:law_HOS_monarch
-			}
-			else_if = {
-				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_republican } }
-				activate_law = law_type:law_HOS_president
-			}
-			else_if = {
-				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_theocrat } }
-				activate_law = law_type:law_HOS_religious_leader
-			}
-			else_if = {
-				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_militarist } }
-				activate_law = law_type:law_HOS_nationalist_leader
-			}
-			else_if = {
-				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_communist } }
-				activate_law = law_type:law_HOS_nationalist_leader
-			}
-			else_if = {
-				limit = { ruler.interest_group ?= { has_ideology = ideology:ideology_communist } }
-				activate_law = law_type:law_HOS_communist_leader
-			}
-		}
-		
-		#Domestic Peace
-		hidden_effect = { has_modifier = strengthened_government_authority }
-		add_modifier = { 
-			name = strengthened_government_authority 
-			years = 5
-			is_decaying = yes
-		}
-		
-		#Clean up modifiers
-		hidden_effect = {
-			every_scope_character = {
-				limit = { has_modifier = leadership_contender_modifier }
-				remove_modifier = leadership_contender_modifier
-			}
-		}
-		
-	}
-	
-	fail = {
-		
-		#Ruler is no longer Ruler
-		OR = { 
-			NOT = { exists = scope:provisional_government_candidate_1 }
-			scope:provisional_government_candidate_1 ?= { is_ruler_of_own_country = no }
-		}
-		
-	}
-	
-	on_fail = {
-	
-		#Remove flags
-		remove_variable = civil_war_country_var
-	
-		#Clean up modifiers
-		hidden_effect = {
-			every_scope_character = {
-				limit = { has_modifier = leadership_contender_modifier }
-				remove_modifier = leadership_contender_modifier
-			}
-		}
-		
-		#Costs of sudden leader change
-		custom_tooltip = {
-			text = change_of_warlordism.tt
-			trigger_event = { id = warlord_state_system.1 }
-		}
-		custom_tooltip = {
-			text = change_of_power_struggle.tt
-			set_variable = civil_war_country_var
-			add_journal_entry = { type = je_provisional_government_system }
-		}
-	
-	}
+
 	
 	on_monthly_pulse = {
 	

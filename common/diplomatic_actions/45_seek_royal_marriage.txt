@@ -1,0 +1,307 @@
+﻿seek_royal_marriage = {
+	groups = {
+		general
+	}
+
+	requires_approval = yes
+	show_confirmation_box = yes
+	show_effect_in_tooltip = yes
+
+	texture = "gfx/interface/icons/diplomatic_action_icons/seek_royal_marriage.dds"
+
+	potential = {
+		
+		#Standard checks
+		is_revolutionary = no is_secessionist = no is_warlord_state = no
+		scope:target_country = {
+			is_revolutionary = no is_secessionist = no is_warlord_state = no
+		}
+		
+		#Is a Monarchy
+		has_law_or_variant = law_type:law_HOS_monarch
+		has_gov_regency = no
+		NOT = { is_subject_type = subject_type_personal_union }
+		scope:target_country = {
+			has_law_or_variant = law_type:law_HOS_monarch
+			has_gov_regency = no
+			NOT = { is_subject_type = subject_type_personal_union }
+		}
+		
+		#THIS and TARGET are independent
+		is_sufficiently_independent = yes
+		scope:target_country = { is_sufficiently_independent = yes }
+		
+		#Eligible spouses
+		scope:target_country = {
+			
+			#Has a marryable character
+			any_scope_character = {
+				
+				#Is a royal (non-monarch) - monarchs use diplo action instead because a subject relation will be created
+				NOT = { has_role = character_role_monarch }
+				is_royal_character = yes
+				
+				#Is of a marryable age
+				is_adult = yes
+				trigger_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = no } }
+					age < 50
+				}
+				trigger_else_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = yes } }
+					age < 40
+				}
+				
+				#Is of correct gender or gender orientation
+				trigger_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = no } }
+					is_female = yes
+					NOT = { has_trait = homosexual_character }
+				}
+				trigger_else_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = yes } }
+					is_female = no
+					NOT = { has_trait = homosexual_character }
+				}
+				
+				#Shares same religion
+				religion ?= { is_state_religion = scope:actor }
+				
+				#Shares similar culture
+				culture ?= { shares_heritage_trait_group_with_any_primary_culture = scope:actor }
+				
+				#Not already a target
+				custom_tooltip = {
+					text = is_not_married.tt
+					NOT = { has_variable = spouse_seeker }
+					NOT = { has_variable = is_married }
+					NOT = { has_variable = marriage_target }
+				}
+				
+			}
+			
+		}
+		any_scope_character = {
+			
+			#Is a royal (non-monarch) - monarchs use diplo action instead because a subject relation will be created
+			NOT = { has_role = character_role_monarch }
+			is_royal_character = yes
+			
+			#In a monarchy
+			scope:actor ?= {
+				has_law_or_variant = law_type:law_HOS_monarch
+				is_a_regency_government = no
+			}
+			
+			#Is interested in marrying
+			NOT = { has_variable = spouse_seeker }
+			NOT = { has_variable = is_married }
+			NOT = { has_trait = homosexual_character }
+			
+			#Is of a marryable age
+			is_adult = yes
+			OR = {
+				age < 50
+				AND = {
+					is_female = yes
+					age < 40
+				}
+			}
+			
+		}
+		
+	}
+
+	possible = {
+		
+		has_diplomatic_relevance = scope:target_country
+		
+		#THIS and TARGET are at peace
+		is_at_war = no
+		scope:target_country = { is_at_war = no }
+		
+	}
+
+	accept_effect = {
+		root = {
+			random_scope_character = {
+				limit = {
+			
+					#Is a royal (non-monarch) - monarchs use diplo action instead because a subject relation will be created
+					NOT = { has_role = character_role_monarch }
+					is_royal_character = yes
+					
+					#In a monarchy
+					scope:actor ?= {
+						has_law_or_variant = law_type:law_HOS_monarch
+						is_a_regency_government = no
+					}
+					
+					#Is interested in marrying
+					NOT = { has_variable = spouse_seeker }
+					NOT = { has_variable = is_married }
+					NOT = { has_trait = homosexual_character }
+					
+					#Is of a marryable age
+					is_adult = yes
+					OR = {
+						age < 50
+						AND = {
+							is_female = yes
+							age < 40
+						}
+					}
+			
+				}
+				set_variable = spouse_seeker
+				save_scope_as = royal_marriage_character
+			}
+		}
+		scope:target_country ?= {
+			random_scope_character = {
+				limit = {
+			
+					#Is a royal (non-monarch) - monarchs use diplo action instead because a subject relation will be created
+					NOT = { has_role = character_role_monarch }
+					is_royal_character = yes
+					
+					#Is of a marryable age
+					is_adult = yes
+					trigger_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = no } }
+						age < 50
+					}
+					trigger_else_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = yes } }
+						age < 40
+					}
+					
+					#Is of correct gender or gender orientation
+					trigger_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = no } }
+						is_female = yes
+						NOT = { has_trait = homosexual_character }
+					}
+					trigger_else_if = {
+						limit = { scope:THIS_character_scope ?= { is_female = yes } }
+						is_female = no
+						NOT = { has_trait = homosexual_character }
+					}
+					
+					#Shares same religion
+					religion ?= { is_state_religion = scope:actor }
+					
+					#Shares similar culture
+					culture ?= { shares_heritage_trait_group_with_any_primary_culture = scope:actor }
+					
+					#Not already a target
+					custom_tooltip = {
+						text = is_not_married.tt
+						NOT = { has_variable = spouse_seeker }
+						NOT = { has_variable = is_married }
+						NOT = { has_variable = marriage_target }
+					}
+			
+				}
+				set_variable = marriage_target
+				save_scope_as = foreign_ruler
+				save_scope_as = foreign_ruler_1
+			}
+			save_scope_as = marriage_country
+			change_relations = {
+				country = root
+				value = 20
+			}
+		}
+		root = {
+			trigger_event = { id = wedding.1 popup = yes }
+		}
+	}
+
+	ai = {
+	
+		evaluation_chance = {
+			value = 0
+		}
+
+		accept_score = {
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+				value = -10
+			}
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RELATIONS"
+				if = {
+					limit = {
+						scope:actor.relations:root >= relations_threshold:friendly
+					}
+					value = 40
+				}
+				else_if = {
+					limit = {
+						scope:actor.relations:root >= relations_threshold:amicable
+					}
+					value = 20
+				}
+				else_if = {
+					limit = {
+						scope:actor.relations:root <= relations_threshold:hostile
+					}
+					value = -80
+				}
+				else_if = {
+					limit = {
+						scope:actor.relations:root <= relations_threshold:cold
+					}
+					value = -40
+				}
+				else_if = {
+					limit = {
+						scope:actor.relations:root <= relations_threshold:poor
+					}
+					value = -20
+				}
+			}
+			if = {
+				limit = {
+					scope:actor.religion != ROOT.religion
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_DIFFERENT_RELIGION"
+					value = -20
+				}
+			}
+			if = { # 0.10(x-y)
+				limit = {
+					ROOT.prestige > 0
+					scope:actor.prestige > 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_PRESTIGE_DIFFERENCE"
+					add = {
+						value = scope:actor.prestige
+						subtract = ROOT.prestige
+					}
+					divide = 10
+					min = -50
+					max = 50
+				}
+			}
+		}
+
+		propose_score = {
+			value = 15
+			add = {
+				value = scope:target_country.country_rank
+				multiply = 3
+			}
+		}
+
+		will_propose = {
+			always = no
+			scope:target_country.relations:root >= relations_threshold:cordial
+		}
+		
+	}
+	
+}

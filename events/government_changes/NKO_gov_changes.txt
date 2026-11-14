@@ -1,7 +1,92 @@
 namespace = NKO_gov_changes
 
-# Kim Jong Il
+# North Korean Constitution 1972
 NKO_gov_changes.1 = {
+    type = country_event
+
+    title = NKO_1972_revolution.t 							# Title of the event; ADD LOCALISATION
+    desc = NKO_1972_revolution.d 							# Description of the event; ADD LOCALISATION
+    #flavor = NKO_1972_revolution.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "unspecific_politicians_arguing" }
+
+    icon = "gfx/interface/icons/event_icons/event_portrait.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:NKO ?= this
+		game_date >= 1972.12.28									# START DATE: Date colony became self governing ****
+		game_date < 1982.12.28									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_communist_government = yes
+		is_sufficiently_independent = yes						# is_vassal = no		
+		is_at_war = no											# war = no
+		
+		#Kim
+		ruler ?= { has_variable = Kim_Il_Sung }
+		has_law_or_variant = law_type:law_HOG_prime_minister
+		
+		# Event has not been fired before
+		NOT = { has_variable = NKO_1972_hgc }					# CHANGE ****
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = NKO_1972_hgc								# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_gov_changes.option.1					# Accept
+        highlighted_option = yes
+		
+		#Enact new regime
+		activate_law = law_type:law_HOG_none
+		if = {
+			limit = {
+				NOT = {
+					active_law:lawgroup_legislature ?= {
+						has_amendment = amendment_type:amendment_cult_of_personality
+					}
+				}
+			}
+			active_law:lawgroup_legislature ?= {
+				add_amendment = {
+					type = amendment_cult_of_personality
+					sponsor = PREV.ig:ig_trade_unions
+				}
+			}
+		}
+		
+		#Kim becomes president
+		ruler ?= { set_character_as_head_of_state = yes }
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_gov_changes.option.2				# Reject
+		default_option = yes
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
+
+# Kim Jong Il
+NKO_gov_changes.2 = {
     type = country_event
 
     title = NKO_1994_revolution.t 							# Title of the event; ADD LOCALISATION
@@ -136,7 +221,7 @@ NKO_gov_changes.1 = {
 }
 
 # Kim Jong Un
-NKO_gov_changes.2 = {
+NKO_gov_changes.3 = {
     type = country_event
 
     title = NKO_2012_revolution.t 							# Title of the event; ADD LOCALISATION

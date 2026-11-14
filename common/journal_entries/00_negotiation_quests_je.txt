@@ -1,4 +1,4 @@
-﻿je_negotiate_army_quest = {
+je_negotiate_army_quest = {
     icon = "gfx/interface/icons/event_icons/event_military.dds"
 
 	group = je_group_internal_affairs
@@ -50,54 +50,65 @@
 		}
 	}
 
-    complete = {
-        trigger_if = {
-            limit = { #grow army quest type
-                scope:ig.var:promise_quest_type = 1
+    outcome = {
+        header = je_standard_completion_header
+        effect_header = je_standard_on_completion_header
+        conclusion_desc = je_standard_completion_conclusion_desc
+        color = "gold_positive"
+        trigger = {
+            trigger_if = {
+                limit = { #grow army quest type
+                    scope:ig.var:promise_quest_type = 1
+                }
+                army_power_projection > scope:ig.var:desired_army_size
             }
-            army_power_projection > scope:ig.var:desired_army_size
+        }
+        effect = {
+            promise_quest_completed = yes
         }
     }
-
-    on_complete = {
-        promise_quest_completed = yes           
-    }
-
-    fail = {
-        OR = {
-            is_promise_abandoned = yes
-            custom_tooltip = {
-                text = time_runs_out_tt
-                scope:journal_entry.journal_entry_age >= {
-                    value = 3650 # 5 years
-                    if = {
-                        limit = {
-                            scope:journal_entry = {
-                                has_variable = asked_for_extension_var
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        trigger = {
+            OR = {
+                is_promise_abandoned = yes
+                custom_tooltip = {
+                    text = time_runs_out_tt
+                    scope:journal_entry.journal_entry_age >= {
+                        value = 3650 # 5 years
+                        if = {
+                            limit = {
+                                scope:journal_entry = {
+                                    has_variable = asked_for_extension_var
+                                }
                             }
+                            add = 1095
                         }
-                        add = 1095
                     }
                 }
             }
         }
-    }
-
-    on_fail = {
-		promise_quest_failed = yes
-    }
-
-    invalid = {
-    }
-
-    on_timeout = {
-        hidden_effect = { #no need to repeat this on UI
+        effect = {
             promise_quest_failed = yes
         }
     }
-
-    on_invalid = {
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        flags = { timeout }
+        effect = {
+            hidden_effect = { #no need to repeat this on UI
+                promise_quest_failed = yes
+            }
+        }
     }
+
+
 
     timeout = {
         value = 3650 # 5 years
@@ -161,62 +172,81 @@ je_government_petition_negotiation_version = {
         }
     }
 
-    complete = {
-        exists = scope:government_petition_law
-        has_law = scope:government_petition_law.type
+    outcome = {
+        header = je_standard_completion_header
+        effect_header = je_standard_on_completion_header
+        conclusion_desc = je_standard_completion_conclusion_desc
+        color = "gold_positive"
+        trigger = {
+            exists = scope:government_petition_law
+            has_law = scope:government_petition_law.type
+        }
+        effect = {
+            promise_quest_completed = yes
+        }
     }
-
-    on_complete = {
-        promise_quest_completed = yes
-    }
-
-    fail = {
-        OR = {
-            is_promise_abandoned = yes
-            custom_tooltip = {
-                text = time_runs_out_tt
-                scope:journal_entry.journal_entry_age >= {
-                    value = 2555 # 7 years
-                    if = {
-                        limit = {
-                            scope:journal_entry = {
-                                has_variable = asked_for_extension_var
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        trigger = {
+            OR = {
+                is_promise_abandoned = yes
+                custom_tooltip = {
+                    text = time_runs_out_tt
+                    scope:journal_entry.journal_entry_age >= {
+                        value = 2555 # 7 years
+                        if = {
+                            limit = {
+                                scope:journal_entry = {
+                                    has_variable = asked_for_extension_var
+                                }
                             }
+                            add = 1095
                         }
-                        add = 1095
                     }
                 }
             }
         }
-    }
-
-    on_fail = {
-		promise_quest_failed = yes
-    }
-
-    invalid = {
-        OR = {
-            scope:ig ?= {
-                law_enactment_stance = {
-                    law = scope:government_petition_law.type
-                    value < approve
-                }
-            }
-            NOT = {
-                exists = scope:government_petition_law
-            }
-        }
-    }
-
-    on_timeout = {
-        hidden_effect = { #no need to repeat this on UI
+        effect = {
             promise_quest_failed = yes
         }
     }
-
-    on_invalid = {
-        quest_cleanup = yes
+    outcome = {
+        conclusion_desc = je_standard_failure_conclusion_desc
+        flags = { hidden invalid_outcome }
+        trigger = {
+            OR = {
+                scope:ig ?= {
+                    law_enactment_stance = {
+                        law = scope:government_petition_law.type
+                        value < approve
+                    }
+                }
+                NOT = {
+                    exists = scope:government_petition_law
+                }
+            }
+        }
+        effect = {
+            quest_cleanup = yes
+        }
     }
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        flags = { timeout }
+        effect = {
+            hidden_effect = { #no need to repeat this on UI
+                promise_quest_failed = yes
+            }
+        }
+    }
+
+
 
     timeout = {
         value = 2555 # 7 years
@@ -281,62 +311,81 @@ je_government_petition_negotiation_version_b = {
         }
     }
 
-    complete = {
-        exists = scope:government_petition_law
-        has_law = scope:government_petition_law.type
+    outcome = {
+        header = je_standard_completion_header
+        effect_header = je_standard_on_completion_header
+        conclusion_desc = je_standard_completion_conclusion_desc
+        color = "gold_positive"
+        trigger = {
+            exists = scope:government_petition_law
+            has_law = scope:government_petition_law.type
+        }
+        effect = {
+            promise_quest_completed = yes
+        }
     }
-
-    on_complete = {
-        promise_quest_completed = yes
-    }
-
-    fail = {
-        OR = {
-            is_promise_abandoned = yes
-            custom_tooltip = {
-                text = time_runs_out_tt
-                scope:journal_entry.journal_entry_age >= {
-                    value = 4565 # 12.5 years
-                    if = {
-                        limit = {
-                            scope:journal_entry = {
-                                has_variable = asked_for_extension_var
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        trigger = {
+            OR = {
+                is_promise_abandoned = yes
+                custom_tooltip = {
+                    text = time_runs_out_tt
+                    scope:journal_entry.journal_entry_age >= {
+                        value = 4565 # 12.5 years
+                        if = {
+                            limit = {
+                                scope:journal_entry = {
+                                    has_variable = asked_for_extension_var
+                                }
                             }
+                            add = 1095
                         }
-                        add = 1095
                     }
                 }
             }
         }
-    }
-
-    on_fail = {
-		promise_quest_failed = yes
-    }
-
-    invalid = {
-        OR = {
-            scope:ig ?= {
-                law_enactment_stance = {
-                    law = scope:government_petition_law.type
-                    value < approve
-                }
-            }
-            NOT = {
-                exists = scope:government_petition_law
-            }
-        }
-    }
-
-    on_timeout = {
-        hidden_effect = { #no need to repeat this on UI
+        effect = {
             promise_quest_failed = yes
         }
     }
-
-    on_invalid = {
-        quest_cleanup = yes
+    outcome = {
+        conclusion_desc = je_standard_failure_conclusion_desc
+        flags = { hidden invalid_outcome }
+        trigger = {
+            OR = {
+                scope:ig ?= {
+                    law_enactment_stance = {
+                        law = scope:government_petition_law.type
+                        value < approve
+                    }
+                }
+                NOT = {
+                    exists = scope:government_petition_law
+                }
+            }
+        }
+        effect = {
+            quest_cleanup = yes
+        }
     }
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        flags = { timeout }
+        effect = {
+            hidden_effect = { #no need to repeat this on UI
+                promise_quest_failed = yes
+            }
+        }
+    }
+
+
 
     timeout = {
         value = 4565 # 12.5 years
@@ -408,49 +457,64 @@ je_negotiate_buildings = {
         }
     }
 
-    complete = {
-        trigger_if = {
-            limit = { #build
-                scope:ig.var:promise_quest_type = 3
-            }
-            country_has_building_type_levels = {
-                target = scope:ig.var:promised_building_type 
-                value >= scope:ig.var:building_level_increase
+    outcome = {
+        header = je_standard_completion_header
+        effect_header = je_standard_on_completion_header
+        conclusion_desc = je_standard_completion_conclusion_desc
+        color = "gold_positive"
+        trigger = {
+            trigger_if = {
+                limit = { #build
+                    scope:ig.var:promise_quest_type = 3
+                }
+                country_has_building_type_levels = {
+                    target = scope:ig.var:promised_building_type
+                    value >= scope:ig.var:building_level_increase
+                }
             }
         }
+        effect = {
+            promise_quest_completed = yes
+        }
     }
-
-    on_complete = {
-        promise_quest_completed = yes           
-    }
-
-    fail = {
-        OR = {
-            is_promise_abandoned = yes
-            custom_tooltip = {
-                text = time_runs_out_tt
-                scope:journal_entry.journal_entry_age >= {
-                    value = 3650 # 5 years
-                    if = {
-                        limit = {
-                            scope:journal_entry = {
-                                has_variable = asked_for_extension_var
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        trigger = {
+            OR = {
+                is_promise_abandoned = yes
+                custom_tooltip = {
+                    text = time_runs_out_tt
+                    scope:journal_entry.journal_entry_age >= {
+                        value = 3650 # 5 years
+                        if = {
+                            limit = {
+                                scope:journal_entry = {
+                                    has_variable = asked_for_extension_var
+                                }
                             }
+                            add = 1095
                         }
-                        add = 1095
                     }
                 }
             }
         }
-    }
-
-    on_fail = {
-		promise_quest_failed = yes
-    }
-
-    on_timeout = {
-        hidden_effect = { #no need to repeat this on UI
+        effect = {
             promise_quest_failed = yes
+        }
+    }
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        flags = { timeout }
+        effect = {
+            hidden_effect = { #no need to repeat this on UI
+                promise_quest_failed = yes
+            }
         }
     }
 
@@ -526,44 +590,59 @@ je_negotiate_building_group = {
         }
     }
 
-    complete = {
-        country_has_building_group_levels = {
-            type = scope:ig.var:promised_building_group
-            value >= scope:ig.var:building_group_level_increase
+    outcome = {
+        header = je_standard_completion_header
+        effect_header = je_standard_on_completion_header
+        conclusion_desc = je_standard_completion_conclusion_desc
+        color = "gold_positive"
+        trigger = {
+            country_has_building_group_levels = {
+                type = scope:ig.var:promised_building_group
+                value >= scope:ig.var:building_group_level_increase
+            }
+        }
+        effect = {
+            promise_quest_completed = yes
         }
     }
-
-    on_complete = {
-        promise_quest_completed = yes
-    }
-
-    fail = {
-        OR = {
-            is_promise_abandoned = yes
-            custom_tooltip = {
-                text = time_runs_out_tt
-                scope:journal_entry.journal_entry_age >= {
-                    value = 3650 # 5 years
-                    if = {
-                        limit = {
-                            scope:journal_entry = {
-                                has_variable = asked_for_extension_var
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        trigger = {
+            OR = {
+                is_promise_abandoned = yes
+                custom_tooltip = {
+                    text = time_runs_out_tt
+                    scope:journal_entry.journal_entry_age >= {
+                        value = 3650 # 5 years
+                        if = {
+                            limit = {
+                                scope:journal_entry = {
+                                    has_variable = asked_for_extension_var
+                                }
                             }
+                            add = 1095
                         }
-                        add = 1095
                     }
                 }
             }
         }
-    }
-
-    on_fail = {
-        promise_quest_failed = yes
-    }
-
-    on_timeout = {
-        hidden_effect = { #no need to repeat this on UI
+        effect = {
             promise_quest_failed = yes
+        }
+    }
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        flags = { timeout }
+        effect = {
+            hidden_effect = { #no need to repeat this on UI
+                promise_quest_failed = yes
+            }
         }
     }
 
@@ -649,38 +728,49 @@ je_negotiate_taxes = {
         }
     }
 
-    complete = {
-        custom_tooltip = {
-            text = neg_taxes_remain_low_tt
-            var:neg_taxes_remaining_months <= 0
-        }
-    }
-
-    on_complete = {
-        promise_quest_completed = yes
-    }
-
-    fail = {
-        OR = {
+    outcome = {
+        header = je_standard_completion_header
+        effect_header = je_standard_on_completion_header
+        conclusion_desc = je_standard_completion_conclusion_desc
+        color = "gold_positive"
+        trigger = {
             custom_tooltip = {
-                text = neg_taxes_change_level_tt
-                trigger_if = {
-                    limit = {
-                        scope:ig.var:promise_quest_degree <= 2
-                    }
-                    tax_level > low
-                }
-                trigger_else = {
-                    tax_level > very_low
-                }
+                text = neg_taxes_remain_low_tt
+                var:neg_taxes_remaining_months <= 0
             }
-            is_promise_abandoned = yes
+        }
+        effect = {
+            promise_quest_completed = yes
+        }
+    }
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        trigger = {
+            OR = {
+                custom_tooltip = {
+                    text = neg_taxes_change_level_tt
+                    trigger_if = {
+                        limit = {
+                            scope:ig.var:promise_quest_degree <= 2
+                        }
+                        tax_level > low
+                    }
+                    trigger_else = {
+                        tax_level > very_low
+                    }
+                }
+                is_promise_abandoned = yes
+            }
+        }
+        effect = {
+            promise_quest_failed = yes
         }
     }
 
-    on_fail = {
-        promise_quest_failed = yes
-    }
+
 
     weight = 1000
 
@@ -741,63 +831,78 @@ je_negotiate_sol = {
         }
     }
 
-    complete = {
-        root.average_sol >= scope:ig.var:promised_sol_level
-    }
-
-    on_complete = {
-        ruler ?= {
-            add_modifier = {
-                name = hero_of_the_people
-                days = very_long_modifier_time
-                multiplier = scope:ig.var:promise_quest_degree
-            }
+    outcome = {
+        header = je_standard_completion_header
+        effect_header = je_standard_on_completion_header
+        conclusion_desc = je_standard_completion_conclusion_desc
+        color = "gold_positive"
+        trigger = {
+            root.average_sol >= scope:ig.var:promised_sol_level
         }
-        scope:ig = { #reapply hero modifier 
-            hidden_effect = {
-                if = {
-                    limit = {
-                        has_modifier = heroes_of_the_people
-                    }
-                    remove_modifier = heroes_of_the_people
+        effect = {
+            ruler ?= {
+                add_modifier = {
+                    name = hero_of_the_people
+                    days = very_long_modifier_time
+                    multiplier = scope:ig.var:promise_quest_degree
                 }
             }
-            add_modifier = {
-                name = heroes_of_the_people
-                days = long_modifier_time
-                multiplier = scope:ig.var:promise_quest_degree
-            }
-        }
-        promise_quest_completed = yes
-    }
-
-    fail = {
-       OR = {
-            is_promise_abandoned = yes
-            custom_tooltip = {
-                text = time_runs_out_tt
-                scope:journal_entry.journal_entry_age >= {
-                    value = 3650 # 5 years
+            scope:ig = { #reapply hero modifier
+                hidden_effect = {
                     if = {
                         limit = {
-                            scope:journal_entry = {
-                                has_variable = asked_for_extension_var
-                            }
+                            has_modifier = heroes_of_the_people
                         }
-                        add = 1095
+                        remove_modifier = heroes_of_the_people
+                    }
+                }
+                add_modifier = {
+                    name = heroes_of_the_people
+                    days = long_modifier_time
+                    multiplier = scope:ig.var:promise_quest_degree
+                }
+            }
+            promise_quest_completed = yes
+        }
+    }
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        trigger = {
+            OR = {
+                is_promise_abandoned = yes
+                custom_tooltip = {
+                    text = time_runs_out_tt
+                    scope:journal_entry.journal_entry_age >= {
+                        value = 3650 # 5 years
+                        if = {
+                            limit = {
+                                scope:journal_entry = {
+                                    has_variable = asked_for_extension_var
+                                }
+                            }
+                            add = 1095
+                        }
                     }
                 }
             }
         }
-    }
-
-    on_fail = {
-        promise_quest_failed = yes
-    }
-
-    on_timeout = {
-        hidden_effect = { #no need to repeat this on UI
+        effect = {
             promise_quest_failed = yes
+        }
+    }
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        conclusion_desc = je_standard_failure_conclusion_desc
+        color = "blue_negative"
+        flags = { timeout }
+        effect = {
+            hidden_effect = { #no need to repeat this on UI
+                promise_quest_failed = yes
+            }
         }
     }
 

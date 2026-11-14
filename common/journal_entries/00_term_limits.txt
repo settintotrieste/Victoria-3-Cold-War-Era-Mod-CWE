@@ -1,4 +1,4 @@
-﻿je_term_limits = {
+je_term_limits = {
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 
 	group = je_group_political_organs
@@ -7,6 +7,10 @@
 	scripted_button = je_extend_term_limit_button
 
 	is_shown_when_inactive = {
+		
+	}
+
+	possible = {
 		
 		#Not any other historical or generic system
 		NOR = {
@@ -25,10 +29,6 @@
 		
 		#Not during a provisional government
 		NOT = { has_journal_entry = je_provisional_government_system }
-		
-	}
-
-	possible = {
 		
 		#Not a special case
 		NOT = {
@@ -70,59 +70,52 @@
 		
 	}
 	
-	fail = {
-	
-		#President was changed along the way
-		scope:the_current_president_scope ?= { is_ruler_of_own_country = no }
-		
-	}
-	
-	on_fail = {
-		
-		#Reset Term Limits
-		remove_variable = term_limit_var
-		
-		#Clean up markers
-		every_scope_character = {
-			remove_variable = is_term_limited_character
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		conclusion_desc = je_standard_failure_conclusion_desc
+		color = "blue_negative"
+		trigger = {
+			#President was changed along the way
+			scope:the_current_president_scope ?= { is_ruler_of_own_country = no }
 		}
-		
-	}
-	
-	invalid = {
-	
-		OR = {
-		
-			active_law:lawgroup_governance_principles ?= {
-				has_amendment = amendment_type:amendment_rotating_presidency
+		effect = {
+			#Reset Term Limits
+			remove_variable = term_limit_var
+			#Clean up markers
+			every_scope_character = {
+				remove_variable = is_term_limited_character
 			}
-			
-			NOR = {
-				is_a_regime_monarchy = no
-				has_gov_regency = yes
+		}
+	}
+	outcome = {
+		conclusion_desc = je_standard_failure_conclusion_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			OR = {
+				active_law:lawgroup_governance_principles ?= {
+					has_amendment = amendment_type:amendment_rotating_presidency
+				}
+				NOR = {
+					is_a_regime_monarchy = no
+					has_gov_regency = yes
+				}
+				NOT = { has_law_or_variant = law_type:law_yes_term_limit }
+				NOT = { exists = scope:the_current_president_scope }
+				scope:the_current_president_scope ?= { NOT = { owner ?= ROOT } }
 			}
-			
-			NOT = { has_law_or_variant = law_type:law_yes_term_limit }
-			
-			NOT = { exists = scope:the_current_president_scope }
-			
-			scope:the_current_president_scope ?= { NOT = { owner ?= ROOT } }
-			
 		}
-	
+		effect = {
+			#Reset Term Limits
+			remove_variable = term_limit_var
+			#Clean up markers
+			every_scope_character = {
+				remove_variable = is_term_limited_character
+			}
+		}
 	}
 	
-	on_invalid = {
-		
-		#Reset Term Limits
-		remove_variable = term_limit_var
-		
-		#Clean up markers
-		every_scope_character = {
-			remove_variable = is_term_limited_character
-		}
-		
-	}
+
 
 	on_yearly_pulse = {
 		
@@ -138,74 +131,72 @@
 		
 	}
 
-	complete = {
-		
-		#Term completed
-		custom_tooltip = {
-			text = je_term_limits_goal
-			root.var:term_limit_var >= root.var:term_limit_max_var
-		}
-		
-		#Elections are not suspended
-		NOR = { has_modifier = state_of_emergency_issued active_law:lawgroup_distribution_of_power ?= { has_amendment = amendment_type:amendment_wartime_suspended_elections } has_modifier = wartime_measures_martial_law }
-		
-		#Only step down during election campaign
-		trigger_if = {
-			limit = {
-				country_has_voting_franchise = yes
-			}
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_standard_completion_conclusion_desc
+		color = "gold_positive"
+		trigger = {
+			#Term completed
 			custom_tooltip = {
-				text = ruler_change_after_elections_only.tt
-				always = no
+				text = je_term_limits_goal
+				root.var:term_limit_var >= root.var:term_limit_max_var
 			}
-		}
-		
-	}
-	
-	on_complete = {
-	
-		#President's term has ended so he shall retire
-		custom_tooltip = {
-			text = je_term_limits.tt
-			
-			if = {
+			#Elections are not suspended
+			NOR = { has_modifier = state_of_emergency_issued active_law:lawgroup_distribution_of_power ?= { has_amendment = amendment_type:amendment_wartime_suspended_elections } has_modifier = wartime_measures_martial_law }
+			#Only step down during election campaign
+			trigger_if = {
 				limit = {
-					has_gov_regency = yes
-					is_a_regime_monarchy = yes
+					country_has_voting_franchise = yes
 				}
-				random_scope_character = {
-					limit = {
-						OR = {
-							AND = { 
-								has_role_of_type = magnate
-								is_noble = yes
-							}
-							has_role_of_type = general
-							has_role_of_type = admiral
-							AND = {
-								has_role = character_role_prince
-								is_eligible_to_become_monarch = no
-							}
-						}
-						is_adult = yes
-					}
-					set_character_as_regent = yes
+				custom_tooltip = {
+					text = ruler_change_after_elections_only.tt
+					hidden_trigger = { always = no }
 				}
 			}
-			else = {
-				scope:the_current_president_scope ?= { retire_character = yes }
-			}
-			
-			#Clean up markers
-			every_scope_character = {
-				remove_variable = is_term_limited_character
-			}
-		
-			#Reset Term Limits
-			remove_variable = term_limit_var
 		}
-		
+		effect = {
+			#President's term has ended so he shall retire
+			custom_tooltip = {
+				text = je_term_limits.tt
+				if = {
+					limit = {
+						has_gov_regency = yes
+						is_a_regime_monarchy = yes
+					}
+					random_scope_character = {
+						limit = {
+							OR = {
+								AND = {
+									has_role_of_type = magnate
+									is_noble = yes
+								}
+								has_role_of_type = general
+								has_role_of_type = admiral
+								AND = {
+									has_role = character_role_prince
+									is_eligible_to_become_monarch = no
+								}
+							}
+							is_adult = yes
+						}
+						set_character_as_regent = yes
+					}
+				}
+				else = {
+					scope:the_current_president_scope ?= { retire_character = yes }
+				}
+				#Clean up markers
+				every_scope_character = {
+					remove_variable = is_term_limited_character
+				}
+				#Reset Term Limits
+				remove_variable = term_limit_var
+			}
+		}
 	}
+	
+
 
 	weight = 100
 
@@ -225,6 +216,10 @@ je_term_limits_collective_HOS = {
 
 	is_shown_when_inactive = {
 		
+	}
+
+	possible = {
+		
 		#Not any other historical or generic system
 		NOR = {
 			has_journal_entry = je_term_limits
@@ -239,10 +234,6 @@ je_term_limits_collective_HOS = {
 		
 		#Not during a provisional government
 		NOT = { has_journal_entry = je_provisional_government_system }
-		
-	}
-
-	possible = {
 		
 		#Is a special case
 		active_law:lawgroup_governance_principles ?= {
@@ -276,46 +267,43 @@ je_term_limits_collective_HOS = {
 		
 	}
 	
-	fail = {
-	
-		#President was changed along the way
-		scope:the_current_president_scope ?= { is_ruler_of_own_country = no }
-		
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		conclusion_desc = je_standard_failure_conclusion_desc
+		color = "blue_negative"
+		trigger = {
+			#President was changed along the way
+			scope:the_current_president_scope ?= { is_ruler_of_own_country = no }
+		}
+		effect = {
+			#Reset Term Limits
+			remove_variable = term_limit_var
+		}
 	}
-	
-	on_fail = {
-		
-		#Reset Term Limits
-		remove_variable = term_limit_var
-		
-	}
-	
-	invalid = {
-		OR = {
-		
-			NOT = { 
-				active_law:lawgroup_governance_principles ?= {
-					has_amendment = amendment_type:amendment_rotating_presidency
+	outcome = {
+		conclusion_desc = je_standard_failure_conclusion_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			OR = {
+				NOT = {
+					active_law:lawgroup_governance_principles ?= {
+						has_amendment = amendment_type:amendment_rotating_presidency
+					}
 				}
+				is_a_regime_monarchy = yes
+				NOT = { has_law_or_variant = law_type:law_yes_term_limit }
+				NOT = { exists = scope:the_current_president_scope }
+				scope:the_current_president_scope ?= { NOT = { owner ?= ROOT } }
 			}
-			
-			is_a_regime_monarchy = yes
-			
-			NOT = { has_law_or_variant = law_type:law_yes_term_limit }
-			
-			NOT = { exists = scope:the_current_president_scope }
-			
-			scope:the_current_president_scope ?= { NOT = { owner ?= ROOT } }
-			
+		}
+		effect = {
+			#Reset Term Limits
+			remove_variable = term_limit_var
 		}
 	}
 	
-	on_invalid = {
-		
-		#Reset Term Limits
-		remove_variable = term_limit_var
-		
-	}
+
 
 	on_monthly_pulse = {
 		
@@ -331,48 +319,102 @@ je_term_limits_collective_HOS = {
 		
 	}
 
-	complete = {
-		
-		#Term completed
-		custom_tooltip = {
-			text = je_term_limits_goal
-			root.var:term_limit_var >= root.var:term_limit_max_var
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_standard_completion_conclusion_desc
+		color = "gold_positive"
+		trigger = {
+			#Term completed
+			custom_tooltip = {
+				text = je_term_limits_goal
+				root.var:term_limit_var >= root.var:term_limit_max_var
+			}
+			#Elections are not suspended
+			NOR = { has_modifier = state_of_emergency_issued active_law:lawgroup_distribution_of_power ?= { has_amendment = amendment_type:amendment_wartime_suspended_elections } has_modifier = wartime_measures_martial_law }
 		}
-		
-		#Elections are not suspended
-		NOR = { has_modifier = state_of_emergency_issued active_law:lawgroup_distribution_of_power ?= { has_amendment = amendment_type:amendment_wartime_suspended_elections } has_modifier = wartime_measures_martial_law }
-		
-	}
-	
-	on_complete = {
-	
-		#President's term has ended so he shall retire
-		custom_tooltip = {
-			text = je_term_limits.tt
-			
-			## Appoint another President ##
-			
-			#Federal Republic of Yugoslavia
-			if = {
-				limit = {
-					c:YUG ?= this
-					is_a_communist_government = yes
-					has_law_or_variant = law_type:law_federal_state
-					has_law_or_variant = law_type:law_multicultural
-				}
-				scope:the_current_president_scope ?= {
-					culture = { save_scope_as = ruler_culture_scope }
-				}
+		effect = {
+			#President's term has ended so he shall retire
+			custom_tooltip = {
+				text = je_term_limits.tt
+				## Appoint another President ##
+				#Federal Republic of Yugoslavia
 				if = {
 					limit = {
+						c:YUG ?= this
+						is_a_communist_government = yes
+						has_law_or_variant = law_type:law_federal_state
+						has_law_or_variant = law_type:law_multicultural
+					}
+					scope:the_current_president_scope ?= {
+						culture = { save_scope_as = ruler_culture_scope }
+					}
+					if = {
+						limit = {
+							NOT = { exists = heir }
+							exists = scope:ruler_culture_scope
+							any_scope_character = {
+								has_role_of_type = politician
+								culture = { NOT = { this = scope:ruler_culture_scope } }
+								interest_group = {
+									OR = {
+										is_in_government = yes
+										is_interest_group_type = scope:the_current_president_ig_scope
+									}
+								}
+								is_ruler_of_own_country = no
+								count >= 1
+							}
+						}
+						random_scope_character = {
+							limit = {
+								has_role_of_type = politician
+								culture = { NOT = { this = scope:ruler_culture_scope } }
+								interest_group = {
+									OR = {
+										is_in_government = yes
+										is_interest_group_type = scope:the_current_president_ig_scope
+									}
+								}
+								is_ruler_of_own_country = no
+							}
+							set_character_as_ruler = yes
+						}
+					}
+					else_if = {
+						limit = {
+							NOT = { exists = heir }
+							any_primary_culture = { NOT = { this = scope:ruler_culture_scope } }
+						}
+						random_primary_culture = {
+							limit = { NOT = { this = scope:ruler_culture_scope } }
+							save_scope_as = new_ruler_culture_scope
+						}
+						create_character = {
+							interest_group = scope:the_current_president_ig_scope
+							culture = scope:new_ruler_culture_scope
+							ruler = yes
+						}
+					}
+					else_if = {
+						limit = {
+							NOT = { exists = heir }
+						}
+						create_character = {
+							interest_group = scope:the_current_president_ig_scope
+							ruler = yes
+						}
+					}
+				}
+				#Generic
+				else_if = {
+					limit = {
 						NOT = { exists = heir }
-						exists = scope:ruler_culture_scope
 						any_scope_character = {
 							has_role_of_type = politician
-							culture = { NOT = { this = scope:ruler_culture_scope } }
 							interest_group = {
 								OR = {
-									is_in_government = yes 
+									is_in_government = yes
 									is_interest_group_type = scope:the_current_president_ig_scope
 								}
 							}
@@ -383,11 +425,10 @@ je_term_limits_collective_HOS = {
 					random_scope_character = {
 						limit = {
 							has_role_of_type = politician
-							culture = { NOT = { this = scope:ruler_culture_scope } }
 							interest_group = {
-								OR = { 
-									is_in_government = yes 
-									is_interest_group_type = scope:the_current_president_ig_scope 
+								OR = {
+									is_in_government = yes
+									is_interest_group_type = scope:the_current_president_ig_scope
 								}
 							}
 							is_ruler_of_own_country = no
@@ -398,74 +439,19 @@ je_term_limits_collective_HOS = {
 				else_if = {
 					limit = {
 						NOT = { exists = heir }
-						any_primary_culture = { NOT = { this = scope:ruler_culture_scope } }
-					}
-					random_primary_culture = {
-						limit = { NOT = { this = scope:ruler_culture_scope } }
-						save_scope_as = new_ruler_culture_scope
-					}
-					create_character = {
-						interest_group = scope:the_current_president_ig_scope
-						culture = scope:new_ruler_culture_scope
-						ruler = yes
-					}
-				}
-				else_if = {
-					limit = {
-						NOT = { exists = heir }
 					}
 					create_character = {
 						interest_group = scope:the_current_president_ig_scope
 						ruler = yes
 					}
 				}
+				#Reset Term Limits
+				remove_variable = term_limit_var
 			}
-			
-			#Generic
-			else_if = {
-				limit = {
-					NOT = { exists = heir }
-					any_scope_character = {
-						has_role_of_type = politician
-						interest_group = { 
-							OR = {
-								is_in_government = yes 
-								is_interest_group_type = scope:the_current_president_ig_scope 
-							} 
-						}
-						is_ruler_of_own_country = no
-						count >= 1
-					}
-				}
-				random_scope_character = {
-					limit = { 
-						has_role_of_type = politician
-						interest_group = {
-							OR = { 
-								is_in_government = yes 
-								is_interest_group_type = scope:the_current_president_ig_scope 
-							}
-						}
-						is_ruler_of_own_country = no
-					}
-					set_character_as_ruler = yes
-				}
-			}
-			else_if = {
-				limit = {
-					NOT = { exists = heir }
-				}
-				create_character = {
-					interest_group = scope:the_current_president_ig_scope
-					ruler = yes
-				}
-			}
-		
-			#Reset Term Limits
-			remove_variable = term_limit_var
 		}
-		
 	}
+	
+
 
 	weight = 100
 
@@ -483,6 +469,10 @@ je_term_limits_monarchy = {
 
 	is_shown_when_inactive = {
 		
+	}
+
+	possible = {
+		
 		#Not any other historical or generic system
 		NOR = {
 			has_journal_entry = je_term_limits
@@ -498,10 +488,6 @@ je_term_limits_monarchy = {
 		
 		#Not during a provisional government
 		NOT = { has_journal_entry = je_provisional_government_system }
-		
-	}
-
-	possible = {
 		
 		#There is a term limit
 		has_law_or_variant = law_type:law_yes_term_limit
@@ -553,78 +539,70 @@ je_term_limits_monarchy = {
 		
 	}
 	
-	fail = {
-	
-		#Monarch was changed along the way
-		scope:the_current_president_scope ?= { is_ruler_of_own_country = no }
-		
-	}
-	
-	on_fail = {
-	
-		#Clean up elective monarchs
-		if = {
-			limit = {
-				OR = {
-					is_a_regime_monarchy = no
-					NOT = { has_law_or_variant = law_type:law_yes_term_limit }
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		conclusion_desc = je_standard_failure_conclusion_desc
+		color = "blue_negative"
+		trigger = {
+			#Monarch was changed along the way
+			scope:the_current_president_scope ?= { is_ruler_of_own_country = no }
+		}
+		effect = {
+			#Clean up elective monarchs
+			if = {
+				limit = {
+					OR = {
+						is_a_regime_monarchy = no
+						NOT = { has_law_or_variant = law_type:law_yes_term_limit }
+					}
+				}
+				every_scope_character = {
+					limit = { has_role = character_role_monarch_elective }
+					set_character_as_royal = yes
+					set_variable = former_elective_monarch
+					remove_character_role = character_role_monarch_elective
 				}
 			}
-			every_scope_character = {
-				limit = { has_role = character_role_monarch_elective }
-				set_character_as_royal = yes
-				set_variable = former_elective_monarch
-				remove_character_role = character_role_monarch_elective
+			#Reset Term Limits
+			remove_variable = term_limit_var
+		}
+	}
+	outcome = {
+		conclusion_desc = je_standard_failure_conclusion_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			OR = {
+				is_a_regime_monarchy = no
+				is_a_regency_government = yes
+				NOT = { has_law_or_variant = law_type:law_yes_term_limit }
+				NOT = { exists = scope:the_current_president_scope }
+				scope:the_current_president_scope ?= { NOT = { owner ?= ROOT } }
+				ruler ?= { NOT = { has_role = character_role_monarch } }
 			}
 		}
-		
-		#Reset Term Limits
-		remove_variable = term_limit_var
-		
-	}
-	
-	invalid = {
-	
-		OR = {
-			
-			is_a_regime_monarchy = no
-			
-			is_a_regency_government = yes
-			
-			NOT = { has_law_or_variant = law_type:law_yes_term_limit }
-			
-			NOT = { exists = scope:the_current_president_scope }
-			
-			scope:the_current_president_scope ?= { NOT = { owner ?= ROOT } }
-			
-			ruler ?= { NOT = { has_role = character_role_monarch } }
-			
-		}
-	
-	}
-	
-	on_invalid = {
-		
-		#Clean up elective monarchs
-		if = {
-			limit = {
-				OR = {
-					is_a_regime_monarchy = no
-					NOT = { has_law_or_variant = law_type:law_yes_term_limit }
+		effect = {
+			#Clean up elective monarchs
+			if = {
+				limit = {
+					OR = {
+						is_a_regime_monarchy = no
+						NOT = { has_law_or_variant = law_type:law_yes_term_limit }
+					}
+				}
+				every_scope_character = {
+					limit = { has_role = character_role_monarch_elective }
+					set_character_as_royal = yes
+					set_variable = former_elective_monarch
+					remove_character_role = character_role_monarch_elective
 				}
 			}
-			every_scope_character = {
-				limit = { has_role = character_role_monarch_elective }
-				set_character_as_royal = yes
-				set_variable = former_elective_monarch
-				remove_character_role = character_role_monarch_elective
-			}
+			#Reset Term Limits
+			remove_variable = term_limit_var
 		}
-		
-		#Reset Term Limits
-		remove_variable = term_limit_var
-		
 	}
+	
+
 
 	on_yearly_pulse = {
 		
@@ -640,71 +618,69 @@ je_term_limits_monarchy = {
 		
 	}
 
-	complete = {
-		
-		#Term completed
-		scope:journal_entry = {
-			is_goal_complete = yes
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_standard_completion_conclusion_desc
+		color = "gold_positive"
+		trigger = {
+			#Term completed
+			scope:journal_entry = {
+				is_goal_complete = yes
+			}
+			#Not regency
+			is_a_regime_monarchy = yes
+			is_a_regency_government = no
 		}
-		
-		#Not regency
-		is_a_regime_monarchy = yes
-		is_a_regency_government = no
-		
-	}
-	
-	on_complete = {
-	
-		#President's term has ended so he shall retire
-		custom_tooltip = {
-			text = je_term_limits.tt
-			
-			#Another Elected Monarch becomes Monarch
-			if = {
-				limit = {
-					NOT = {
-						any_scope_character = {
-							has_role = character_role_monarch_elective
-							is_ruler_of_own_country = no
-							is_adult = yes
-							count >= 1
+		effect = {
+			#President's term has ended so he shall retire
+			custom_tooltip = {
+				text = je_term_limits.tt
+				#Another Elected Monarch becomes Monarch
+				if = {
+					limit = {
+						NOT = {
+							any_scope_character = {
+								has_role = character_role_monarch_elective
+								is_ruler_of_own_country = no
+								is_adult = yes
+								count >= 1
+							}
 						}
 					}
+					#Generate Elective Monarchs
+					generate_elective_monarchs_for_country = yes
 				}
-				
-				#Generate Elective Monarchs
-				generate_elective_monarchs_for_country = yes
-				
+				random_scope_character = {
+					limit = {
+						has_role = character_role_monarch_elective
+						is_ruler_of_own_country = no
+						is_adult = yes
+					}
+					set_character_as_ruler = yes
+					set_character_as_monarch = yes
+					if = {
+						limit = { has_role = character_role_monarch_elective }
+						remove_character_role = character_role_monarch_elective
+					}
+				}
+				scope:the_current_president_scope ?= {
+					if = {
+						limit = { NOT = { has_role = character_role_monarch_elective } }
+						add_character_role = character_role_monarch_elective
+					}
+					if = {
+						limit = { has_role = character_role_monarch }
+						remove_character_role = character_role_monarch
+					}
+				}
+				#Reset Term Limits
+				remove_variable = term_limit_var
 			}
-			random_scope_character = {
-				limit = {
-					has_role = character_role_monarch_elective
-					is_ruler_of_own_country = no
-					is_adult = yes
-				}
-				set_character_as_ruler = yes
-				set_character_as_monarch = yes
-				if = {
-					limit = { has_role = character_role_monarch_elective }
-					remove_character_role = character_role_monarch_elective
-				}
-			}
-			scope:the_current_president_scope ?= {
-				if = {
-					limit = { NOT = { has_role = character_role_monarch_elective } }
-					add_character_role = character_role_monarch_elective
-				}
-				if = {
-					limit = { has_role = character_role_monarch }
-					remove_character_role = character_role_monarch
-				}
-			}
-		
-			#Reset Term Limits
-			remove_variable = term_limit_var
 		}
-		
 	}
+	
+
 
 	weight = 100
 

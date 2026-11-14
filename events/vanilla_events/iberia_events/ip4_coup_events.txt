@@ -63,6 +63,8 @@ ip4_coup.1 = {
 
 	trigger = {
 	
+		# triggered by on_action - coup_monthly_events
+		
 		#Not already fired
 		NOT = { has_journal_entry = je_ip4_coup }
 		NOT = { has_free_government_reform = yes } # Election grace period
@@ -123,6 +125,7 @@ ip4_coup.1 = {
 				has_role_of_type = general
 				has_role_of_type = admiral
 			}
+			is_busy = no
 			loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD # Loyalty is 25 or below
 			commander_coup_strength >= { # Commander can plausibly coup the government with help
 				value = owner.country_coup_resistance
@@ -172,6 +175,7 @@ ip4_coup.1 = {
 					has_role_of_type = general
 					has_role_of_type = admiral
 				}
+				is_busy = no
 				loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD # Loyalty is 25 or below
 				commander_coup_strength >= { # Commander can plausibly coup the government with help
 					value = owner.country_coup_resistance
@@ -192,6 +196,7 @@ ip4_coup.1 = {
 			set_variable = { name = monthly_cached_units_share value = this.num_units_share } # Updates at start of coup
 			set_variable = { name = monthly_cached_commander_coup_strength value = this.commander_coup_strength }
 			save_scope_as = golpista_general
+			set_temporary_event_immortality = { DURATION = 3 }
 			interest_group ?= {
 				set_variable = golpista_ig_var
 				save_scope_as = golpista_ig
@@ -243,6 +248,7 @@ ip4_coup.1 = {
 			ip4_coup_victory_effect = yes
 		}
 		remove_variable = coup_event_active
+		revoke_temporary_event_immortality = { CHARACTER = scope:golpista_general }
 	}
 }
 
@@ -392,6 +398,7 @@ ip4_coup.2 = {
 				has_variable = golpista_var
 			}
 			save_scope_as = golpista_general
+			set_temporary_event_immortality = { DURATION = 3 }
 			interest_group ?= {
 				save_scope_as = golpista_ig
 			}
@@ -680,6 +687,8 @@ ip4_coup.2 = {
 
 	after = {
 		ip4_coup_cleanup_effects = yes
+		revoke_temporary_event_immortality = { CHARACTER = scope:golpista_general }
+		je_ip4_coup_cleanup = yes
 	}
 }
 
@@ -721,6 +730,7 @@ ip4_coup.3 = {
 				has_variable = golpista_var
 			}
 			save_scope_as = golpista_general
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 		capital ?= {
 			save_scope_as = capital_scope
@@ -812,6 +822,7 @@ ip4_coup.3 = {
 						add = 25
 					}
 				}
+				revoke_temporary_event_immortality = { CHARACTER = scope:golpista_general }
 				scope:golpista_general = {
 					kill_character = yes
 				}
@@ -846,6 +857,7 @@ ip4_coup.3 = {
 	}
 	after = {
 		ip4_coup_cleanup_effects = yes
+		revoke_temporary_event_immortality = { CHARACTER = scope:golpista_general }
 	}
 }
 
@@ -869,8 +881,11 @@ ip4_coup.4 = {
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 
 	# Cooldown is handled by ip4_coup_4_var
+	
+	cooldown = { days = short_modifier_time }
 
 	trigger = {
+		# triggered by journal entry - je_ip4_coup [on_weekly_pulse]
 		# triggered by je_ip4_coup
 		any_scope_character = {
 			has_variable = golpista_var
@@ -879,6 +894,7 @@ ip4_coup.4 = {
 				limit = {
 					has_variable = monthly_cached_units_share
 				}
+				var:monthly_cached_units_share > 0
 				this.num_units_share <= {
 					value = this.var:monthly_cached_units_share # Their amount of controlled units has declined by at least 20%
 					multiply = 0.8
@@ -911,6 +927,7 @@ ip4_coup.4 = {
 				}
 			}
 			save_scope_as = golpista_general
+			set_temporary_event_immortality = { DURATION = 3 }
 			set_variable = { name = ip4_coup_4_var days = short_modifier_time }
 		}
 		capital ?= {
@@ -925,6 +942,15 @@ ip4_coup.4 = {
 	option = {
 		name = ip4_coup.4.a
 		default_option = yes
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
+		}
 		scope:golpista_general.interest_group ?= {
 			add_modifier = {
 				name = modifier_sabotaged_military_forces
@@ -943,6 +969,15 @@ ip4_coup.4 = {
 
 	option = {
 		name = ip4_coup.4.b
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_wants_radicals = yes
+				}
+				add = 10
+			}
+		}
 		scope:golpista_general.interest_group ?= {
 			add_modifier = {
 				name = modifier_sabotaged_military_forces
@@ -959,5 +994,9 @@ ip4_coup.4 = {
 			value = large_radicals
 		}
 		clear_generated_names = yes
+	}
+	
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:golpista_general }
 	}
 }

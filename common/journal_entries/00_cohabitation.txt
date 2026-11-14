@@ -59,24 +59,6 @@ je_cohabitation_system = {
 		else_if = {
 			limit = {
 				any_scope_character = {
-					has_role = character_role_reserved_powers_holder
-					character_has_legal_restrictions = no
-					is_ruler_of_own_country = no
-				}
-			}
-			random_scope_character = {
-				limit = { 
-					has_role = character_role_reserved_powers_holder
-					character_has_legal_restrictions = no
-					is_ruler_of_own_country = no
-				}
-				save_scope_as = cohabitation_pm_scope
-				set_character_as_head_of_government = yes
-			}
-		}
-		else_if = {
-			limit = {
-				any_scope_character = {
 					is_ruler_of_own_country = no
 					is_an_IG_leader = yes
 					interest_group ?= { 
@@ -131,59 +113,60 @@ je_cohabitation_system = {
 		
 	}
 	
-	invalid = {
-		
-		OR = {
-		
-			#THIS has an executive PM and President
-			NOR = { 
-				has_law_or_variant = law_type:law_HOG_president_prime_minister
-				AND = {
-					has_law_or_variant = law_type:law_HOG_prime_minister
-					trigger_if = {
-						limit = { has_law_or_variant = law_type:law_HOS_communist_leader }
-						OR = {
-							has_law_or_variant = law_type:law_single_party_state
-							has_law_or_variant = law_type:law_parties_not_allowed
+	outcome = {
+		conclusion_desc = je_standard_failure_conclusion_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			OR = {
+				#THIS has an executive PM and President
+				NOR = {
+					has_law_or_variant = law_type:law_HOG_president_prime_minister
+					AND = {
+						has_law_or_variant = law_type:law_HOG_prime_minister
+						trigger_if = {
+							limit = { has_law_or_variant = law_type:law_HOS_communist_leader }
+							OR = {
+								has_law_or_variant = law_type:law_single_party_state
+								has_law_or_variant = law_type:law_parties_not_allowed
+							}
+						}
+					}
+					AND = {
+						has_law_or_variant = law_type:law_HOG_prime_minister
+						ruler ?= {
+							has_trait = character_ineligible_as_office_holder
 						}
 					}
 				}
-				AND = {
-					has_law_or_variant = law_type:law_HOG_prime_minister
-					ruler ?= {
-						has_trait = character_ineligible_as_office_holder
+				hidden_trigger = {
+					OR = {
+						scope:cohabitation_pm_scope ?= {
+							NOT = { has_role = character_role_head_of_government }
+						}
+						NOT = { exists = scope:cohabitation_pm_scope }
+					}
+				}
+				#HOG has left the country
+				scope:cohabitation_pm_scope ?= { NOT = { owner ?= ROOT } }
+				#HOG is ruler or HOS
+				scope:cohabitation_pm_scope ?= { 
+					OR = { 
+						is_ruler_of_own_country = yes
+						has_role = character_role_head_of_state
 					}
 				}
 			}
-			
-			hidden_trigger = {
-				OR = {
-					scope:cohabitation_pm_scope ?= {
-						NOT = { has_role = character_role_head_of_government }
-					}
-					NOT = { exists = scope:cohabitation_pm_scope }
+		}
+		effect = {
+			scope:cohabitation_pm_scope ?= {
+				if = {
+					limit = { has_role = character_role_head_of_government }
+					remove_character_role = character_role_head_of_government
 				}
 			}
-			
-			#HOG has left the country
-			scope:cohabitation_pm_scope ?= { NOT = { owner ?= ROOT } }
-			
-			#HOG is ruler
-			scope:cohabitation_pm_scope ?= { is_ruler_of_own_country = yes }
-		
 		}
-		
 	}
-	on_invalid = {
-		
-		scope:cohabitation_pm_scope ?= {
-			if = {
-				limit = { has_role = character_role_head_of_government }
-				remove_character_role = character_role_head_of_government
-			}
-		}
-		
-	}
+
 	
 	on_monthly_pulse = {
 		

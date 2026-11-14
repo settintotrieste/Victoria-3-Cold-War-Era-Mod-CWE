@@ -8,6 +8,7 @@
 	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/bankroll_treaties.dds"
 
 	flags = {
+		show_in_lens
 		is_money_transfer
 		can_be_enforced
 		can_be_renegotiated
@@ -366,25 +367,52 @@
 					}
 				}
 			}
+		}
+		
+		contextual_accept_score = {
+			value = 0
 
 			if = {
 				limit = {
 					NOT = { exists = scope:is_treaty_active }
-					exists = scope:treaty
-					scope:treaty.binding_period >= 1825
+					scope:treaty.binding_period > 1825
+					exists = scope:article.input_quantity
 				}
-				multiply = {
-					desc = "DIPLOMATIC_ACCEPTANCE_BINDING_PERIOD"
-					value = 1
-					add = {
-						value = scope:treaty.binding_period
-						min = 365
-						divide = 3650
+
+				if = {
+					limit = {
+						scope:source_country ?= this
 					}
-					max = 2
+
+					subtract = {
+						desc = "DIPLOMATIC_ACCEPTANCE_BINDING_PERIOD"
+						value = scope:article.input_quantity
+						divide = 25
+						multiply = {
+							value = scope:treaty.binding_period
+							subtract = 1825
+							divide = 3650
+							max = 1
+						}
+					}
+				}
+				else = {
+					add = {
+						desc = "DIPLOMATIC_ACCEPTANCE_BINDING_PERIOD"
+						value = scope:article.input_quantity
+						divide = 100
+						max = 75
+						multiply = {
+							value = scope:treaty.binding_period
+							subtract = 1825
+							divide = 3650
+							max = 1
+						}
+					}
 				}
 			}
 		}
+		
 	}
 
 	wargoal = {

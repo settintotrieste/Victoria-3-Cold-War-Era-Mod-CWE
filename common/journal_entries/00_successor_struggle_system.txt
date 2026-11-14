@@ -1,4 +1,4 @@
-﻿je_successor_struggle_system = {
+je_successor_struggle_system = {
 	icon = "gfx/interface/icons/event_icons/event_carlist_beret.dds"
 
 	group = je_group_internal_affairs
@@ -92,7 +92,7 @@
 							}
 							custom_tooltip = {
 								text = ruler_disapproves_of_revolutionary_law_contextless
-								always = no
+								hidden_trigger = { always = no }
 							}
 						}
 					}
@@ -132,128 +132,119 @@
 		
 	}
 
-	complete = {
-		
-		OR = {
-		
-			#Won competition
-			trigger_if = {
-				limit = { has_variable = successor_struggle_candidate_1 }
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_standard_completion_conclusion_desc
+		color = "gold_positive"
+		trigger = {
+			OR = {
+				#Won competition
+				trigger_if = {
+					limit = { has_variable = successor_struggle_candidate_1 }
+					custom_tooltip = {
+						text = successor_struggle_candidate_1_completed.tt
+						var:successor_struggle_candidate_1 >= 100
+					}
+				}
+				trigger_if = {
+					limit = { has_variable = successor_struggle_candidate_2 }
+					custom_tooltip = {
+						text = successor_struggle_candidate_2_completed.tt
+						var:successor_struggle_candidate_2 >= 100
+					}
+				}
+				#Ruler resigned
 				custom_tooltip = {
-					text = successor_struggle_candidate_1_completed.tt
+					text = ruler_resigned_in_leadership_challenge.tt
+					has_variable = ruler_resigned_in_leadership_challenge
+				}
+				#All rivals eliminated
+				custom_tooltip = {
+					text = no_leadership_challengers_remains.tt
+					exists = scope:successor_struggle_candidate_1
+					OR = {
+						NOT = { exists = scope:successor_struggle_candidate_2 }
+						scope:successor_struggle_candidate_2 ?= { has_role = character_role_prisoner }
+					}
+				}
+			}
+		}
+		effect = {
+			#Declare victor
+			if = {
+				limit = {
+					has_variable = successor_struggle_candidate_1
 					var:successor_struggle_candidate_1 >= 100
 				}
+				scope:successor_struggle_candidate_1 ?= { set_character_as_ruler_cwe = yes }
+				heir ?= { disinherit_character = yes }
 			}
-			trigger_if = {
-				limit = { has_variable = successor_struggle_candidate_2 }
-				custom_tooltip = {
-					text = successor_struggle_candidate_2_completed.tt
+			else_if = {
+				limit = {
+					has_variable = successor_struggle_candidate_2
 					var:successor_struggle_candidate_2 >= 100
 				}
+				scope:successor_struggle_candidate_2 ?= { set_character_as_ruler_cwe = yes }
 			}
-			
 			#Ruler resigned
-			custom_tooltip = {
-				text = ruler_resigned_in_leadership_challenge.tt
-				has_variable = ruler_resigned_in_leadership_challenge
+			if = {
+				limit = { has_variable = ruler_resigned_in_leadership_challenge }
+				scope:successor_struggle_candidate_2 ?= { set_character_as_ruler_cwe = yes }
+				remove_variable = ruler_resigned_in_leadership_challenge
 			}
-			
-			#All rivals eliminated
-			custom_tooltip = {
-				text = no_leadership_challengers_remains.tt
-				exists = scope:successor_struggle_candidate_1
-				OR = {
-					NOT = { exists = scope:successor_struggle_candidate_2 }
-					scope:successor_struggle_candidate_2 ?= { has_role = character_role_prisoner }
+			#Domestic Peace
+			hidden_effect = { has_modifier = strengthened_government_authority }
+			add_modifier = {
+				name = strengthened_government_authority
+				years = 5
+				is_decaying = yes
+			}
+			#Clean up modifiers
+			hidden_effect = {
+				every_scope_character = {
+					limit = { has_modifier = leadership_contender_modifier }
+					remove_modifier = leadership_contender_modifier
 				}
 			}
-			
 		}
-		
 	}
-	
-	on_complete = {
-		
-		#Declare victor
-		if = {
-			limit = { 
-				has_variable = successor_struggle_candidate_1
-				var:successor_struggle_candidate_1 >= 100
-			}
-			scope:successor_struggle_candidate_1 ?= { set_character_as_ruler_cwe = yes }
-			heir ?= { disinherit_character = yes }
-		}
-		else_if = {
-			limit = { 
-				has_variable = successor_struggle_candidate_2
-				var:successor_struggle_candidate_2 >= 100
-			}
-			scope:successor_struggle_candidate_2 ?= { set_character_as_ruler_cwe = yes }
-		}
-		
-		#Ruler resigned
-		if = {
-			limit = { has_variable = ruler_resigned_in_leadership_challenge }
-			scope:successor_struggle_candidate_2 ?= { set_character_as_ruler_cwe = yes }
-			remove_variable = ruler_resigned_in_leadership_challenge
-		}
-		
-		#Domestic Peace
-		hidden_effect = { has_modifier = strengthened_government_authority }
-		add_modifier = { 
-			name = strengthened_government_authority 
-			years = 5
-			is_decaying = yes
-		}
-		
-		#Clean up modifiers
-		hidden_effect = {
-			every_scope_character = {
-				limit = { has_modifier = leadership_contender_modifier }
-				remove_modifier = leadership_contender_modifier
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		conclusion_desc = je_standard_failure_conclusion_desc
+		color = "blue_negative"
+		trigger = {
+			OR = {
+				#Ruler is no longer Ruler
+				NOT = { exists = scope:successor_struggle_candidate_1 }
+				scope:successor_struggle_candidate_1 ?= { is_ruler_of_own_country = no }
+				#No longer a dictatorship
+				NOT = { has_law_or_variant = law_type:law_appointed_legislature }
+				#Has distributed power
+				has_law_or_variant = law_type:law_yes_term_limit
+				active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_rotating_presidency }
+				is_a_regency_government = yes
+				is_a_regime_monarchy = yes
 			}
 		}
-		
-	}
-	
-	fail = {
-		
-		OR = {
-			
-			#Ruler is no longer Ruler
-			NOT = { exists = scope:successor_struggle_candidate_1 }
-			scope:successor_struggle_candidate_1 ?= { is_ruler_of_own_country = no }
-			
-			#No longer a dictatorship
-			NOT = { has_law_or_variant = law_type:law_appointed_legislature }
-			
-			#Has distributed power
-			has_law_or_variant = law_type:law_yes_term_limit
-			active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_rotating_presidency }
-			is_a_regency_government = yes
-			is_a_regime_monarchy = yes
-			
-		}
-		
-	}
-	
-	on_fail = {
-	
-		#Costs of sudden leader change
-		custom_tooltip = {
-			text = change_of_warlordism.tt
-			trigger_event = { id = warlord_state_system.1 }
-		}
-		
-		#Clean up modifiers
-		hidden_effect = {
-			every_scope_character = {
-				limit = { has_modifier = leadership_contender_modifier }
-				remove_modifier = leadership_contender_modifier
+		effect = {
+			#Costs of sudden leader change
+			custom_tooltip = {
+				text = change_of_warlordism.tt
+				trigger_event = { id = warlord_state_system.1 }
+			}
+			#Clean up modifiers
+			hidden_effect = {
+				every_scope_character = {
+					limit = { has_modifier = leadership_contender_modifier }
+					remove_modifier = leadership_contender_modifier
+				}
 			}
 		}
-	
 	}
+	
+
 	
 	on_monthly_pulse = {
 	

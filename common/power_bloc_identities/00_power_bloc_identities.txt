@@ -813,23 +813,36 @@ identity_religious = {
 			desc = POWER_BLOC_COHESION_WORST_LEADER_RELATIONS
 		}
 		
-		add = {
-			if = {
-				limit = { exists = scope:with_country }
-				add = "scope:power_bloc.power_bloc_worst_leader_religion_population_fraction_with(scope:with_country)"
+		if = {
+			limit = {
+				OR = {
+					exists = scope:with_country
+					scope:power_bloc ?= {
+						any_power_bloc_member = {
+							is_power_bloc_leader = no
+						}
+					}
+				}
 			}
-			else_if = {
-				limit = { exists = scope:without_country }
-				add = "scope:power_bloc.power_bloc_worst_leader_religion_population_fraction_without(scope:without_country)"
+			add = {
+				if = {
+					limit = { exists = scope:with_country }
+					add = "scope:power_bloc.power_bloc_worst_leader_religion_population_fraction_with(scope:with_country)"
+				}
+				else_if = {
+					limit = { exists = scope:without_country }
+					add = "scope:power_bloc.power_bloc_worst_leader_religion_population_fraction_without(scope:without_country)"
+				}
+				else = {
+					add = scope:power_bloc.power_bloc_worst_leader_religion_population_fraction
+				}
+				add = -0.5
+				multiply = 0.5
+				multiply = define:NPowerBlocs|COHESION_TARGET_MAX
+				desc = POWER_BLOC_COHESION_LEADER_RELIGION_WORST_POPULATION_SHARE
 			}
-			else = {
-				add = scope:power_bloc.power_bloc_worst_leader_religion_population_fraction
-			}
-			add = -0.5
-			multiply = 0.5
-			multiply = define:NPowerBlocs|COHESION_TARGET_MAX
-			desc = POWER_BLOC_COHESION_LEADER_RELIGION_WORST_POPULATION_SHARE
 		}
+		
 		add = {
 			scope:power_bloc = {
 				every_power_bloc_member = {

@@ -319,6 +319,8 @@
 	}
 
 	secession = {
+		can_secede_during_revolution = yes
+		
 		possible = {
 			political_movement_support >= 0.05
 			scope:clout <= 0
@@ -358,18 +360,7 @@
 	}
 
 	additional_radicalism_factors = {
-		if = {
-			limit = {
-				owner.ruler ?= {
-					NOT = { culture = { is_primary_culture_of = root.owner } }
-				}
-			}
-
-			add = {
-				value = 0.1
-				desc = "RULER_NOT_PRIMARY_CULTURE"
-			}
-		}
+		add = movement_radicalism_ruler_not_primary_culture
 		add = {
 			value = "owner.average_sol"
 			subtract = "owner.average_sol_for_primary_cultures"
@@ -446,19 +437,7 @@
 			}
 		}
 		
-		if = {
-			limit = {
-				this.days_since_movement_defeated <= very_long_modifier_time
-			}
-			add = { # (x-y)/y - ([1, 7300]-7300)/7300
-				desc = "movement_suppressed_after_civil_war"
-				value = this.days_since_movement_defeated
-				subtract = very_long_modifier_time
-				divide = {
-					value = very_long_modifier_time
-				}
-			}
-		}
+		add = movement_radicalism_suppressed_after_civil_war
 	}
 	
 }
@@ -897,19 +876,31 @@ movement_cultural_minority = {
 						value >= 0.05
 					}
 				}
-				add = { # These three values must add up to more than 1 - 5 x Obstinance, 1/2 Turmoil, percent of pops of this culture
+				add = { # These values must add up to more than 1 - 5 x Obstinance, Turmoil, percent of pops of this culture (counting at most half), and a bonus if this culture is already seceding elsewhere
 					value = -1
-					add = "this.culture_percent_state(scope:political_movement.culture)"
 					add = {
-						value = this.turmoil
-						multiply = 0.5
+						value = "this.culture_percent_state(scope:political_movement.culture)"
+						max = 0.5
 					}
+					add = this.turmoil
 					add = {
 						value = this.obstinance
 						multiply = 5
 					}
+					if = {
+						limit = {
+							scope:political_movement = { is_culture_seceding_elsewhere = yes }
+						}
+						add = 0.5
+					}
 					multiply = 100
 				}
+			}
+			if = {
+				limit = {
+					is_isolated_from_market = yes
+				}
+				multiply = 1.5
 			}
 		}
 
@@ -936,7 +927,7 @@ movement_cultural_minority = {
 		if = {
 			limit = {
 				owner = {
-					has_law = law_type:law_subjecthood
+					is_a_colonial_subject_colony_gov = yes
 				}
 			}
 			add = {
@@ -1035,57 +1026,26 @@ movement_cultural_minority = {
 				value = 0.15
 			}
 		}
-
 		if = {
 			limit = {
 				owner = {
-					any_political_movement = {
-						NOT = { this = root } # Insurrectionary movements should not make themselves more insurrectionary
-						is_insurrectionary = yes
+					any_scope_state = {
+						state_region = { is_homeland = scope:culture }
+						culture_percent_state = {
+							target = scope:culture
+							value >= 0.05
+						}
+						is_isolated_from_market = yes
 					}
 				}
 			}
 			add = {
-				desc = "SIMULTANEOUS_INSURRECTIONARY_MOVEMENTS"
-				owner = {
-					every_political_movement = {
-						limit = {
-							NOT = { this = root } # Insurrectionary movements should not make themselves more insurrectionary
-							is_insurrectionary = yes
-						}
-						if = {
-							limit = {
-								exists = this.political_movement_identity_support
-							}
-							add = { # Identity support can get a bit high
-								value = this.political_movement_identity_support
-								multiply = 0.5
-							}
-						}
-						else = {
-							add = this.political_movement_support
-						}
-					}
-				}
-				min = 0.05
-				max = 0.25
+				value = 0.1
+				desc = "ISOLATED_FROM_MARKET"
 			}
 		}
-		
-		if = {
-			limit = {
-				this.days_since_movement_defeated <= very_long_modifier_time
-			}
-			add = { # (x-y)/y - ([1, 7300]-7300)/7300
-				desc = "movement_suppressed_after_civil_war"
-				value = this.days_since_movement_defeated
-				subtract = very_long_modifier_time
-				divide = {
-					value = very_long_modifier_time
-				}
-			}
-		}
-		
+		add = movement_radicalism_simultaneous_insurrections
+		add = movement_radicalism_suppressed_after_civil_war
 	}
 }
 
@@ -1406,19 +1366,7 @@ movement_minority_rights = {
 				desc = "law_racial_segregation"
 			}
 		}
-		if = {
-			limit = {
-				this.days_since_movement_defeated <= very_long_modifier_time
-			}
-			add = { # (x-y)/y - ([1, 7300]-7300)/7300
-				desc = "movement_suppressed_after_civil_war"
-				value = this.days_since_movement_defeated
-				subtract = very_long_modifier_time
-				divide = {
-					value = very_long_modifier_time
-				}
-			}
-		}
+		add = movement_radicalism_suppressed_after_civil_war
 	}
 
 	revolution = {
