@@ -1,0 +1,399 @@
+﻿namespace = favorites
+
+favorites.1 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	cooldown = { days = long_modifier_time }
+
+	title = favorites.1.t
+	desc = favorites.1.d
+	flavor = favorites.1.f
+
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	trigger = {
+		any_scope_character = {
+			has_role = character_role_favorite
+			NOT = { has_variable = favorite_character_lobby_var }
+			interest_group ?= {
+				is_in_government = yes
+				any_political_lobby = {
+					OR = {
+						is_political_lobby_type = lobby_pro_country
+						is_political_lobby_type = lobby_pro_overlord
+					}
+					save_temporary_scope_as = favorite_lobby_temp
+					ROOT = {
+						any_interest_group = {
+							is_in_government = no
+							is_marginal = no
+							NOT = {
+								any_political_lobby = { this = scope:favorite_lobby_temp }
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		random_scope_character = {
+			limit = {
+				has_role = character_role_favorite
+			}
+			save_scope_as = current_favorite_scope
+		}
+		scope:current_favorite_scope ?= {
+			set_temporary_event_immortality = { DURATION = 3 }
+		}
+		set_variable = { name = favorite_event_active_var months = 3 } # neither appoint_favorite nor revoke_favorite character interactions should be available while this event is active
+		if = {
+			limit = {
+				scope:current_favorite_scope ?= {
+					NOT = { has_variable = favorite_character_lobby_var }
+				}
+				scope:current_favorite_scope.interest_group ?= {
+					is_in_government = yes
+					any_political_lobby = {
+						OR = {
+							is_political_lobby_type = lobby_pro_country
+							is_political_lobby_type = lobby_pro_overlord
+						}
+						save_temporary_scope_as = favorite_lobby_temp
+						ROOT = {
+							any_interest_group = {
+								is_in_government = no
+								is_marginal = no
+								NOT = {
+									any_political_lobby = { this = scope:favorite_lobby_temp }
+								}
+							}
+						}
+					}
+				}
+			}
+			scope:current_favorite_scope.interest_group ?= {
+				random_political_lobby = {
+					limit = {
+						OR = {
+							is_political_lobby_type = lobby_pro_country
+							is_political_lobby_type = lobby_pro_overlord
+						}
+						save_temporary_scope_as = favorite_lobby_temp
+						ROOT = {
+							any_interest_group = {
+								is_in_government = no
+								is_marginal = no
+								NOT = {
+									any_political_lobby = { this = scope:favorite_lobby_temp }
+								}
+							}
+						}
+					}
+					save_scope_as = current_favorite_lobby_scope
+				}
+			}
+			random_interest_group = {
+				limit = {
+					is_in_government = no
+					is_marginal = no
+					NOT = {
+						any_political_lobby = { this = scope:current_favorite_lobby_scope }
+					}
+				}
+				save_scope_as = opposition_ig_scope
+			}
+		}
+	}
+
+	option = {
+		name = favorites.1.a
+		every_interest_group = {
+			limit = {
+				is_in_government = yes
+			}
+			add_modifier = {
+				name = modifier_favored_interests_ig_approval
+				days = normal_modifier_time
+			}
+		}
+		ai_chance = {
+			base = 25
+		}
+	}
+
+	option = {
+		name = favorites.1.b
+		default_option = yes
+		scope:current_favorite_lobby_scope ?= {
+			change_appeasement = {
+				amount = 3
+				factor = appeasement_lobby_pleased
+			}
+		}
+		ai_chance = {
+			base = 75
+		}
+	}
+
+	option = {
+		name = favorites.1.c
+		scope:current_favorite_scope ?= {
+			custom_tooltip = {
+				text = revoke_current_favorite_effect_tt
+				revoke_favorite_effect = yes
+			}
+		}
+		every_interest_group = {
+			limit = {
+				is_in_government = no
+				is_marginal = no
+			}
+			add_modifier = {
+				name = modifier_favored_interests_ig_approval
+				days = normal_modifier_time
+			}
+		}
+		ai_chance = {
+			base = 0
+		}
+	}
+
+	after = {
+		remove_variable = favorite_event_active_var # appoint_favorite or revoke_favorite character interactions become available again
+		scope:current_favorite_scope ?= {
+			set_variable = favorite_character_lobby_var # checks that this event doesn't fire again for the same favorite
+		}
+		revoke_temporary_event_immortality = { CHARACTER = scope:current_favorite_scope }
+	}
+}
+
+favorites.2 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	cooldown = { days = normal_modifier_time }
+
+	title = favorites.2.t
+	desc = favorites.2.d
+	flavor = favorites.2.f
+
+	gui_window = event_window_1char_tabloid
+	left_icon = scope:current_favorite_scope
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	trigger = {
+		any_scope_character = {
+			has_role = character_role_favorite
+			NOT = { has_variable = favorite_character_scandal_var }
+		}
+	}
+
+	immediate = {
+		random_scope_character = {
+			limit = {
+				has_role = character_role_favorite
+			}
+			save_scope_as = current_favorite_scope
+		}
+		scope:current_favorite_scope ?= {
+			set_temporary_event_immortality = { DURATION = 3 }
+		}
+		set_variable = { name = favorite_event_active_var months = 3 } # neither appoint_favorite nor revoke_favorite character interactions should be available while this event is active
+	}
+
+	option = {
+		name = favorites.2.a
+		default_option = yes
+		scope:current_favorite_scope ?= {
+			if = {
+				limit = { NOT = { has_trait = scandalous } }
+				add_trait = scandalous
+			}
+			interest_group ?= {
+				add_modifier = {
+					name = modifier_favorite_embarrassment
+					days = normal_modifier_time
+				}
+			}
+		}
+		ai_chance = {
+			base = 75
+			modifier = {
+				trigger = {
+					scope:current_favorite_scope ?= {
+						popularity > 0
+					}
+				}
+				add = 15
+			}
+		}
+	}
+
+	option = {
+		name = favorites.2.b
+		scope:current_favorite_scope ?= {
+			if = {
+				limit = { NOT = { has_trait = scandalous } }
+				add_trait = scandalous
+			}
+			custom_tooltip = {
+				text = revoke_current_favorite_effect_tt
+				revoke_favorite_effect = yes
+			}
+		}
+		capital = {
+			add_loyalists_in_state = {
+				value = medium_radicals
+			}
+		}
+		ai_chance = {
+			base = 15
+			modifier = {
+				trigger = {
+					scope:current_favorite_scope ?= {
+						popularity <= -25
+					}
+				}
+				add = 50
+			}
+			modifier = {
+				trigger = {
+					has_journal_entry = je_tsarpoints_master
+				}
+				factor = 0
+			}
+		}
+	}
+
+	after = {
+		remove_variable = favorite_event_active_var # appoint_favorite or revoke_favorite character interactions become available again
+		scope:current_favorite_scope ?= {
+			set_variable = favorite_character_scandal_var # checks that this event doesn't fire again for the same favorite
+		}
+		revoke_temporary_event_immortality = { CHARACTER = scope:current_favorite_scope }
+	}
+}
+
+favorites.3 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	cooldown = { days = long_modifier_time }
+
+	title = favorites.3.t
+	desc = favorites.3.d
+	flavor = favorites.3.f
+
+	category = enactment
+
+	event_image = {
+		video = "unspecific_ruler_speaking_to_people"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	trigger = {
+		exists = currently_enacting_law
+		any_scope_character = {
+			has_role = character_role_favorite
+			NOT = { has_variable = favorite_character_law_var }
+			law_enactment_stance = {
+				law = owner.currently_enacting_law.type
+				value > neutral
+			}
+			OR = {
+				has_trait = charismatic
+				has_trait = tactful
+				has_trait = romantic
+				has_trait = ambitious
+				has_trait = brave
+				has_trait = direct
+				has_trait = persistent
+				has_trait = imposing
+				has_trait = arrogant
+				has_trait = ruthless
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = root.currently_enacting_law }
+	}
+
+	immediate = {
+		random_scope_character = {
+			limit = {
+				has_role = character_role_favorite
+			}
+			save_scope_as = current_favorite_scope
+		}
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		scope:current_favorite_scope ?= {
+			set_temporary_event_immortality = { DURATION = 3 }
+		}
+		set_variable = { name = favorite_event_active_var months = 3 } # neither appoint_favorite nor revoke_favorite character interactions should be available while this event is active
+	}
+
+	option = {
+		name = favorites.3.a
+		default_option = yes
+		add_enactment_modifier = {
+			name = modifier_favored_outcome
+		}
+		scope:current_favorite_scope ?= {
+			add_modifier = {
+				name = modifier_rousing_speech
+				days = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = favorites.3.b
+		trigger = {
+			scope:current_favorite_scope ?= {
+				OR = {
+					has_trait = charismatic
+					has_trait = tactful
+					has_trait = romantic
+				}
+			}
+		}
+		add_enactment_modifier = {
+			name = modifier_favored_outcome
+		}
+		scope:current_favorite_scope ?= {
+			add_modifier = {
+				name = modifier_crowd_charisma
+				days = normal_modifier_time
+			}
+		}
+	}
+
+	after = {
+		remove_variable = favorite_event_active_var # appoint_favorite or revoke_favorite character interactions become available again
+		scope:current_favorite_scope ?= {
+			set_variable = favorite_character_law_var # checks that this event doesn't fire again for the same favorite
+		}
+		revoke_temporary_event_immortality = { CHARACTER = scope:current_favorite_scope }
+	}
+}
