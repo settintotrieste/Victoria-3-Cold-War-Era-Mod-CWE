@@ -10101,3 +10101,87 @@ historical_domestic_unrest.104 = {
     }
 
 }
+
+# Death of Eva Peron
+historical_domestic_unrest.105 = {
+    type = country_event
+
+    title = ARG_death_of_eva_person.t 							# Title of the event; ADD LOCALISATION
+    desc = ARG_death_of_eva_person.d 							# Description of the event; ADD LOCALISATION
+    #flavor = ARG_death_of_eva_person.f 						# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "asia_politician_parliament_motion" }
+
+    icon = "gfx/interface/icons/invention_icons/event_newspaper.dds" 	# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 		# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {													# What triggers the event, if using other events or journal entries leave empty
+		
+		#Overlord conditions
+		c:ARG ?= this											# Change TAG of the overlord ****
+		game_date >= 1952.7.26									# START DATE: Date colony became self governing ****
+		game_date < 1962.7.26									# END DATE: All historical events must not fire 10 years after the START DATE ****
+		
+		is_a_presidential_democracy = yes						# Correct gov types
+		#is_sufficiently_independent = yes						# is_vassal = no		
+		#is_at_war = no											# war = no
+		
+		# Event has not been fired before
+		NOT = { has_variable = ARG_death_of_eva_person_hdu }	# CHANGE ****
+		
+		#Character
+		ruler ?= { has_variable = juan_peron }
+		any_scope_character = {
+			has_variable = Eva_Peron
+		}
+		
+    }
+	
+	immediate = {
+	
+		# Fire only once
+		set_variable = ARG_death_of_eva_person_hdu				# Change variable ****
+		
+	}
+    
+    option = {
+        name = historical_domestic_unrest.option.1				# Yes
+        highlighted_option = yes
+		default_option = yes
+		
+		#Death of character
+		random_scope_character = {
+			limit = { has_variable = Eva_Peron }
+			kill_character = yes
+		}
+		
+		#Domestic reaction
+		add_loyalists = {
+			value = large_radicals
+			culture = cu:argentine
+		}
+		
+		ai_chance = { 
+			base = 90 
+		}
+		
+    }
+	
+	option = {
+        name = historical_domestic_unrest.option.2				# No
+		
+		#Become vice president
+		random_scope_character = {
+			limit = { has_variable = Eva_Peron }
+			set_character_as_deputy = yes
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}

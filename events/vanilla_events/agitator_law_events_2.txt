@@ -14,14 +14,16 @@ agitator_legal_events.1 = {
 	title = agitator_legal_events.1.t
 	desc = agitator_legal_events.1.d
 	flavor = agitator_legal_events.1.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
-	trigger = { #Triggers when you enact laws; agitator does not like the law AND governing interest group doesn't care about the law
+
+	trigger = {
+		# triggered by on_action - on_law_checkpoint_stall
+ #Triggers when you enact laws; agitator does not like the law AND governing interest group doesn't care about the law
 		agitator_opposes_enaction = yes
 		government_ig_ambivalent_enaction = yes
 	}
@@ -39,13 +41,13 @@ agitator_legal_events.1 = {
 			}
 		}
 	}
-	
+
 	immediate = { #Immediately, the law you're working on resets its timer — it's stalled — and the options will target the Agitator's IG and SOL Radicals
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
 			save_scope_as = current_law_scope
 		}
-		capital ?= {
+		capital = {
 			save_scope_as = capital_scope
 		}
 	}
@@ -53,6 +55,15 @@ agitator_legal_events.1 = {
 	option = {
 		name = agitator_legal_events.1.a
 		default_option = yes
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
+		}
 		random_interest_group = {
 			limit = {
 				is_in_government = yes
@@ -76,6 +87,15 @@ agitator_legal_events.1 = {
 
 	option = {
 		name = agitator_legal_events.1.b
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_wants_radicals = yes
+				}
+				add = 10
+			}
+		}
 		add_radicals = {
 			value = medium_radicals
 			interest_group = scope:opposing_agitator.interest_group
@@ -107,14 +127,16 @@ agitator_legal_events.2 = {
 	title = agitator_legal_events.2.t
 	desc = agitator_legal_events.2.d
 	flavor = agitator_legal_events.2.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
-	trigger = { #Triggers when you enact laws; agitator does not like the law	
+
+	trigger = {
+		# triggered by on_action - on_law_checkpoint_stall
+ #Triggers when you enact laws; agitator does not like the law
 		agitator_opposes_enaction = yes
 		government_ig_supports_enaction = yes
 		government_ig_opposes_enaction = yes
@@ -122,18 +144,24 @@ agitator_legal_events.2 = {
 
 	cancellation_trigger = {
 		OR = {
-			scope:opposing_agitator = {
+			scope:opposing_agitator ?= {
 				is_character_alive = no
 			}
 			NOT = {
 				exists = scope:opposing_agitator
 			}
 			NOT = {
+				exists = scope:governing_ig
+			}
+			NOT = {
+				exists = scope:opposing_ig
+			}
+			NOT = {
 				exists = root.currently_enacting_law
 			}
 		}
 	}
-	
+
 	immediate = { #Immediately, the law you're working on resets its timer — it's stalled — and the options will target the Agitator's IG and SOL Radicals
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -141,8 +169,9 @@ agitator_legal_events.2 = {
 		}
 		random_interest_group = {
 			limit = {
+				ig_counts_as_marginal = no
 				is_in_government = yes
-				law_stance = {
+				law_enactment_stance = {
 					law = owner.currently_enacting_law.type
 					value > neutral
 				}
@@ -151,8 +180,9 @@ agitator_legal_events.2 = {
 		}
 		random_interest_group = {
 			limit = {
+				ig_counts_as_marginal = no
 				is_in_government = yes
-				law_stance = {
+				law_enactment_stance = {
 					law = owner.currently_enacting_law.type
 					value < neutral
 				}
@@ -166,7 +196,7 @@ agitator_legal_events.2 = {
 		default_option = yes
 		random_list = {
 			70 = {
-				scope:opposing_ig = {
+				scope:opposing_ig ?= {
 					add_modifier = {
 						name = gagging_the_opposition
 						days = normal_modifier_time
@@ -174,7 +204,7 @@ agitator_legal_events.2 = {
 				}
 			}
 			30 = {
-				scope:governing_ig = {
+				scope:governing_ig ?= {
 					add_modifier = {
 						name = reasonable_exercise_of_authority
 						days = normal_modifier_time
@@ -186,10 +216,10 @@ agitator_legal_events.2 = {
 			name = modifier_gag_laws_controversy
 		}
 	}
-	
+
 	option = {
 		name = agitator_legal_events.2.b
-		scope:opposing_agitator = {
+		scope:opposing_agitator ?= {
 			add_modifier = {
 				name = bridle_gagged
 				days = normal_modifier_time
@@ -197,10 +227,10 @@ agitator_legal_events.2 = {
 		}
 		random_list = {
 			50 = {
-				
+
 			}
 			50 = {
-				scope:governing_ig = {
+				scope:governing_ig ?= {
 					add_modifier = {
 						name = tasteless_kink_shaming
 						days = normal_modifier_time
@@ -215,7 +245,7 @@ agitator_legal_events.2 = {
 agitator_legal_events.3 = {
 	type = country_event
 	event_image = {
-		texture = "unspecific_politicians_arguing"
+		video = "unspecific_politicians_arguing"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -225,14 +255,15 @@ agitator_legal_events.3 = {
 	title = agitator_legal_events.3.t
 	desc = agitator_legal_events.3.d
 	flavor = agitator_legal_events.3.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_stall
 		agitator_supports_enaction = yes
 	}
 
@@ -249,7 +280,7 @@ agitator_legal_events.3 = {
 			}
 		}
 	}
-	
+
 	immediate = { #The options will target the governing IG, Agitator's IG and Agitator themselves
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -257,9 +288,18 @@ agitator_legal_events.3 = {
 		}
 	}
 
-	option = { 
+	option = {
 		name = agitator_legal_events.3.a
 		default_option = yes
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
+		}
 		add_enactment_modifier = {
 			name = modifier_sick_leave
 			multiplier = 2
@@ -296,7 +336,7 @@ agitator_legal_events.3 = {
 agitator_legal_events.4 = {
 	type = country_event
 	event_image = {
-		texture = "middleeast_engineer_blueprint"
+		video = "middleeast_engineer_blueprint"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -306,14 +346,15 @@ agitator_legal_events.4 = {
 	title = agitator_legal_events.4.t
 	desc = agitator_legal_events.4.d
 	flavor = agitator_legal_events.4.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_stall
 		agitator_opposes_enaction = yes
 		government_ig_supports_enaction = yes
 	}
@@ -331,7 +372,7 @@ agitator_legal_events.4 = {
 			}
 		}
 	}
-	
+
 	immediate = { #The options will target the enacting law, governing IG, Agitator's IG and Agitator themselves
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -352,6 +393,15 @@ agitator_legal_events.4 = {
 	option = { #Cave to the Agitator, gets them attraction and you lose muns; this is meant to represent the expedient option. Not recommended if you're in heavy debt.
 		name = agitator_legal_events.4.a
 		default_option = yes
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
+		}
 		add_treasury = -3000
 		scope:supporting_ig = {
 			add_modifier = {
@@ -391,6 +441,15 @@ agitator_legal_events.4 = {
 
 	option = { #Go to a university in the country, which can go either way on helping the agitator or the government
 		name = agitator_legal_events.4.c
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_wants_radicals = yes
+				}
+				add = 10
+			}
+		}
 		trigger = {
 			any_scope_building = {
 				is_building_type = building_university
@@ -432,14 +491,15 @@ agitator_legal_events.5 = {
 	title = agitator_legal_events.5.t
 	desc = agitator_legal_events.5.d
 	flavor = agitator_legal_events.5.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_stall
 		any_interest_group = {
 			law_stance = {
 				law = owner.currently_enacting_law.type
@@ -462,7 +522,7 @@ agitator_legal_events.5 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -478,7 +538,8 @@ agitator_legal_events.5 = {
 			save_scope_as = opposing_ig #Actually supporting the law
 			leader = {
 				save_scope_as = opposing_ig_leader
-			}	
+				set_temporary_event_immortality = { DURATION = 3 }
+			}
 		}
 	}
 
@@ -493,8 +554,12 @@ agitator_legal_events.5 = {
 		}
 		scope:opposing_ig_leader = {
 			add_modifier = {
-				name = scandalous
+				name = modifier_scandalous
 				days = normal_modifier_time
+			}
+			if = {
+				limit = { NOT = { has_trait = scandalous } }
+				add_trait = scandalous
 			}
 		}
 		add_enactment_modifier = {
@@ -515,13 +580,17 @@ agitator_legal_events.5 = {
 			name = failed_law_ram
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:opposing_ig_leader }
+	}
 }
 
 #Agitator acts like Lenin and runs on a platform of adamant non-compliance
 agitator_legal_events.6 = {
 	type = country_event
 	event_image = {
-		texture = "unspecific_politicians_arguing"
+		video = "unspecific_politicians_arguing"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -531,14 +600,15 @@ agitator_legal_events.6 = {
 	title = agitator_legal_events.6.t
 	desc = agitator_legal_events.6.d
 	flavor = agitator_legal_events.6.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_stall
 		agitator_opposes_enaction = yes
 		OR = {
 			government_ig_supports_enaction = yes
@@ -563,7 +633,7 @@ agitator_legal_events.6 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -574,7 +644,7 @@ agitator_legal_events.6 = {
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value >= neutral
-				}	
+				}
 				ig_counts_as_marginal = no
 				is_in_government = yes
 			}
@@ -648,6 +718,15 @@ agitator_legal_events.6 = {
 
 	option = {
 		name = agitator_legal_events.6.c
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_wants_radicals = yes
+				}
+				add = 10
+			}
+		}
 		trigger = {
 			enactment_setback_count < max_setbacks_minus_one
 		}
@@ -680,14 +759,15 @@ agitator_legal_events.7 = {
 	title = agitator_legal_events.7.t
 	desc = agitator_legal_events.7.d
 	flavor = agitator_legal_events.7.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_stall
 		OR = {
 			government_ig_supports_enaction = yes
 			government_ig_ambivalent_enaction = yes
@@ -708,7 +788,7 @@ agitator_legal_events.7 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -748,7 +828,7 @@ agitator_legal_events.7 = {
 				name = house_divided
 				days = short_modifier_time
 			}
-		}	
+		}
 		add_enactment_modifier = {
 			name = failed_law_ram
 			multiplier = 1
@@ -791,20 +871,21 @@ agitator_legal_events.8 = {
 	title = agitator_legal_events.8.t
 	desc = agitator_legal_events.8.d
 	flavor = agitator_legal_events.8.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_stall
 		agitator_supports_enaction = yes
 		any_interest_group = {
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value >= neutral
-			}	
+			}
 			ig_counts_as_marginal = no
 			is_in_government = no
 		}
@@ -838,7 +919,7 @@ agitator_legal_events.8 = {
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value >= neutral
-				}	
+				}
 				ig_counts_as_marginal = no
 				is_in_government = no
 			}
@@ -868,7 +949,7 @@ agitator_legal_events.8 = {
 		add_enactment_modifier = {
 			name = failed_law_abandoned
 			multiplier = 2
-		}	
+		}
 	}
 
 	option = {
@@ -893,7 +974,7 @@ agitator_legal_events.8 = {
 		add_enactment_modifier = {
 			name = modifier_corruption_is_very_good
 		}
-	}		
+	}
 }
 
 #Agitator stalls by falling back on ye olde classic: the price of bread
@@ -910,14 +991,15 @@ agitator_legal_events.9 = {
 	title = agitator_legal_events.9.t
 	desc = agitator_legal_events.9.d
 	flavor = agitator_legal_events.9.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_stall
 		agitator_opposes_enaction = yes
 		OR = {
 			government_ig_supports_enaction = yes
@@ -938,7 +1020,7 @@ agitator_legal_events.9 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -955,6 +1037,7 @@ agitator_legal_events.9 = {
 			save_scope_as = govnas
 			leader = {
 				save_scope_as = da_boss
+				set_temporary_event_immortality = { DURATION = 3 }
 			}
 		}
 	}
@@ -994,13 +1077,17 @@ agitator_legal_events.9 = {
 			multiplier = 1
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:da_boss }
+	}
 }
 
 #Agitator stalls by throwing another IG under the bus
 agitator_legal_events.10 = {
 	type = country_event
 	event_image = {
-		texture = "unspecific_politicians_arguing"
+		video = "unspecific_politicians_arguing"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -1010,14 +1097,15 @@ agitator_legal_events.10 = {
 	title = agitator_legal_events.10.t
 	desc = agitator_legal_events.10.d
 	flavor = agitator_legal_events.10.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_stall
 		any_interest_group = {
 			law_stance = {
 				law = owner.currently_enacting_law.type
@@ -1056,13 +1144,14 @@ agitator_legal_events.10 = {
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value >= neutral
-				}	
+				}
 				is_in_government = yes
 			}
 			save_scope_as = govnas
 			leader = {
 				save_scope_as = da_boss
-			}	
+				set_temporary_event_immortality = { DURATION = 3 }
+			}
 		}
 		random_interest_group = {
 			limit = {
@@ -1089,7 +1178,7 @@ agitator_legal_events.10 = {
 			add_modifier = {
 				name = book_yeeter
 				days = normal_modifier_time
-				}
+			}
 		}
 		scope:opposing_ig = {
 			add_modifier = {
@@ -1116,6 +1205,10 @@ agitator_legal_events.10 = {
 			multiplier = 2
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:da_boss }
+	}
 }
 
 
@@ -1133,14 +1226,15 @@ agitator_legal_events.11 = {
 	title = agitator_legal_events.11.t
 	desc = agitator_legal_events.11.d
 	flavor = agitator_legal_events.11.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_debate
 		agitator_opposes_enaction = yes
 		government_ig_supports_enaction = yes
 	}
@@ -1158,7 +1252,7 @@ agitator_legal_events.11 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -1206,7 +1300,7 @@ agitator_legal_events.11 = {
 agitator_legal_events.12 = {
 	type = country_event
 	event_image = {
-		texture = "unspecific_ruler_speaking_to_people"
+		video = "unspecific_ruler_speaking_to_people"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -1221,8 +1315,9 @@ agitator_legal_events.12 = {
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_debate
 		government_ig_supports_enaction = yes
 		any_scope_character = {
 			has_role_of_type = agitator is_a_special_agitator = no
@@ -1252,7 +1347,7 @@ agitator_legal_events.12 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		random_scope_character = {
 			limit = {
@@ -1269,6 +1364,7 @@ agitator_legal_events.12 = {
 				}
 			}
 			save_scope_as = supporting_agitator
+			set_temporary_event_immortality = { DURATION = 3 }
 			this.interest_group ?= {
 				save_scope_as = ambivalent_ig
 			}
@@ -1288,6 +1384,7 @@ agitator_legal_events.12 = {
 			save_scope_as = govnas
 			leader = {
 				save_scope_as = da_boss
+				set_temporary_event_immortality = { DURATION = 3 }
 			}
 		}
 		random_primary_culture = {
@@ -1320,7 +1417,7 @@ agitator_legal_events.12 = {
 		}
 		scope:da_boss = {
 			add_modifier = {
-				name = scandalous
+				name = modifier_scandalous
 				days = normal_modifier_time
 			}
 		}
@@ -1343,6 +1440,11 @@ agitator_legal_events.12 = {
 			multiplier = 1
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:supporting_agitator }
+		revoke_temporary_event_immortality = { CHARACTER = scope:da_boss }
+	}
 }
 
 #The agitator's faction is sick of their shenanigans
@@ -1364,8 +1466,9 @@ agitator_legal_events.13 = {
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_debate
 		any_scope_character = {
 			has_role_of_type = agitator is_a_special_agitator = no
 			law_stance = {
@@ -1401,7 +1504,7 @@ agitator_legal_events.13 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		random_scope_character = {
 			limit = {
@@ -1425,7 +1528,8 @@ agitator_legal_events.13 = {
 				}
 			}
 			save_scope_as = supporting_agitator
-			interest_group = {
+			set_temporary_event_immortality = { DURATION = 3 }
+			interest_group ?= {
 				save_scope_as = opposing_interest_group
 			}
 		}
@@ -1440,6 +1544,15 @@ agitator_legal_events.13 = {
 	option = {
 		name = agitator_legal_events.13.a
 		default_option = yes
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_wants_radicals = yes
+				}
+				add = 10
+			}
+		}
 		random_list = {
 			50 = {
 				scope:opposing_interest_group = {
@@ -1463,6 +1576,15 @@ agitator_legal_events.13 = {
 	}
 	option = {
 		name = agitator_legal_events.13.b
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
+		}
 		scope:supporting_agitator = {
 			add_modifier = {
 				name = homo_plebii
@@ -1473,9 +1595,12 @@ agitator_legal_events.13 = {
 			add_modifier = {
 				name = modifier_dissidents_splitting
 				days = normal_modifier_time
-				multiplier = -1
 			}
 		}
+	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:supporting_agitator }
 	}
 }
 
@@ -1483,7 +1608,7 @@ agitator_legal_events.13 = {
 agitator_legal_events.14 = {
 	type = country_event
 	event_image = {
-		texture = "unspecific_politicians_arguing"
+		video = "unspecific_politicians_arguing"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -1498,8 +1623,9 @@ agitator_legal_events.14 = {
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_debate
 		authority >= political_concession_level_1_auth
 		agitator_opposes_enaction = yes
 		OR = {
@@ -1521,7 +1647,7 @@ agitator_legal_events.14 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -1610,7 +1736,7 @@ agitator_legal_events.14 = {
 agitator_legal_events.15 = {
 	type = country_event
 	event_image = {
-		texture = "southamerica_election"
+		video = "southamerica_election"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -1625,8 +1751,9 @@ agitator_legal_events.15 = {
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_debate
 		has_technology_researched = mass_communication
 		agitator_opposes_enaction = yes
 		OR = {
@@ -1648,7 +1775,7 @@ agitator_legal_events.15 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -1666,6 +1793,7 @@ agitator_legal_events.15 = {
 			save_scope_as = govnas
 			leader = {
 				save_scope_as = da_boss
+				set_temporary_event_immortality = { DURATION = 3 }
 			}
 		}
 	}
@@ -1718,13 +1846,17 @@ agitator_legal_events.15 = {
 			multiplier = 2
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:da_boss }
+	}
 }
 
 #Agitator wants a third opinion through a totally not corrupt commission of experts
 agitator_legal_events.16 = {
 	type = country_event
 	event_image = {
-		texture = "europenorthamerica_capitalists_meeting"
+		video = "europenorthamerica_capitalists_meeting"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -1739,8 +1871,9 @@ agitator_legal_events.16 = {
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_debate
 		agitator_supports_enaction = yes
 		OR = {
 			government_ig_supports_enaction = yes
@@ -1761,7 +1894,7 @@ agitator_legal_events.16 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -1848,8 +1981,9 @@ agitator_legal_events.17 = {
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_debate
 		any_interest_group = {
 			ig_counts_as_marginal = no
 			is_in_government = yes
@@ -1871,7 +2005,7 @@ agitator_legal_events.17 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -1940,6 +2074,12 @@ agitator_legal_events.17 = {
 				days = normal_modifier_time
 			}
 		}
+		scope:opposing_agitator.political_movement ?= {
+			add_modifier = {
+				name = semantics_for_the_people_movement
+				days = normal_modifier_time
+			}
+		}
 	}
 }
 
@@ -1959,12 +2099,13 @@ agitator_legal_events.18 = {
 	flavor = agitator_legal_events.18.f
 
 	category = enactment
-	
+
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_debate
 		agitator_supports_enaction = yes
 		any_interest_group = {
 			is_in_government = no
@@ -1988,7 +2129,7 @@ agitator_legal_events.18 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -2011,10 +2152,16 @@ agitator_legal_events.18 = {
 		default_option = yes
 		ai_chance = {
 			base = 10
+			modifier = {
+				trigger = {
+					ai_wants_radicals = yes
+				}
+				add = 10
+			}
 		}
 		random_list = {
 			34 = {
-				scope:supporting_agitator ?= {
+				scope:supporting_agitator.interest_group ?= {
 					add_modifier = {
 						name = bicker_win
 						days = normal_modifier_time
@@ -2028,7 +2175,7 @@ agitator_legal_events.18 = {
 				}
 			}
 			33 = {
-				scope:supporting_agitator ?= {
+				scope:supporting_agitator.interest_group ?= {
 					add_modifier = {
 						name = bicker_loss
 						days = normal_modifier_time
@@ -2069,6 +2216,12 @@ agitator_legal_events.18 = {
 				}
 				add = -3
 			}
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
 		}
 		scope:supporting_agitator = {
 			add_modifier = {
@@ -2093,6 +2246,12 @@ agitator_legal_events.18 = {
 		name = agitator_legal_events.18.c
 		ai_chance = {
 			base = 10
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
 		}
 		scope:supporting_agitator = {
 			add_modifier = {
@@ -2119,7 +2278,7 @@ agitator_legal_events.18 = {
 agitator_legal_events.19 = {
 	type = country_event
 	event_image = {
-		texture = "unspecific_politicians_arguing"
+		video = "unspecific_politicians_arguing"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -2135,13 +2294,14 @@ agitator_legal_events.19 = {
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_debate
 		authority >= political_concession_level_1_auth
 		agitator_supports_enaction = yes
 		any_interest_group = {
 			ig_counts_as_marginal = no
-			law_stance = {
+			law_enactment_stance = {
 				law = owner.currently_enacting_law.type
 				value <= neutral
 			}
@@ -2162,7 +2322,7 @@ agitator_legal_events.19 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -2171,7 +2331,7 @@ agitator_legal_events.19 = {
 		random_interest_group = {
 			limit = {
 				ig_counts_as_marginal = no
-				law_stance = {
+				law_enactment_stance = {
 					law = owner.currently_enacting_law.type
 					value <= neutral
 				}
@@ -2180,7 +2340,7 @@ agitator_legal_events.19 = {
 		}
 		random_interest_group = {
 			limit = {
-				law_stance = {
+				law_enactment_stance = {
 					law = owner.currently_enacting_law.type
 					value <= neutral
 				}
@@ -2267,8 +2427,9 @@ agitator_legal_events.20 = {
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_debate
 		any_interest_group = {
 			ig_counts_as_marginal = no
 			law_stance = {
@@ -2297,7 +2458,7 @@ agitator_legal_events.20 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -2385,7 +2546,7 @@ agitator_legal_events.20 = {
 agitator_legal_events.21 = {
 	type = country_event
 	event_image = {
-		texture = "unspecific_ruler_speaking_to_people"
+		video = "unspecific_ruler_speaking_to_people"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -2395,14 +2556,15 @@ agitator_legal_events.21 = {
 	title = agitator_legal_events.21.t
 	desc = agitator_legal_events.21.d
 	flavor = agitator_legal_events.21.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = stupidly_long_modifier_time } #increased cooldown because this event is over-represented
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_advance
 		any_scope_character = {
 			has_role_of_type = agitator is_a_special_agitator = no
 			law_enactment_stance = {
@@ -2426,7 +2588,7 @@ agitator_legal_events.21 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		random_scope_character = {
 			limit = {
@@ -2437,6 +2599,7 @@ agitator_legal_events.21 = {
 				}
 			}
 			save_scope_as = supporting_agitator
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 		currently_enacting_law = {
 			save_scope_as = current_law_scope
@@ -2457,7 +2620,7 @@ agitator_legal_events.21 = {
 	option = {
 		name = agitator_legal_events.21.a
 		default_option = yes
-		scope:supporting_agitator.interest_group = {
+		scope:supporting_agitator.interest_group ?= {
 			add_modifier = {
 				name = middle_meeter
 				days = normal_modifier_time
@@ -2487,6 +2650,10 @@ agitator_legal_events.21 = {
 			multiplier = 1
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:supporting_agitator }
+	}
 }
 
 # Agitator concedes defeat on a matter and makes a gracious exit
@@ -2503,14 +2670,15 @@ agitator_legal_events.22 = {
 	title = agitator_legal_events.22.t
 	desc = agitator_legal_events.22.d
 	flavor = agitator_legal_events.22.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_advance
 		agitator_opposes_enaction = yes
 		OR = {
 			government_ig_supports_enaction = yes
@@ -2531,7 +2699,7 @@ agitator_legal_events.22 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -2548,6 +2716,7 @@ agitator_legal_events.22 = {
 			save_scope_as = govnas
 			leader = {
 				save_scope_as = da_boss
+				set_temporary_event_immortality = { DURATION = 3 }
 			}
 		}
 	}
@@ -2585,13 +2754,17 @@ agitator_legal_events.22 = {
 			multiplier = 1
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:da_boss }
+	}
 }
 
 # Agitator Spider-Man swings in at the 11th hour to save a law
 agitator_legal_events.23 = {
 	type = country_event
 	event_image = {
-		texture = "unspecific_politicians_arguing"
+		video = "unspecific_politicians_arguing"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -2601,14 +2774,15 @@ agitator_legal_events.23 = {
 	title = agitator_legal_events.23.t
 	desc = agitator_legal_events.23.d
 	flavor = agitator_legal_events.23.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_advance
 		agitator_supports_enaction = yes
 		OR = {
 			government_ig_supports_enaction = yes
@@ -2629,7 +2803,7 @@ agitator_legal_events.23 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -2653,7 +2827,16 @@ agitator_legal_events.23 = {
 	option = {
 		name = agitator_legal_events.23.a
 		default_option = yes
-		scope:supporting_agitator.interest_group = {
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
+		}
+		scope:supporting_agitator.interest_group ?= {
 			add_modifier = {
 				name = middle_meeter
 				days = normal_modifier_time
@@ -2670,7 +2853,7 @@ agitator_legal_events.23 = {
 	}
 	option = {
 		name = agitator_legal_events.23.b
-		scope:supporting_agitator.interest_group = {
+		scope:supporting_agitator.interest_group ?= {
 			add_modifier = {
 				name = convenient_ally
 				days = normal_modifier_time
@@ -2703,14 +2886,15 @@ agitator_legal_events.24 = {
 	title = agitator_legal_events.24.t
 	desc = agitator_legal_events.24.d
 	flavor = agitator_legal_events.24.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_advance
 		agitator_opposes_enaction = yes
 		OR = {
 			government_ig_supports_enaction = yes
@@ -2731,7 +2915,7 @@ agitator_legal_events.24 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -2799,14 +2983,15 @@ agitator_legal_events.25 = {
 	title = agitator_legal_events.25.t
 	desc = agitator_legal_events.25.d
 	flavor = agitator_legal_events.25.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_advance
 		agitator_opposes_enaction = yes
 		OR = {
 			government_ig_supports_enaction = yes
@@ -2827,7 +3012,7 @@ agitator_legal_events.25 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -2849,6 +3034,7 @@ agitator_legal_events.25 = {
 		scope:govnas = {
 			leader = {
 				save_scope_as = da_boss
+				set_temporary_event_immortality = { DURATION = 3 }
 			}
 		}
 	}
@@ -2877,6 +3063,15 @@ agitator_legal_events.25 = {
 	}
 	option = {
 		name = agitator_legal_events.25.b
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
+		}
 		add_loyalists = {
 			culture = scope:primary_culture_scope
 			value = 0.01
@@ -2885,6 +3080,10 @@ agitator_legal_events.25 = {
 			name = successful_law_ram
 			multiplier = 1
 		}
+	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:da_boss }
 	}
 }
 
@@ -2902,20 +3101,21 @@ agitator_legal_events.26 = {
 	title = agitator_legal_events.26.t
 	desc = agitator_legal_events.26.d
 	flavor = agitator_legal_events.26.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_advance
 		agitator_opposes_enaction = yes
 		any_interest_group = {
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value >= neutral
-			}	
+			}
 			ig_counts_as_marginal = no
 			is_in_government = no
 		}
@@ -2938,7 +3138,7 @@ agitator_legal_events.26 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -2957,6 +3157,7 @@ agitator_legal_events.26 = {
 		scope:govnas = {
 			leader = {
 				save_scope_as = da_boss
+				set_temporary_event_immortality = { DURATION = 3 }
 			}
 		}
 	}
@@ -2990,6 +3191,10 @@ agitator_legal_events.26 = {
 			multiplier = 1
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:da_boss }
+	}
 }
 
 #An agitator and another IG get punk in drublic and raise excellent points about a law
@@ -3006,20 +3211,21 @@ agitator_legal_events.27 = {
 	title = agitator_legal_events.27.t
 	desc = agitator_legal_events.27.d
 	flavor = agitator_legal_events.27.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_advance
 		agitator_supports_enaction = yes
 		any_interest_group = {
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value >= neutral
-			}	
+			}
 			ig_counts_as_marginal = no
 			is_in_government = no
 		}
@@ -3042,7 +3248,7 @@ agitator_legal_events.27 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -3074,7 +3280,7 @@ agitator_legal_events.27 = {
 	option = {
 		name = agitator_legal_events.27.a
 		default_option = yes
-		scope:supporting_agitator.interest_group = {
+		scope:supporting_agitator.interest_group ?= {
 			add_modifier = {
 				name = humanised_people
 				days = normal_modifier_time
@@ -3095,7 +3301,7 @@ agitator_legal_events.27 = {
 		name = agitator_legal_events.27.b
 		random_list = {
 			70 = {
-				scope:supporting_agitator.interest_group = {
+				scope:supporting_agitator.interest_group ?= {
 					add_modifier = {
 						name = people_like_them_tho
 						days = normal_modifier_time
@@ -3109,7 +3315,7 @@ agitator_legal_events.27 = {
 				}
 			}
 			25 = {
-				scope:supporting_agitator.interest_group = {
+				scope:supporting_agitator.interest_group ?= {
 					add_modifier = {
 						name = destructive_bender
 						days = normal_modifier_time
@@ -3139,7 +3345,7 @@ agitator_legal_events.27 = {
 agitator_legal_events.28 = {
 	type = country_event
 	event_image = {
-		texture = "unspecific_politicians_arguing"
+		video = "unspecific_politicians_arguing"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -3149,26 +3355,27 @@ agitator_legal_events.28 = {
 	title = agitator_legal_events.28.t
 	desc = agitator_legal_events.28.d
 	flavor = agitator_legal_events.28.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_advance
 		any_interest_group = {
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value > neutral
-			}	
+			}
 			ig_counts_as_marginal = no
 		}
 		any_interest_group = {
 			law_stance = {
 				law = owner.currently_enacting_law.type
 				value < neutral
-			}	
+			}
 			ig_counts_as_marginal = no
 		}
 		agitator_supports_enaction = yes
@@ -3187,7 +3394,7 @@ agitator_legal_events.28 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -3198,7 +3405,7 @@ agitator_legal_events.28 = {
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value > neutral
-				}	
+				}
 				ig_counts_as_marginal = no
 			}
 			save_scope_as = opposing_ig
@@ -3208,7 +3415,7 @@ agitator_legal_events.28 = {
 				law_stance = {
 					law = owner.currently_enacting_law.type
 					value < neutral
-				}	
+				}
 				ig_counts_as_marginal = no
 				NOT = {
 					scope:opposing_ig = THIS
@@ -3221,7 +3428,7 @@ agitator_legal_events.28 = {
 	option = {
 		name = agitator_legal_events.28.a
 		default_option = yes
-		scope:supporting_agitator.interest_group = {
+		scope:supporting_agitator.interest_group ?= {
 			add_modifier = {
 				name = people_like_them_tho
 				days = normal_modifier_time
@@ -3273,14 +3480,15 @@ agitator_legal_events.29 = {
 	title = agitator_legal_events.29.t
 	desc = agitator_legal_events.29.d
 	flavor = agitator_legal_events.29.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_advance
 		agitator_supports_enaction = yes
 		OR = {
 			government_ig_supports_enaction = yes
@@ -3301,7 +3509,7 @@ agitator_legal_events.29 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -3376,7 +3584,7 @@ agitator_legal_events.29 = {
 agitator_legal_events.30 = {
 	type = country_event
 	event_image = {
-		texture = "unspecific_politicians_arguing"
+		video = "unspecific_politicians_arguing"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -3386,14 +3594,15 @@ agitator_legal_events.30 = {
 	title = agitator_legal_events.30.t
 	desc = agitator_legal_events.30.d
 	flavor = agitator_legal_events.30.f
-	
+
 	category = enactment
 
 	duration = 3
 
 	cooldown = { days = normal_modifier_time }
-	
+
 	trigger = {
+		# triggered by on_action - on_law_checkpoint_advance
 		agitator_supports_enaction = yes
 		OR = {
 			government_ig_supports_enaction = yes
@@ -3414,7 +3623,7 @@ agitator_legal_events.30 = {
 			}
 		}
 	}
-	
+
 	immediate = {
 		save_agitator_law_scopes = yes
 		currently_enacting_law = {
@@ -3465,7 +3674,7 @@ agitator_legal_events.30 = {
 	}
 	option = {
 		name = agitator_legal_events.30.b
-		scope:supporting_agitator.interest_group = {
+		scope:supporting_agitator.interest_group ?= {
 			add_modifier = {
 				name = foul_play_success
 				days = normal_modifier_time

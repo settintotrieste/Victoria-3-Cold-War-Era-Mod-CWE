@@ -1,0 +1,43 @@
+REPLACE_OR_CREATE:character_rule_length_counter_effects = {
+	if = {
+		limit = {
+			has_role = character_role_regent
+		}
+		if = {
+			limit = {
+				has_variable = regency_years
+			}
+			change_variable = { name = regency_years add = 1 } # Keeps track of how long one has been Regent
+		}
+		else = {
+			set_variable = { name = regency_years value = 0 } # In case all else fails
+		}
+	}
+	if = { # Handles total years in power, not consecutive years. Mostly for Japan.
+		limit = {
+			is_ruler_of_own_country = yes
+		}
+		if = {
+			limit = {
+				has_variable = year_in_power
+			}
+			change_variable = { name = year_in_power add = 1 } # Keeps track of how long one has been Regent
+		}
+		else = {
+			set_variable = { name = year_in_power value = 1 } # In case all else fails
+		}
+	}
+}
+
+REPLACE_OR_CREATE:on_character_creation_effects = {
+	if = { # Updates biannual unit share cache - just in case a commander spawns another way
+		limit = {
+			OR = {
+				has_role_of_type = admiral
+				has_role_of_type = general
+			}
+		}
+		set_variable = { name = monthly_cached_units_share value = this.num_units_share }
+		set_variable = { name = monthly_cached_commander_coup_strength value = this.commander_coup_strength }
+	}
+}

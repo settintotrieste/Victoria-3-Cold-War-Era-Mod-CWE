@@ -268,98 +268,92 @@ je_head_of_state_system = {
 		
 	}
 	
-	complete = {
-	
-		scope:journal_entry = {
-			is_goal_complete = yes
-		}
-		NOR = { 
-			has_modifier = state_of_emergency_issued 
-			active_law:lawgroup_distribution_of_power ?= { has_amendment = amendment_type:amendment_wartime_suspended_elections } 
-			has_modifier = wartime_measures_martial_law 
-		}
-		
-		#Only step down during election campaign
-		trigger_if = {
-			limit = { 
-				country_has_voting_franchise = yes 
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_standard_completion_conclusion_desc
+		color = "gold_positive"
+		trigger = {
+			scope:journal_entry = {
+				is_goal_complete = yes
 			}
-			in_election_campaign = yes
-		}
-		
-	}
-	
-	on_complete = {
-	
-		scope:head_of_state_pm_scope ?= {
-			if = {
-				limit = { has_role = character_role_head_of_state }
-				remove_character_role = character_role_head_of_state
+			NOR = {
+				has_modifier = state_of_emergency_issued
+				active_law:lawgroup_distribution_of_power ?= { has_amendment = amendment_type:amendment_wartime_suspended_elections }
+				has_modifier = wartime_measures_martial_law
 			}
-		}
-		
-	}
-	
-	invalid = {
-		
-		OR = {
-		
-			#Inappropriate laws
-			NAND = {
-				OR = { 
-					has_law_or_variant = law_type:law_HOS_president
-					has_law_or_variant = law_type:law_HOS_nationalist_leader
-					has_law_or_variant = law_type:law_HOS_communist_leader
-					has_law_or_variant = law_type:law_HOS_religious_leader
+			#Only step down during election campaign
+			trigger_if = {
+				limit = {
+					country_has_voting_franchise = yes
 				}
-				OR = {
-					has_law_or_variant = law_type:law_HOG_prime_minister
-					AND = {
-						NOT = { has_law_or_variant = law_type:law_HOS_monarch }
-						NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
-						ruler ?= {
-							NOT = { has_role = character_role_head_of_state }
-							has_trait = character_ineligible_as_office_holder
+				in_election_campaign = yes
+			}
+		}
+		effect = {
+			scope:head_of_state_pm_scope ?= {
+				if = {
+					limit = { has_role = character_role_head_of_state }
+					remove_character_role = character_role_head_of_state
+				}
+			}
+		}
+	}
+	outcome = {
+		conclusion_desc = je_standard_failure_conclusion_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			OR = {
+				#Inappropriate laws
+				NAND = {
+					OR = {
+						has_law_or_variant = law_type:law_HOS_president
+						has_law_or_variant = law_type:law_HOS_nationalist_leader
+						has_law_or_variant = law_type:law_HOS_communist_leader
+						has_law_or_variant = law_type:law_HOS_religious_leader
+					}
+					OR = {
+						has_law_or_variant = law_type:law_HOG_prime_minister
+						AND = {
+							NOT = { has_law_or_variant = law_type:law_HOS_monarch }
+							NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
+							ruler ?= {
+								NOT = { has_role = character_role_head_of_state }
+								has_trait = character_ineligible_as_office_holder
+							}
 						}
 					}
 				}
-			}
-			
-			#HOS does not exist
-			hidden_trigger = {
-				OR = {
-					scope:head_of_state_pm_scope ?= {
-						NOT = { has_role = character_role_head_of_state }
+				#HOS does not exist
+				hidden_trigger = {
+					OR = {
+						scope:head_of_state_pm_scope ?= {
+							NOT = { has_role = character_role_head_of_state }
+						}
+						NOT = { exists = scope:head_of_state_pm_scope }
 					}
-					NOT = { exists = scope:head_of_state_pm_scope }
+				}
+				#Not a foreign HOS, if applicable
+				shares_same_monarch = yes
+				shares_same_head_of_state_republic = yes
+				is_a_colonial_subject_colony_gov = yes
+				#HOS has left the country
+				scope:head_of_state_pm_scope ?= { NOT = { owner ?= ROOT } }
+				#HOS is ruler
+				scope:head_of_state_pm_scope ?= { is_ruler_of_own_country = yes }
+			}
+		}
+		effect = {
+			scope:head_of_state_pm_scope ?= {
+				if = {
+					limit = { has_role = character_role_head_of_state }
+					remove_character_role = character_role_head_of_state
 				}
 			}
-			
-			#Not a foreign HOS, if applicable
-			shares_same_monarch = yes
-			shares_same_head_of_state_republic = yes
-			is_a_colonial_subject_colony_gov = yes
-		
-			#HOS has left the country
-			scope:head_of_state_pm_scope ?= { NOT = { owner ?= ROOT } }
-			
-			#HOS is ruler
-			scope:head_of_state_pm_scope ?= { is_ruler_of_own_country = yes }
-			
 		}
-		
 	}
 	
-	on_invalid = {
-		
-		scope:head_of_state_pm_scope ?= {
-			if = { 
-				limit = { has_role = character_role_head_of_state }
-				remove_character_role = character_role_head_of_state
-			}
-		}
-		
-	}
+
 	
 	on_monthly_pulse = {
 	

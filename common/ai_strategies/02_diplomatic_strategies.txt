@@ -268,9 +268,9 @@ ai_strategy_territorial_expansion = {
 		conquer = {
 			trigger = {
 				NOT = { scope:target_country = { is_subject_of = root } }
-				can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
 				has_strategic_adjacency = scope:target_country
 				scope:target_country.country_rank <= root.country_rank
+				can_reach_target_country_to_conquer = { TARGET_COUNTRY = scope:target_country }
 			}
 			score = {
 				if = {
@@ -379,8 +379,20 @@ ai_strategy_territorial_expansion = {
 
 		if = {
 			limit = { has_radical_leftist_government = yes }
-			multiply = 0.5
+			multiply = {
+				value = 1
+				subtract = {
+					value = 1
+					subtract = 0.5
+					multiply = {
+						value = 1
+						add = modifier:country_other_country_socialist_government_hostility_impact_mult
+					}
+				}
+				min = 0
+			}
 		}
+		
 	}
 }
 
@@ -683,8 +695,20 @@ ai_strategy_colonial_expansion = {
 
 		if = {
 			limit = { has_radical_leftist_government = yes }
-			multiply = 0.01
+			multiply = {
+				value = 1
+				subtract = {
+					value = 1
+					subtract = 0.01
+					multiply = {
+						value = 1
+						add = modifier:country_other_country_socialist_government_hostility_impact_mult
+					}
+				}
+				min = 0
+			}
 		}
+		
 	}
 }
 
@@ -1026,12 +1050,12 @@ ai_strategy_economic_imperialism = {
 	treaty_port_value = {
 		if = {
 			limit = {
-				can_reach_target_state = yes
 				scope:target_country = {
 					has_law_or_variant = law_type:law_isolationism
 					gdp >= 2000000 # Not worth doing against very small markets
 				}
 				scope:target_state = { is_incorporated = yes }
+				can_reach_target_state_to_coerce = { TARGET_STATE = scope:target_state }
 			}
 			add = {
 				value = 50
@@ -1043,13 +1067,13 @@ ai_strategy_economic_imperialism = {
 				}
 			}
 		}
-		
+
 		# Eager to reclaim a treaty port from a country that recently reneged on the agreement we inherited to them
 		if = {
 			limit = {
-				can_reach_target_state = yes
 				has_variable = wants_treaty_port_revenge_against
 				var:wants_treaty_port_revenge_against ?= scope:target_country
+				can_reach_target_state_to_coerce = { TARGET_STATE = scope:target_state }
 			}
 			add = 100
 		}
@@ -1063,7 +1087,7 @@ ai_strategy_economic_imperialism = {
 			if = {
 				limit = {
 					country_rank >= rank_value:great_power
-					can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
+					can_reach_target_country_to_coerce = { TARGET_COUNTRY = scope:target_country }
 					scope:target_country = {
 						has_law_or_variant = law_type:law_isolationism
 						gdp >= 5000000 # Not worth doing against small markets
@@ -1086,7 +1110,7 @@ ai_strategy_economic_imperialism = {
 			if = {
 				limit = {
 					country_rank >= rank_value:great_power
-					can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
+					can_reach_target_country_to_coerce = { TARGET_COUNTRY = scope:target_country }
 					scope:target_country = {
 						has_law_or_variant = law_type:law_isolationism
 						gdp >= 5000000 # Not worth doing against small markets
@@ -1173,7 +1197,18 @@ ai_strategy_economic_imperialism = {
 
 		if = {
 			limit = { has_radical_leftist_government = yes }
-			multiply = 0.25
+			multiply = {
+				value = 1
+				subtract = {
+					value = 1
+					subtract = 0.25
+					multiply = {
+						value = 1
+						add = modifier:country_other_country_socialist_government_hostility_impact_mult
+					}
+				}
+				min = 0
+			}
 		}
 	}
 }
@@ -1288,7 +1323,7 @@ ai_strategy_unify_germany = {
 						}
 					}
 				}
-				can_reach_target_state = yes
+				can_reach_target_state_to_conquer = { TARGET_STATE = scope:target_state }
 			}
 			add = {
 				value = 100
@@ -1483,7 +1518,7 @@ ai_strategy_unify_italy = {
 						is_homeland = cu:italian
 					}
 				}
-				can_reach_target_state = yes
+				can_reach_target_state_to_conquer = { TARGET_STATE = scope:target_state }
 			}
 			add = {
 				value = 100
@@ -1647,7 +1682,7 @@ ai_strategy_unify_ethiopia = {
 						}
 					}
 				}
-				can_reach_target_state = yes
+				can_reach_target_state_to_conquer = { TARGET_STATE = scope:target_state }
 			}
 			add = {
 				value = 100
@@ -1678,7 +1713,7 @@ ai_strategy_unify_ethiopia = {
 
 				if = {
 					limit = {
-						NOT = { can_reach_target_country = { TARGET_COUNTRY = scope:target_country } }
+						NOT = { can_reach_target_country_to_protect = { TARGET_COUNTRY = scope:target_country } }
 					}
 					add = 150
 				}
@@ -1695,7 +1730,7 @@ ai_strategy_unify_ethiopia = {
 						}
 					}
 				}
-				can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
+				can_reach_target_country_to_conquer = { TARGET_COUNTRY = scope:target_country }
 			}
 			score = {
 				value = 500
@@ -1804,7 +1839,7 @@ ai_strategy_unify_china = {
 						}
 					}
 				}
-				can_reach_target_state = yes
+				can_reach_target_state_to_conquer = { TARGET_STATE = scope:target_state }
 			}
 			add = {
 				value = 100
@@ -1820,7 +1855,7 @@ ai_strategy_unify_china = {
 					scope:target_country = {
 						has_journal_entry = je_chinese_unification
 					}
-					can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
+					can_reach_target_country_to_conquer = { TARGET_COUNTRY = scope:target_country }
 				}
 				add = 300
 			}
@@ -1837,7 +1872,7 @@ ai_strategy_unify_china = {
 
 				if = {
 					limit = {
-						NOT = { can_reach_target_country = { TARGET_COUNTRY = scope:target_country } }
+						NOT = { can_reach_target_country_to_protect = { TARGET_COUNTRY = scope:target_country } }
 					}
 					add = 150
 				}
@@ -1846,7 +1881,7 @@ ai_strategy_unify_china = {
 		conquer = {
 			trigger = {
 				NOT = { scope:target_country = { is_subject_of = root } }
-				can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
+				can_reach_target_country_to_conquer = { TARGET_COUNTRY = scope:target_country }
 			}
 			score = {
 				value = 500
@@ -2012,11 +2047,6 @@ ai_strategy_socialism_in_one_country = {
 		}
 
 		if = {
-			limit = { has_law_or_variant = law_type:law_national_militia }
-			add = 50
-		}
-
-		if = {
 			limit = { has_law_or_variant = law_type:law_isolationism }
 			add = 200
 		}
@@ -2042,7 +2072,18 @@ ai_strategy_socialism_in_one_country = {
 					country_rank >= rank_value:great_power
 				}
 			}
-			multiply = 0.05
+			multiply = {
+				value = 1
+				subtract = {
+					value = 1
+					subtract = 0.05
+					multiply = {
+						value = 1
+						add = modifier:country_other_country_socialist_government_hostility_impact_mult
+					}
+				}
+				min = 0
+			}
 		}
 		else_if = {
 			limit = {
@@ -2117,7 +2158,18 @@ ai_strategy_world_revolution = {
 					has_radical_leftist_government = yes
 				}
 			}
-			multiply = 0.25
+			multiply = {
+				value = 1
+				subtract = {
+					value = 1
+					subtract = 0.25
+					multiply = {
+						value = 1
+						add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+					}
+				}
+				min = 0
+			}
 		}
 
 		# More aggressive against ideological enemies, a bit less aggressive against ideological allies
@@ -2189,8 +2241,10 @@ ai_strategy_world_revolution = {
 	}
 
 	wargoal_weights = {
-		regime_change = 3.0
-		force_nationalization = 1.0
+		regime_change = 3
+		liberate_subject = 2
+		liberate_country = 2
+		force_nationalization = 1
 	}
 	
 	diplomatic_play_support = {
@@ -2257,10 +2311,7 @@ ai_strategy_world_revolution = {
 
 		if = {
 			limit = {
-				OR = {
-					has_law_or_variant = law_type:law_professional_army
-					has_law_or_variant = law_type:law_mass_conscription
-				}
+				has_law_or_variant = law_type:law_mass_conscription
 			}
 			add = 25
 		}
@@ -2291,7 +2342,18 @@ ai_strategy_world_revolution = {
 					country_rank >= rank_value:great_power
 				}
 			}
-			multiply = 1.5
+			multiply = {
+				value = 1
+				subtract = {
+					value = 1
+					subtract = 1.5
+					multiply = {
+						value = 1
+						add = modifier:country_other_country_socialist_government_hostility_impact_mult
+					}
+				}
+				min = 0
+			}
 		}
 		else_if = {
 			limit = {
@@ -2365,7 +2427,18 @@ ai_strategy_anti_imperialism = {
 			limit = {
 				scope:target_country = { NOT = { has_radical_leftist_government = yes } }
 			}
-			multiply = 2
+			multiply = {
+				value = 1
+				subtract = {
+					value = 1
+					subtract = 2
+					multiply = {
+						value = 1
+						add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+					}
+				}
+				min = 0
+			}
 		}
 
 		# Less aggressive against countries we're just antagonistic against, rather than belligerent/domineering
@@ -2440,7 +2513,13 @@ ai_strategy_anti_imperialism = {
 					limit = {
 						scope:target_country = { has_radical_leftist_government = yes }
 					}
-					add = 50
+					add = {
+						value = 50
+						multiply = {
+							value = 1
+							add = scope:target_country.modifier:country_other_country_socialist_government_hostility_impact_mult
+						}
+					}
 				}
 				if = {
 					limit = {
@@ -2579,8 +2658,22 @@ ai_strategy_anti_imperialism = {
 		value = 10
 
 		if = {
-			limit = { country_rank >= rank_value:major_power }
+			limit = { is_country_type = unrecognized }
 			add = 25
+		}
+
+		if = {
+			limit = { country_rank >= rank_value:unrecognized_major_power }
+			add = 25
+		}
+
+		if = {
+			limit = {
+				is_in_geographic_region = geographic_region_europe
+			}
+			multiply = {
+				value = 0.75
+			}
 		}
 	}
 }
@@ -2701,7 +2794,7 @@ ai_strategy_restore_natural_borders = {
 		conquer = {
 			trigger = {
 				NOT = { scope:target_country = { is_subject_of = root } }
-				can_reach_target_country = { TARGET_COUNTRY = scope:target_country }
+				can_reach_target_country_to_conquer = { TARGET_COUNTRY = scope:target_country }
 			}
 			score = {
 				if = {
@@ -2798,7 +2891,19 @@ ai_strategy_restore_natural_borders = {
 
 		if = {
 			limit = { has_radical_leftist_government = yes }
-			multiply = 0.5
+			multiply = {
+				value = 1
+				subtract = {
+					value = 1
+					subtract = 0.5
+					multiply = {
+						value = 1
+						add = modifier:country_other_country_socialist_government_hostility_impact_mult
+					}
+				}
+				min = 0
+			}
 		}
+		
 	}
 }

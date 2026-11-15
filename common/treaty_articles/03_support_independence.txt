@@ -11,6 +11,7 @@
 	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/support_independence_treaties.dds"
 
 	flags = {
+		show_in_lens
 		is_support_independence
 		can_be_renegotiated
 		giftable
@@ -113,6 +114,15 @@
 			}
 		}
 	}
+	
+	requirement_to_maintain = {
+		trigger = {
+			OR = {
+				scope:source_country = { is_sufficiently_independent = yes }
+				scope:source_country = { overlord = scope:target_country.overlord }
+			}
+		}
+	}
 
 	requirement_to_maintain = {
 		trigger = {
@@ -133,8 +143,51 @@
 			}
 		}
 	}
+	
+	requirement_to_maintain = {
+		trigger = {
+			custom_tooltip = {
+				text = "DIPLOMATIC_PACT_REQUIREMENT_NOT_HUMILIATED_BY_OVERLORD"
+				trigger_if = {
+					limit = {
+						scope:target_country = { is_subject = yes }
+					}
+					scope:target_country.overlord = {
+						NOT = { has_diplomatic_pact = { who = scope:source_country type = humiliation is_initiator = yes } }
+					}
+					scope:target_country.top_overlord = {
+						NOT = { has_diplomatic_pact = { who = scope:source_country type = humiliation is_initiator = yes } }
+					}
+				}
+			}
+		}
+	}
+
+	requirement_to_maintain = {
+		trigger = {
+			trigger_if = {
+				limit = {
+					scope:target_country = { is_subject = yes }
+				}
+				scope:source_country = {
+					NOT = { has_truce_with = scope:target_country.overlord }
+				}
+				trigger_if = {
+					limit = {
+						scope:target_country = {
+							NOT = { overlord = top_overlord }
+						}
+					}
+					scope:source_country = {
+						NOT = { has_truce_with = scope:target_country.top_overlord }
+					}
+				}
+			}
+		}
+	}
 
 	can_ratify = {
+		scope:source_country = { highest_overlapping_interest_tier = { target = scope:target_country value >= interest_tier_effect_can_sign_support_independence_min_tier } }
 		scope:target_country.overlord ?= {
 			NOT = {
 				any_scope_treaty = {
@@ -502,23 +555,14 @@
 					}
 				}
 			}
+		}
+		
+		contextual_accept_score = {
+			value = 0
 
-			if = {
-				limit = {
-					NOT = { exists = scope:is_treaty_active }
-					exists = scope:treaty
-					scope:treaty.binding_period >= 1825
-				}
-				multiply = {
-					desc = "DIPLOMATIC_ACCEPTANCE_BINDING_PERIOD"
-					value = 1
-					add = {
-						value = scope:treaty.binding_period
-						min = 365
-						divide = 3650
-					}
-					max = 2
-				}
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BINDING_PERIOD"
+				value = treaty_binding_period_commitment_acceptance
 			}
 		}
 

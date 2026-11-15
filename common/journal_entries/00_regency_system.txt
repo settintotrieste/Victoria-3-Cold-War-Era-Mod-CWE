@@ -53,143 +53,141 @@ je_regency_system = {
 		}
 	}
 	
-	invalid = {
-		OR = {
-			NAND = {
-				has_law_or_variant = law_type:law_HOS_monarch
-				ruler_is_governor_general = no
-				shares_same_monarch = no
-				is_a_regency_government = yes
-			}
-			active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy }
-			scope:regent_character ?= { NOT = { has_role = character_role_regent } }
-			NOT = { exists = scope:regent_character }
-			scope:monarch_character ?= { NOT = { has_role = character_role_monarch } }
-		}
-	}
-	
-	on_invalid = {
-		
-		#Coronation Day
-		hidden_effect = {
-			if = {
-				limit = {
+	outcome = {
+		conclusion_desc = je_standard_failure_conclusion_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			OR = {
+				NAND = {
 					has_law_or_variant = law_type:law_HOS_monarch
 					ruler_is_governor_general = no
 					shares_same_monarch = no
-					any_scope_character = {
-						has_role = character_role_monarch
-						is_eligible_to_become_monarch = yes
-					}
+					is_a_regency_government = yes
 				}
-				trigger_event = { id = regency.3 popup = yes }
+				active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy }
+				scope:regent_character ?= { NOT = { has_role = character_role_regent } }
+				NOT = { exists = scope:regent_character }
+				scope:monarch_character ?= { NOT = { has_role = character_role_monarch } }
 			}
 		}
-		
-		#Clean up
-		if = {
-			limit = {
-				has_law_or_variant = law_type:law_HOS_monarch
-				ruler_is_governor_general = no
-				shares_same_monarch = no
-				scope:monarch_character ?= { has_role = character_role_monarch }
-			}
-			scope:regent_character ?= {
-				clean_up_regent_character = yes
-			}
-		}
-		
-		#Detect monarch
-		random_scope_character = {
-			limit = { has_role = character_role_monarch }
-			save_scope_as = constitutional_monarch_scope
-		}
-		
-		#Create Regency if applicable
-		if = {
-			limit = {
-				has_law_or_variant = law_type:law_HOS_monarch
-				ruler_is_governor_general = no
-				shares_same_monarch = no
-				NOT = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy } }
-				any_scope_character = {
-					owner ?= ROOT
-					has_role = character_role_monarch
-					is_eligible_to_become_monarch = no
-				}
-			}
-			trigger_event = { id = regency.2 }
-		}
-		
-	}
-	
-	complete = {
-		trigger_if = {
-			limit = { exists = scope:monarch_character }
-			scope:monarch_character ?= {
-				has_role = character_role_monarch
-				is_eligible_to_become_monarch = yes
-			}
-		}
-		trigger_else_if = {
-			limit = { NOT = { any_scope_character = { has_role = character_role_monarch } } }
-			any_scope_character = {
-				has_role = character_role_prince
-				is_eligible_to_become_monarch = yes
-			}
-		}
-		trigger_else = {
-			any_scope_character = {
-				has_role = character_role_monarch
-				is_eligible_to_become_monarch = yes
-			}
-		}
-	}
-	
-	on_complete = {
-		
-		hidden_effect = {
-			
+		effect = {
 			#Coronation Day
-			if = {
-				limit = {
-					has_law_or_variant = law_type:law_HOS_monarch
-					ruler_is_governor_general = no
-					shares_same_monarch = no
-					trigger_if = {
-						limit = { NOT = { any_scope_character = { has_role = character_role_monarch } } }
-						any_scope_character = {
-							has_role = character_role_prince
-							is_eligible_to_become_monarch = yes
-						}
-					}
-					trigger_else = {
+			hidden_effect = {
+				if = {
+					limit = {
+						has_law_or_variant = law_type:law_HOS_monarch
+						ruler_is_governor_general = no
+						shares_same_monarch = no
 						any_scope_character = {
 							has_role = character_role_monarch
 							is_eligible_to_become_monarch = yes
 						}
 					}
+					trigger_event = { id = regency.3 popup = yes }
 				}
-				trigger_event = { id = regency.3 popup = yes }
 			}
-			
 			#Clean up
-			scope:regent_character ?= {
-				clean_up_regent_character = yes
+			if = {
+				limit = {
+					has_law_or_variant = law_type:law_HOS_monarch
+					ruler_is_governor_general = no
+					shares_same_monarch = no
+					scope:monarch_character ?= { has_role = character_role_monarch }
+				}
+				scope:regent_character ?= {
+					clean_up_regent_character = yes
+				}
 			}
-			
-		}
-		
-		#Mark monarchs
-		every_scope_character = {
-			limit = { has_role = character_role_monarch }
-			save_scope_as = monarch_character_label
-			custom_tooltip = {
-				text = character_role_monarch.tt
+			#Detect monarch
+			random_scope_character = {
+				limit = { has_role = character_role_monarch }
+				save_scope_as = constitutional_monarch_scope
+			}
+			#Create Regency if applicable
+			if = {
+				limit = {
+					has_law_or_variant = law_type:law_HOS_monarch
+					ruler_is_governor_general = no
+					shares_same_monarch = no
+					NOT = { active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy } }
+					any_scope_character = {
+						owner ?= ROOT
+						has_role = character_role_monarch
+						is_eligible_to_become_monarch = no
+					}
+				}
+				trigger_event = { id = regency.2 }
 			}
 		}
-		
 	}
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_standard_completion_conclusion_desc
+		color = "gold_positive"
+		trigger = {
+			trigger_if = {
+				limit = { exists = scope:monarch_character }
+				scope:monarch_character ?= {
+					has_role = character_role_monarch
+					is_eligible_to_become_monarch = yes
+				}
+			}
+			trigger_else_if = {
+				limit = { NOT = { any_scope_character = { has_role = character_role_monarch } } }
+				any_scope_character = {
+					has_role = character_role_prince
+					is_eligible_to_become_monarch = yes
+				}
+			}
+			trigger_else = {
+				any_scope_character = {
+					has_role = character_role_monarch
+					is_eligible_to_become_monarch = yes
+				}
+			}
+		}
+		effect = {
+			hidden_effect = {
+				#Coronation Day
+				if = {
+					limit = {
+						has_law_or_variant = law_type:law_HOS_monarch
+						ruler_is_governor_general = no
+						shares_same_monarch = no
+						trigger_if = {
+							limit = { NOT = { any_scope_character = { has_role = character_role_monarch } } }
+							any_scope_character = {
+								has_role = character_role_prince
+								is_eligible_to_become_monarch = yes
+							}
+						}
+						trigger_else = {
+							any_scope_character = {
+								has_role = character_role_monarch
+								is_eligible_to_become_monarch = yes
+							}
+						}
+					}
+					trigger_event = { id = regency.3 popup = yes }
+				}
+				#Clean up
+				scope:regent_character ?= {
+					clean_up_regent_character = yes
+				}
+			}
+			#Mark monarchs
+			every_scope_character = {
+				limit = { has_role = character_role_monarch }
+				save_scope_as = monarch_character_label
+				custom_tooltip = {
+					text = character_role_monarch.tt
+				}
+			}
+		}
+	}
+	
+
 	
 	status_desc = {
 		first_valid = {

@@ -1,4 +1,4 @@
-﻿je_olympic_games = {
+je_olympic_games = {
 	icon = "gfx/interface/icons/invention_icons/organized_sports.dds"
 
 	group = je_group_historical_content
@@ -93,120 +93,110 @@
 		}
 	}
 
-	complete = {
-		
-		custom_tooltip = {
-			text = olympics_commencement_date.tt
-			year >= var:olympic_games_year_display
-			month >= 6
-			month <= 10
-		}
-		
-	}
-	
-	on_complete = {
-		
-		#Mark as a recent host
-		set_variable = {
-			name = recently_hosted_olympics
-			years = 1
-		}
-		
-		#Send olympics event to all participants
-		custom_tooltip = {
-			text = olympics_commences.tt
-			every_country = {
-				limit = {
-					is_sufficiently_independent = yes
-					is_at_war = no
-					NOT = { has_modifier = olympics_banned }
-				}
-				trigger_event = { id = olympic_games_system.3 }
-			}
-		}
-		
-		#Olympic JE result
-		if = {
-			limit = { 
-				scope:journal_entry = {
-					is_goal_complete = yes
-				}
-			}
-			#Reward host with more prestige
-			add_modifier = { 
-				name = hosted_olympics 
-				years = 5 
-				is_decaying = yes 
-			}
-		}
-		else = {
-			trigger_event = { id = olympic_games_system.5 }
-		}
-		change_infamy = -10
-		
-		#Set timer
-		set_global_variable = { 
-			name = olympic_games_timer 
-			years = 4 
-		}
-		
-		#Select another olympics country
-		custom_tooltip = {
-			text = next_olympic_host.tt
-			select_olympic_games_host = yes
-		}
-		
-		#No longer a host city
-		remove_variable = olympic_games_host_country
-		
-		#Clean up
-		remove_variable = olympics_progress
-		
-	}
-
-	fail = {
-		
-		OR = {
-		
-			#Country is at war & there is occupation
-			AND = { 
-				is_at_war = yes
-				country_is_occupied_by_enemy = yes
-			}
-			
-			#No longer a host city for any reason
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_standard_completion_conclusion_desc
+		color = "gold_positive"
+		trigger = {
 			custom_tooltip = {
-				text = olympics_not_host_country.tt
-				NOT = { has_variable = olympic_games_host_country }
+				text = olympics_commencement_date.tt
+				year >= var:olympic_games_year_display
+				month >= 6
+				month <= 10
 			}
-		
 		}
-		
-		
+		effect = {
+			#Mark as a recent host
+			set_variable = {
+				name = recently_hosted_olympics
+				years = 1
+			}
+			#Send olympics event to all participants
+			custom_tooltip = {
+				text = olympics_commences.tt
+				every_country = {
+					limit = {
+						is_sufficiently_independent = yes
+						is_at_war = no
+						NOT = { has_modifier = olympics_banned }
+					}
+					trigger_event = { id = olympic_games_system.3 }
+				}
+			}
+			#Olympic JE result
+			if = {
+				limit = {
+					scope:journal_entry = {
+						is_goal_complete = yes
+					}
+				}
+				#Reward host with more prestige
+				add_modifier = {
+					name = hosted_olympics
+					years = 5
+					is_decaying = yes
+				}
+			}
+			else = {
+				trigger_event = { id = olympic_games_system.5 }
+			}
+			change_infamy = -10
+			#Set timer
+			set_global_variable = {
+				name = olympic_games_timer
+				years = 4
+			}
+			#Select another olympics country
+			custom_tooltip = {
+				text = next_olympic_host.tt
+				select_olympic_games_host = yes
+			}
+			#No longer a host city
+			remove_variable = olympic_games_host_country
+			#Clean up
+			remove_variable = olympics_progress
+		}
+	}
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		conclusion_desc = je_standard_failure_conclusion_desc
+		color = "blue_negative"
+		trigger = {
+			OR = {
+				#Country is at war & there is occupation
+				AND = {
+					is_at_war = yes
+					country_is_occupied_by_enemy = yes
+				}
+				#No longer a host city for any reason
+				custom_tooltip = {
+					text = olympics_not_host_country.tt
+					NOT = { has_variable = olympic_games_host_country }
+				}
+			}
+		}
+		effect = {
+			#Offer olympics to another country
+			hidden_effect = { select_olympic_games_host = yes }
+			#Clear host city modifier
+			every_scope_state = {
+				limit = { has_modifier = olympics_host_city }
+				remove_modifier = olympics_host_city
+			}
+			#Reduce prestige slightly
+			add_modifier = {
+				name = small_national_humiliation
+				years = 5
+				is_decaying = yes
+			}
+			#Clean up
+			remove_variable = olympics_progress
+		}
 	}
 	
-	on_fail = {
-		
-		#Offer olympics to another country
-		hidden_effect = { select_olympic_games_host = yes }
-		
-		#Clear host city modifier
-		every_scope_state = {
-			limit = { has_modifier = olympics_host_city }
-			remove_modifier = olympics_host_city
-		}
-		
-		#Reduce prestige slightly
-		add_modifier = { 
-			name = small_national_humiliation
-			years = 5 
-			is_decaying = yes 
-		}
-		
-		#Clean up
-		remove_variable = olympics_progress
-		
-	}
+
 	
 	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country
 	modifiers_while_active = {

@@ -14,10 +14,7 @@ je_governor = {
 		
 		has_a_republican_governor_HOG = yes
 		hidden_trigger = {
-			NOR = { 
-				has_journal_entry = je_foreign_head_of_state_system
-				has_journal_entry = je_resident_general
-			} 
+			NOT = { has_journal_entry = je_resident_general }
 		}
 		
 	}
@@ -31,6 +28,7 @@ je_governor = {
 		random_scope_character = {
 			limit = { has_role = character_role_governor }
 			save_scope_as = governor_scope
+			set_character_as_governor = yes
 		}
 		
 		#Notification
@@ -84,78 +82,74 @@ je_governor = {
 		
 	}
 	
-	complete = {
-	
-		scope:journal_entry = {
-			is_goal_complete = yes
-		}
-		NOR = { 
-			has_modifier = state_of_emergency_issued 
-			active_law:lawgroup_distribution_of_power ?= { has_amendment = amendment_type:amendment_wartime_suspended_elections } 
-			has_modifier = wartime_measures_martial_law 
-		}
-		
-		#Only step down during election campaign
-		trigger_if = {
-			limit = { 
-				country_has_voting_franchise = yes 
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		conclusion_desc = je_standard_completion_conclusion_desc
+		color = "gold_positive"
+		trigger = {
+			scope:journal_entry = {
+				is_goal_complete = yes
 			}
-			in_election_campaign = yes
-		}
-		
-	}
-	
-	on_complete = {
-	
-		scope:governor_scope ?= {
-			if = {
-				limit = { has_role = character_role_governor }
-				remove_character_role = character_role_governor
+			NOR = {
+				has_modifier = state_of_emergency_issued
+				active_law:lawgroup_distribution_of_power ?= { has_amendment = amendment_type:amendment_wartime_suspended_elections }
+				has_modifier = wartime_measures_martial_law
+			}
+			#Only step down during election campaign
+			trigger_if = {
+				limit = {
+					country_has_voting_franchise = yes
+				}
+				in_election_campaign = yes
 			}
 		}
-		
+		effect = {
+			scope:governor_scope ?= {
+				if = {
+					limit = { has_role = character_role_governor }
+					remove_character_role = character_role_governor
+				}
+			}
+		}
 	}
-
-	invalid = {
-		
-		OR = {
-			hidden_trigger = { 
-				OR = { 
-					has_journal_entry = je_foreign_head_of_state_system
+	outcome = {
+		conclusion_desc = je_standard_failure_conclusion_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			OR = {
+				hidden_trigger = {
 					has_journal_entry = je_resident_general
 				}
-			}
-			has_a_republican_governor_HOG = no
-			NOT = { exists = scope:governor_scope }
-			scope:governor_scope ?= {
-				OR = {
-					NOT = { has_role = character_role_governor }
-					NOT = { owner ?= ROOT }
+				has_a_republican_governor_HOG = no
+				NOT = { exists = scope:governor_scope }
+				scope:governor_scope ?= {
+					OR = {
+						NOT = { has_role = character_role_governor }
+						NOT = { owner ?= ROOT }
+					}
 				}
 			}
 		}
-		
-	}
-	
-	on_invalid = {
-		
-		#Clear Governor
-		scope:governor_scope ?= {
-			remove_character_role = character_role_governor
-		}
-		if = {
-			limit = { has_a_republican_governor_HOG = no }
-			every_scope_character = {
-				limit = { has_role = character_role_governor }
+		effect = {
+			#Clear Governor
+			scope:governor_scope ?= {
 				remove_character_role = character_role_governor
 			}
+			if = {
+				limit = { has_a_republican_governor_HOG = no }
+				every_scope_character = {
+					limit = { has_role = character_role_governor }
+					remove_character_role = character_role_governor
+				}
+			}
+			#Clear variables
+			remove_variable = governor_veto_overruled
+			remove_variable = elected_governor_system
 		}
-		
-		#Clear variables
-		remove_variable = governor_veto_overruled
-		remove_variable = elected_governor_system
-		
 	}
+	
+
 	
 	status_desc = {
 		first_valid = {

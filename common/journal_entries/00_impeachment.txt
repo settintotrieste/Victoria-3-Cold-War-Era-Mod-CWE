@@ -37,180 +37,171 @@ je_impeachment_system = {
 	timeout = 90
 	
 	# Senate to vote on whether to convict after 90 days
-	on_timeout = {
-	
-		# Impeachment is successful
-		if = {
-			limit = {
-			
-				#Opposition has a 2/3 majority to convict the President
-				NOR = { 
-					government_legitimacy > 33
-					government_has_legislative_simple_majority = yes
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		conclusion_desc = je_standard_failure_conclusion_desc
+		color = "blue_negative"
+		flags = { timeout }
+		effect = {
+			# Impeachment is successful
+			if = {
+				limit = {
+					#Opposition has a 2/3 majority to convict the President
+					NOR = {
+						government_legitimacy > 33
+						government_has_legislative_simple_majority = yes
+					}
 				}
-			
+				#President's IG is tarnished for 1 electoral cycle
+				scope:impeached_president_scope ?= {
+					interest_group ?= {
+						hidden_effect = { remove_modifier = leader_imprisoned }
+						add_modifier = { name = leader_imprisoned years = 4 is_decaying = yes }
+					}
+				}
+				#President is removed from office
+				custom_tooltip = {
+					text = je_impeachment_system_1.tt
+					if = {
+						limit = {
+							scope:impeached_president_scope ?= { is_ruler_of_own_country = yes }
+						}
+						if = {
+							limit = {
+								any_scope_character = {
+									has_role_of_type = politician
+									is_ruler_of_own_country = no
+									interest_group ?= { is_interest_group_type = scope:impeached_president_scope.interest_group }
+								}
+							}
+							ordered_scope_character = {
+								limit = {
+									has_role_of_type = politician
+									is_ruler_of_own_country = no
+									interest_group ?= { OR = { is_interest_group_type = scope:impeached_president_scope.interest_group is_in_government = yes } }
+								}
+								order_by = popularity
+								position = 0
+								check_range_bounds = no
+								set_character_as_ruler = yes
+							}
+						}
+						else = {
+							create_character = {
+								ruler = yes
+								interest_group = scope:impeached_president_scope.interest_group
+								on_created = {
+									add_character_role = politician
+								}
+							}
+						}
+					}
+					else_if = {
+						limit = {
+							scope:impeached_president_scope ?= { has_role = character_role_head_of_state }
+						}
+						if = {
+							limit = {
+								any_scope_character = {
+									has_role_of_type = politician
+									is_ruler_of_own_country = no
+									NOT = { has_role = character_role_head_of_state }
+									interest_group ?= { OR = { is_interest_group_type = scope:impeached_president_scope.interest_group is_in_government = yes } }
+								}
+							}
+							ordered_scope_character = {
+								limit = {
+									has_role_of_type = politician
+									is_ruler_of_own_country = no
+									NOT = { has_role = character_role_head_of_state }
+									interest_group ?= { OR = { is_interest_group_type = scope:impeached_president_scope.interest_group is_in_government = yes } }
+								}
+								order_by = popularity
+								position = 0
+								check_range_bounds = no
+								add_character_role = character_role_head_of_state
+							}
+						}
+						else = {
+							create_character = {
+								has_role = character_role_head_of_state
+								interest_group = scope:impeached_president_scope.interest_group
+								on_created = {
+									add_character_role = politician
+								}
+							}
+						}
+					}
+				}
+				#President is put on trial
+				scope:impeached_president_scope ?= {
+					replace_character_roles = { add = { character_role_politician } remove_all = yes }
+					add_modifier = { name = indicted_character }
+					owner ?= { hidden_effect = { add_journal_entry = { type = je_political_trials_system } } }
+				}
 			}
-			
-			#President's IG is tarnished for 1 electoral cycle
+			# Impeachment is unsuccessful
+			else = {
+				#President's popularity is raised for 1 electoral cycle
+				custom_tooltip = {
+					text = je_impeachment_system_2.tt
+				}
+				scope:impeached_president_scope ?= {
+					hidden_effect = { remove_modifier = survived_impeachment }
+					add_modifier = { name = survived_impeachment years = 4 is_decaying = yes }
+				}
+			}
+			#Clear modifiers
 			scope:impeached_president_scope ?= {
-				interest_group ?= {
-					hidden_effect = { remove_modifier = leader_imprisoned }
-					add_modifier = { name = leader_imprisoned years = 4 is_decaying = yes }
-				}
-			}
-	
-			#President is removed from office
-			custom_tooltip = {
-				text = je_impeachment_system_1.tt
 				if = {
-					limit = {
-						scope:impeached_president_scope ?= { is_ruler_of_own_country = yes }
-					}
-					if = {
-						limit = {
-							any_scope_character = {
-								has_role_of_type = politician
-								is_ruler_of_own_country = no
-								interest_group ?= { is_interest_group_type = scope:impeached_president_scope.interest_group }
-							}
-						}
-						ordered_scope_character = {
-							limit = {
-								has_role_of_type = politician
-								is_ruler_of_own_country = no
-								interest_group ?= { OR = { is_interest_group_type = scope:impeached_president_scope.interest_group is_in_government = yes } }
-							}
-							order_by = popularity
-							position = 0
-							check_range_bounds = no
-							set_character_as_ruler = yes
-						}
-					}
-					else = {
-						create_character = {
-							ruler = yes
-							interest_group = scope:impeached_president_scope.interest_group
-							on_created = {
-								add_character_role = politician
-							}
-						}
-					}
+					limit = { has_modifier = impeached_politician }
+					remove_modifier = impeached_politician
 				}
-				else_if = {
-					limit = {
-						scope:impeached_president_scope ?= { has_role = character_role_head_of_state }
-					}
-					if = {
-						limit = {
-							any_scope_character = {
-								has_role_of_type = politician
-								is_ruler_of_own_country = no
-								NOT = { has_role = character_role_head_of_state }
-								interest_group ?= { OR = { is_interest_group_type = scope:impeached_president_scope.interest_group is_in_government = yes } }
-							}
+				remove_variable = investigation_found_crimes
+			}
+		}
+	}
+	outcome = {
+		conclusion_desc = je_standard_failure_conclusion_desc
+		flags = { hidden invalid_outcome }
+		trigger = {
+			OR = {
+				#Character is a President
+				scope:impeached_president_scope ?= {
+					NOR = {
+						AND = {
+							is_ruler_of_own_country = yes
+							owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
 						}
-						ordered_scope_character = {
-							limit = {
-								has_role_of_type = politician
-								is_ruler_of_own_country = no
-								NOT = { has_role = character_role_head_of_state }
-								interest_group ?= { OR = { is_interest_group_type = scope:impeached_president_scope.interest_group is_in_government = yes } }
-							}
-							order_by = popularity
-							position = 0
-							check_range_bounds = no
-							add_character_role = character_role_head_of_state
-						}
-					}
-					else = {
-						create_character = {
+						AND = {
 							has_role = character_role_head_of_state
-							interest_group = scope:impeached_president_scope.interest_group
-							on_created = {
-								add_character_role = politician
-							}
+							owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
 						}
 					}
 				}
-			}
-			
-			#President is put on trial
-			scope:impeached_president_scope ?= {
-				replace_character_roles = { add = { character_role_politician } remove_all = yes }
-				add_modifier = { name = indicted_character }
-				owner ?= { hidden_effect = { add_journal_entry = { type = je_political_trials_system } } }
-			}
-			
-		}
-		
-		# Impeachment is unsuccessful
-		else = {
-	
-			#President's popularity is raised for 1 electoral cycle
-			custom_tooltip = {
-				text = je_impeachment_system_2.tt
-			}
-			scope:impeached_president_scope ?= {
-				hidden_effect = { remove_modifier = survived_impeachment }
-				add_modifier = { name = survived_impeachment years = 4 is_decaying = yes } 
-			}
-			
-		}
-		
-		#Clear modifiers
-		scope:impeached_president_scope ?= {
-			if = {
-				limit = { has_modifier = impeached_politician }
-				remove_modifier = impeached_politician
-			}
-			remove_variable = investigation_found_crimes
-		}
-		
-	}
-	
-	invalid = {
-	
-		OR = {
-		
-			#Character is a President
-			scope:impeached_president_scope ?= {
-				NOR = {
-					AND = {
-						is_ruler_of_own_country = yes
-						owner ?= { NOT = { has_law_or_variant = law_type:law_HOG_prime_minister } }
-					}
-					AND = {
-						has_role = character_role_head_of_state
-						owner ?= { has_law_or_variant = law_type:law_HOG_prime_minister }
-					}
+				#Ineligible character
+				NOT = { exists = scope:impeached_president_scope }
+				scope:impeached_president_scope ?= { OR = { has_modifier = indicted_character has_role = character_role_prisoner } }
+				scope:impeached_president_scope ?= { NOT = { owner ?= ROOT } }
+				#Prison Breakout
+				capital ?= {
+					market_access <= 0 # Occupied
 				}
 			}
-			
-			#Ineligible character
-			NOT = { exists = scope:impeached_president_scope }
-			scope:impeached_president_scope ?= { OR = { has_modifier = indicted_character has_role = character_role_prisoner } }
-			scope:impeached_president_scope ?= { NOT = { owner ?= ROOT } }
-			
-			#Prison Breakout
-			capital ?= {
-				market_access <= 0 # Occupied
-			}
-		
 		}
-		
-	}
-	
-	on_invalid = {
-	
-		#Clear impeachment markers
-		scope:impeached_president_scope ?= {
-			if = {
-				limit = { has_modifier = impeached_politician }
-				remove_modifier = impeached_politician
+		effect = {
+			#Clear impeachment markers
+			scope:impeached_president_scope ?= {
+				if = {
+					limit = { has_modifier = impeached_politician }
+					remove_modifier = impeached_politician
+				}
 			}
 		}
-		
 	}
+	
+
 	
 	weight = 200
 

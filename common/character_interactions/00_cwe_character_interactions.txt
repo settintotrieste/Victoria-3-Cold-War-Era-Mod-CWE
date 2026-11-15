@@ -3,16 +3,26 @@ grant_ministership_to_politician = {
 	clicksound = "event:/SFX/DLC/1.3_ip1/UI/agitator_promote"
 
 	potential = {
-		is_an_IG_leader = yes
-		is_ruler_of_own_country = no
-		NOT = { has_role = character_role_cabinet_minister }
-		owner ?= scope:actor
 		
-		interest_group ?= {
-			is_in_government = yes
+		has_role_of_type = politician
+		NOT = { has_role = character_role_cabinet_minister }
+		
+		is_ruler_of_own_country = no
+		NAND = {
+			is_heir_of_own_country = yes
+			has_variable = vice_president_character
 		}
 		
 		owner ?= { has_journal_entry = je_cabinet }
+		
+		trigger_if = {
+			limit = { NOT = { has_law_or_variant = law_type:law_HOG_none } }
+			interest_group ?= {
+				is_in_government = yes
+			}
+		}
+		
+		owner ?= scope:actor
 		
 	}
 
@@ -34,10 +44,14 @@ grant_ministership_to_politician = {
 	effect = {
 		add_character_role = character_role_cabinet_minister
 		set_variable = { name = new_cabinet_minister months = 3 }
-		this.interest_group ?= {
-			if = {
-				limit = { has_modifier = ig_angry_with_government }
-				remove_modifier = ig_angry_with_government
+		if = {
+			limit = { has_modifier = character_angry_with_government }
+			remove_modifier = character_angry_with_government
+		}
+		owner ?= {
+			add_loyalists = {
+				interest_group = root.interest_group
+				value = small_radicals
 			}
 		}
 	}
@@ -61,6 +75,7 @@ grant_ministership_to_politician = {
 			add = 60
 		}
 	}
+	
 }
 
 remove_ministership_from_politician = {
@@ -68,10 +83,13 @@ remove_ministership_from_politician = {
 	clicksound = "event:/SFX/UI/Military/command_remove"
 
 	potential = {
+		
 		has_role = character_role_cabinet_minister
-		owner ?= scope:actor
 		
 		owner ?= { has_journal_entry = je_cabinet }
+		
+		owner ?= scope:actor
+		
 	}
 
 	possible = {
@@ -80,18 +98,18 @@ remove_ministership_from_politician = {
 			text = not_a_new_cabinet_minister.tt
 			NOT = { has_variable = new_cabinet_minister }
 		}
-	
-		interest_group ?= {
-			is_in_government = yes
-		}
 		
 	}
 
 	effect = {
 		remove_character_role = character_role_cabinet_minister
-		this.interest_group ?= {
-			hidden_effect = { remove_modifier = ig_angry_with_government }
-			add_modifier = { name = ig_angry_with_government years = 2 is_decaying = yes }
+		hidden_effect = { remove_modifier = character_angry_with_government }
+		add_modifier = { name = character_angry_with_government years = 2 is_decaying = yes }
+		owner ?= {
+			add_radicals = {
+				interest_group = root.interest_group
+				value = small_radicals
+			}
 		}
 	}
 
@@ -114,6 +132,7 @@ remove_ministership_from_politician = {
 			add = 30
 		}
 	}
+	
 }
 
 arrange_accident = {
@@ -1593,7 +1612,10 @@ appoint_as_ruler_deputy = {
 		owner ?= scope:actor
 		
 		#Eligible to deputy
-		has_role_of_type = politician
+		OR = { 
+			has_role_of_type = politician
+			has_role = character_role_favorite
+		}
 		is_ruler_of_own_country = no
 		is_heir_of_own_country = no
 		owner ?= {
@@ -1605,6 +1627,7 @@ appoint_as_ruler_deputy = {
 
 	possible = {
 		
+		NOT = { has_role_of_type = agitator }
 		interest_group ?= { OR = { is_same_interest_group_type = owner.ruler.interest_group is_in_government = yes } }
 		character_is_key_state_officeholder = no
 		NOT = { has_trait = character_ineligible_as_office_holder }
@@ -1614,14 +1637,7 @@ appoint_as_ruler_deputy = {
 	effect = {
 		
 		#Appoint as Deputy
-		save_scope_as = vice_president_scope
-		owner ?= {
-			set_heir = scope:vice_president_scope
-			every_scope_character = {
-				remove_variable = vice_president_character
-			}
-		}
-		set_variable = vice_president_character
+		set_character_as_deputy = yes
 		
 		#Domestic reaction
 		interest_group ?= { save_scope_as = THIS_IG_scope }

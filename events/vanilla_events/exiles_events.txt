@@ -71,6 +71,7 @@ exiles_events.1 = {
 	cooldown = { days = stupidly_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - exiles_yearly_events
 		any_scope_character = {
 			has_role_of_type = agitator is_a_special_agitator = no
 			character_supports_political_movement = no
@@ -98,6 +99,7 @@ exiles_events.1 = {
 				save_scope_as = agitator_ig
 			}
 			save_scope_as = agitator_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 	}
 
@@ -134,6 +136,10 @@ exiles_events.1 = {
 			}
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:agitator_scope }
+	}
 }
 
 exiles_events.2 = {
@@ -157,9 +163,11 @@ exiles_events.2 = {
 	cooldown = { days = stupidly_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - exiles_yearly_events
 		empty_agitator_slots >= 1
 		any_scope_character = {
 			is_ruler_of_own_country = no
+			character_is_valid_for_events = yes
 			is_heir_of_own_country = no
 			this.interest_group ?= {
 				is_in_government = yes
@@ -169,6 +177,7 @@ exiles_events.2 = {
 			}
 		}
 		any_character_in_exile_pool = {
+			is_in_regional_exile_pool = no
 			character_acceptance = { target = prev value >= acceptance_status_4 }
 			this.interest_group_type = {
 				this = scope:ex_ig_type
@@ -194,15 +203,18 @@ exiles_events.2 = {
 		random_scope_character = {
 			limit = {
 				is_ruler_of_own_country = no
+				character_is_valid_for_events = yes
 				is_heir_of_own_country = no
 				this.interest_group ?= {
 					is_in_government = yes
 				}
 				any_character_in_exile_pool = {
+					is_in_regional_exile_pool = no
 					this.interest_group_type = prev.interest_group_type
 				}
 			}
 			save_scope_as = friend_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 			this.interest_group ?= {
 				save_scope_as = exile_ig_scope
 			}
@@ -212,18 +224,23 @@ exiles_events.2 = {
 		}
 		random_character_in_exile_pool = {
 			limit = {
+				is_in_regional_exile_pool = no
 				character_acceptance = { target = prev value >= acceptance_status_4 }
 				this.interest_group_type = {
 					this = scope:ex_ig_type
 				}
 			}
 			save_scope_as = exile_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 	}
 
 	option = {
 		name = exiles_events.2.a
 		default_option = yes
+		ai_chance = {
+			base = 1
+		}
 		scope:exile_ig_scope = {
 			add_modifier = {
 				name = modifier_exile_ig_empowered
@@ -253,6 +270,11 @@ exiles_events.2 = {
 			}
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:friend_scope }
+		revoke_temporary_event_immortality = { CHARACTER = scope:exile_scope }
+	}
 }
 
 exiles_events.3 = {
@@ -276,11 +298,13 @@ exiles_events.3 = {
 	cooldown = { days = stupidly_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - exiles_yearly_events
 		empty_agitator_slots >= 1
 		any_political_movement = {
 			save_temporary_scope_as = movement_scope
 		}
 		any_character_in_exile_pool = {
+			is_in_regional_exile_pool = no
 			root = this.home_country
 			could_support_political_movement = scope:movement_scope
 		}
@@ -304,6 +328,7 @@ exiles_events.3 = {
 		random_political_movement = {
 			limit = {
 				any_character_in_exile_pool = {
+					is_in_regional_exile_pool = no
 					root = this.home_country
 					could_support_political_movement = prev
 				}
@@ -312,10 +337,12 @@ exiles_events.3 = {
 		}
 		random_character_in_exile_pool = {
 			limit = {
+				is_in_regional_exile_pool = no
 				root = this.home_country
 				could_support_political_movement = scope:movement_scope
 			}
 			save_scope_as = exile_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 	}
 
@@ -351,6 +378,10 @@ exiles_events.3 = {
 			}
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:exile_scope }
+	}
 }
 
 exiles_events.4 = {
@@ -374,6 +405,7 @@ exiles_events.4 = {
 	cooldown = { days = long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - exiles_yearly_events
 		any_interest_group = {
 			OR = {
 				has_modifier = failed_coup
@@ -381,6 +413,8 @@ exiles_events.4 = {
 				has_variable = coup_guilty
 			}
 			any_scope_character = {
+				NOT = { is_ruler_of_own_country = yes }
+				NOT = { has_variable = daimyo_var }
 				OR = {
 					has_role_of_type = agitator is_a_special_agitator = no
 					has_modifier = incompetent_coup_attempt
@@ -412,12 +446,15 @@ exiles_events.4 = {
 			save_scope_as = failed_revolution_ig
 			random_scope_character = {
 				limit = {
+					NOT = { is_ruler_of_own_country = yes }
+					NOT = { has_variable = daimyo_var }
 					OR = {
 						has_role_of_type = agitator is_a_special_agitator = no
 						has_modifier = incompetent_coup_attempt
 					}
 				}
 				save_scope_as = failed_revolution_agitator
+				set_temporary_event_immortality = { DURATION = 3 }
 			}
 		}
 	}
@@ -442,10 +479,15 @@ exiles_events.4 = {
 					exile_character_with_martyrdom = yes
 				}
 				33 = {
+					revoke_temporary_event_immortality = { CHARACTER = scope:failed_revolution_agitator }
 					kill_character = yes
 				}
 			}
 		}
+	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:failed_revolution_agitator }
 	}
 }
 
@@ -460,7 +502,7 @@ exiles_events.5 = {
 	flavor = exiles_events.5.f
 
 	event_image = {
-		texture = "unspecific_signed_contract"
+		video = "unspecific_signed_contract"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -470,6 +512,7 @@ exiles_events.5 = {
 	cooldown = { days = stupidly_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - exiles_yearly_events
 		empty_agitator_slots >= 1
 		any_interest_group = {
 			ig_approval >= 5
@@ -478,6 +521,7 @@ exiles_events.5 = {
 			}
 		}
 		any_character_in_exile_pool = {
+			is_in_regional_exile_pool = no
 			root = this.home_country
 			interest_group_type = scope:ex_ig_type
 		}
@@ -502,6 +546,7 @@ exiles_events.5 = {
 			limit = {
 				ig_approval >= 5
 				any_character_in_exile_pool = {
+					is_in_regional_exile_pool = no
 					root = this.home_country
 					this.interest_group_type = prev.type
 				}
@@ -513,10 +558,12 @@ exiles_events.5 = {
 		}
 		random_character_in_exile_pool = {
 			limit = {
+				is_in_regional_exile_pool = no
 				root = this.home_country
 				this.interest_group_type = scope:ex_ig_type
 			}
 			save_scope_as = exile_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 	}
 
@@ -544,6 +591,10 @@ exiles_events.5 = {
 			}
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:exile_scope }
+	}
 }
 
 exiles_events.6 = {
@@ -557,7 +608,7 @@ exiles_events.6 = {
 	flavor = exiles_events.6.f
 
 	event_image = {
-		texture = "unspecific_steam_ship"
+		video = "unspecific_steam_ship"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -567,9 +618,15 @@ exiles_events.6 = {
 	cooldown = { days = stupidly_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - exiles_yearly_events
 		empty_agitator_slots >= 1
 		any_political_movement = { count >= 5 }
+		NOR = {
+			has_law_or_variant = law_type:law_censorship
+			has_law_or_variant = law_type:law_outlawed_dissent
+		}
 		any_character_in_exile_pool = {
+			is_in_regional_exile_pool = no
 			character_acceptance = { target = prev value >= acceptance_status_4 }
 		}
 	}
@@ -591,11 +648,13 @@ exiles_events.6 = {
 	immediate = {
 		random_character_in_exile_pool = {
 			limit = {
+				is_in_regional_exile_pool = no
 				character_acceptance = { target = prev value >= acceptance_status_4 }
 			}
 			save_scope_as = exile_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
-		capital ?= {
+		capital = {
 			save_scope_as = capital_scope
 		}
 	}
@@ -603,6 +662,15 @@ exiles_events.6 = {
 	option = {
 		name = exiles_events.6.a
 		default_option = yes
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_wants_radicals = yes
+				}
+				add = 10
+			}
+		}
 		add_modifier = {
 			name = modifier_rich_politics
 			days = normal_modifier_time
@@ -617,10 +685,23 @@ exiles_events.6 = {
 
 	option = {
 		name = exiles_events.6.b
+		ai_chance = {
+			base = 1
+			modifier = {
+				trigger = {
+					ai_avoids_radicals = yes
+				}
+				add = 10
+			}
+		}
 		add_modifier = {
 			name = modifier_rich_politics_rejected
 			days = normal_modifier_time
 		}
+	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:exile_scope }
 	}
 }
 
@@ -645,12 +726,14 @@ exiles_events.7 = {
 	cooldown = { days = stupidly_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - exiles_yearly_events
 		empty_agitator_slots >= 1
 		OR = {
 			has_law_or_variant = law_type:law_no_migration_controls
 			has_law_or_variant = law_type:law_migration_controls
 		}
 		any_character_in_exile_pool = {
+			is_in_regional_exile_pool = no
 			character_acceptance = { target = prev value >= acceptance_status_4 }
 		}
 	}
@@ -672,9 +755,11 @@ exiles_events.7 = {
 	immediate = {
 		random_character_in_exile_pool = {
 			limit = {
+				is_in_regional_exile_pool = no
 				character_acceptance = { target = prev value >= acceptance_status_4 }
 			}
 			save_scope_as = exile_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 	}
 
@@ -704,6 +789,10 @@ exiles_events.7 = {
 			}
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:exile_scope }
+	}
 }
 
 exiles_events.8 = {
@@ -717,18 +806,20 @@ exiles_events.8 = {
 	flavor = exiles_events.8.f
 
 	event_image = {
-		texture = "middleeast_engineer_blueprint"
+		video = "middleeast_engineer_blueprint"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
 
 	icon = "gfx/interface/icons/event_icons/event_protest.dds"
 
-	cooldown = { days = never_fire_again_modifier_time }
+	fire_only_once = yes
 
 	trigger = {
+		# triggered by on_action - exiles_yearly_events
 		any_political_movement = {
 			any_character_in_exile_pool = {
+				is_in_regional_exile_pool = no
 				could_support_political_movement = prev
 			}
 		}
@@ -753,15 +844,18 @@ exiles_events.8 = {
 		random_political_movement = {
 			limit = {
 				any_character_in_exile_pool = {
+					is_in_regional_exile_pool = no
 					could_support_political_movement = prev
 				}
 			}
 			save_scope_as = movement_scope
 			random_character_in_exile_pool = {
 				limit = {
+					is_in_regional_exile_pool = no
 					could_support_political_movement = prev
 				}
 				save_scope_as = exile_scope
+				set_temporary_event_immortality = { DURATION = 3 }
 			}
 		}
 	}
@@ -792,6 +886,10 @@ exiles_events.8 = {
 			}
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:exile_scope }
+	}
 }
 
 exiles_events.9 = {
@@ -805,7 +903,7 @@ exiles_events.9 = {
 	flavor = exiles_events.9.f
 
 	event_image = {
-		texture = "unspecific_politicians_arguing"
+		video = "unspecific_politicians_arguing"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -815,6 +913,7 @@ exiles_events.9 = {
 	cooldown = { days = stupidly_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - exiles_yearly_events
 		empty_agitator_slots >= 1
 		any_interest_group = {
 			is_in_government = yes
@@ -823,6 +922,7 @@ exiles_events.9 = {
 			}
 		}
 		any_character_in_exile_pool = {
+			is_in_regional_exile_pool = no
 			root = this.home_country
 			interest_group_type = scope:ex_ig_type
 		}
@@ -847,6 +947,7 @@ exiles_events.9 = {
 			limit = {
 				is_in_government = yes
 				any_character_in_exile_pool = {
+					is_in_regional_exile_pool = no
 					root = this.home_country
 					interest_group_type = prev.type
 				}
@@ -858,10 +959,12 @@ exiles_events.9 = {
 		}
 		random_character_in_exile_pool = {
 			limit = {
+				is_in_regional_exile_pool = no
 				root = this.home_country
 				interest_group_type = scope:ex_ig_type
 			}
 			save_scope_as = exile_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 	}
 
@@ -891,6 +994,10 @@ exiles_events.9 = {
 			}
 		}
 	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:exile_scope }
+	}
 }
 
 exiles_events.10 = {
@@ -904,7 +1011,7 @@ exiles_events.10 = {
 	flavor = exiles_events.10.f
 
 	event_image = {
-		texture = "unspecific_sick_in_hospital"
+		video = "unspecific_sick_in_hospital"
 	}
 
 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
@@ -914,8 +1021,10 @@ exiles_events.10 = {
 	cooldown = { days = stupidly_long_modifier_time }
 
 	trigger = {
+		# triggered by on_action - exiles_yearly_events
 		empty_agitator_slots >= 1
 		any_character_in_exile_pool = {
+			is_in_regional_exile_pool = no
 			root = this.home_country
 			this.age >= 40
 		}
@@ -928,10 +1037,12 @@ exiles_events.10 = {
 	immediate = {
 		random_character_in_exile_pool = {
 			limit = {
+				is_in_regional_exile_pool = no
 				root = this.home_country
 				this.age >= 40
 			}
 			save_scope_as = exile_scope
+			set_temporary_event_immortality = { DURATION = 3 }
 		}
 	}
 
@@ -953,6 +1064,7 @@ exiles_events.10 = {
 		name = exiles_events.10.a
 		default_option = yes
 		scope:exile_scope = {
+			revoke_temporary_event_immortality = { CHARACTER = scope:exile_scope }
 			kill_character = yes
 		}
 	}
@@ -989,5 +1101,9 @@ exiles_events.10 = {
 				free_from_exile_effect = yes
 			}
 		}
+	}
+
+	after = {
+		revoke_temporary_event_immortality = { CHARACTER = scope:exile_scope }
 	}
 }

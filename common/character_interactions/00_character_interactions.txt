@@ -4,6 +4,7 @@
 #						All scopes are character scopes with the interacting country stored as the actor
 #potential				Trigger to check if the interaction should be shown
 #possible 				Trigger to check if the interaction is available
+#actor_capacity			Country-scoped trigger on the interacting country that must also be true for the interaction to be available, for limits like free slots that do not depend on the character
 #effect					The effects of the interaction
 #cooldown				Scriptable duration that this interaction will be unavailable for the interacting country
 
@@ -472,7 +473,11 @@ marry_ruler_or_heir = {
 		owner ?= scope:actor
 		
 		#Is a monarch
-		has_role = character_role_monarch
+		OR = {
+			has_role = character_role_monarch
+			has_role = character_role_monarch_elective
+			has_role = character_role_prince
+		}
 		
 		#In a monarchy
 		scope:actor ?= {
@@ -508,111 +513,49 @@ marry_ruler_or_heir = {
 			is_sufficiently_independent = yes
 			is_at_war = no
 		
-			#Available country
-			OR = {
+			#Available Spouse in Country
+			any_scope_character = {
 			
-				any_scope_character = {
-					
-					has_role_of_type = magnate
-					is_noble = yes
-					
-					#Is of a marryable age
-					is_adult = yes
-					trigger_if = {
-						limit = { scope:THIS_character_scope ?= { is_female = no } }
-						age < 50
-					}
-					trigger_else_if = {
-						limit = { scope:THIS_character_scope ?= { is_female = yes } }
-						age < 40
-					}
-					
-					#Is of correct gender or gender orientation
-					trigger_if = {
-						limit = { scope:THIS_character_scope ?= { is_female = no } }
-						is_female = yes
-						NOT = { has_trait = homosexual_character }
-					}
-					trigger_else_if = {
-						limit = { scope:THIS_character_scope ?= { is_female = yes } }
-						is_female = no
-						NOT = { has_trait = homosexual_character }
-					}
-					
-					#Shares same religion
-					religion ?= { is_state_religion = scope:actor }
-					
-					#Shares similar culture
-					culture ?= { shares_heritage_trait_group_with_any_primary_culture = scope:actor }
-					
-					#Not already a target
-					custom_tooltip = {
-						text = is_not_married.tt
-						NOT = { has_variable = spouse_seeker }
-						NOT = { has_variable = is_married }
-						NOT = { has_variable = marriage_target }
-					}
-					
-				}
-			
-				any_diplomatically_relevant_country = {
-					
-					#Not THIS
-					NOT = { THIS = scope:actor }
-					
-					#Is a monarchy
-					has_law_or_variant = law_type:law_HOS_monarch
-					has_gov_regency = no
-					NOT = { is_subject_type = subject_type_personal_union }
-					
-					#Has a marryable character
-					any_scope_character = {
-						
-						#Is a royal (non-monarch) - monarchs use diplo action instead because a subject relation will be created
-						NOT = { has_role = character_role_monarch }
-						is_royal_character = yes
-						
-						#Is of a marryable age
-						is_adult = yes
-						trigger_if = {
-							limit = { scope:THIS_character_scope ?= { is_female = no } }
-							age < 50
-						}
-						trigger_else_if = {
-							limit = { scope:THIS_character_scope ?= { is_female = yes } }
-							age < 40
-						}
-						
-						#Is of correct gender or gender orientation
-						trigger_if = {
-							limit = { scope:THIS_character_scope ?= { is_female = no } }
-							is_female = yes
-							NOT = { has_trait = homosexual_character }
-						}
-						trigger_else_if = {
-							limit = { scope:THIS_character_scope ?= { is_female = yes } }
-							is_female = no
-							NOT = { has_trait = homosexual_character }
-						}
-						
-						#Shares same religion
-						religion ?= { is_state_religion = scope:actor }
-						
-						#Shares similar culture
-						culture ?= { shares_heritage_trait_group_with_any_primary_culture = scope:actor }
-						
-						#Not already a target
-						custom_tooltip = {
-							text = is_not_married.tt
-							NOT = { has_variable = spouse_seeker }
-							NOT = { has_variable = is_married }
-							NOT = { has_variable = marriage_target }
-						}
-						
-					}
+				has_role_of_type = magnate
+				is_noble = yes
 				
+				#Is of a marryable age
+				is_adult = yes
+				trigger_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = no } }
+					age < 50
 				}
-
+				trigger_else_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = yes } }
+					age < 40
+				}
+				
+				#Is of correct gender or gender orientation
+				trigger_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = no } }
+					is_female = yes
+					NOT = { has_trait = homosexual_character }
+				}
+				trigger_else_if = {
+					limit = { scope:THIS_character_scope ?= { is_female = yes } }
+					is_female = no
+					NOT = { has_trait = homosexual_character }
+				}
+				
+				#Shares same religion
+				religion ?= { is_state_religion = scope:actor }
+				
+				#Shares similar culture
+				culture ?= { shares_heritage_trait_group_with_any_primary_culture = scope:actor }
+				
+				#Not already a target
+				custom_tooltip = {
+					text = is_not_married.tt
+					NOT = { has_variable = spouse_seeker }
+					NOT = { has_variable = is_married }
+					NOT = { has_variable = marriage_target }
+				}
+				
 			}
 			
 		}
@@ -1295,9 +1238,12 @@ invite_exile = {
 	
 	# required for AI to evaluate if interaction is possible on characters in exile pool
 	ai_considers_exiles = yes
+	
+	actor_capacity = {
+		empty_agitator_slots >= 1
+	}
 
 	possible = {
-		scope:actor ?= { empty_agitator_slots >= 1 }
 		# Devout exiles must have country religion
 		trigger_if = {
 			limit = {
@@ -1506,6 +1452,7 @@ retire_commander = {
 		else = {
 			hidden_effect = {
 				replace_character_roles = { remove = { general admiral } }
+				retired_commander_becomes_politician_roll_effect = { CHANCE_MULT = define:NCharacters|RETIRED_COMMANDER_POLITICIAN_FORCED_CHANCE_MULT }
 				retire_character_if_should_be_culled = yes
 			}
 		}
