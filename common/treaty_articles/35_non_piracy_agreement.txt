@@ -8,7 +8,6 @@
 	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/non_piracy_agreement.dds"
 
 	flags = {
-		show_in_lens
 		is_non_piracy_agreement
 		can_be_enforced
 		ai_consider_threaten_naval_hostilities
@@ -91,38 +90,11 @@
 				}
 				add = 0.05
 			}
-
-			# Any country a pirate is hurting looks for relief, whatever its rank
-			if = {
-				limit = { NOT = { has_law_or_variant = law_type:law_free_trade } }
-				add = {
-					value = worst_piracy_grievance
-					multiply = 0.005
-				}
-			}
 		}
 
 		article_ai_usage = {
 			request
 			offer
-		}
-
-		proposal_weight = {
-			value = 1
-
-			# Pursued harder the more the pirate is hurting us
-			add = {
-				value = "piracy_grievance_against(scope:source_country)"
-				multiply = 0.04
-			}
-
-			if = {
-				limit = {
-					root = scope:target_country
-					has_law_or_variant = law_type:law_free_trade # Free traders ask for piracy to be abandoned against everyone instead
-				}
-				value = 0
-			}
 		}
 
 		inherent_accept_score = {
@@ -178,17 +150,15 @@
 				if = {
 					limit = {
 						scope:target_country = {
-							"piracy_grievance_against(scope:source_country)" > 0
+							"pirated_trade_value_by(scope:source_country)" > 0
 						}
 					}
 					add = {
-						desc = "DIPLOMATIC_ACCEPTANCE_PIRACY_GRIEVANCE"
-						value = {
-							scope:target_country = {
-								add = "piracy_grievance_against(scope:source_country)"
-							}
+						desc = "country_piracy_income_add"
+						scope:target_country = {
+							add = "pirated_trade_value_by(scope:source_country)"
 						}
-						multiply = 0.3
+						divide = 100
 						max = 30
 					}
 				}
@@ -196,16 +166,24 @@
 		}
 
 		wargoal_score_multiplier = {
-			value = 0
+			value = 1
+
 			if = {
 				limit = {
-					NOT = { has_law_or_variant = law_type:law_free_trade } # Free traders demand piracy be abandoned against everyone instead
-					"piracy_grievance_against(scope:source_country)" > 0
+					NOT = { is_country_type = unrecognized }
+					navy_size >= scope:source_country.navy_size
 				}
-				value = 1
+
 				add = {
-					value = "piracy_grievance_against(scope:source_country)"
-					multiply = 0.15
+					value = navy_size
+					divide = 1000
+				}
+
+				add = {
+					root = {
+						add = "pirated_trade_value_by(scope:source_country)"
+					}
+					divide = 10000
 				}
 			}
 		}
