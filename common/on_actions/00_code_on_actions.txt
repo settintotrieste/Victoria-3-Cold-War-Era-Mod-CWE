@@ -744,6 +744,9 @@ on_character_death = {
 			}
 		}
 		
+		#Royal Succession
+		determine_royal_sucession_crown_prince = yes
+		
 	}
 }
 
@@ -762,6 +765,7 @@ on_new_ruler = {
 	effect = {
 		
 		#Monarchs
+		determine_if_ruler_is_monarch = yes
 		if = {
 			limit = {
 				owner ?= {
@@ -770,7 +774,10 @@ on_new_ruler = {
 					shares_same_monarch = no
 					is_a_regency_government = no
 				}
-				is_eligible_to_become_monarch = no
+				OR = { 
+					is_eligible_to_become_monarch = no
+					NOT = { has_role = character_role_monarch }
+				}
 				NOT = { has_variable = regency_complete }
 			}
 			owner ?= {
@@ -2933,6 +2940,22 @@ on_company_disbanded = {
 on_heir_born = {
 	effect = {
 		
+		#Infertility bg age
+		if = {
+			limit = {
+				owner.ruler ?= {
+					OR = {
+						age > 60
+						AND = {
+							is_female = yes
+							age > 45
+						}
+					}
+				}
+			}
+			this = { kill_character = { hidden = yes } }
+		}
+		
 		#Dynastic Republic
 		if = {
 			limit = {
@@ -2951,16 +2974,12 @@ on_heir_born = {
 		else_if = {
 			limit = {
 				owner ?= {
+					is_a_regime_monarchy = yes
 					OR = {
 						is_a_regency_government = yes
-						AND = {
-							OR = {
-								ruler ?= { has_role = character_role_regent }
-								active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy }
-							}
-							has_law_or_variant = law_type:law_HOS_monarch
-							NOT = { has_law_or_variant = law_type:law_HOG_prime_minister }
-						}
+						ruler ?= { has_role = character_role_regent }
+						active_law:lawgroup_governance_principles ?= { has_amendment = amendment_type:amendment_elective_monarchy }
+						ruler ?= { NOT = { has_role = character_role_monarch } }
 					}
 				}
 			}
@@ -2971,6 +2990,7 @@ on_heir_born = {
 		if = {
 			limit = {
 				owner ?= {
+					has_law_or_variant = law_type:law_HOS_monarch
 					OR = {
 						is_a_regime_monarchy = yes
 						ruler ?= { has_role = character_role_monarch }
