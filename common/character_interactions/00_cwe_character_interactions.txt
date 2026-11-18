@@ -1725,3 +1725,80 @@ remove_as_ruler_deputy = {
 	}
 	
 }
+
+appoint_as_royal_heir = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_royalist.dds"
+	clicksound = "event:/SFX/UI/Military/command_grant"
+
+	potential = {
+		
+		owner ?= scope:actor
+		
+		#Eligible to be Crown Princes
+		has_role = character_role_prince
+		is_ruler_of_own_country = no
+		is_heir_of_own_country = no
+		has_potential_to_become_monarch = yes
+		owner.ruler ?= {
+			has_role = character_role_monarch
+		}
+		
+	}
+
+	possible = {
+		
+		#Has parliamentary support
+		owner ?= {
+			custom_tooltip = {
+				text = government_has_legislative_super_majority.tt
+				government_has_legislative_super_majority = yes
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Anger existing Crown Prince
+		owner.heir ?= {
+			if = { limit = { has_modifier = character_happy_with_government } remove_modifier = character_happy_with_government }
+			add_modifier = { name = character_angry_with_government years = 10 is_decaying = yes }
+			interest_group ?= { save_scope_as = THIS_IG_scope }
+			owner ?= {
+				add_radicals = {
+					value = large_radicals
+					interest_group = scope:THIS_IG_scope
+				}
+			}
+		}
+		
+		#Appoint as Crown Prince
+		save_scope_as = new_crown_prince_scope
+		owner ?= {
+			set_heir = scope:new_crown_prince_scope
+		}
+		add_modifier = { name = character_happy_with_government years = 10 is_decaying = yes }
+		
+		#Domestic reaction
+		interest_group ?= { save_scope_as = THIS_IG_scope }
+		owner ?= {
+			add_loyalists = {
+				value = large_radicals
+				interest_group = scope:THIS_IG_scope
+			}
+		}
+		
+	}
+
+	cooldown = { years = 2 }
+	#show_confirmation_box = yes
+	
+	should_ai_evaluate = {
+		always = no
+	}
+
+	ai_chance = {
+		value = 0
+	}
+	
+}
