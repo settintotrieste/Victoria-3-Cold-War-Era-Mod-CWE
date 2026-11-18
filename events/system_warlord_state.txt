@@ -122,6 +122,7 @@ warlord_state_system.1 = {
 										any_neighbouring_state = { owner = scope:new_warlord_state }
 									}
 									set_state_owner = scope:new_warlord_state
+									set_state_type = incorporated
 								}
 								every_scope_state = {
 									limit = {
@@ -134,6 +135,7 @@ warlord_state_system.1 = {
 										any_neighbouring_state = { owner = scope:new_warlord_state }
 									}
 									set_state_owner = scope:new_warlord_state
+									set_state_type = incorporated
 								}
 							}
 						}
@@ -184,6 +186,194 @@ warlord_state_system.1 = {
 		ai_chance = { 
 			base = 10 
 		}
+    }
+
+}
+
+# Colonial Warlord State
+warlord_state_system.2 = {
+    type = country_event
+
+    title = colonial_warlord_state_start.t 									# Title of the event; ADD LOCALISATION
+    desc = colonial_warlord_state_start.d 									# Description of the event; ADD LOCALISATION
+    flavor = colonial_warlord_state_start.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = { texture = "europenorthamerica_before_the_battle" }
+
+    icon = "gfx/interface/icons/invention_icons/anarchy.dds" 				# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 			# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {																# What triggers the event, if using other events or journal entries leave empty
+		
+		num_states >= 2
+		is_a_colonial_subject_gov = yes
+		country_turmoil > 0.25
+		
+		any_scope_character = {
+			OR = {
+				AND = { 
+					has_role_of_type = general
+					popularity >= 25
+				}
+				AND = {
+					has_role_of_type = politician
+					prominence > 50
+				}
+				is_a_guerrilla_character = yes
+			}
+			culture ?= { is_primary_culture_of = ROOT }
+			character_is_key_state_officeholder = no
+			loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+			is_historical = no
+		}
+		
+    }
+	
+	immediate = {
+	
+		#Mark target
+		every_scope_character = {
+			limit = {
+				OR = {
+					AND = { 
+						has_role_of_type = general
+						popularity >= 25
+					}
+					AND = {
+						has_role_of_type = politician
+						prominence > 50
+					}
+					is_a_guerrilla_character = yes
+				}
+				culture ?= { is_primary_culture_of = ROOT }
+				character_is_key_state_officeholder = no
+				loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+				is_historical = no
+			}
+			save_scope_as = warlord_character
+			interest_group ?= { save_scope_as = warlord_character_IG }
+			owner ?= {
+				random_scope_state = {
+					limit = { 
+						is_capital = no
+						is_incorporated = yes
+						ig_state_pol_strength_share = {
+							target = scope:warlord_character_IG
+							value >= 0.05
+						}
+					}
+					save_scope_as = warlord_state
+					set_variable = { name = warlord_state days = 1 }
+					owner ?= {
+						create_dynamic_country = {
+							origin = ROOT
+							country_type = unrecognized
+							tier = city_state
+							capital = scope:warlord_state
+							cede_state_trigger = {
+								has_variable = warlord_state
+							}
+							on_created = {
+								every_scope_state = {
+									remove_variable = warlord_state
+								}
+								set_variable = civil_war_country_var
+								set_variable = dynamic_decolonisation_country
+								set_variable = { name = new_warlord_state days = 1 }
+								
+								#Set regime
+								activate_law = law_type:law_HOS_president
+								activate_law = law_type:law_no_voting
+								activate_law = law_type:law_parties_not_allowed
+								activate_law = law_type:law_appointed_legislature
+								activate_law = law_type:law_kangaroo_law
+								activate_law = law_type:law_politicised_judiciary
+								activate_law = law_type:law_nepotistic_cabinet
+								activate_law = law_type:law_politicised_bureaucrats
+								activate_law = law_type:law_no_term_limit
+								activate_law = law_type:law_politicised_armed_forces
+							}
+						}
+						random_country = {
+							limit = { has_variable = new_warlord_state }
+							save_scope_as = new_warlord_state
+							remove_variable = new_warlord_state
+							ROOT = {
+								create_diplomatic_pact = {
+									country = scope:new_warlord_state
+									type = warlord_state
+								}
+							}
+							ROOT = { scope:warlord_character ?= { transfer_character = scope:new_warlord_state } }
+							scope:warlord_character ?= { 
+								remove_variable = prince_renounced_throne
+								set_character_as_ruler = yes 
+							}
+							ROOT = {
+								every_scope_state = {
+									limit = {
+										is_capital = no
+										is_incorporated = yes
+										ig_state_pol_strength_share = {
+											target = scope:warlord_character_IG
+											value >= 0.05
+										}
+										any_neighbouring_state = { owner = scope:new_warlord_state }
+									}
+									set_state_owner = scope:new_warlord_state
+									set_state_type = incorporated
+								}
+								every_scope_state = {
+									limit = {
+										is_capital = no
+										is_incorporated = yes
+										ig_state_pol_strength_share = {
+											target = scope:warlord_character_IG
+											value >= 0.10
+										}
+										any_neighbouring_state = { owner = scope:new_warlord_state }
+									}
+									set_state_owner = scope:new_warlord_state
+									set_state_type = incorporated
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+	}
+    
+    option = {
+        name = colonial_warlord_state_start.option						# Start war
+		
+		#Add radicals
+		add_radicals = {
+			value = large_radicals
+		}
+		
+		#Wage war
+		every_country = {
+			limit = {
+				is_direct_subject_of = ROOT
+				is_warlord_state = yes
+			}
+			save_scope_as = THIS_scope
+			create_diplomatic_play = {
+                type = dp_annex_war_historical
+                target_country = ROOT
+
+                add_war_goal = {
+                    holder = ROOT
+                    type = annex_country
+                    target_country = scope:THIS_scope
+                }
+            }
+		}
+		
     }
 
 }
