@@ -1,0 +1,137 @@
+namespace = colonial_crisis_system
+
+# Initialise Warlord State
+colonial_crisis_system.1 = {
+    type = country_event
+	placement = scope:war_starter_scope
+
+    title = colonial_crisis_start.t 								# Title of the event; ADD LOCALISATION
+    desc = colonial_crisis_start.d 									# Description of the event; ADD LOCALISATION
+    flavor = colonial_crisis_start.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = {
+		texture = "cwe_united_nations"
+	}
+
+	icon = "gfx/interface/icons/event_icons/united_nations.dds"
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 	# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {														# What triggers the event, if using other events or journal entries leave empty
+		
+		is_sufficiently_independent = yes
+		
+		scope:target ?= { is_not_a_diplomatic_ally = yes }
+		
+    }
+	
+	immediate = {
+		
+		scope:war_starter_scope ?= { save_scope_as = colonial_crisis_initiator_backer }
+		
+	}
+    
+    option = {
+        name = colonial_crisis_start.option.1						# Military Support
+		
+		#Wage war
+		every_diplomatic_play = {
+			limit = {
+				is_war = no
+				initiator_is = scope:colonial_crisis_initiator_backer
+				OR = {
+					is_diplomatic_play_type = dp_independence
+					is_diplomatic_play_type = dp_independence_condominium
+				}
+				NOT = { is_diplomatic_play_participant = ROOT }
+			}
+			add_initiator_backers = {
+				ROOT
+			}
+		}
+		
+		ai_chance = { 
+			base = 0
+			modifier = { 
+				trigger = { 
+					scope:target.relations:root <= relations_threshold:hostile
+					scope:initiator.relations:root >= relations_threshold:friendly 
+					root.naval_power_projection > scope:target.naval_power_projection
+					root.army_power_projection > scope:target.army_power_projection
+				} 
+				add = 100 
+			}
+		}
+    }
+	
+	option = {
+        name = colonial_crisis_start.option.2						# Economic Sanctions
+		
+		if = {
+			limit = { exists = scope:target }
+			create_diplomatic_pact = {
+				country = scope:target
+				type = embargo
+			}
+			create_diplomatic_pact = {
+				country = scope:target
+				type = sanction_country
+			}
+		}
+		
+		ai_chance = { 
+			base = 0
+			modifier = { 
+				trigger = { 
+					scope:target.relations:root <= relations_threshold:cold
+					scope:initiator.relations:root >= relations_threshold:amicable 
+					root.gdp > scope:target.gdp
+				} 
+				add = 100 
+			}
+		}
+    }
+	
+	option = {
+        name = colonial_crisis_start.option.3						# Diplomatic Sanctions
+		
+		change_relations = { 
+			country = scope:target 
+			value = -50
+		}
+		
+		scope:target ?= {
+			create_incident = {
+				value = 2
+				country = scope:initiator
+			}
+		}
+		
+		ai_chance = { 
+			base = 0
+			modifier = { 
+				trigger = { 
+					scope:target.relations:root <= relations_threshold:poor
+					scope:initiator.relations:root >= relations_threshold:cordial 
+					root.gdp > scope:target.gdp
+				} 
+				add = 100 
+			}
+		}
+    }
+	
+	option = {
+        name = colonial_crisis_start.option.4						# Do nothing
+		
+		change_relations = { 
+			country = scope:colonial_crisis_initiator_backer 
+			value = -50
+		}
+		
+		ai_chance = { 
+			base = 1 
+		}
+    }
+
+}

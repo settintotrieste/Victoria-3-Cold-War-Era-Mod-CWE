@@ -2387,3 +2387,53 @@ evaluate_warlordism_eligibility = {
 	}
 
 }
+
+effect_cwe_start_diplomatic_play_colonial_crisis = {
+	
+	if = {
+		limit = {
+			is_war = no
+			scope:initiator ?= { is_sufficiently_independent = no }
+		}
+		
+		#Colony
+		scope:initiator ?= { save_scope_as = war_starter_scope }
+		
+		#Add Initiator backers
+		every_country = {
+			limit = {
+				save_temporary_scope_as = war_joiner_candidate_scope
+				NOR = {
+					this = scope:initiator
+					this = scope:target
+				}
+				is_sufficiently_independent = yes
+				NOT = { has_war_with = scope:initiator }
+				OR = {
+					is_adjacent_to_country = scope:initiator
+					AND = {
+						country_rank >= rank_value:great_power
+						OR = {
+							has_modifier = unsc_non_permanent_member
+							has_modifier = unsc_permanent_member
+						}
+					}
+					has_radical_leftist_government = yes
+				}
+				NOT = { has_diplomatic_pact = { who = scope:initiator type = condominium is_initiator = yes } }
+				ROOT = {
+					NOT = { is_diplomatic_play_participant = scope:war_joiner_candidate_scope }
+				}
+				NOT = {
+					any_enemy_in_diplo_play = { this = scope:initiator }
+				}
+				NOR = { has_truce_with = scope:initiator any_scope_treaty = { binds = scope:initiator any_scope_article = { has_type = non_aggression_pact } } }
+				scope:initiator ?= { NOT = { top_overlord ?= scope:war_joiner_candidate_scope } }
+			}
+			save_scope_as = war_joiner_scope
+			trigger_event = { id = colonial_crisis_system.1 }
+		}
+		
+	}
+	
+}
