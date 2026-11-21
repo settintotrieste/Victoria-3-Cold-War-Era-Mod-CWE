@@ -248,3 +248,200 @@ remove_princess_restriction_decision = {
 	}
 	
 }
+
+enact_elective_monarchy_decision = {
+
+	is_shown = {
+		
+		#THIS is a monarchy
+		is_a_monarchy = yes
+		
+		#Does not have Elected Monarchy
+		NOT = { 
+			active_law:lawgroup_governance_principles ?= {
+				has_amendment = amendment_type:amendment_elective_monarchy
+			}
+		}
+		
+		#Cannot weaken overlord monarchy
+		trigger_if = {
+			limit = { 
+				is_subject = yes
+				is_a_devolved_monarchy_gov = no
+			}
+			NAND = {
+				overlord ?= { is_a_monarchy = yes }
+				shares_same_monarch = yes
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#Has Local Monarchies
+		is_a_subsidiary_monarchy = yes
+	
+		#Legal requirements
+		government_has_legislative_super_majority = yes
+		
+	}
+	
+	when_taken = {
+		
+		#Add Amendment
+		active_law:lawgroup_governance_principles ?= {
+			add_amendment = {
+				type = amendment_elective_monarchy
+				sponsor = PREV.ig:ig_petty_bourgeoisie 
+			}
+		}
+		upgrade_subsidiary_monarchs_to_elective_monarchs = yes
+		hidden_effect = { generate_elective_monarchs_for_country = yes }
+		
+	}
+
+	ai_chance = {
+		value = 0
+		
+		#AI will only do this if monarch is disliked
+		if = {
+			limit = { 
+				NOT = { historical_railroading_active = yes }
+				any_scope_character = {
+					has_role = character_role_monarch
+					is_historical = yes
+					popularity <= -100
+				}
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+enact_no_nobility_decision = {
+
+	is_shown = {
+		
+		#THIS is a monarchy
+		is_a_monarchy = yes
+		
+		#Has aristocracy
+		NOT = { 
+			active_law:lawgroup_governance_principles ?= {
+				has_amendment = amendment_type:amendment_no_nobility
+			}
+		}
+		
+		#Cannot weaken overlord monarchy
+		trigger_if = {
+			limit = { is_subject = yes }
+			NAND = {
+				overlord ?= { is_a_monarchy = yes }
+				shares_same_monarch = yes
+			}
+		}
+		
+	}
+
+	possible = {
+		
+		#Legal requirements
+		government_has_legislative_super_majority = yes
+		
+	}
+	
+	when_taken = {
+		
+		#Add Amendment
+		active_law:lawgroup_governance_principles ?= {
+			add_amendment = {
+				type = amendment_no_nobility
+				sponsor = PREV.ig:ig_trade_unions 
+			}
+		}
+		
+	}
+
+	ai_chance = {
+		value = 0
+		
+		#AI will only do this if monarch is disliked and there is revolution
+		if = {
+			limit = {
+				has_revolution = yes
+				NOT = { historical_railroading_active = yes }
+				any_scope_character = {
+					has_role = character_role_monarch
+					is_historical = yes
+					popularity <= -50
+				}
+			}
+			add = 10
+		}
+		
+	}
+	
+}
+
+enact_subsidiary_monarchy_decision = {
+
+	is_shown = {
+		
+		#THIS is a monarchy
+		is_a_monarchy = yes
+		
+		#Does not have Subsidiary Monarchy
+		is_a_subsidiary_monarchy = no
+		
+		#Does not have Elected Monarchy
+		NOT = { 
+			active_law:lawgroup_governance_principles ?= {
+				has_amendment = amendment_type:amendment_elective_monarchy
+			}
+		}
+		
+		#Cannot weaken overlord monarchy
+		trigger_if = {
+			limit = {
+				is_subject = yes
+				is_a_devolved_monarchy_gov = no
+			}
+			NAND = {
+				overlord ?= { is_a_monarchy = yes }
+				shares_same_monarch = yes
+			}
+		}
+		
+	}
+
+	possible = {
+	
+		is_at_war = no
+		
+		#Legal requirements
+		government_has_legislative_super_majority = yes
+		
+		#Has aristocracy
+		NOT = { 
+			active_law:lawgroup_governance_principles ?= {
+				has_amendment = amendment_type:amendment_no_nobility
+			}
+		}
+		
+	}
+	
+	when_taken = {
+		
+		#Add Amendment
+		set_subsidiary_monarchs_amendment = yes
+		
+	}
+
+	ai_chance = {
+		value = 0
+	}
+	
+}
