@@ -1,9 +1,9 @@
 namespace = colonial_crisis_system
 
-# Initialise Warlord State
+# Initialise Colonial Crisis
 colonial_crisis_system.1 = {
     type = country_event
-	placement = scope:war_starter_scope
+	placement = scope:initiator
 
     title = colonial_crisis_start.t 								# Title of the event; ADD LOCALISATION
     desc = colonial_crisis_start.d 									# Description of the event; ADD LOCALISATION
@@ -28,61 +28,18 @@ colonial_crisis_system.1 = {
 	
 	immediate = {
 		
-		save_scope_as = colonial_crisis_ROOT
-		scope:war_starter_scope ?= { save_scope_as = colonial_crisis_initiator_backer }
+		save_scope_as = colonial_crisis_initiator_backer
 		
 	}
     
     option = {
         name = colonial_crisis_start.option.1						# Military Support
+		trigger = { can_go_to_war = yes }
 		
-		#Wage war
-		every_diplomatic_play = {
-			limit = {
-				is_war = no
-				initiator_is = scope:colonial_crisis_initiator_backer
-				OR = {
-					is_diplomatic_play_type = dp_independence
-					is_diplomatic_play_type = dp_independence_condominium
-				}
-				NOT = { is_diplomatic_play_participant = ROOT }
-			}
-			add_initiator_backers = {
-				ROOT
-			}
+		#Send ultimatum
+		scope:target ?= {
+			trigger_event = { id = colonial_crisis_system.2 }
 		}
-		create_treaty = {
-			first_country = ROOT
-			second_country = scope:initiator
-
-			is_draft = no
-			binding_period = { years = 10 } # However long you want, really
-
-			articles_to_create = {
-				{
-					article = support_independence
-					source_country = ROOT
-					target_country = scope:initiator
-				}
-			}
-		}
-		
-		scope:initiator ?= { 
-			send_interface_message = {
-				title = colonial_crisis_start_war_option.t
-				desc = colonial_crisis_start_war_option.d
-			}
-		}
-		scope:target ?= { 
-			send_interface_message = {
-				title = colonial_crisis_start_war_option.t
-				desc = colonial_crisis_start_war_option.d
-			}
-		}
-		#send_interface_message = {
-		#	title = colonial_crisis_start_war_option.t
-		#	desc = colonial_crisis_start_war_option.d
-		#}
 		
 		ai_chance = { 
 			base = 0
@@ -101,41 +58,24 @@ colonial_crisis_system.1 = {
 	option = {
         name = colonial_crisis_start.option.2						# Economic Sanctions
 		
-		if = {
-			limit = { exists = scope:target }
-			create_diplomatic_pact = {
-				country = scope:target
-				type = embargo
-			}
-			create_diplomatic_pact = {
-				country = scope:target
-				type = sanction_country
-			}
+		#Send ultimatum
+		scope:target ?= {
+			trigger_event = { id = colonial_crisis_system.3 }
 		}
-		
-		scope:initiator ?= { 
-			send_interface_message = {
-				title = colonial_crisis_start_sanctions_option.t
-				desc = colonial_crisis_start_sanctions_option.d
-			}
-		}
-		scope:target ?= { 
-			send_interface_message = {
-				title = colonial_crisis_start_sanctions_option.t
-				desc = colonial_crisis_start_sanctions_option.d
-			}
-		}
-		#send_interface_message = {
-		#	title = colonial_crisis_start_sanctions_option.t
-		#	desc = colonial_crisis_start_sanctions_option.d
-		#}
 		
 		ai_chance = { 
 			base = 0
 			modifier = { 
 				trigger = { 
-					scope:target.relations:root <= relations_threshold:cold
-					scope:initiator.relations:root >= relations_threshold:amicable 
+					OR = {
+						AND = { 
+							scope:target.relations:root <= relations_threshold:cold
+							scope:initiator.relations:root >= relations_threshold:amicable
+						}
+						ruler ?= {
+							character_is_democratic = yes
+						}
+					}
 					root.gdp > scope:target.gdp
 				} 
 				add = 100 
@@ -145,6 +85,9 @@ colonial_crisis_system.1 = {
 	
 	option = {
         name = colonial_crisis_start.option.3						# Diplomatic Sanctions
+		trigger = {
+			is_country_type = recognized
+		}
 		
 		change_relations = { 
 			country = scope:target 
@@ -192,12 +135,342 @@ colonial_crisis_system.1 = {
         name = colonial_crisis_start.option.4						# Do nothing
 		
 		change_relations = { 
-			country = scope:colonial_crisis_initiator_backer 
+			country = scope:initiator 
 			value = -50
 		}
 		
 		ai_chance = { 
 			base = 1 
+		}
+    }
+
+}
+
+# Ultimatum Colonial Crisis - War
+colonial_crisis_system.2 = {
+    type = country_event
+	placement = scope:initiator
+
+    title = colonial_crisis_war_ultimatum.t 								# Title of the event; ADD LOCALISATION
+    desc = colonial_crisis_war_ultimatum.d 									# Description of the event; ADD LOCALISATION
+    flavor = colonial_crisis_war_ultimatum.f 								# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = {
+		texture = "cwe_united_nations"
+	}
+
+	icon = "gfx/interface/icons/event_icons/united_nations.dds"
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 			# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {																# What triggers the event, if using other events or journal entries leave empty
+		
+		any_diplomatic_play = {
+			is_war = no
+			intiator_is = scope:initiator
+			target_is = scope:target
+			OR = {
+				is_diplomatic_play_type = dp_independence
+				is_diplomatic_play_type = dp_independence_condominium
+			}
+			NOT = { is_diplomatic_play_participant = scope:colonial_crisis_initiator_backer }
+		}
+		
+    }
+	
+	cancellation_trigger = {
+		NOT = { 
+			any_diplomatic_play = {
+				is_war = no
+				intiator_is = scope:initiator
+				target_is = scope:target
+				OR = {
+					is_diplomatic_play_type = dp_independence
+					is_diplomatic_play_type = dp_independence_condominium
+				}
+				NOT = { is_diplomatic_play_participant = scope:colonial_crisis_initiator_backer }
+			}
+		}
+	}
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = colonial_crisis_war_ultimatum.option.1					# Back down
+		
+		#Resolve DP in target's favour
+		custom_tooltip = {
+			text = colonial_crisis_war_ultimatum_back_down.tt
+			every_diplomatic_play = {
+				limit = {
+					is_war = no
+					initiator_is = scope:initiator
+					target_is = scope:target
+					OR = {
+						is_diplomatic_play_type = dp_independence
+						is_diplomatic_play_type = dp_independence_condominium
+					}
+					NOT = { is_diplomatic_play_participant = scope:colonial_crisis_initiator_backer }
+				}
+				resolve_play_for = scope:initiator
+			}
+			scope:initiator ?= {
+				create_bidirectional_truce = {
+					country = scope:target
+					months = 60
+				}
+			}
+			scope:initiator ?= { 
+				send_interface_message = {
+					title = colonial_crisis_back_down_option.t
+					desc = colonial_crisis_back_down_option.d
+				}
+			}
+			scope:colonial_crisis_initiator_backer ?= { 
+				send_interface_message = {
+					title = colonial_crisis_back_down_option.t
+					desc = colonial_crisis_back_down_option.d
+				}
+			}
+		}
+		
+		ai_chance = {
+			base = 0
+			modifier = {
+				trigger = {
+					root.naval_power_projection < scope:colonial_crisis_initiator_backer.naval_power_projection
+					root.army_power_projection < scope:colonial_crisis_initiator_backer.army_power_projection
+				}
+				add = 100 
+			}
+		}
+    }
+	
+	option = {
+        name = colonial_crisis_war_ultimatum.option.2					# Reject
+		
+		#Apply war support
+		scope:colonial_crisis_initiator_backer ?= {
+			every_diplomatic_play = {
+				limit = {
+					is_war = no
+					initiator_is = scope:initiator
+					target_is = scope:target
+					OR = {
+						is_diplomatic_play_type = dp_independence
+						is_diplomatic_play_type = dp_independence_condominium
+					}
+					NOT = { is_diplomatic_play_participant = scope:colonial_crisis_initiator_backer }
+				}
+				add_initiator_backers = {
+					scope:colonial_crisis_initiator_backer
+				}
+			}
+			create_treaty = {
+				first_country = scope:colonial_crisis_initiator_backer
+				second_country = scope:initiator
+
+				is_draft = no
+				binding_period = { years = 10 } # However long you want, really
+
+				articles_to_create = {
+					{
+						article = support_independence
+						source_country = scope:colonial_crisis_initiator_backer
+						target_country = scope:initiator
+					}
+				}
+				articles_to_create = {
+					{
+						article = military_assistance
+						source_country = scope:colonial_crisis_initiator_backer
+						target_country = scope:initiator
+					}
+				}
+			}
+		}
+		
+		#Notify
+		scope:target ?= { 
+			send_interface_message = {
+				title = colonial_crisis_start_war_option.t
+				desc = colonial_crisis_start_war_option.d
+			}
+		}
+		
+		change_relations = { 
+			country = scope:colonial_crisis_initiator_backer 
+			value = -50
+		}
+		
+		ai_chance = {
+			base = 0
+			modifier = {
+				trigger = {
+					root.naval_power_projection > scope:colonial_crisis_initiator_backer.naval_power_projection
+					root.army_power_projection > scope:colonial_crisis_initiator_backer.army_power_projection
+				}
+				add = 100 
+			}
+		}
+    }
+
+}
+
+# Ultimatum Colonial Crisis - Sanctions
+colonial_crisis_system.3 = {
+    type = country_event
+	placement = scope:initiator
+
+    title = colonial_crisis_sanctions_ultimatum.t 							# Title of the event; ADD LOCALISATION
+    desc = colonial_crisis_sanctions_ultimatum.d 							# Description of the event; ADD LOCALISATION
+    flavor = colonial_crisis_sanctions_ultimatum.f 							# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    event_image = {
+		texture = "cwe_united_nations"
+	}
+
+	icon = "gfx/interface/icons/event_icons/united_nations.dds"
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 			# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {																# What triggers the event, if using other events or journal entries leave empty
+		
+		any_diplomatic_play = {
+			is_war = no
+			intiator_is = scope:initiator
+			target_is = scope:target
+			OR = {
+				is_diplomatic_play_type = dp_independence
+				is_diplomatic_play_type = dp_independence_condominium
+			}
+			NOT = { is_diplomatic_play_participant = scope:colonial_crisis_initiator_backer }
+		}
+		
+    }
+	
+	cancellation_trigger = {
+		NOT = { 
+			any_diplomatic_play = {
+				is_war = no
+				intiator_is = scope:initiator
+				target_is = scope:target
+				OR = {
+					is_diplomatic_play_type = dp_independence
+					is_diplomatic_play_type = dp_independence_condominium
+				}
+				NOT = { is_diplomatic_play_participant = scope:colonial_crisis_initiator_backer }
+			}
+		}
+	}
+	
+	immediate = {
+		
+	}
+    
+    option = {
+        name = colonial_crisis_sanctions_ultimatum.option.1					# Back down
+		
+		#Resolve DP in target's favour
+		custom_tooltip = {
+			text = colonial_crisis_war_ultimatum_back_down.tt
+			every_diplomatic_play = {
+				limit = {
+					is_war = no
+					initiator_is = scope:initiator
+					target_is = scope:target
+					OR = {
+						is_diplomatic_play_type = dp_independence
+						is_diplomatic_play_type = dp_independence_condominium
+					}
+					NOT = { is_diplomatic_play_participant = scope:colonial_crisis_initiator_backer }
+				}
+				resolve_play_for = scope:initiator
+			}
+			scope:initiator ?= {
+				create_bidirectional_truce = {
+					country = scope:target
+					months = 60
+				}
+			}
+			scope:initiator ?= { 
+				send_interface_message = {
+					title = colonial_crisis_back_down_option.t
+					desc = colonial_crisis_back_down_option.d
+				}
+			}
+			scope:colonial_crisis_initiator_backer ?= { 
+				send_interface_message = {
+					title = colonial_crisis_back_down_option.t
+					desc = colonial_crisis_back_down_option.d
+				}
+			}
+		}
+		
+		ai_chance = {
+			base = 0
+			modifier = {
+				trigger = {
+					root.gdp < scope:colonial_crisis_initiator_backer.gdp
+					has_healthy_economy = no
+				}
+				add = 100 
+			}
+		}
+    }
+	
+	option = {
+        name = colonial_crisis_sanctions_ultimatum.option.2					# Reject
+		
+		#Apply sanctions
+		custom_tooltip = {
+			text = colonial_crisis_war_ultimatum_sanctions.tt
+			scope:colonial_crisis_initiator_backer ?= {
+				create_diplomatic_pact = {
+					country = ROOT
+					type = embargo
+				}
+				create_diplomatic_pact = {
+					country = ROOT
+					type = sanction_country
+				}
+				if = {
+					limit = { exists = scope:initiator }
+					create_diplomatic_pact = {
+						country = scope:initiator
+						type = bankroll
+					}
+				}
+			}
+		}
+		
+		#Notify
+		scope:initiator ?= { 
+			send_interface_message = {
+				title = colonial_crisis_start_sanctions_option.t
+				desc = colonial_crisis_start_sanctions_option.d
+			}
+		}
+		scope:target ?= { 
+			send_interface_message = {
+				title = colonial_crisis_start_sanctions_option.t
+				desc = colonial_crisis_start_sanctions_option.d
+			}
+		}
+		
+		ai_chance = {
+			base = 0
+			modifier = {
+				trigger = {
+					root.gdp > scope:colonial_crisis_initiator_backer.gdp
+					has_healthy_economy = yes
+				}
+				add = 100 
+			}
 		}
     }
 
