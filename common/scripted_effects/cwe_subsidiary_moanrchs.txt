@@ -1,0 +1,151 @@
+generate_subsidiary_monarchs_for_country = {
+
+	set_variable = {
+		name = subsidiary_monarchs_quota
+		value = 0
+	}
+	
+	hidden_effect = {
+		if = {
+			limit = { has_variable = consolidated_princely_states }
+			ordered_scope_state = {
+				limit = { 
+					is_incorporated = yes 
+					is_largest_state_in_region = yes 
+				}
+				order_by = state_population
+				position = 0
+				check_range_bounds = no
+				generate_subsidiary_monarchs_for_state = yes
+			}
+			ordered_scope_state = {
+				limit = { 
+					is_incorporated = yes 
+					is_largest_state_in_region = yes 
+				}
+				order_by = state_population
+				position = 1
+				check_range_bounds = no
+				generate_subsidiary_monarchs_for_state = yes
+			}
+			ordered_scope_state = {
+				limit = { 
+					is_incorporated = yes 
+					is_largest_state_in_region = yes 
+				}
+				order_by = state_population
+				position = 2
+				check_range_bounds = no
+				generate_subsidiary_monarchs_for_state = yes
+			}
+			ordered_scope_state = {
+				limit = { 
+					is_incorporated = yes 
+					is_largest_state_in_region = yes 
+				}
+				order_by = state_population
+				position = 3
+				check_range_bounds = no
+				generate_subsidiary_monarchs_for_state = yes
+			}
+			ordered_scope_state = {
+				limit = { 
+					is_incorporated = yes 
+					is_largest_state_in_region = yes 
+				}
+				order_by = state_population
+				position = 4
+				check_range_bounds = no
+				generate_subsidiary_monarchs_for_state = yes
+			}
+			ordered_scope_state = {
+				limit = { 
+					is_incorporated = yes 
+					is_largest_state_in_region = yes 
+				}
+				order_by = state_population
+				position = 5
+				check_range_bounds = no
+				generate_subsidiary_monarchs_for_state = yes
+			}
+		}
+		else = {
+			every_scope_state = {
+				limit = { 
+					is_incorporated = yes 
+					is_largest_state_in_region = yes 
+				}
+				generate_subsidiary_monarchs_for_state = yes
+			}
+		}
+	}
+	
+	set_variable = {
+		name = subsidiary_monarchs_count
+		value = 0
+	}
+	every_scope_character = {
+		limit = { has_role = character_role_subsidiary_monarch }
+		owner ?= {
+			change_variable = {
+				name = subsidiary_monarchs_count
+				add = 1
+			}
+		}
+	}
+
+}
+
+generate_subsidiary_monarchs_for_state = {
+
+	save_scope_as = state_in_question
+	owner ?= {
+		change_variable = {
+			name = subsidiary_monarchs_quota
+			add = 1
+		}
+		if = {
+			limit = {
+				exists = scope:state_in_question
+				NOT = {
+					any_scope_character = {
+						has_role = character_role_subsidiary_monarch
+						home_state ?= { state ?= scope:state_in_question }
+					}
+				}
+			}
+			create_character = {
+				role = magnate noble = yes
+				on_created = {
+					add_character_role = character_role_subsidiary_monarch
+				}
+				save_scope_as = new_subsidiary_monarch
+			}
+			scope:new_subsidiary_monarch ?= {
+				set_home_state = scope:state_in_question
+			}
+		}
+	}
+
+}
+
+set_subsidiary_monarchs_amendment = {
+
+	if = { 
+		limit = {
+			NOT = {
+				active_law:lawgroup_governance_principles ?= {
+					has_amendment = amendment_type:amendment_subsidiary_monarchy
+				}
+			}
+		}
+		active_law:lawgroup_governance_principles ?= {
+			add_amendment = {
+				type = amendment_subsidiary_monarchy
+				sponsor = PREV.ig:ig_landowners
+			}
+		}
+	}
+	set_variable = { name = block_subsidiary_monarch_generation months = 2 }
+
+}
