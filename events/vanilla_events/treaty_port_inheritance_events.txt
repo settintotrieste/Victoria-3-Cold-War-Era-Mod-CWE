@@ -19,12 +19,31 @@ treaty_port_inheritance_events.1 = {
 
 	immediate = {
 		save_scope_as = new_host
+		scope:target_country = {
+			random_scope_state = {
+				limit = {
+					is_treaty_port = yes
+					state_region = {
+						any_scope_state = { owner = root }
+					}
+				}
+				save_scope_as = inherited_treaty_port
+			}
+		}
 	}
 
 	# Honor the inherited treaty
 	option = {
 		name = treaty_port_inheritance_events.1.a
 		default_option = yes
+		if = {
+			limit = { exists = scope:inherited_treaty_port }
+			custom_tooltip = treaty_port_inheritance_events.1.a_tt
+		}
+		change_relations = {
+			country = scope:target_country
+			value = 30
+		}
 		hidden_effect = {
 			scope:target_country = {
 				trigger_event = { id = treaty_port_inheritance_events.2 }
@@ -47,11 +66,21 @@ treaty_port_inheritance_events.1 = {
 		}
 	}
 
-	# Renege: void the treaty and reclaim the ports - Use CWE system instead
+	# Renege: void the treaty, the foreign power keeps the port provinces as ordinary territory - Use CWE system instead
 	option = {
 		name = treaty_port_inheritance_events.1.b
 		trigger = { always = no }
 		renege_treaty_ports_with = scope:target_country
+		scope:target_country = {
+			change_relations = {
+				country = root
+				value = -50
+			}
+			create_diplomatic_catalyst = {
+				type = catalyst_event_negative
+				target = root
+			}
+		}
 		hidden_effect = {
 			scope:target_country = {
 				# Remember who reneged on us so our colonial AI is keen to retake the ports by force
