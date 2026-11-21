@@ -146,6 +146,17 @@ resignation.1 = {
 			}
 			save_scope_as = replacement_ruler_liberal
 		}
+		random_scope_character = {
+			limit = {
+				OR = { 
+					has_role = character_role_head_of_state
+					has_role = character_role_head_of_government
+				}
+				is_ruler_of_own_country = no
+				is_heir_of_own_country = no
+			}
+			save_scope_as = replacement_ruler_alt_head
+		}
 		
 	}
 	
@@ -849,6 +860,124 @@ resignation.1 = {
 		
 		#Give leadership to most prominent leadership contender
 		set_variable = { name = ruler_resigned_in_leadership_challenge months = 1 }
+		
+	}
+	
+	option = { # Head of State or Head of Government
+		name = resignation_1.9.a
+		trigger = {
+			any_scope_character = {
+				OR = {
+					has_role = character_role_head_of_state
+					has_role = character_role_head_of_government
+				}
+				NOR = { 
+					THIS = scope:replacement_ruler_autocratic
+					THIS = scope:replacement_ruler_power_hungry
+					THIS = scope:replacement_ruler_elitist
+					THIS = scope:replacement_ruler_democratic
+					THIS = scope:replacement_ruler_liberal
+					is_ruler_of_own_country = yes
+					is_heir_of_own_country = yes
+				}
+			}
+		}
+		
+		#Legacy of previous ruler
+		if = {
+			limit = {
+				NOR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician ?= {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_best_of_luck
+				days = normal_modifier_time
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					scope:resignation_ig = {
+						OR = {
+							ig_approval <= angry
+							ig_counts_as_marginal = yes
+						}
+					}
+					scope:resigning_politician ?= {
+						popularity <= -50
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_disastrous_administration
+				days = normal_modifier_time
+			}
+			add_loyalists = {
+				value = small_radicals
+			}
+		}
+		
+		#Appoint ruler
+		if = {
+			limit = { ruler ?= { has_role = character_role_head_of_state } }
+			random_scope_character = {
+				limit = {
+					has_role = character_role_head_of_government
+					NOR = { 
+						THIS = scope:replacement_ruler_autocratic
+						THIS = scope:replacement_ruler_power_hungry
+						THIS = scope:replacement_ruler_elitist
+						THIS = scope:replacement_ruler_democratic
+						THIS = scope:replacement_ruler_liberal
+						is_ruler_of_own_country = yes
+						is_heir_of_own_country = yes
+					}
+				}
+				set_character_as_ruler_cwe = yes
+				set_character_as_head_of_state = yes
+			}
+		}
+		else_if = {
+			limit = { ruler ?= { has_role = character_role_head_of_government } }
+			random_scope_character = {
+				limit = {
+					has_role = character_role_head_of_state
+					NOR = { 
+						THIS = scope:replacement_ruler_autocratic
+						THIS = scope:replacement_ruler_power_hungry
+						THIS = scope:replacement_ruler_elitist
+						THIS = scope:replacement_ruler_democratic
+						THIS = scope:replacement_ruler_liberal
+						is_ruler_of_own_country = yes
+						is_heir_of_own_country = yes
+					}
+				}
+				set_character_as_ruler_cwe = yes
+				set_character_as_head_of_government = yes
+			}
+		}
+		
+		#Call snap elections where applicable
+		if = {
+			limit = { 
+				is_a_parliamentary_elective_system = yes
+			}
+			call_election = {
+				months = 3
+			}
+		}
+		
+		#Power Struggle
+		check_power_struggle_eligibility = yes
 		
 	}
 	
