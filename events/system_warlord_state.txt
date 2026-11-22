@@ -377,3 +377,146 @@ warlord_state_system.2 = {
     }
 
 }
+
+# Princely State
+warlord_state_system.3 = {
+    type = country_event
+
+    title = princely_state_rebellion.t 										# Title of the event; ADD LOCALISATION
+    desc = princely_state_rebellion.d 										# Description of the event; ADD LOCALISATION
+    flavor = princely_state_rebellion.f 									# Flavor for event; ADD LOCALISATION, IF REQUIRED
+
+    gui_window = event_window_1char_tabloid
+
+	left_icon = scope:warlord_character
+
+    icon = "gfx/interface/icons/diplomatic_action_icons/doctrine_of_lapse.dds" 		# Icon that shows on the map or the outliner
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear" 					# Sound effect if needed
+
+    duration = 1 # Duration to fire if triggers are met
+	
+	trigger = {																# What triggers the event, if using other events or journal entries leave empty
+		
+		num_states >= 2
+		government_legitimacy < 25
+		
+		any_scope_character = {
+			has_role = character_role_subsidiary_monarch
+			home_state ?= { is_capital = no }
+			character_is_key_state_officeholder = no
+			loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+		}
+		
+    }
+	
+	immediate = {
+	
+		#Mark target
+		random_scope_character = {
+			limit = {
+				has_role = character_role_subsidiary_monarch
+				home_state ?= { is_capital = no }
+				character_is_key_state_officeholder = no
+				loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+			}
+			save_scope_as = warlord_character
+			interest_group ?= { save_scope_as = warlord_character_IG }
+			home_state ?= { save_scope_as = warlord_character_home_state }
+			owner ?= {
+				scope:warlord_character_home_state ?= {
+					save_scope_as = warlord_state
+					set_variable = { name = warlord_state days = 1 }
+					owner ?= {
+						create_dynamic_country = {
+							origin = ROOT
+							country_type = unrecognized
+							tier = city_state
+							capital = scope:warlord_state
+							cede_state_trigger = {
+								has_variable = warlord_state
+							}
+							on_created = {
+								every_scope_state = {
+									remove_variable = warlord_state
+								}
+								set_variable = civil_war_country_var
+								set_variable = dynamic_decolonisation_country
+								set_variable = { name = new_warlord_state days = 1 }
+								
+								#Set regime
+								activate_law = law_type:law_HOS_monarch
+								activate_law = law_type:law_HOG_none
+								activate_law = law_type:law_no_voting
+								activate_law = law_type:law_parties_not_allowed
+								activate_law = law_type:law_appointed_legislature
+								activate_law = law_type:law_kangaroo_law
+								activate_law = law_type:law_politicised_judiciary
+								activate_law = law_type:law_nepotistic_cabinet
+								activate_law = law_type:law_politicised_bureaucrats
+								activate_law = law_type:law_no_term_limit
+								activate_law = law_type:law_politicised_armed_forces
+							}
+						}
+						random_country = {
+							limit = { has_variable = new_warlord_state }
+							save_scope_as = new_warlord_state
+							remove_variable = new_warlord_state
+							ROOT = {
+								create_diplomatic_pact = {
+									country = scope:new_warlord_state
+									type = warlord_state
+								}
+							}
+							ROOT = { scope:warlord_character ?= { transfer_character = scope:new_warlord_state } }
+							scope:warlord_character ?= { 
+								remove_variable = prince_renounced_throne
+								set_character_as_ruler = yes 
+								set_character_as_monarch = yes 
+							}
+							save_scope_as = new_princely_state
+						}
+					}
+				}
+			}
+		}
+		
+	}
+    
+    option = {
+        name = princely_state_rebellion.option.1						# Start war
+		
+		#Wage war
+		scope:new_princely_state ?= {
+			save_scope_as = THIS_scope
+			create_diplomatic_play = {
+                type = dp_independence
+                target_country = ROOT
+            }
+		}
+		
+		#Trigger other rebellions
+		hidden_effect = {
+			trigger_event = { id = warlord_state_system.3 }
+		}
+		
+		ai_chance = { 
+			base = 90
+		}
+		
+    }
+	
+	option = {
+        name = princely_state_rebellion.option.2						# Peace
+		
+		#Wage war
+		scope:new_princely_state ?= {
+			change_subject_type = subject_type_special_administrative_region
+		}
+		
+		ai_chance = { 
+			base = 10 modifier = { trigger = { high_historical_ai_railroading = yes } add = -100 } modifier = { trigger = { medium_historical_ai_railroading = yes } add = 0 } modifier = { trigger = { low_historical_ai_railroading = yes } add = 20 } modifier = { trigger = { no_historical_ai_railroading = yes } add = 80 } 
+		}
+		
+    }
+
+}
