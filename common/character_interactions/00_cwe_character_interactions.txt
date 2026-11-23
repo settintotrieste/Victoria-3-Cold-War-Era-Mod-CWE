@@ -1734,6 +1734,9 @@ appoint_as_royal_heir = {
 		
 		owner ?= scope:actor
 		
+		#Monarchy
+		owner ?= { is_a_monarchy = yes }
+		
 		#Eligible to be Crown Princes
 		has_role = character_role_prince
 		is_ruler_of_own_country = no
@@ -1922,6 +1925,109 @@ grant_vassal_local_autonomy = {
 	}
 
 	#cooldown = { months = 12 }
+	show_confirmation_box = yes
+	
+	should_ai_evaluate = {
+		always = no
+	}
+
+	ai_chance = {
+		value = 0
+	}
+	
+}
+
+adopt_as_prince = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_royalist.dds"
+	clicksound = "event:/SFX/UI/Military/command_grant"
+
+	potential = {
+		
+		owner ?= scope:actor
+		
+		#Monarchy
+		owner ?= { 
+			is_a_monarchy = yes
+			shares_same_monarch = no
+		}
+		
+		#Eligible to be Prince
+		NOT = { has_role = character_role_prince }
+		OR = {
+			AND = {
+				has_role_of_type = magnate
+				is_noble = yes
+			}
+			has_role = character_role_favorite
+		}
+		has_potential_to_become_monarch = yes
+		
+	}
+
+	possible = {
+		
+		#Has parliamentary support
+		owner ?= {
+			OR = {
+				custom_tooltip = {
+					text = government_has_legislative_super_majority.tt
+					government_has_legislative_super_majority = yes
+				}
+				AND = {
+					NOT = { exists = heir }
+					is_a_regime_monarchy = yes
+				}
+			}
+			is_a_regency_government = no
+		}
+		trigger_if = {
+			limit = { 
+				has_role = character_role_favorite
+				is_noble = no
+			}
+			owner.ruler ?= {
+				has_role = character_role_monarch
+			}
+		}
+		
+	}
+
+	effect = {
+		
+		#Anger existing Princes
+		owner ?= {
+			every_scope_character = {
+				limit = {
+					has_role = character_role_prince
+				}
+				if = { limit = { has_modifier = character_happy_with_government } remove_modifier = character_happy_with_government }
+				add_modifier = { name = character_angry_with_government years = 5 is_decaying = yes }
+				interest_group ?= { save_scope_as = THIS_IG_scope }
+				owner ?= {
+					add_radicals = {
+						value = large_radicals
+						interest_group = scope:THIS_IG_scope
+					}
+				}
+			}
+		}
+		
+		#Appoint as Prince
+		set_character_as_royal = yes
+		add_modifier = { name = character_happy_with_government years = 10 is_decaying = yes }
+		
+		#Domestic reaction
+		interest_group ?= { save_scope_as = THIS_IG_scope }
+		owner ?= {
+			add_loyalists = {
+				value = large_radicals
+				interest_group = scope:THIS_IG_scope
+			}
+		}
+		
+	}
+
+	cooldown = { years = 5 }
 	show_confirmation_box = yes
 	
 	should_ai_evaluate = {
