@@ -15,45 +15,97 @@ je_generic_decolonisation_overlord_system = {
 		any_scope_state = {
 			is_incorporated = no
 		}
-		is_a_colonial_subject_gov = no
+		#is_a_colonial_subject_gov = no
+		
+	}
+	
+	immediate = {
+		
+		if = {
+			limit = { NOT = { has_variable = block_administrator_generation } }
+			generate_administrators_for_country = yes
+		}
 		
 	}
 	
 	outcome = {
-		header = je_standard_completion_header
-		effect_header = je_standard_on_completion_header
-		conclusion_desc = je_standard_completion_conclusion_desc
-		color = "gold_positive"
+		conclusion_desc = je_standard_failure_conclusion_desc
+		flags = { hidden invalid_outcome }
 		trigger = {
-			#Does not owns Colonial States
 			NOT = {
 				any_scope_state = {
 					is_incorporated = no
 				}
 			}
 		}
+		effect = {
+		
+			#Remove all subsidiary monarchs
+			every_scope_character = {
+				limit = { has_role = character_role_administrator }
+				remove_character_role = character_role_administrator
+			}
+			
+			#Clear variables
+			remove_variable = administrators_quota
+			remove_variable = administrators_count
+			remove_variable = administrator_state
+		
+		}
 	}
-
 	
-	on_monthly_pulse = {
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_effect_character_list_header
+		conclusion_desc = je_standard_failure_conclusion_desc
+		color = "blue_negative"
+		trigger = {
+			hidden_trigger = { always = no }
+		}
+		effect = {
+			#Mark Princely Rulers
+			every_scope_character = {
+				limit = {
+					has_role = character_role_administrator
+				}
+				save_scope_as = administrator_character
+				custom_tooltip = administrator_character_label.tt
+			}
+		}
+	}
+	
+	on_yearly_pulse = {
+	
 		effect = {
 			
-			#Increase radicalism
-			#every_scope_state = {
-			#	limit = { is_incorporated = no }
-			#	every_scope_culture = {
-			#		limit = { NOT = { is_primary_culture_of = prev.owner } }
-			#		save_scope_as = angry_colonial_culture
-			#		prev.owner = {
-			#			add_radicals = {
-			#				value = small_radicals
-			#				culture = scope:angry_colonial_culture
-			#			}
-			#		}
-			#	}
-			#}
+			if = {
+				limit = { 
+					has_variable = administrators_quota
+					any_scope_character = { 
+						has_role = character_role_administrator
+						count < owner.var:administrators_quota
+					}
+				}
+				generate_administrators_for_country = yes
+			}
+			every_scope_character = {
+				limit = {
+					has_role = character_role_administrator
+					OR = {
+						home_state ?= { 
+							OR = {
+								NOT = { owner = ROOT }
+								is_incorporated = yes
+							}
+						}
+						NOT = { has_variable = administrator_term }
+					}
+				}
+				remove_character_role = character_role_administrator
+			}
 			
 		}
+		
 	}
 	
 	# zero or more static modifiers that will be applied to the Journal Entry when it activates, where they will propagate to the country

@@ -1,0 +1,141 @@
+generate_administrators_for_country = {
+
+	set_variable = {
+		name = administrators_quota
+		value = 0
+	}
+	
+	every_scope_state = {
+		limit = { 
+			is_incorporated = no
+		}
+		generate_administrators_for_state = yes
+	}
+	
+	set_variable = {
+		name = administrators_count
+		value = 0
+	}
+	every_scope_character = {
+		limit = { has_role = character_role_administrator }
+		owner ?= {
+			change_variable = {
+				name = administrators_count
+				add = 1
+			}
+		}
+	}
+
+}
+
+generate_administrators_for_state = {
+
+	save_scope_as = state_in_question
+	
+	random_scope_pop = {
+		limit = {
+			culture ?= { 
+				NOT = { is_primary_culture_of = ROOT }
+				save_temporary_scope_as = colonial_culture_in_question_temp 
+			}
+			scope:state_in_question ?= { state_region = { is_homeland = scope:colonial_culture_in_question_temp } }
+		}
+		culture ?= { save_scope_as = colonial_culture_in_question }
+		if = {
+			limit = {
+				owner ?= {
+					NOT = {
+						any_scope_character = {
+							has_role = character_role_administrator
+							home_state ?= { 
+								OR = { 
+									state ?= scope:state_in_question
+									state_region = { is_homeland = scope:colonial_culture_in_question }
+								}
+							}
+						}
+					}
+				}
+			}
+			owner ?= {
+				ordered_scope_state = {
+					limit = { 
+						is_incorporated = no
+						state_region = { is_homeland = scope:colonial_culture_in_question }
+					}
+					order_by = state_population
+					position = 0
+					check_range_bounds = no
+					save_scope_as = colonial_capital
+				}
+				change_variable = {
+					name = administrators_quota
+					add = 1
+				}
+				create_character = {
+					role = character_role_administrator
+					on_created = {
+						set_variable = { name = administrator_term years = 10 }
+					}
+					save_scope_as = new_administrator
+				}
+				scope:new_administrator ?= {
+					set_home_state = scope:colonial_capital
+				}
+			}
+		}
+	}
+
+}
+
+initialise_colonial_governor_effect = {
+
+	if = {
+		limit = {
+			scope:target ?= {
+				is_subject_of = ROOT
+				is_a_colonial_subject_gov = yes 
+			}
+		}
+		random_scope_character = {
+			limit = {
+				has_role = character_role_administrator
+				home_state ?= {
+					owner = scope:target
+				}
+			}
+			transfer_character = scope:target
+			if = { 
+				limit = { scope:target ?= { is_a_monarchy = yes } }
+				set_character_as_viceroy = yes
+			}
+			else = {
+				set_character_as_governor = yes
+			}
+			remove_character_role = character_role_administrator
+		}
+		every_scope_character = {
+			limit = {
+				has_role = character_role_administrator
+				home_state ?= {
+					owner = scope:target
+				}
+			}
+			remove_character_role = character_role_administrator
+		}
+		set_variable = {
+			name = administrators_count
+			value = 0
+		}
+		every_scope_character = {
+			limit = { has_role = character_role_administrator }
+			owner ?= {
+				change_variable = {
+					name = administrators_count
+					add = 1
+				}
+			}
+		}
+	}
+
+}
