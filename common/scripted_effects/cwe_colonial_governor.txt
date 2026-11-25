@@ -63,7 +63,7 @@ generate_administrators_for_state = {
 			}
 			owner ?= {
 				ordered_scope_state = {
-					limit = { 
+					limit = {
 						is_incorporated = no
 						state_region = { is_homeland = scope:colonial_culture_in_question }
 					}
@@ -72,12 +72,38 @@ generate_administrators_for_state = {
 					check_range_bounds = no
 					save_scope_as = colonial_capital
 				}
-				create_character = {
-					role = character_role_administrator
-					on_created = {
-						set_variable = { name = administrator_term years = 10 }
+				if = {
+					limit = {
+						any_scope_character = {
+							has_role_of_type = magnate
+							NOT = { has_role = character_role_administrator }
+							culture ?= { is_primary_culture_of = ROOT }
+							home_state ?= { state ?= scope:state_in_question }
+						}
 					}
-					save_scope_as = new_administrator
+					ordered_scope_character = {
+						limit = {
+							has_role_of_type = magnate
+							NOT = { has_role = character_role_administrator }
+							culture ?= { is_primary_culture_of = ROOT }
+							home_state ?= { state ?= scope:state_in_question }
+						}
+						order_by = prominence
+						position = 0
+						check_range_bounds = no
+						add_character_role = character_role_administrator
+						set_variable = { name = administrator_term years = 10 }
+						save_scope_as = new_administrator
+					}
+				}
+				else = {
+					create_character = {
+						role = character_role_administrator
+						on_created = {
+							set_variable = { name = administrator_term years = 10 }
+						}
+						save_scope_as = new_administrator
+					}
 				}
 				scope:new_administrator ?= {
 					set_home_state = scope:colonial_capital
