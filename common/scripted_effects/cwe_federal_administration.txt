@@ -1,0 +1,114 @@
+generate_representatives_for_country_federal = {
+
+	set_variable = {
+		name = representatives_quota
+		value = 0
+	}
+	
+	every_scope_state = {
+		limit = { 
+			is_incorporated = yes
+			NOT = { has_variable = election_excluded_state }
+		}
+		generate_representatives_for_state_federal = yes
+	}
+	
+	set_variable = {
+		name = representatives_count
+		value = 0
+	}
+	every_scope_character = {
+		limit = { has_role = character_role_representative }
+		owner ?= {
+			change_variable = {
+				name = representatives_count
+				add = 1
+			}
+			change_variable = {
+				name = representatives_quota
+				add = 1
+			}
+		}
+	}
+
+}
+
+generate_representatives_for_state_federal = {
+
+	save_scope_as = state_in_question
+	set_variable = { name = state_in_question days = 1 }
+	if = {
+		limit = {
+			owner ?= {
+				NOT = {
+					any_scope_character = {
+						has_role = character_role_representative
+						home_state ?= {
+							has_variable = state_in_question
+						}
+					}
+				}
+			}
+		}
+		random_scope_pop = {
+			limit = {
+				pop_acceptance >= acceptance_status_4
+				culture ?= {
+					save_temporary_scope_as = colonial_culture_in_question_temp 
+				}
+				scope:state_in_question ?= {
+					state_region ?= { 
+						is_homeland = scope:colonial_culture_in_question_temp
+					}
+				}
+			}
+			culture ?= { save_scope_as = colonial_culture_in_question }
+		}
+		owner ?= {
+			if = {
+				limit = {
+					any_scope_character = {
+						has_role_of_type = politician
+						is_ruler_of_own_country = no
+						NOT = { has_role = character_role_representative }
+						culture ?= scope:colonial_culture_in_question
+						home_state ?= { 
+							has_variable = state_in_question
+						}
+					}
+				}
+				ordered_scope_character = {
+					limit = {
+						has_role_of_type = politician
+						is_ruler_of_own_country = no
+						NOT = { has_role = character_role_representative }
+						culture ?= scope:colonial_culture_in_question
+						home_state ?= { 
+							has_variable = state_in_question
+						}
+					}
+					order_by = prominence
+					position = 0
+					check_range_bounds = no
+					add_character_role = character_role_representative
+					save_scope_as = new_representative
+				}
+			}
+			else = {
+				create_character = {
+					role = character_role_representative
+					culture = scope:colonial_culture_in_question
+					on_created = {
+						add_character_role = politician
+					}
+					save_scope_as = new_representative
+				}
+			}
+			scope:new_representative ?= {
+				set_home_state = scope:state_in_question
+			}
+		}
+	}
+	remove_variable = state_in_question
+
+}
