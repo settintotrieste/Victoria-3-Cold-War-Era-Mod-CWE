@@ -2039,3 +2039,152 @@ adopt_as_prince = {
 	}
 	
 }
+
+create_settler_colony = {
+	icon = "gfx/interface/icons/lens_toolbar_icons/colony.dds"
+	clicksound = "event:/SFX/UI/Military/command_grant"
+
+	potential = {
+		
+		owner ?= scope:actor
+		
+		#Eligible to become colony
+		has_role = character_role_administrator
+		home_state ?= { 
+			is_incorporated = no
+			state_region ?= { NOT = { is_homeland = ROOT.culture } }
+		}
+		character_is_key_state_officeholder = no
+		
+		#Character is not pre-occupied
+		is_busy = no
+		is_in_battle = no
+		
+	}
+
+	possible = {
+		
+		owner ?= {
+			
+			#Not at war
+			is_at_war = no
+		
+			#Has parliamentary support
+			custom_tooltip = {
+				text = government_has_legislative_super_majority.tt
+				government_has_legislative_super_majority = yes
+			}
+		
+		}
+		
+	}
+
+	effect = {
+		
+		#Create Colonial State
+		custom_tooltip = {
+			text = create_settler_colony.tt
+			save_scope_as = warlord_character
+			interest_group ?= { save_scope_as = warlord_character_IG }
+			home_state ?= { save_scope_as = warlord_character_home_state }
+			owner ?= {
+				save_scope_as = ROOT_country
+				scope:warlord_character_home_state ?= {
+					random_scope_pop = {
+						limit = {
+							culture ?= {
+								NOT = { is_primary_culture_of = scope:ROOT_country }
+								save_temporary_scope_as = colonial_culture_in_question_temp 
+							}
+							scope:warlord_character_home_state ?= { state_region = { is_homeland = scope:colonial_culture_in_question_temp } }
+						}
+						culture ?= { save_scope_as = colonial_culture_in_question }
+					}
+				}
+				every_scope_state = {
+					limit = { state_region = { is_homeland = scope:colonial_culture_in_question } }
+					set_variable = { name = warlord_state days = 1 }
+				}
+				scope:warlord_character_home_state ?= {
+					save_scope_as = warlord_state
+					set_variable = { name = warlord_state days = 1 }
+					owner ?= {
+						create_dynamic_country = {
+							origin = scope:ROOT_country
+							country_type = unrecognized
+							tier = city_state
+							capital = scope:warlord_state
+							cede_state_trigger = {
+								has_variable = warlord_state
+							}
+							on_created = {
+								every_scope_state = {
+									remove_variable = warlord_state
+								}
+								set_variable = { name = new_warlord_state days = 1 }
+								
+								#Set regime
+								activate_law = law_type:law_ethnostate
+								
+								#Mark as settler colony
+								set_variable = settler_colony_country
+							}
+						}
+						random_country = {
+							limit = { has_variable = new_warlord_state }
+							save_scope_as = new_warlord_state
+							remove_variable = new_warlord_state
+							scope:ROOT_country ?= {
+								create_diplomatic_pact = {
+									country = scope:new_warlord_state
+									type = semi_autonomous_colony
+								}
+								create_diplomatic_pact = {
+									country = scope:new_warlord_state
+									type = legal_union
+								}
+								create_diplomatic_pact = {
+									country = scope:new_warlord_state
+									type = currency_union
+								}
+							}
+							scope:ROOT_country = { scope:warlord_character ?= { transfer_character = scope:new_warlord_state } }
+							scope:warlord_character ?= {
+								if = { 
+									limit = { owner ?= { is_a_monarchy = yes } }
+									set_character_as_viceroy = yes
+								}
+								else = {
+									set_character_as_governor = yes
+								}
+								remove_character_role = character_role_administrator
+							}
+							save_scope_as = new_colonial_state
+						}
+					}
+				}
+			}
+		}
+		
+		#Domestic reaction
+		owner ?= {
+			create_incident = {
+				country = THIS
+				value = 5
+			}
+		}
+		
+	}
+
+	#cooldown = { months = 12 }
+	show_confirmation_box = yes
+	
+	should_ai_evaluate = {
+		always = no
+	}
+
+	ai_chance = {
+		value = 0
+	}
+	
+}
