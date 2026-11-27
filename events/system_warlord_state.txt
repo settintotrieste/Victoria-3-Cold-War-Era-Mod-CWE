@@ -405,8 +405,12 @@ warlord_state_system.3 = {
 		is_at_war = no
 		
 		any_scope_character = {
-			has_role = character_role_subsidiary_monarch
-			home_state ?= { is_capital = no }
+			OR = {
+				has_role = character_role_subsidiary_monarch
+				has_role = character_role_administrator
+				has_role = character_role_representative
+			}
+			home_state ?= { is_capital = no owner = ROOT }
 			character_is_key_state_officeholder = no
 			loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
 		}
@@ -418,8 +422,12 @@ warlord_state_system.3 = {
 		#Mark target
 		random_scope_character = {
 			limit = {
-				has_role = character_role_subsidiary_monarch
-				home_state ?= { is_capital = no }
+				OR = {
+					has_role = character_role_subsidiary_monarch
+					has_role = character_role_administrator
+					has_role = character_role_representative
+				}
+				home_state ?= { is_capital = no owner = ROOT }
 				character_is_key_state_officeholder = no
 				loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
 			}
@@ -443,10 +451,15 @@ warlord_state_system.3 = {
 								every_scope_state = {
 									remove_variable = warlord_state
 								}
-								set_variable = dynamic_decolonisation_country
 								set_variable = { name = new_warlord_state days = 1 }
-								
-								#Set regime
+							}
+						}
+						random_country = {
+							limit = { has_variable = new_warlord_state }
+							save_scope_as = new_warlord_state
+							remove_variable = new_warlord_state
+							if = {
+								limit = { scope:warlord_character ?= { has_role = character_role_subsidiary_monarch } }
 								activate_law = law_type:law_HOS_monarch
 								activate_law = law_type:law_HOG_none
 								activate_law = law_type:law_no_voting
@@ -458,25 +471,128 @@ warlord_state_system.3 = {
 								activate_law = law_type:law_politicised_bureaucrats
 								activate_law = law_type:law_no_term_limit
 								activate_law = law_type:law_politicised_armed_forces
+								set_variable = dynamic_decolonisation_country
 							}
-						}
-						random_country = {
-							limit = { has_variable = new_warlord_state }
-							save_scope_as = new_warlord_state
-							remove_variable = new_warlord_state
-							ROOT = {
-								create_diplomatic_pact = {
-									country = scope:new_warlord_state
-									type = special_administrative_region
+							else_if = {
+								limit = { scope:warlord_character ?= { has_role = character_role_administrator } }
+								activate_law = law_type:law_HOG_none
+								activate_law = law_type:law_no_voting
+								activate_law = law_type:law_parties_not_allowed
+								activate_law = law_type:law_appointed_legislature
+								activate_law = law_type:law_kangaroo_law
+								activate_law = law_type:law_politicised_judiciary
+								activate_law = law_type:law_nepotistic_cabinet
+								activate_law = law_type:law_politicised_bureaucrats
+								activate_law = law_type:law_no_term_limit
+								activate_law = law_type:law_politicised_armed_forces
+								activate_law = law_type:law_ethnostate
+								set_variable = settler_colony_country
+							}
+							else_if = {
+								limit = { scope:warlord_character ?= { has_role = character_role_representative } }
+								activate_law = law_type:law_multicultural
+								set_variable = dynamic_decolonisation_country
+							}
+							if = {
+								limit = { scope:warlord_character ?= { has_role = character_role_subsidiary_monarch } }
+								ROOT = {
+									create_diplomatic_pact = {
+										country = scope:new_warlord_state
+										type = special_administrative_region
+									}
 								}
+								ROOT = { scope:warlord_character ?= { transfer_character = scope:new_warlord_state } }
+								scope:warlord_character ?= { 
+									remove_variable = prince_renounced_throne
+									set_character_as_ruler = yes 
+									set_character_as_monarch = yes
+									remove_character_role = character_role_subsidiary_monarch
+								}
+								save_scope_as = new_princely_state
+								set_variable = dynamic_decolonisation_country
 							}
-							ROOT = { scope:warlord_character ?= { transfer_character = scope:new_warlord_state } }
-							scope:warlord_character ?= { 
-								remove_variable = prince_renounced_throne
-								set_character_as_ruler = yes 
-								set_character_as_monarch = yes 
+							else_if = {
+								limit = { scope:warlord_character ?= { has_role = character_role_administrator } }
+								ROOT = {
+									create_diplomatic_pact = {
+										country = scope:new_warlord_state
+										type = semi_autonomous_colony
+									}
+								}
+								scope:warlord_character_home_state ?= {
+									random_scope_pop = {
+										limit = {
+											culture ?= { 
+												NOT = { is_primary_culture_of = ROOT }
+												save_temporary_scope_as = colonial_culture_in_question_temp 
+											}
+											scope:warlord_character_home_state ?= { state_region = { is_homeland = scope:colonial_culture_in_question_temp } }
+										}
+										culture ?= { save_scope_as = colonial_culture_in_question }
+									}
+								}
+								ROOT = { 
+									scope:warlord_character ?= { transfer_character = scope:new_warlord_state }
+									every_scope_state = {
+										limit = { state_region = { is_homeland = scope:colonial_culture_in_question } }
+										set_state_owner = scope:new_warlord_state
+										set_state_type = incorporated
+									}
+								}
+								scope:warlord_character ?= {
+									set_character_as_ruler = yes
+									if = { 
+										limit = { owner ?= { is_a_monarchy = yes } }
+										set_character_as_viceroy = yes
+									}
+									else = {
+										set_character_as_governor = yes
+									}
+									remove_character_role = character_role_administrator
+								}
+								save_scope_as = new_princely_state
+								set_variable = settler_colony_country
 							}
-							save_scope_as = new_princely_state
+							else_if = {
+								limit = { scope:warlord_character ?= { has_role = character_role_representative } }
+								if = {
+									limit = { ROOT = { has_law_or_variant = law_type:law_devolved_state } }
+									clear_all_overlord_primary_cultures = yes
+									if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+									if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+									if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+									if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+									if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+									if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+									if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+									if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+									if = { limit = { any_primary_culture = { is_primary_culture_of = ROOT } } clear_all_overlord_primary_cultures = yes }
+									add_primary_culture = scope:warlord_character.culture
+								}
+								ROOT = {
+									create_diplomatic_pact = {
+										country = scope:new_warlord_state
+										type = special_administrative_region
+									}
+								}
+								ROOT = { 
+									scope:warlord_character ?= { transfer_character = scope:new_warlord_state }
+									if = {
+										limit = { has_law_or_variant = law_type:law_devolved_state }
+										every_scope_state = {
+											limit = { state_region = { is_homeland = scope:warlord_character.culture } }
+											set_state_owner = scope:new_warlord_state
+											set_state_type = incorporated
+										}
+									}
+								}
+								scope:warlord_character ?= {
+									set_character_as_ruler = yes
+									remove_character_role = character_role_representative
+								}
+								save_scope_as = new_princely_state
+								set_variable = dynamic_decolonisation_country
+							}
 						}
 					}
 				}
@@ -494,6 +610,11 @@ warlord_state_system.3 = {
 			create_diplomatic_play = {
                 type = dp_independence
                 target_country = ROOT
+				add_war_goal = {
+					holder = ROOT
+					type = annex_country
+					target_country = scope:THIS_scope
+				}
             }
 		}
 		
@@ -510,10 +631,23 @@ warlord_state_system.3 = {
 	
 	option = {
         name = princely_state_rebellion.option.2						# Peace
+		trigger = {
+			relinquishing_of_territory_permitted = yes
+		}
 		
-		#Wage war
 		scope:new_princely_state ?= {
-			change_subject_type = subject_type_special_administrative_region
+			change_relation = {
+				country = ROOT
+				value = 100
+			}
+		}
+		create_diplomatic_pact = {
+			country = scope:new_princely_state
+			type = legal_union
+		}
+		create_diplomatic_pact = {
+			country = scope:new_princely_state
+			type = currency_union
 		}
 		
 		ai_chance = { 
